@@ -1,0 +1,21 @@
+(function(global){
+'use strict';
+const b=()=>global.JBBackend;
+const c=()=>{if(!b()?.client)throw new Error('BACKEND_NOT_READY');return b().client};
+const owner=async()=>b().requireOwner();
+const iso=()=>new Date().toISOString();
+async function audit(action,recordType,recordId,metadata={}){await owner();const s=await b().session();const {error}=await c().from('audit_logs').insert({actor_user_id:s.user.id,action,record_type:recordType,record_id:recordId?String(recordId):null,metadata,created_at:iso()});if(error)throw error;}
+async function analyticsSummary(){await owner();const today=new Date();today.setHours(0,0,0,0);const [v,a,s]=await Promise.all([c().from('analytics_events').select('id',{count:'exact',head:true}).gte('created_at',today.toISOString()),c().from('analytics_events').select('id',{count:'exact',head:true}),c().from('article_stats').select('*').order('views',{ascending:false}).limit(50)]);if(v.error)throw v.error;if(a.error)throw a.error;if(s.error)throw s.error;return{today:v.count||0,total:a.count||0,articles:s.data||[]}}
+async function track(articleId,eventType){const {error}=await c().from('analytics_events').insert({article_id:articleId||null,event_type:eventType});if(error)console.warn('analytics',error.message)}
+async function grievances(status){await owner();let q=c().from('grievances').select('*').order('created_at',{ascending:false});if(status)q=q.eq('status',status);const {data,error}=await q;if(error)throw error;return data||[]}
+function clientUuid(){if(global.crypto?.randomUUID)return global.crypto.randomUUID();const b=new Uint8Array(16);global.crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`}
+async function createGrievance(x){const id=clientUuid();const {error}=await c().from('grievances').insert({id,article_id:x.articleId||null,article_url:x.articleUrl||'',complainant_name:x.name||'',contact:x.contact||'',issue:x.issue||'',reason:x.reason||'',evidence_note:x.evidence||'',urgent:!!x.urgent,status:'received'});if(error)throw error;return{id,status:'received'}}
+async function setGrievanceStatus(id,status,note){await owner();const {data,error}=await c().from('grievances').update({status,decision_note:note||'',updated_at:iso()}).eq('id',id).select('*').single();if(error)throw error;await audit('grievance_status', 'grievance',id,{status});return data}
+async function liveSessions(){await owner();const {data,error}=await c().from('live_sessions').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
+async function setLive(id,active){await owner();const {data,error}=await c().from('live_sessions').update({active:!!active,ended_at:active?null:iso()}).eq('id',id).select('*').single();if(error)throw error;await audit(active?'live_start':'live_stop','live_session',id);return data}
+async function reporters(){await owner();const {data,error}=await c().from('reporters').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
+async function socialRows(){await owner();const {data,error}=await c().from('social_distribution').select('*,articles(title)').order('updated_at',{ascending:false});if(error)throw error;return data||[]}
+async function saveSocial(row){await owner();const payload={article_id:row.article_id,enabled:!!row.enabled,facebook:!!row.facebook,instagram:!!row.instagram,whatsapp:!!row.whatsapp,youtube:!!row.youtube,caption:row.caption||'',status:row.status||{},updated_at:iso()};const {data,error}=await c().from('social_distribution').upsert(payload,{onConflict:'article_id'}).select('*').single();if(error)throw error;return data}
+async function compliance(){await owner();const {data,error}=await c().from('compliance_tasks').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
+global.JBPhase2={audit,analyticsSummary,track,grievances,createGrievance,setGrievanceStatus,liveSessions,setLive,reporters,socialRows,saveSocial,compliance};
+})(window);

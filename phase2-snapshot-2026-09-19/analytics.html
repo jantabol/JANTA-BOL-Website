@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="hi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Analytics</title>
+
+  <style>
+    body{
+      font-family:Arial,sans-serif;
+      background:#0d0d0d;
+      color:#eee;
+      margin:0
+    }
+
+    .top{
+      padding:16px;
+      background:#111;
+      border-bottom:2px solid #b30000
+    }
+
+    .wrap{
+      max-width:900px;
+      margin:auto;
+      padding:16px
+    }
+
+    .card{
+      background:#171717;
+      border:1px solid #333;
+      border-radius:12px;
+      padding:16px;
+      margin:12px 0
+    }
+
+    .btn{
+      background:#b30000;
+      color:white;
+      border:0;
+      border-radius:8px;
+      padding:10px 14px;
+      font-weight:700
+    }
+
+    .btn.alt{
+      background:#333
+    }
+
+    input,textarea,select{
+      width:100%;
+      padding:10px;
+      margin:6px 0 12px;
+      background:#111;
+      color:#fff;
+      border:1px solid #444;
+      border-radius:7px;
+      box-sizing:border-box
+    }
+
+    .muted{color:#aaa}
+
+    .row{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap
+    }
+
+    .back{color:#fff}
+  </style>
+</head>
+
+<body>
+
+<header class="top">
+  <b>JANTA BOL — Analytics</b>
+</header>
+
+<main class="wrap">
+
+  <a class="back" href="admin.html">← Dashboard</a>
+
+  <div class="card">
+    <h2>Analytics</h2>
+    <div id="summary">Loading…</div>
+  </div>
+
+  <div class="card">
+    <h3>Article Stats</h3>
+    <div id="rows"></div>
+  </div>
+
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+<script src="phase2-client.js"></script>
+<script src="admin-auth.js"></script>
+
+<script>
+async function loadAnalytics(){
+  const summary = document.getElementById('summary');
+  const rows = document.getElementById('rows');
+
+  try{
+    const x = await JBPhase2.analyticsSummary();
+
+    summary.innerHTML =
+      `Today events: <b>${x.today}</b> · Total events: <b>${x.total}</b>`;
+
+    rows.innerHTML =
+      x.articles.map(r =>
+        `<p>${JBBackend.esc(r.title || r.article_id)} — Views ${r.views || 0} · Shares ${r.shares || 0}</p>`
+      ).join('') || 'No data';
+
+  }catch(e){
+    summary.textContent = e.message;
+  }
+}
+
+if(document.documentElement.dataset.jbAuth==='ready'){
+  loadAnalytics();
+}else{
+  addEventListener('jb-auth-ready',loadAnalytics,{once:true});
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JANTA-BOL Emergency Recovery</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+
+<body>
+
+<header class="topbar">
+  <h1>JANTA-BOL</h1>
+  <p>Emergency Recovery</p>
+</header>
+
+<main class="page">
+
+  <div class="form-card">
+
+    <h2>🛟 Emergency Recovery</h2>
+
+    <div class="notice backend">
+      Sirf genuine emergency ke liye.
+      Normal Admin login ke replacement ke roop me use na karein.
+    </div>
+
+    <div
+      id="msg"
+      class="notice"
+      style="display:none"
+    ></div>
+
+    <div id="recoveryForm">
+
+      <div class="field">
+        <label for="email">Founder Email</label>
+        <input
+          id="email"
+          type="email"
+          autocomplete="username"
+        >
+      </div>
+
+      <div class="field">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          type="password"
+          autocomplete="current-password"
+        >
+      </div>
+
+      <div class="field">
+        <label for="recoveryKey">Emergency Recovery Key</label>
+        <input
+          id="recoveryKey"
+          type="password"
+          autocomplete="off"
+          placeholder="JB-RK-..."
+        >
+      </div>
+
+      <div class="actions">
+        <button
+          id="recover"
+          type="button"
+          class="btn primary"
+        >
+          Verify Emergency Recovery
+        </button>
+      </div>
+
+    </div>
+
+
+    <div
+      id="limitedMode"
+      style="display:none"
+    >
+
+      <h3>🔒 LIMITED RECOVERY MODE</h3>
+
+      <div class="notice">
+        Emergency Recovery verified.
+        Full Admin access intentionally blocked hai.
+      </div>
+
+      <p>
+        Is mode me sirf security cleanup allowed hoga.
+      </p>
+
+      <p>
+        Article Publish ❌<br>
+        Article Edit ❌<br>
+        Article Delete ❌<br>
+        Advertisement Change ❌<br>
+        Role Change ❌
+      </p>
+
+      <div class="notice backend">
+        Affected verified MFA factor ko neeche revoke karein.
+        Verified factor delete hone par Supabase active sessions logout karta hai.
+        Iske baad known-clean device par fresh MFA setup aur purani Recovery Key ko replace karna mandatory hai.
+      </div>
+
+      <div id="factorRows" style="margin-top:16px"></div>
+
+      <div class="actions" style="margin-top:16px">
+        <button id="refreshFactors" type="button" class="btn">
+          Refresh MFA Factors
+        </button>
+        <button id="exitRecovery" type="button" class="btn secondary">
+          Cancel Recovery / Logout
+        </button>
+      </div>
+
+      <div id="recoveryDone" style="display:none;margin-top:18px">
+        <div class="notice">
+          Recovery cleanup completed. Ab secure login se known-clean device par fresh MFA setup karein,
+          phir Emergency Recovery Key ko replace karein. Purani Recovery Key ko final recovery credential na rakhein.
+        </div>
+        <div class="actions">
+          <button id="goLogin" type="button" class="btn primary">
+            Go to Secure Login
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</main>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+
+<script>
+'use strict';
+
+const msg=document.getElementById('msg');
+const recoveryForm=document.getElementById('recoveryForm');
+const limitedMode=document.getElementById('limitedMode');
+const recover=document.getElementById('recover');
+const factorRows=document.getElementById('factorRows');
+const refreshFactors=document.getElementById('refreshFactors');
+const exitRecovery=document.getElementById('exitRecovery');
+const recoveryDone=document.getElementById('recoveryDone');
+const goLogin=document.getElementById('goLogin');
+
+const emailInput=document.getElementById('email');
+const passwordInput=document.getElementById('password');
+const recoveryKeyInput=document.getElementById('recoveryKey');
+
+let verifiedRecoveryKey='';
+
+function showMessage(text){
+  msg.style.display='block';
+  msg.textContent=text;
+}
+
+function clearLimitedRecoveryMode(){
+  localStorage.removeItem('jbLimitedRecoveryMode');
+  verifiedRecoveryKey='';
+}
+
+function clearStaleRecoveryModeOnLoad(){
+  // Recovery Key is intentionally never persisted. After reload/reopen,
+  // previous local LIMITED state cannot safely continue and must be re-verified.
+  if(localStorage.getItem('jbLimitedRecoveryMode')){
+    localStorage.removeItem('jbLimitedRecoveryMode');
+    showMessage('Previous Limited Recovery state cleared. Recovery Key dobara verify karein.');
+  }
+}
+
+function factorLabel(factor,index){
+  const friendly=String(factor?.friendly_name||'').trim();
+  return friendly || ('Verified MFA Factor '+String(index+1));
+}
+
+async function renderRecoveryFactors(){
+  factorRows.textContent='Loading verified MFA factors…';
+
+  try{
+    const factors=await JBBackend.mfaListFactors();
+    const verified=(factors?.totp||[])
+      .filter(f=>f.status==='verified');
+
+    factorRows.replaceChildren();
+
+    if(!verified.length){
+      const note=document.createElement('div');
+      note.className='notice';
+      note.textContent='Koi verified TOTP factor nahi mila. MFA-factor cleanup required nahi hai.';
+      factorRows.appendChild(note);
+      return;
+    }
+
+    verified.forEach((factor,index)=>{
+      const row=document.createElement('div');
+      row.className='notice';
+      row.style.marginBottom='10px';
+
+      const title=document.createElement('strong');
+      title.textContent=factorLabel(factor,index);
+
+      const meta=document.createElement('div');
+      meta.textContent='Type: TOTP • Status: verified';
+      meta.style.margin='6px 0 10px';
+
+      const revoke=document.createElement('button');
+      revoke.type='button';
+      revoke.className='btn danger';
+      revoke.textContent='Revoke This MFA Factor + Active Sessions';
+
+      revoke.onclick=async()=>{
+        if(!verifiedRecoveryKey){
+          showMessage('Recovery Key memory me available nahi hai. Recovery dobara verify karein.');
+          return;
+        }
+
+        if(!confirm('Selected verified MFA factor revoke karna hai? Is action se active sessions logout honge.')){
+          return;
+        }
+
+        revoke.disabled=true;
+
+        try{
+          const result=await JBBackend.recoveryDeleteMfa(
+            factor.id,
+            verifiedRecoveryKey
+          );
+
+          if(!result?.ok){
+            throw new Error(result?.error||'RECOVERY_MFA_DELETE_FAILED');
+          }
+
+          clearLimitedRecoveryMode();
+          factorRows.replaceChildren();
+          refreshFactors.disabled=true;
+          exitRecovery.disabled=true;
+          recoveryDone.style.display='block';
+
+          try{
+            await JBBackend.signOut();
+          }catch(_){
+            // Verified-factor deletion already invalidates active Auth sessions.
+            // Local sign-out is cleanup only and must not turn successful recovery into false failure.
+          }
+
+          showMessage(
+            'Affected MFA factor revoked. Active sessions invalidated. Fresh MFA + Recovery Key replacement required.'
+          );
+        }catch(e){
+          showMessage(e.message||'Recovery MFA cleanup failed.');
+          revoke.disabled=false;
+        }
+      };
+
+      row.append(title,meta,revoke);
+      factorRows.appendChild(row);
+    });
+
+  }catch(e){
+    factorRows.textContent='MFA factors load failed.';
+    showMessage(e.message||String(e));
+  }
+}
+
+clearStaleRecoveryModeOnLoad();
+
+recover.onclick=async()=>{
+  recover.disabled=true;
+  msg.style.display='none';
+
+  try{
+
+    const founderEmail=emailInput.value.trim();
+    const founderPassword=passwordInput.value;
+    const key=recoveryKeyInput.value.trim();
+
+    if(!founderEmail || !founderPassword || !key){
+      throw new Error(
+        'Email, Password aur Emergency Recovery Key required hain.'
+      );
+    }
+
+    await JBBackend.signIn(
+      founderEmail,
+      founderPassword
+    );
+
+    const r=await JBBackend.role();
+
+    if(r!=='owner'){
+      await JBBackend.signOut();
+
+      throw new Error(
+        'Founder/Super Admin account required.'
+      );
+    }
+
+    const result=await JBBackend.verifyOwnerRecoveryKey(key);
+
+    if(!result?.success){
+
+      const lockedUntil=result?.locked_until;
+      const remaining=result?.remaining_attempts;
+
+      if(lockedUntil){
+        throw new Error(
+          'Recovery attempts temporarily locked. Cooldown active.'
+        );
+      }
+
+      throw new Error(
+        'Invalid Emergency Recovery Key. Remaining attempts: ' +
+        String(remaining ?? 0)
+      );
+    }
+
+    verifiedRecoveryKey=key;
+
+    localStorage.setItem(
+      'jbLimitedRecoveryMode',
+      JSON.stringify({
+        verified:true,
+        startedAt:Date.now()
+      })
+    );
+
+    emailInput.value='';
+    passwordInput.value='';
+    recoveryKeyInput.value='';
+
+    recoveryForm.style.display='none';
+    limitedMode.style.display='block';
+    recoveryDone.style.display='none';
+    refreshFactors.disabled=false;
+    exitRecovery.disabled=false;
+
+    showMessage(
+      'Emergency Recovery verified — Limited Recovery Mode active. Affected MFA factor select karein.'
+    );
+
+    await renderRecoveryFactors();
+
+  }catch(e){
+
+    clearLimitedRecoveryMode();
+
+    showMessage(
+      e.message ||
+      'Emergency Recovery verification failed.'
+    );
+
+  }finally{
+
+    recover.disabled=false;
+
+  }
+};
+
+refreshFactors.onclick=async()=>{
+  if(!verifiedRecoveryKey){
+    showMessage('Recovery Key dobara verify karein.');
+    return;
+  }
+  await renderRecoveryFactors();
+};
+
+exitRecovery.onclick=async()=>{
+  clearLimitedRecoveryMode();
+
+  try{
+    await JBBackend.signOut();
+  }catch(_){}
+
+  location.replace('admin-login.html');
+};
+
+goLogin.onclick=()=>{
+  location.replace('admin-login.html');
+};
+</script>
+
+</body>
+</html>

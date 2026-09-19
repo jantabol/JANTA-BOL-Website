@@ -1,0 +1,9 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Drafts - JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body>
+<header class="topbar"><h1>JANTA-BOL Admin</h1><p>Draft News</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice backend">Real Supabase drafts. Same immutable Article ID edit/publish lifecycle me preserve hota hai.</div><div id="drafts"><div class="empty">Loading…</div></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="admin-auth.js"></script><script>
+const root=document.getElementById('drafts');
+async function render(){try{const list=await JBBackend.listDrafts();if(!list.length){root.innerHTML='<div class="empty">Abhi koi draft nahi hai.</div>';return}root.innerHTML=list.map(n=>`<article class="draft-card"><span class="badge">${JBBackend.esc(n.status.toUpperCase())}</span><h2>${JBBackend.esc(n.headline||'Untitled')}</h2><p>${JBBackend.esc(n.summary||'')}</p><p class="muted">ID: ${JBBackend.esc(n.id)} • Version: ${n.version}</p><div class="buttons"><button class="action primary" onclick="editItem('${n.id}')">Edit</button><button class="action danger" onclick="trashItem('${n.id}',${n.version})">Delete → Trash</button></div></article>`).join('')}catch(e){root.innerHTML='<div class="notice">'+JBBackend.esc(e.message)+'</div>'}}
+function editItem(id){location.href='add-news.html?edit='+encodeURIComponent(id)+'&from=draft'}
+async function trashItem(id,v){if(!confirm('Draft ko Trash me bhejna hai?'))return;try{await JBBackend.softDelete(id,v);await render()}catch(e){alert(e.message==='VERSION_CONFLICT'?'Naya version mil gaya. List refresh karein.':e.message)}}
+addEventListener('jb-auth-ready',render,{once:true});
+</script></body></html>

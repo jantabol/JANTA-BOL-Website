@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="admin-header"><h1>JANTA-BOL</h1><p>Admin Dashboard</p></header><main class="dashboard"><h2>Dashboard</h2>
+<div class="notice backend"><strong>UPDATE 1:</strong> Supabase backend foundation connected hai. Founder Auth account binding pending hai; bina authorized Owner session ke Admin access block rahega.</div><div id="recoveryPhysicalReminder" class="notice" style="display:none"><strong>⚠ Recovery Key Physical Check DUE</strong><br>Apni Emergency Recovery Key ki offline physical copies check karein. <a href="admin-security.html">Security Center kholen</a>. Ye reminder SAFE/ROTATE confirmation tak pending rahega.</div>
+<div class="admin-card"><h3>➕ Add News</h3><p>Nayi verified news create, draft ya publish karein.</p><button class="admin-btn" onclick="location.href='add-news.html'">Add News</button></div>
+<div class="admin-card"><h3>📝 Drafts</h3><p>Unpublished/draft news edit, publish ya Trash me bhejein.</p><button class="admin-btn" onclick="location.href='drafts.html'">View Drafts</button></div>
+<div class="admin-card"><h3>📰 Published News</h3><p>Published records preview, edit/correct, unpublish ya controlled delete karein.</p><button class="admin-btn" onclick="location.href='published.html'">Manage News</button></div>
+<div class="admin-card"><h3>🗑 Deleted News</h3><p>Trash records restore ya permanently delete karein.</p><button class="admin-btn" onclick="location.href='trash.html'">Open Trash</button></div>
+<div class="admin-card"><h3>📣 Social Distribution</h3><p>Global settings + per-news platform selection/status workflow.</p><button class="admin-btn" onclick="location.href='settings.html'">Global Settings</button> <button class="admin-btn" onclick="location.href='social.html'">Per-News Status</button></div><div class="admin-card"><h3>📢 Advertising</h3><p>Homepage image/video ad slot enable/disable aur URL management.</p><button class="admin-btn" onclick="location.href='ads.html'">Manage Ads</button></div>
+<div class="admin-card"><h3>👁 Analytics</h3><p>Daily visitors / article views owner-only backend analytics phase me connect honge.</p><span class="badge">🟡 Backend/API Required</span></div>
+<div class="admin-card"><h3>🔐 Founder Security</h3><p>MFA factors, current trusted session aur logout security controls.</p><button class="admin-btn" onclick="location.href='admin-security.html'">Open Security Center</button></div>
+<div class="admin-card"><h3>📊 Phase 2 Analytics</h3><button class="admin-btn" onclick="location.href='analytics.html'">Open Analytics</button></div><div class="admin-card"><h3>🛡 Grievance & Compliance</h3><button class="admin-btn" onclick="location.href='grievances.html'">Grievances</button> <button class="admin-btn" onclick="location.href='compliance.html'">Compliance</button></div><div class="admin-card"><h3>🔴 LIVE & Reporters</h3><button class="admin-btn" onclick="location.href='live.html'">LIVE Control</button> <button class="admin-btn" onclick="location.href='reporters.html'">Reporters</button></div><div class="admin-card"><h3>🌐 Visitor Website</h3><p>Public website Supabase se published news fetch karegi. Backend-published article same immutable Article ID URL par open hoga.</p><button class="admin-btn" onclick="location.href='index.html'">Open Website</button></div>
+<div class="admin-card">
+  <button class="admin-btn" onclick="JBBackend.signOut().then(()=>location.href='admin-login.html')">Logout</button>
+</div>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script></script><script>
+try{
+  const recoveryState=JSON.parse(
+    localStorage.getItem('jbLimitedRecoveryMode')||'null'
+  );
+
+  if(recoveryState?.verified===true){
+    location.replace('admin-recovery.html');
+  }
+}catch(_){}
+</script><script src="admin-auth.js"></script><script>
+async function jbRecoveryPhysicalReminder(){
+  try{
+    const x=await JBBackend.recoveryPhysicalStatus();
+    const box=document.getElementById('recoveryPhysicalReminder');
+    if(box)box.style.display=x?.due===true?'block':'none';
+  }catch(_){
+    // Pending migration: do not break the existing dashboard.
+  }
+}
+if(document.documentElement.dataset.jbAuth==='ready')jbRecoveryPhysicalReminder();
+else addEventListener('jb-auth-ready',jbRecoveryPhysicalReminder,{once:true});
+</script></body></html>
