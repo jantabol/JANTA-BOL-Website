@@ -998,3 +998,196 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
       data[0],
       await getSource(id)
     );
+  }
+
+  async function restore(
+    id,
+    expectedVersion
+  ){
+    await requireOwner();
+
+    const {
+      data:current,
+      error:e0
+    }=await client
+      .from('articles')
+      .select(
+        'previous_status,version'
+      )
+      .eq('id',id)
+      .single();
+
+    if(e0){
+      throw e0;
+    }
+
+    const status=
+      current.previous_status==='published'
+        ?'published'
+        :'draft';
+
+    let q=client
+      .from('articles')
+      .update({status})
+      .eq('id',id);
+
+    if(expectedVersion!=null){
+      q=q.eq(
+        'version',
+        expectedVersion
+      );
+    }
+
+    const {data,error}=await q
+      .select('*');
+
+    if(error){
+      throw error;
+    }
+
+    if(!data?.length){
+      throw new Error(
+        'VERSION_CONFLICT'
+      );
+    }
+
+    return normalize(
+      data[0],
+      await getSource(id)
+    );
+  }
+
+  async function permanentDelete(id){
+    await requireRecentMfa(600);
+
+    const {data,error}=await client.rpc(
+      'jb_owner_permanent_delete_article',
+      {p_article_id:id}
+    );
+
+    if(error){
+      throw error;
+    }
+
+    if(data!==true){
+      throw new Error('PERMANENT_DELETE_NOT_CONFIRMED');
+    }
+
+    return true;
+  }
+
+  function saveShadow(item){
+    localStorage.setItem(
+      SHADOW,
+      JSON.stringify({
+        item,
+        savedAt:now()
+      })
+    );
+  }
+
+  function getShadow(){
+    try{
+      return JSON.parse(
+        localStorage.getItem(SHADOW)
+        ||'null'
+      );
+    }catch(e){
+      return null;
+    }
+  }
+
+  function clearShadow(){
+    localStorage.removeItem(SHADOW);
+  }
+
+    async function uploadPublic(file){
+    await requireOwner();
+
+    const ext=(
+      file.name.split('.').pop()
+      ||'bin'
+    ).toLowerCase();
+
+    const path=
+      `articles/${Date.now()}-${
+        crypto.randomUUID
+          ?crypto.randomUUID()
+          :Math.random()
+            .toString(36)
+            .slice(2)
+      }.${ext}`;
+
+    const {error}=await client
+      .storage
+      .from('public-media')
+      .upload(
+        path,
+        file,
+        {upsert:false}
+      );
+
+    if(error){
+      throw error;
+    }
+
+    return client
+      .storage
+      .from('public-media')
+      .getPublicUrl(path)
+      .data
+      .publicUrl;
+  }
+
+  global.JBBackend={
+    client,
+    esc,
+    safeUrl,
+    session,
+    serverSessionValid,
+    role,
+    requireOwner,
+    recentMfaInfo,
+    requireRecentMfa,
+    insertSecurityAudit,
+    signIn,
+    signOutOtherSessions,
+    signOutAllSessions,
+    signOut,
+    changePassword,
+    mfaListFactors,
+    mfaEnroll,
+    mfaUnenroll,
+    mfaChallengeAndVerify,
+    mfaAAL,
+    setOwnerRecoveryKey,
+    recoveryDeleteMfa,
+    verifyOwnerRecoveryKey,
+    ownerListSessions,
+    setOwnerSessionLabel,
+    ownerRevokeSession,
+    ownerSecurityActivity,
+    recoveryPhysicalStatus,
+    confirmRecoveryPhysicalCheck,
+    getArticle,
+    listDrafts,
+    listPublished:()=>listByStatus(
+      'published'
+    ),
+    listTrash:()=>listByStatus(
+      'deleted'
+    ),
+    listPublishedPublic,
+    saveDraft,
+    publish,
+    unpublish,
+    softDelete,
+    restore,
+    permanentDelete,
+    saveShadow,
+    getShadow,
+    clearShadow,
+    uploadPublic
+  };
+
+})(window);
