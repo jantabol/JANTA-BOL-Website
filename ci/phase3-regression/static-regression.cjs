@@ -134,6 +134,59 @@ record('3A-P3-T126',
   /a\.role\s*!==\s*"owner"\s*\|\|\s*a\.aal\s*!==\s*"aal2"/.test(edge),
   'High-risk Phase 3B admin actions retain owner + AAL2 server checks.');
 
+const submitStart=edge.indexOf('if (action === "reporter_submit_request")');
+const submitEnd=edge.indexOf('if (action === "reporter_my_requests")');
+const submitBlock=submitStart>=0 && submitEnd>submitStart ? edge.slice(submitStart,submitEnd) : '';
+const myStart=submitEnd;
+const myEnd=edge.indexOf('if (action === "reporter_cancel_request")');
+const myBlock=myStart>=0 && myEnd>myStart ? edge.slice(myStart,myEnd) : '';
+const cancelStart=myEnd;
+const cancelEnd=edge.indexOf('// Phase 3B advanced operations.');
+const cancelBlock=cancelStart>=0 && cancelEnd>cancelStart ? edge.slice(cancelStart,cancelEnd) : '';
+
+record('3A-P1-T014',
+  /a\.role\s*!==\s*"reporter"/.test(submitBlock) &&
+  /reporter_id:\s*a\.userId/.test(submitBlock),
+  'Live Request Reporter identity is derived from the authenticated server-side actor.');
+
+record('3A-P1-T015',
+  /reporter_id:\s*a\.userId/.test(submitBlock) &&
+  !/payload\.reporter_id/.test(submitBlock),
+  'Live Request path does not trust a caller-supplied Reporter ID.');
+
+record('3A-P1-T022',
+  /client_action_id/.test(submitBlock) &&
+  /23505/.test(submitBlock) &&
+  /\.eq\("reporter_id",\s*a\.userId\)/.test(submitBlock) &&
+  /\.eq\("client_action_id",\s*clientActionId\)/.test(submitBlock),
+  'Double-submit/idempotency path reuses the existing Reporter + client-action Request on uniqueness conflict.');
+
+record('3A-P2-T066',
+  /a\.role\s*!==\s*"reporter"/.test(submitBlock) &&
+  /\.from\("live_requests"\)\.insert/.test(submitBlock) &&
+  /location_confirmed/.test(submitBlock),
+  'Create Live Request is an authenticated Reporter-controlled backend operation with validated request input.');
+
+record('3A-P2-T067',
+  /\.from\("live_requests"\)/.test(myBlock) &&
+  /\.eq\("reporter_id",\s*a\.userId\)/.test(myBlock),
+  'Reporter My Requests query is scoped to the authenticated Reporter identity.');
+
+record('3A-P2-T068',
+  /request_status\s*!==\s*"PENDING"/.test(cancelBlock) &&
+  /\.eq\("reporter_id",\s*a\.userId\)/.test(cancelBlock) &&
+  /\.eq\("state_version",\s*expectedVersion\)/.test(cancelBlock) &&
+  /REQUEST_STATE_CHANGED/.test(cancelBlock),
+  'Cancel Request path is owner-scoped to the Reporter, PENDING-only, and optimistic-version protected.');
+
+record('3A-P3-T127',
+  frontendLeaks.length===0 && /JB_SUPABASE_SERVICE_ROLE_KEY/.test(edge),
+  'Browser/frontend receives no RLS-bypass service credential; privileged key remains server-side.');
+
+record('3A-P3-T128',
+  cfgSafe,
+  'Frontend uses the client-safe Supabase publishable-key model.');
+
 record('3B-T026',
   /Force Stop reason/.test(adminUi) &&
   /const sessionId=.*reason=textValue\(payload\.reason,240\)/s.test(edge) &&
