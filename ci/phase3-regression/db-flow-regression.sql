@@ -192,24 +192,23 @@ begin
     'Admin Reject operation preserves the rejection reason in canonical state and audit.'
   );
 
-  insert into ci_phase3_flow_results values(
-    '3A-P2-T055-REJECT',
-    (select request_status='REJECTED' and state_version=2
-       from public.live_requests where request_id=v_req_reject),
-    'Canonical Pending Request successfully follows the controlled PENDING -> REJECTED path.'
-  );
+  update ci_phase3_flow_results
+  set ok = ok
+    and (select request_status='REJECTED' and state_version=2
+         from public.live_requests where request_id=v_req_reject),
+    detail = 'Canonical Request states prove both controlled PENDING -> APPROVED and PENDING -> REJECTED paths.'
+  where test_id='3A-P2-T055';
 
   begin
     perform public.jb_live_approve_request_internal(v_owner,v_req_reject,2);
-    insert into ci_phase3_flow_results values(
-      '3A-P2-T056',false,'Rejected Request unexpectedly jumped to APPROVED.'
-    );
-  exception when others then
-    insert into ci_phase3_flow_results values(
-      '3A-P2-T056',
-      position('REQUEST_NOT_PENDING' in sqlerrm)>0,
-      'Non-pending Request cannot make an arbitrary jump back into approval.'
-    );
+    if true then
+      raise exception 'CI_ARBITRARY_JUMP_ACCEPTED';
+    end if;
+  exception
+    when others then
+      if position('REQUEST_NOT_PENDING' in sqlerrm)=0 then
+        raise;
+      end if;
   end;
 end $$;
 
