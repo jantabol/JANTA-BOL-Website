@@ -99,6 +99,12 @@ jobs:
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-access-regression.sql 2>&1 | tee ci-results/db-access-regression.log
 
+      - name: Run Phase 3A function security regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-function-security-regression.sql 2>&1 | tee ci-results/db-function-security-regression.log
+
       - name: Run Supabase editorial regression
         shell: bash
         run: |
@@ -118,7 +124,7 @@ jobs:
           {
             echo "## Phase 3 Supabase regression"
             echo
-            for f in ci-results/db-regression.log ci-results/db-schema-regression.log ci-results/db-flow-regression.log ci-results/db-access-regression.log ci-results/db-editorial-regression.log ci-results/db-retention-regression.log; do
+            for f in ci-results/db-regression.log ci-results/db-schema-regression.log ci-results/db-flow-regression.log ci-results/db-access-regression.log ci-results/db-function-security-regression.log ci-results/db-editorial-regression.log ci-results/db-retention-regression.log; do
               if [ -f "$f" ]; then
                 grep -E '^[[:space:]]*(PASS|FAIL) \[' "$f" || true
               fi
