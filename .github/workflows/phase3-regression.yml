@@ -1,0 +1,41 @@
+name: Phase 3A + 3B Regression
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - phase3-regression-ci
+      - phase3c-codex-baseline-2026-09-29
+    paths:
+      - "JANTA_BOL_PHASE_3C_WORKING/**"
+      - "CODEX_CURRENT_SUPABASE/**"
+      - "ci/phase3-regression/**"
+      - ".github/workflows/phase3-regression.yml"
+  pull_request:
+    branches:
+      - phase3c-codex-baseline-2026-09-29
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  static-regression:
+    name: Static / source regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Run static regression
+        run: node ci/phase3-regression/static-regression.cjs
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-static-regression
+          path: ci-results/
+          if-no-files-found: warn
