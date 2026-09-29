@@ -118,10 +118,10 @@ begin
   returning operation_id into v_op;
 
   insert into public.encoder_handoffs(
-    token_hash,session_id,reporter_id,generation_id,grant_version,expires_at
+    token_hash,session_id,reporter_id,generation_id,grant_version,expires_at,connector_key
   ) values(
     encode(digest(gen_random_uuid()::text,'sha256'),'hex'),
-    v_session,v_a,v_gen,1,now()+interval '5 minutes'
+    v_session,v_a,v_gen,1,now()+interval '5 minutes','larix_android'
   )
   returning handoff_id into v_handoff;
 
