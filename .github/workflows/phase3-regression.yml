@@ -74,12 +74,18 @@ jobs:
           sudo apt-get update -y
           sudo apt-get install -y postgresql-client
 
-      - name: Run Supabase regression
+      - name: Run Supabase core regression
         shell: bash
         run: |
           mkdir -p ci-results
           set -o pipefail
-          psql -X -v ON_ERROR_STOP=1             -f ci/phase3-regression/db-regression.sql             2>&1 | tee ci-results/db-regression.log
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-regression.sql 2>&1 | tee ci-results/db-regression.log
+
+      - name: Run Supabase editorial regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-editorial-regression.sql 2>&1 | tee ci-results/db-editorial-regression.log
 
       - name: Summarize database results
         if: always()
