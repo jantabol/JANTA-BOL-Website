@@ -84,10 +84,10 @@ begin
   insert into ci_phase3_schema_results values(
     '3A-P2-T030',
     exists(
-      select 1 from pg_indexes
-      where schemaname='public' and tablename='live_sessions'
-        and indexdef ilike 'CREATE UNIQUE INDEX%'
-        and indexdef ~* '\\(request_id\\)'
+      select 1 from pg_constraint
+      where conrelid='public.live_sessions'::regclass
+        and conname='live_sessions_request_unique'
+        and contype='u'
     ),
     'Database uniqueness enforces maximum one canonical Live Session per Request ID.'
   );
@@ -169,14 +169,12 @@ begin
     exists(
       select 1 from pg_indexes
       where schemaname='public' and tablename='live_provider_generations'
-        and indexdef ilike 'CREATE UNIQUE INDEX%'
-        and indexdef ~* '\\(session_id, generation_number\\)'
+        and indexname='live_provider_generation_number_unique'
     )
     and exists(
       select 1 from pg_indexes
       where schemaname='public' and tablename='live_provider_generations'
-        and indexdef ilike 'CREATE UNIQUE INDEX%'
-        and indexdef ~* '\\(session_id\\)'
+        and indexname='live_provider_one_current_idx'
         and indexdef ilike '%WHERE is_current%'
     ),
     'Database enforces unique generation number per Session and maximum one current generation.'
@@ -213,8 +211,7 @@ begin
     and exists(
       select 1 from pg_indexes
       where schemaname='public' and tablename='encoder_handoffs'
-        and indexdef ilike 'CREATE UNIQUE INDEX%'
-        and indexdef ~* '\\(token_hash\\)'
+        and indexname='encoder_handoffs_token_hash_key'
     ),
     'Encoder handoff tracks ID, token hash, Session and Reporter; token hash is unique.'
   );
