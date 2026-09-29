@@ -379,7 +379,7 @@ begin
   );
 
   insert into ci_phase3_schema_results values(
-    '3A-P3-RLS-LIVE-CORE',
+    '3A-P3-T106',
     (select relrowsecurity from pg_class where oid='public.live_requests'::regclass)
     and (select relrowsecurity from pg_class where oid='public.live_session_members'::regclass)
     and (select relrowsecurity from pg_class where oid='public.live_provider_generations'::regclass)
