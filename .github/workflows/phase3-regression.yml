@@ -88,11 +88,11 @@ jobs:
           {
             echo "## Phase 3 Supabase regression"
             echo
-            if [ -f ci-results/db-regression.log ]; then
-              grep -E '^(PASS|FAIL) \[' ci-results/db-regression.log || true
-            else
-              echo "Database regression log not created."
-            fi
+            for f in ci-results/db-regression.log ci-results/db-editorial-regression.log; do
+              if [ -f "$f" ]; then
+                grep -E '^[[:space:]]*(PASS|FAIL) \[' "$f" || true
+              fi
+            done
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload database evidence
