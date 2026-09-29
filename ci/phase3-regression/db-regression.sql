@@ -65,8 +65,8 @@ begin
   values(v_article,v_r1_row,v_r1,'CI Phase3 Regression',true,'LIVE','LIVE',now())
   returning id into v_session;
 
-  insert into public.public_live_feed(article_id,permanent_url,headline,public_status)
-  values(v_article,'article.html?id='||v_article::text,'CI Phase3 Regression','LIVE');
+  insert into public.public_live_feed(article_id,permanent_url,headline,public_status,playback_reference)
+  values(v_article,'article.html?id='||v_article::text,'CI Phase3 Regression','LIVE','ci://playback/'||v_session::text);
 
   insert into public.live_session_members(
     session_id,user_id,permission,status,grant_version,member_role,is_current_primary
@@ -230,8 +230,8 @@ begin
   values(v_article2,v_r1_row,v_r1,'CI Replacement',true,'LIVE','LIVE',now())
   returning id into v_session2;
 
-  insert into public.public_live_feed(article_id,permanent_url,headline,public_status)
-  values(v_article2,'article.html?id='||v_article2::text,'CI Replacement','LIVE');
+  insert into public.public_live_feed(article_id,permanent_url,headline,public_status,playback_reference)
+  values(v_article2,'article.html?id='||v_article2::text,'CI Replacement','LIVE','ci://playback/'||v_session2::text);
 
   insert into public.live_session_members(
     session_id,user_id,permission,status,grant_version,member_role,is_current_primary
