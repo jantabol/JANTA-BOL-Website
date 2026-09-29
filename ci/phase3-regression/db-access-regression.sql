@@ -293,7 +293,7 @@ begin
   );
 end $$;
 
-do $$
+do $
 declare
   f ci_phase3_access_fixture%rowtype;
   v_count integer:=0;
@@ -310,7 +310,29 @@ begin
     '3A-P3-T115',v_ok,
     'Privileged Live operation journal is denied to direct authenticated client access.'
   );
-end $$;
+end $;
+
+do $
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_ok boolean:=false;
+  v_rows integer:=0;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    update public.live_operations
+    set operation_state='SUCCEEDED'
+    where operation_id=f.operation_id;
+    get diagnostics v_rows = row_count;
+    v_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T116',v_ok,
+    'Durable Live work queue/operation state is internal; browser-authenticated clients cannot directly mutate queued work.'
+  );
+end $;
 
 do $$
 declare
