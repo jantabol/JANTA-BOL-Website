@@ -139,60 +139,103 @@ end $$;
 
 set local role authenticated;
 
-insert into ci_phase3_access_results
-select
-  '3A-P3-T108',
-  not exists(
-    select 1
-    from public.live_requests r
-    join ci_phase3_access_fixture f on r.request_id=f.request_b
-  ),
-  'Generic authenticated database role does not automatically gain Reporter/Owner access to internal Live Requests.';
-
-insert into ci_phase3_access_results
-select
-  '3A-P3-T109',
-  not exists(
-    select 1
-    from public.live_requests r
-    join ci_phase3_access_fixture f on r.request_id=f.request_b
-  )
-  and not exists(
-    select 1
-    from public.live_sessions s
-    join ci_phase3_access_fixture f on s.id=f.session_id
-  ),
-  'Knowing another Reporter Request/Session UUID does not grant direct authenticated access to internal Live state.';
-
-with changed as (
-  update public.live_sessions s
-  set headline='UNAUTHORIZED DIRECT CHANGE'
-  from ci_phase3_access_fixture f
-  where s.id=f.session_id
-  returning s.id
-)
-insert into ci_phase3_access_results
-select
-  '3A-P3-T110',
-  not exists(select 1 from changed),
-  'Authenticated client cannot broadly direct-UPDATE sensitive Live Session state.';
-
-with changed as (
-  update public.live_session_members m
-  set revocation_reason='UNAUTHORIZED COLUMN CHANGE'
-  from ci_phase3_access_fixture f
-  where m.membership_id=f.membership_id
-  returning m.membership_id
-)
-insert into ci_phase3_access_results
-select
-  '3A-P3-T111',
-  not exists(select 1 from changed),
-  'Sensitive membership columns are not broadly directly writable by an authenticated client.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_count integer:=0;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    select count(*) into v_count from public.live_requests where request_id=f.request_b;
+    insert into ci_phase3_access_results values(
+      '3A-P3-T108',v_count=0,
+      'Generic authenticated role does not automatically gain internal Live Request access.'
+    );
+  exception when insufficient_privilege then
+    insert into ci_phase3_access_results values(
+      '3A-P3-T108',true,
+      'Generic authenticated role is denied direct access to internal Live Requests at database privilege boundary.'
+    );
+  end;
+end $$;
 
 do $$
 declare
   f ci_phase3_access_fixture%rowtype;
+  v_req_ok boolean:=false;
+  v_session_ok boolean:=false;
+  v_count integer;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+
+  begin
+    select count(*) into v_count from public.live_requests where request_id=f.request_b;
+    v_req_ok := (v_count=0);
+  exception when insufficient_privilege then
+    v_req_ok := true;
+  end;
+
+  begin
+    select count(*) into v_count from public.live_sessions where id=f.session_id;
+    v_session_ok := (v_count=0);
+  exception when insufficient_privilege then
+    v_session_ok := true;
+  end;
+
+  insert into ci_phase3_access_results values(
+    '3A-P3-T109',v_req_ok and v_session_ok,
+    'Knowing another Reporter Request/Session UUID does not grant direct authenticated access to internal Live state.'
+  );
+end $$;
+
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_rows integer:=0;
+  v_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    update public.live_sessions
+    set headline='UNAUTHORIZED DIRECT CHANGE'
+    where id=f.session_id;
+    get diagnostics v_rows = row_count;
+    v_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T110',v_ok,
+    'Authenticated client cannot broadly direct-UPDATE sensitive Live Session state.'
+  );
+end $$;
+
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_rows integer:=0;
+  v_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    update public.live_session_members
+    set revocation_reason='UNAUTHORIZED COLUMN CHANGE'
+    where membership_id=f.membership_id;
+    get diagnostics v_rows = row_count;
+    v_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T111',v_ok,
+    'Sensitive membership columns are not broadly directly writable by an authenticated client.'
+  );
+end $$;
+
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_ok boolean:=false;
 begin
   select * into f from ci_phase3_access_fixture limit 1;
   begin
@@ -201,97 +244,172 @@ begin
     ) values(
       f.session_id,f.reporter_b,'BROADCAST','ACTIVE',999,'REPORTER',false
     );
-    insert into ci_phase3_access_results values(
-      '3A-P3-T112',false,'Authenticated client unexpectedly self-assigned Live membership.'
-    );
+    v_ok := false;
   exception when others then
-    insert into ci_phase3_access_results values(
-      '3A-P3-T112',true,
-      'Authenticated client cannot self-assign membership/change permission/grant authority through direct table access.'
-    );
+    v_ok := (sqlstate='42501' or position('row-level security' in lower(sqlerrm))>0 or position('permission denied' in lower(sqlerrm))>0);
   end;
+
+  insert into ci_phase3_access_results values(
+    '3A-P3-T112',v_ok,
+    'Authenticated client cannot self-assign Live membership or directly choose permission/grant authority.'
+  );
 end $$;
 
-insert into ci_phase3_access_results
-select
-  '3A-P3-T113',
-  not exists(
-    select 1 from public.live_provider_generations g
-    join ci_phase3_access_fixture f on g.generation_id=f.generation_id
-  ),
-  'Provider generations/provider internals are not directly readable by authenticated client role.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_count integer:=0;
+  v_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    select count(*) into v_count from public.live_provider_generations where generation_id=f.generation_id;
+    v_ok := (v_count=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T113',v_ok,
+    'Provider generation/provider internals are denied to direct authenticated client access.'
+  );
+end $$;
 
-insert into ci_phase3_access_results
-select
-  '3A-P3-T114',
-  not exists(
-    select 1 from public.encoder_handoffs h
-    join ci_phase3_access_fixture f on h.handoff_id=f.handoff_id
-  ),
-  'Encoder handoff table is internal and not directly queryable by authenticated client role.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_count integer:=0;
+  v_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    select count(*) into v_count from public.encoder_handoffs where handoff_id=f.handoff_id;
+    v_ok := (v_count=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T114',v_ok,
+    'Encoder handoff table is internal and not directly queryable by authenticated client role.'
+  );
+end $$;
 
-insert into ci_phase3_access_results
-select
-  '3A-P3-T115',
-  not exists(
-    select 1 from public.live_operations o
-    join ci_phase3_access_fixture f on o.operation_id=f.operation_id
-  ),
-  'Privileged Live operation journal is not directly readable by authenticated client role.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_count integer:=0;
+  v_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+  begin
+    select count(*) into v_count from public.live_operations where operation_id=f.operation_id;
+    v_ok := (v_count=0);
+  exception when insufficient_privilege then
+    v_ok := true;
+  end;
+  insert into ci_phase3_access_results values(
+    '3A-P3-T115',v_ok,
+    'Privileged Live operation journal is denied to direct authenticated client access.'
+  );
+end $$;
 
-with changed as (
-  update public.audit_logs a
-  set action='UNAUTHORIZED_AUDIT_CHANGE'
-  from ci_phase3_access_fixture f
-  where a.id=f.audit_id
-  returning a.id
-),
-deleted as (
-  delete from public.audit_logs a
-  using ci_phase3_access_fixture f
-  where a.id=f.audit_id
-  returning a.id
-)
-insert into ci_phase3_access_results
-select
-  '3A-P3-T117',
-  not exists(select 1 from changed) and not exists(select 1 from deleted),
-  'Authenticated user cannot alter or delete security audit history directly.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_rows integer:=0;
+  v_update_ok boolean:=false;
+  v_delete_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+
+  begin
+    update public.audit_logs set action='UNAUTHORIZED_AUDIT_CHANGE' where id=f.audit_id;
+    get diagnostics v_rows = row_count;
+    v_update_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_update_ok := true;
+  end;
+
+  begin
+    delete from public.audit_logs where id=f.audit_id;
+    get diagnostics v_rows = row_count;
+    v_delete_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_delete_ok := true;
+  end;
+
+  insert into ci_phase3_access_results values(
+    '3A-P3-T117',v_update_ok and v_delete_ok,
+    'Authenticated user cannot alter or delete security audit history directly.'
+  );
+end $$;
 
 reset role;
 set local role anon;
 
-insert into ci_phase3_access_results
-select
-  '3A-P3-T118',
-  exists(
-    select 1 from public.public_live_feed p
-    join ci_phase3_access_fixture f on p.article_id=f.article_id
-  )
-  and not exists(
-    select 1 from public.live_sessions s
-    join ci_phase3_access_fixture f on s.id=f.session_id
-  ),
-  'Anonymous viewer reads dedicated sanitized public Live projection but not internal Live Session table.';
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_public_count integer:=0;
+  v_internal_count integer:=0;
+  v_public_ok boolean:=false;
+  v_internal_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
 
-with changed as (
-  update public.public_live_feed p
-  set headline='UNAUTHORIZED PUBLIC WRITE'
-  from ci_phase3_access_fixture f
-  where p.article_id=f.article_id
-  returning p.article_id
-),
-deleted as (
-  delete from public.public_live_feed p
-  using ci_phase3_access_fixture f
-  where p.article_id=f.article_id
-  returning p.article_id
-)
-insert into ci_phase3_access_results
-select
-  '3A-P3-T120',
-  not exists(select 1 from changed) and not exists(select 1 from deleted),
-  'Anonymous/public client cannot UPDATE or DELETE public Live feed state.';
+  begin
+    select count(*) into v_public_count
+    from public.public_live_feed where article_id=f.article_id;
+    v_public_ok := (v_public_count=1);
+  exception when insufficient_privilege then
+    v_public_ok := false;
+  end;
+
+  begin
+    select count(*) into v_internal_count
+    from public.live_sessions where id=f.session_id;
+    v_internal_ok := (v_internal_count=0);
+  exception when insufficient_privilege then
+    v_internal_ok := true;
+  end;
+
+  insert into ci_phase3_access_results values(
+    '3A-P3-T118',v_public_ok and v_internal_ok,
+    'Anonymous viewer can read dedicated safe public Live projection but cannot query internal Live Session state.'
+  );
+end $$;
+
+do $$
+declare
+  f ci_phase3_access_fixture%rowtype;
+  v_rows integer:=0;
+  v_update_ok boolean:=false;
+  v_delete_ok boolean:=false;
+begin
+  select * into f from ci_phase3_access_fixture limit 1;
+
+  begin
+    update public.public_live_feed
+    set headline='UNAUTHORIZED PUBLIC WRITE'
+    where article_id=f.article_id;
+    get diagnostics v_rows = row_count;
+    v_update_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_update_ok := true;
+  end;
+
+  begin
+    delete from public.public_live_feed where article_id=f.article_id;
+    get diagnostics v_rows = row_count;
+    v_delete_ok := (v_rows=0);
+  exception when insufficient_privilege then
+    v_delete_ok := true;
+  end;
+
+  insert into ci_phase3_access_results values(
+    '3A-P3-T120',v_update_ok and v_delete_ok,
+    'Anonymous/public client cannot UPDATE or DELETE public Live feed state.'
+  );
+end $$;
 
 reset role;
 
