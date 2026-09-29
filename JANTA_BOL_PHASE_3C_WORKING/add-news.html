@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add / Edit News - JANTA-BOL Admin</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+<header class="topbar"><h1>JANTA-BOL Admin</h1><p id="pageMode">Add News</p></header>
+<main class="page">
+  <a class="back-link" href="admin.html">← Dashboard par wapas</a>
+  <div class="notice backend"><strong>UPDATE 1 Backend:</strong> Supabase real database adapter active. Auto-save, offline shadow copy, version conflict protection aur Final Review workflow enabled.</div><div id="syncState" class="notice status-good">SYNC STATUS: waiting…</div>
+  <form class="form-card" id="newsForm" novalidate>
+    <h2 id="formTitle">➕ Nayi News Add Karein</h2>
+    <input type="hidden" id="newsId">
+
+    <div class="field"><label for="headline">Headline *</label><input id="headline" type="text" placeholder="News headline likhein"></div>
+    <div class="field"><label for="summary">Short Summary *</label><textarea id="summary" placeholder="2-3 line ka short summary"></textarea></div>
+    <div class="field"><label for="content">Full Article Body *</label><textarea id="content" style="min-height:220px" placeholder="Puri news yahan likhein"></textarea></div>
+
+    <div class="grid-2">
+      <div class="field"><label for="publishDate">News Date</label><input id="publishDate" type="date"></div>
+      <div class="field"><label for="publishTime">News Time</label><input id="publishTime" type="time"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field"><label for="author">Reporter / Author</label><input id="author" type="text" placeholder="Reporter ka naam"></div>
+      <div class="field"><label for="location">Location *</label><input id="location" type="text" placeholder="Jaise: Pichhore, Shivpuri"></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="field"><label for="geoLevel">Geographic Classification *</label><select id="geoLevel"><option value="">Select karein</option><option>Global</option><option>India</option><option>MP</option><option>Shivpuri</option><option>Local-Pichhore</option></select></div>
+      <div class="field"><label for="district">District</label><select id="district"><option value="">Not applicable / Select</option><option>Shivpuri</option><option>Guna</option><option>Ashoknagar</option><option value="Other">Other / Future District</option></select></div>
+    </div>
+    <div class="field hidden" id="customDistrictWrap"><label for="customDistrict">Future / Other District</label><input id="customDistrict" type="text" placeholder="District naam"></div>
+
+    <div class="field"><label for="category">Category *</label><select id="category"><option value="">Category select karein</option><option>Politics</option><option>Crime</option><option>Education</option><option>Health</option><option>Business</option><option>Sports</option><option>Technology</option><option>Entertainment</option><option>Administration</option><option>Krishi</option><option>Dharm-Sanskriti</option><option>Mausam</option><option>Other</option></select></div>
+
+    <h3 class="section-title">🖼 Media</h3>
+    <div class="field"><label for="coverImageUrl">Cover Image URL</label><input id="coverImageUrl" type="url" placeholder="https://..."><small>Frontend test me URL persist hota hai. Local file upload production media storage ke bina permanent nahi ho sakta.</small></div>
+    <div class="field"><label for="image">Local Cover Image File</label><input type="file" id="image" accept="image/*"><small>Manual Draft/Publish par public-media bucket me upload hoga.</small></div>
+    <div class="field"><label for="additionalMediaUrls">Additional Photo/Video URLs</label><textarea id="additionalMediaUrls" placeholder="Har URL nayi line me"></textarea></div>
+    <div class="field"><label for="youtubeUrl">YouTube Video URL / Embed Link</label><input id="youtubeUrl" type="url" placeholder="https://www.youtube.com/watch?v=..."></div>
+
+    <h3 class="section-title">🔒 Internal Source + Verification Trail</h3>
+    <div class="notice">Ye section <strong>internal editorial record</strong> hai. Public article preview me Source URL, Internal Note aur Verification Evidence display nahi kiye jayenge.</div>
+    <div class="grid-2">
+      <div class="field"><label for="sourceType">Source Type *</label><select id="sourceType"><option value="">Select source type</option><option>Newspaper</option><option>News Website</option><option>TV/Digital Channel</option><option>Government/Official Source</option><option>Police/Administration</option><option>Press Release</option><option>Citizen Tip</option><option>WhatsApp/Input</option><option>JANTA BOL Ground Report</option><option>JANTA BOL Reporter</option><option>Other</option></select></div>
+      <div class="field"><label for="sourceName">Source Name *</label><input id="sourceName" type="text" placeholder="Source ka naam"></div>
+    </div>
+    <div class="grid-2">
+      <div class="field"><label for="sourceUrl">Source URL / Reference</label><input id="sourceUrl" type="text" placeholder="URL, order no., diary ref etc."></div>
+      <div class="field"><label for="sourceDate">Source / Information Date</label><input id="sourceDate" type="date"></div>
+    </div>
+    <div class="field"><label for="internalNote">Internal Note</label><textarea id="internalNote" placeholder="Editorial/internal note — public nahi"></textarea></div>
+    <div class="grid-2">
+      <div class="field"><label for="verificationStatus">Verification Status *</label><select id="verificationStatus"><option>Pending Verification</option><option>Partially Verified</option><option>Verified</option><option>JANTA BOL Ground Verified</option></select></div>
+      <div class="field"><label for="evidence">Verification Evidence / Reference</label><textarea id="evidence" placeholder="Document ref, call confirmation, URL etc."></textarea></div>
+    </div>
+    <div class="field"><label for="verificationNote">Verification Trail Note</label><input id="verificationNote" type="text" placeholder="Is update me verification me kya badla?"><small>Status/note change hone par timestamped trail preserve hota hai.</small></div>
+    <div class="field"><label for="publicAttribution">Optional Public Attribution</label><input id="publicAttribution" type="text" placeholder="Jaise: पुलिस के अनुसार…"><small>Blank chhodne par internal source public article me expose nahi hoga.</small></div>
+
+    <h3 class="section-title">📣 Social Distribution — Future-ready</h3>
+    <div class="notice backend">API auto-posting is frontend build me available nahi hai. Controls preference/status record karte hain aur manual share workflow ko prepare karte hain.</div>
+    <div class="switch-row">
+      <label class="switch-item"><input type="checkbox" id="socialEnabled"> Is news ke liye Social Distribution ON</label>
+      <label class="switch-item"><input type="checkbox" id="facebook"> Facebook</label>
+      <label class="switch-item"><input type="checkbox" id="instagram"> Instagram</label>
+      <label class="switch-item"><input type="checkbox" id="whatsapp"> WhatsApp</label>
+      <label class="switch-item"><input type="checkbox" id="youtubeSocial"> YouTube Video Workflow</label>
+    </div>
+    <div class="field"><label for="socialCaption">Social Caption</label><textarea id="socialCaption" placeholder="Headline se alag editable caption"></textarea></div>
+    <div class="record" id="socialPreview">Social preview yahan dikhega.</div>
+
+    <h3 class="section-title">Publishing Controls</h3>
+    <div class="switch-row"><label class="switch-item"><input type="checkbox" id="breaking"> Breaking News</label><label class="switch-item"><input type="checkbox" id="topStory"> Top Story</label></div>
+    <div class="actions">
+      <button class="btn secondary btn-draft" type="button">Save Draft</button>
+      <button class="btn primary btn-publish" type="button">Publish News</button>
+      <a class="btn outline" id="previewLink" href="#" style="text-decoration:none;display:none">Article Preview</a>
+    </div>
+  </form>
+</main>
+<div id="reviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;padding:18px;overflow:auto"><div class="form-card" style="max-width:700px;margin:30px auto"><h2>✅ Final Review Before Publish</h2><div id="reviewContent" class="record"></div><div class="actions" style="margin-top:16px"><button class="btn secondary" id="cancelReview" type="button">Back / Edit</button><button class="btn primary" id="confirmPublish" type="button">Confirm Publish</button></div></div></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="admin-auth.js"></script>
+<script>
+(function(){
+  const $=id=>document.getElementById(id); let editing=null, origin='new', previousVerification='Pending Verification', autoTimer=null, publishingItem=null, autoBusy=false, manualBusy=false, autoQueued=false, lastSavedSnapshot=null, conflictMode=false;
+  const qs=new URLSearchParams(location.search), editId=qs.get('edit'), from=qs.get('from');
+  function today(){return new Date().toISOString().slice(0,10)} function currentTime(){return new Date().toTimeString().slice(0,5)}
+  $('publishDate').value=today();$('publishTime').value=currentTime();$('sourceDate').value=today();
+  function state(text,good=true){$('syncState').className='notice '+(good?'status-good':'');$('syncState').textContent=text}
+  function selectedDistrict(){return $('district').value==='Other'?$('customDistrict').value.trim():$('district').value}
+  $('district').addEventListener('change',()=>$('customDistrictWrap').classList.toggle('hidden',$('district').value!=='Other'));
+  function setDistrict(v){const known=['Shivpuri','Guna','Ashoknagar'];if(!v){$('district').value='';return}if(known.includes(v))$('district').value=v;else{$('district').value='Other';$('customDistrict').value=v;$('customDistrictWrap').classList.remove('hidden')}}
+  function splitLines(v){return v.split(/\n+/).map(x=>x.trim()).filter(Boolean)}
+  function fieldsToItem(){const base=editing?JSON.parse(JSON.stringify(editing)):{id:'',version:0,slug:'',status:'draft'};Object.assign(base,{headline:$('headline').value.trim(),summary:$('summary').value.trim(),content:$('content').value.trim(),category:$('category').value,location:$('location').value.trim(),author:$('author').value.trim(),geoLevel:$('geoLevel').value,district:selectedDistrict(),newsDate:$('publishDate').value,newsTime:$('publishTime').value,breaking:$('breaking').checked,topStory:$('topStory').checked});base.media={coverImageUrl:$('coverImageUrl').value.trim(),additionalMediaUrls:splitLines($('additionalMediaUrls').value),youtubeUrl:$('youtubeUrl').value.trim()};base.internalSource={type:$('sourceType').value,name:$('sourceName').value.trim(),url:$('sourceUrl').value.trim(),informationDate:$('sourceDate').value,note:$('internalNote').value.trim(),verificationStatus:$('verificationStatus').value,evidence:$('evidence').value.trim(),publicAttribution:$('publicAttribution').value.trim()};base.social={enabled:$('socialEnabled').checked,facebook:$('facebook').checked,instagram:$('instagram').checked,whatsapp:$('whatsapp').checked,youtube:$('youtubeSocial').checked,caption:$('socialCaption').value.trim()};base.verificationNote=$('verificationNote').value.trim();return base}
+  function autosaveSnapshot(i){
+  const x=JSON.parse(JSON.stringify(i));
+  delete x.version;
+  x.verificationNote=x.verificationNote||'';
+  return JSON.stringify(x);
+}
+  function validatePublish(i){const missing=[];if(!i.headline)missing.push('Headline');if(!i.summary)missing.push('Summary');if(!i.content)missing.push('Article Body');if(!i.category)missing.push('Category');if(!i.location)missing.push('Location');if(!i.geoLevel)missing.push('Geography');if(!i.internalSource.type)missing.push('Source Type');if(!i.internalSource.name)missing.push('Source Name');if(missing.length){alert('Publish blocked. Missing: '+missing.join(', '));return false}return true}
+  function load(i,source){
+    editing=i;
+    origin=source;
+    previousVerification=i.internalSource?.verificationStatus||'Pending Verification';
+    $('newsId').value=i.id||'';
+    $('headline').value=i.headline||'';
+    $('summary').value=i.summary||'';
+    $('content').value=i.content||'';
+    $('category').value=i.category||'';
+    $('location').value=i.location||'';
+    $('author').value=i.author||'';
+    $('geoLevel').value=i.geoLevel||'';
+    setDistrict(i.district||'');
+    $('publishDate').value=i.newsDate||today();
+    $('publishTime').value=i.newsTime||currentTime();
+    $('breaking').checked=!!i.breaking;
+    $('topStory').checked=!!i.topStory;
+
+    const m=i.media||{};
+    $('coverImageUrl').value=m.coverImageUrl||'';
+    $('additionalMediaUrls').value=(m.additionalMediaUrls||[]).join('\n');
+    $('youtubeUrl').value=m.youtubeUrl||'';
+
+    const ss=i.internalSource||{};
+    $('sourceType').value=ss.type||'';
+    $('sourceName').value=ss.name||'';
+    $('sourceUrl').value=ss.url||'';
+    $('sourceDate').value=ss.informationDate||today();
+    $('internalNote').value=ss.note||'';
+    $('verificationStatus').value=ss.verificationStatus||'Pending Verification';
+    $('evidence').value=ss.evidence||'';
+    $('publicAttribution').value=ss.publicAttribution||'';
+
+    const so=i.social||{};
+    $('socialEnabled').checked=!!so.enabled;
+    $('facebook').checked=!!so.facebook;
+    $('instagram').checked=!!so.instagram;
+    $('whatsapp').checked=!!so.whatsapp;
+    $('youtubeSocial').checked=!!so.youtube;
+    $('socialCaption').value=so.caption||'';
+
+    $('formTitle').textContent=source==='published'
+      ?'✏️ Published News Correction'
+      :(i.id?'✏️ Draft Edit':'➕ Recovered Unsynced News');
+    $('pageMode').textContent=$('formTitle').textContent;
+
+    if(i.id){
+      $('previewLink').href='article.html?id='+encodeURIComponent(i.id)+(source==='published'?'':'&preview=admin');
+      $('previewLink').style.display='inline-block';
+    }else{
+      $('previewLink').style.display='none';
+    }
+
+    document.querySelector('.btn-draft').style.display=
+      source==='published'?'none':'';
+
+    updateSocialPreview();
+    state('SYNCED • Version '+Number(i.version||0));
+  }
+
+  function setFormLocked(locked){
+    document.querySelectorAll('#newsForm input,#newsForm textarea,#newsForm select,#newsForm button')
+      .forEach(el=>{ el.disabled=!!locked; });
+  }
+
+  function showVersionConflict(serverItem,shadow){
+    conflictMode=true;
+    load(serverItem,from==='published'?'published':'draft');
+    setFormLocked(true);
+
+    let box=document.getElementById('versionConflictBox');
+    if(!box){
+      box=document.createElement('div');
+      box.id='versionConflictBox';
+      box.className='notice';
+      $('syncState').insertAdjacentElement('afterend',box);
+    }
+
+    box.innerHTML='';
+
+    const title=document.createElement('strong');
+    title.textContent='⚠ VERSION CONFLICT — local unsynced copy preserved';
+    box.appendChild(title);
+
+    const info=document.createElement('p');
+    info.textContent='Server version '+Number(serverItem.version||0)+' hai, local copy version '+Number(shadow?.item?.version||0)+' par based hai. Stale local copy server ko automatically overwrite nahi karegi.';
+    box.appendChild(info);
+
+    const details=document.createElement('details');
+    const summary=document.createElement('summary');
+    summary.textContent='Local unsynced copy dekhein';
+    const pre=document.createElement('pre');
+    pre.style.whiteSpace='pre-wrap';
+    pre.style.wordBreak='break-word';
+    pre.textContent=JSON.stringify({savedAt:shadow?.savedAt||'',item:shadow?.item||{}},null,2);
+    details.append(summary,pre);
+    box.appendChild(details);
+
+    const actions=document.createElement('div');
+    actions.className='actions';
+    actions.style.marginTop='12px';
+
+    const copyBtn=document.createElement('button');
+    copyBtn.type='button';
+    copyBtn.className='btn secondary';
+    copyBtn.textContent='Copy Local Unsynced Copy';
+    copyBtn.onclick=async()=>{
+      try{
+        await navigator.clipboard.writeText(pre.textContent);
+        alert('Local unsynced copy clipboard me copy ho gayi.');
+      }catch(_){
+        alert('Clipboard unavailable. Details kholkar text manually copy karein.');
+      }
+    };
+
+    const serverBtn=document.createElement('button');
+    serverBtn.type='button';
+    serverBtn.className='btn primary';
+    serverBtn.textContent='Keep Newer Server Version';
+    serverBtn.onclick=()=>{
+      if(!confirm('Local unsynced copy discard karke newer server version continue karna hai?'))return;
+      JBBackend.clearShadow();
+      conflictMode=false;
+      setFormLocked(false);
+      box.style.display='none';
+      state('SYNCED • Server Version '+Number(serverItem.version||0));
+    };
+
+    actions.append(copyBtn,serverBtn);
+    box.appendChild(actions);
+    box.style.display='block';
+
+    state('CONFLICT: newer server version exists • local copy preserved',false);
+  }
+
+  async function maybeUploadCover(i){const f=$('image').files[0];if(f){state('Uploading cover image…');i.media.coverImageUrl=await JBBackend.uploadPublic(f);$('coverImageUrl').value=i.media.coverImageUrl;}return i}
+  async function manualSave(){
+    if(conflictMode){
+      alert('Version conflict resolve kiye bina save allowed nahi hai.');
+      return;
+    }
+
+    if(origin==='published'){
+      alert('Published correction ko Final Review → Confirm Publish se save karein. Save Draft se article unpublish nahi hoga.');
+      return;
+    }
+
+    if(manualBusy||autoBusy){
+      state('SAVE ALREADY IN PROGRESS',false);
+      return;
+    }
+
+    let i=fieldsToItem();
+    if(!i.headline){
+      alert('Headline likhna zaroori hai.');
+      return;
+    }
+
+    const draftBtn=document.querySelector('.btn-draft');
+    manualBusy=true;
+    draftBtn.disabled=true;
+
+    try{
+      i=await maybeUploadCover(i);
+      state('Saving draft…');
+      const saved=await JBBackend.saveDraft(i,{
+        expectedVersion:editing?editing.version:null,
+        prevVerification:previousVerification
+      });
+      editing=saved;
+      previousVerification=saved.internalSource.verificationStatus;
+      lastSavedSnapshot=autosaveSnapshot(saved);
+      state('SYNCED • Draft Version '+saved.version);
+      alert('Draft Supabase backend me save ho gaya.');
+      location.href='drafts.html';
+    }catch(e){
+      if(e.message==='VERSION_CONFLICT'){
+        alert('A newer version of this article exists. Refresh/review required.');
+      }else{
+        alert(e.message);
+      }
+      state('NOT SYNCED',false);
+    }finally{
+      manualBusy=false;
+      draftBtn.disabled=false;
+    }
+  }
+  function showReview(i){publishingItem=i;const rows=[['Headline',i.headline],['Category',i.category],['Geography',i.geoLevel],['Location',i.location],['Cover Image',i.media.coverImageUrl?'Yes':'Not set'],['Reporter/Author',i.author||'Not set'],['Verification',i.internalSource.verificationStatus],['Preview',i.summary]];$('reviewContent').innerHTML=rows.map(r=>'<p><strong>'+JBBackend.esc(r[0])+':</strong> '+JBBackend.esc(r[1])+'</p>').join('');$('reviewModal').classList.remove('hidden')}
+  async function doPublish(){
+    if(conflictMode){
+      alert('Version conflict resolve kiye bina publish allowed nahi hai.');
+      return;
+    }
+
+    if(manualBusy||autoBusy){
+      alert('Ek save operation already chal rahi hai. Complete hone ke baad publish karein.');
+      return;
+    }
+
+    let i=publishingItem;
+    manualBusy=true;
+    $('confirmPublish').disabled=true;
+
+    try{
+      i=await maybeUploadCover(i);
+      state('Publishing to backend…');
+      const saved=await JBBackend.publish(i,{
+        expectedVersion:editing?editing.version:null,
+        prevVerification:previousVerification
+      });
+      editing=saved;
+      previousVerification=saved.internalSource.verificationStatus;
+      lastSavedSnapshot=autosaveSnapshot(saved);
+      state('PUBLISHED • Backend confirmed • Version '+saved.version);
+      $('reviewModal').classList.add('hidden');
+      alert('Published Successfully ✅');
+      location.href='published.html';
+    }catch(e){
+      alert(e.message==='VERSION_CONFLICT'
+        ?'A newer version of this article exists. Publish blocked.'
+        :e.message);
+      state('PUBLISH FAILED / NOT SYNCED',false);
+    }finally{
+      manualBusy=false;
+      $('confirmPublish').disabled=false;
+    }
+  }
+  function scheduleAutosave(delay=10000){
+  clearTimeout(autoTimer);
+
+  if(conflictMode){
+    state('CONFLICT: local copy preserved • auto-save blocked',false);
+    return;
+  }
+
+  // Existing-article autosave must never run against an uninitialized blank form.
+  // This protects a previously saved local correction if article loading is temporarily unavailable.
+  if(editId && !editing){
+    state(
+      navigator.onLine
+        ?'WAITING FOR ARTICLE LOAD • local copy preserved'
+        :'OFFLINE • ARTICLE NOT LOADED • local copy preserved',
+      false
+    );
+    return;
+  }
+
+  const i=fieldsToItem();
+
+  JBBackend.saveShadow(i);
+
+  if(!navigator.onLine){
+    state('OFFLINE / NOT SYNCED',false);
+    return;
+  }
+
+  if(!i.headline)return;
+
+  autoTimer=setTimeout(async()=>{
+    const fresh=fieldsToItem();
+    const savedVerificationNote=fresh.verificationNote||'';
+    const snapshot=autosaveSnapshot(fresh);
+
+    if(lastSavedSnapshot===snapshot){
+      state('SYNCED • No new changes');
+      return;
+    }
+
+    if(autoBusy||manualBusy){
+      autoQueued=true;
+      return;
+    }
+
+    autoBusy=true;
+
+    try{
+      state('Auto-saving…');
+
+      if(editing && editing.status==='published'){
+  state('LOCAL CORRECTION SAVED • NOT SYNCED',false);
+  return;
+}
+
+      const saved=await JBBackend.saveDraft(fresh,{
+        expectedVersion:editing?editing.version:null,
+        prevVerification:previousVerification
+      });
+
+      editing=saved;
+      previousVerification=saved.internalSource.verificationStatus;
+      if(
+  savedVerificationNote &&
+  $('verificationNote').value.trim()===savedVerificationNote
+){
+  $('verificationNote').value='';
+}
+
+const savedSnapshotItem=JSON.parse(JSON.stringify(saved));
+savedSnapshotItem.verificationNote='';
+lastSavedSnapshot=autosaveSnapshot(savedSnapshotItem);
+
+      state('SYNCED • Auto-Save Version '+saved.version);
+
+      if(saved.id){
+        $('previewLink').href='article.html?id='+encodeURIComponent(saved.id)+'&preview=admin';
+        $('previewLink').style.display='inline-block';
+      }
+
+    }catch(e){
+      state(
+        e.message==='VERSION_CONFLICT'
+          ?'CONFLICT: newer version exists'
+          :'NOT SYNCED',
+        false
+      );
+    }finally{
+      autoBusy=false;
+
+      if(autoQueued){
+        autoQueued=false;
+        scheduleAutosave();
+      }
+    }
+  },delay);
+}
+  function updateSocialPreview(){const caption=$('socialCaption').value.trim()||$('headline').value.trim()||'Headline';$('socialPreview').textContent=caption+' • '+($('coverImageUrl').value.trim()?'Cover image selected':'No cover image')+' • Permanent ID URL after backend publish'}
+  async function init(){
+  if(editId){
+    // A matching local correction must be recoverable even when the server cannot
+    // be reached. Check it before making the network-dependent article request.
+    const sh=JBBackend.getShadow();
+
+    if(!navigator.onLine && sh?.item?.id===editId){
+      load(sh.item,from==='published'?'published':'draft');
+      state('RECOVERED LOCAL CORRECTION • OFFLINE / NOT SYNCED',false);
+      return;
+    }
+
+    try{
+      const i=await JBBackend.getArticle(editId,{privateData:true});
+
+      if(!i){
+        state('Article not found',false);
+        return;
+      }
+
+      if(sh && sh.item && sh.item.id===editId){
+        if(Number(sh.item.version)===Number(i.version)){
+          load(sh.item,from==='published'?'published':'draft');
+          state('RECOVERED LOCAL CORRECTION • NOT SYNCED',false);
+          // If connectivity is already available, immediately queue a safe
+          // server sync instead of leaving a recovered local correction pending.
+          if(navigator.onLine) scheduleAutosave(1000);
+          return;
+        }
+
+        showVersionConflict(i,sh);
+        return;
+      }
+
+      load(i,from==='published'?'published':'draft');
+
+    }catch(e){
+      // navigator.onLine can remain true during an API/server failure. If a
+      // matching local correction exists, recover it instead of exposing a blank
+      // new-article form or allowing that blank form to replace the local copy.
+      if(sh?.item?.id===editId){
+        load(sh.item,from==='published'?'published':'draft');
+        state('RECOVERED LOCAL CORRECTION • SERVER UNAVAILABLE / NOT SYNCED',false);
+        if(navigator.onLine) scheduleAutosave(1000);
+        return;
+      }
+
+      state(e.message,false);
+    }
+  }else{
+    const sh=JBBackend.getShadow();
+
+    if(sh?.item && !sh.item.id){
+      load(sh.item,'draft');
+      state('RECOVERED LOCAL NEW DRAFT • NOT SYNCED',false);
+      // A recovered new draft should sync promptly once connectivity exists.
+      if(navigator.onLine) scheduleAutosave(1000);
+      return;
+    }
+
+    state('READY • New article');
+  }
+}
+  document.querySelector('.btn-draft').addEventListener('click',manualSave);document.querySelector('.btn-publish').addEventListener('click',()=>{const i=fieldsToItem();if(validatePublish(i))showReview(i)});$('cancelReview').onclick=()=>$('reviewModal').classList.add('hidden');$('confirmPublish').onclick=doPublish;
+  document.querySelectorAll('#newsForm input,#newsForm textarea,#newsForm select').forEach(el=>{
+  // Event listeners must not pass the DOM Event object into scheduleAutosave(delay).
+  // Wrapping preserves the intended default debounce instead of coercing Event -> 0ms.
+  el.addEventListener('input',()=>scheduleAutosave());
+  el.addEventListener('change',()=>scheduleAutosave());
+});['headline','socialCaption','coverImageUrl'].forEach(id=>$(id).addEventListener('input',updateSocialPreview));updateSocialPreview();
+  addEventListener('offline',()=>state('OFFLINE / NOT SYNCED',false));addEventListener('online',()=>{state('ONLINE • Sync queued');scheduleAutosave(1000)});if(document.documentElement.dataset.jbAuth==='ready'){init();}else{addEventListener('jb-auth-ready',init,{once:true});}
+})();
+</script>
+<script src="admin-data.js"></script>
+</body></html>

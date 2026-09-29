@@ -1,0 +1,112 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Social Distribution - JANTA-BOL</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Per-News Social Distribution</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice backend">Auto-post API connected nahi hai. Per-news selection/status Supabase backend me save hoga. Website publish social integration se independent rahega.</div><div id="list"></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js"></script><script src="admin-auth.js"></script><script>
+'use strict';
+const statuses=['Posted','Pending','Failed','Manual Share','Not Selected'];
+const root=document.getElementById('list');
+let rowsCache=[];
+
+function statusValue(row,p){
+  return (row.status||{})[p]||'Not Selected';
+}
+
+function optionEl(value,current){
+  const o=document.createElement('option');
+  o.value=value;
+  o.textContent=value;
+  o.selected=value===current;
+  return o;
+}
+
+async function saveStatus(row,platform,value){
+  const next={...(row.status||{}),[platform]:value};
+  row.status=next;
+  await JBPhase2.saveSocial(row);
+}
+
+function rowCard(row){
+  const article=row.articles||{};
+  const card=document.createElement('article');
+  card.className='card';
+
+  const h=document.createElement('h2');
+  h.textContent=article.title||'Untitled / Article';
+  card.appendChild(h);
+
+  const id=document.createElement('p');
+  id.className='muted';
+  id.textContent=String(row.article_id||'');
+  card.appendChild(id);
+
+  const state=document.createElement('p');
+  state.textContent='Per-News: '+(row.enabled?'ON':'OFF')+
+    ' • FB '+(row.facebook?'Selected':'Not Selected')+
+    ' • IG '+(row.instagram?'Selected':'Not Selected')+
+    ' • WhatsApp '+(row.whatsapp?'Selected':'Not Selected')+
+    ' • YouTube '+(row.youtube?'Selected':'Not Selected');
+  card.appendChild(state);
+
+  const caption=document.createElement('p');
+  caption.textContent='Caption: '+(row.caption||'-');
+  card.appendChild(caption);
+
+  const grid=document.createElement('div');
+  grid.className='grid-2';
+  ['facebook','instagram','whatsapp','youtube'].forEach(platform=>{
+    const field=document.createElement('div');
+    field.className='field';
+    const label=document.createElement('label');
+    label.textContent=platform.toUpperCase()+' Status';
+    const select=document.createElement('select');
+    statuses.forEach(s=>select.appendChild(optionEl(s,statusValue(row,platform))));
+    select.onchange=async()=>{
+      select.disabled=true;
+      try{
+        await saveStatus(row,platform,select.value);
+      }catch(e){
+        alert('Status save failed: '+(e.message||String(e)));
+        await render();
+      }finally{
+        select.disabled=false;
+      }
+    };
+    field.append(label,select);
+    grid.appendChild(field);
+  });
+  card.appendChild(grid);
+
+  const buttons=document.createElement('div');
+  buttons.className='buttons';
+  const edit=document.createElement('button');
+  edit.className='action primary';
+  edit.textContent='Edit Distribution';
+  edit.onclick=()=>location.href='add-news.html?edit='+encodeURIComponent(row.article_id)+'&from=published';
+  const preview=document.createElement('button');
+  preview.className='action secondary';
+  preview.textContent='Article Preview / Manual Share';
+  preview.onclick=()=>location.href='article.html?id='+encodeURIComponent(row.article_id)+'&adminPreview=1';
+  buttons.append(edit,preview);
+  card.appendChild(buttons);
+
+  return card;
+}
+
+async function render(){
+  root.textContent='Loading…';
+  try{
+    rowsCache=await JBPhase2.socialRows();
+    root.textContent='';
+    if(!rowsCache.length){
+      const empty=document.createElement('div');
+      empty.className='empty';
+      empty.textContent='Abhi kisi article ka social-distribution record nahi hai.';
+      root.appendChild(empty);
+      return;
+    }
+    rowsCache.forEach(r=>root.appendChild(rowCard(r)));
+  }catch(e){
+    root.textContent='Social distribution load failed: '+(e.message||String(e));
+  }
+}
+
+if(document.documentElement.dataset.jbAuth==='ready')render();
+else addEventListener('jb-auth-ready',render,{once:true});
+</script></body></html>

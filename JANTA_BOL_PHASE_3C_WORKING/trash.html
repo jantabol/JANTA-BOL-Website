@@ -1,0 +1,59 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trash - JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Deleted News / Trash</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice">Soft Delete same Article ID ko reserve karta hai. Permanent Delete Owner/Super Admin-only irreversible action hai aur recent 2FA required hai.</div><div id="trash"><div class="empty">Loading…</div></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="admin-auth.js"></script><script>
+'use strict';
+const root=document.getElementById('trash');
+
+async function ensureRecentMfa(){
+  const recent=await JBBackend.recentMfaInfo(600);
+  if(recent?.ok)return true;
+
+  const factors=await JBBackend.mfaListFactors();
+  const factor=(factors?.totp||[]).find(x=>x.status==='verified');
+  if(!factor)throw new Error('Verified MFA factor required.');
+
+  const code=prompt('Permanent Delete ke liye fresh Authenticator 6-digit code enter karein');
+  if(code===null)throw new Error('MFA_STEP_UP_CANCELLED');
+  if(!/^\d{6}$/.test(code.trim()))throw new Error('Valid 6-digit Authenticator code required.');
+
+  await JBBackend.mfaChallengeAndVerify(factor.id,code.trim());
+  const after=await JBBackend.recentMfaInfo(600);
+  if(!after?.ok)throw new Error('Fresh MFA step-up verify nahi hua.');
+  return true;
+}
+
+async function render(){
+  try{
+    const a=await JBBackend.listTrash();
+    if(!a.length){root.innerHTML='<div class="empty">Trash empty hai.</div>';return}
+    root.innerHTML=a.map(n=>`<article class="card"><span class="badge">DELETED</span><h2>${JBBackend.esc(n.headline||'Untitled')}</h2><p class="muted">Previous: ${JBBackend.esc(n.previousStatus||'draft')} • ID: ${JBBackend.esc(n.id)} • Version: ${n.version}</p><div class="buttons"><button class="action primary" onclick="restore('${n.id}',${n.version})">Restore</button><button class="action danger" onclick="perma('${n.id}')">Permanent Delete</button></div></article>`).join('');
+  }catch(e){
+    root.innerHTML='<div class="notice">'+JBBackend.esc(e.message)+'</div>';
+  }
+}
+
+async function restore(id,v){
+  if(!confirm('Restore this news from Trash?'))return;
+  try{
+    await JBBackend.restore(id,v);
+    alert('News restored successfully.');
+    await render();
+  }catch(e){
+    alert(e.message);
+  }
+}
+
+async function perma(id){
+  if(!confirm('PERMANENT DELETE irreversible hai. Kya aap sure hain?'))return;
+  if(!confirm('Final confirmation: permanently delete?'))return;
+  try{
+    await ensureRecentMfa();
+    await JBBackend.permanentDelete(id);
+    alert('Permanent Delete backend-confirmed.');
+    await render();
+  }catch(e){
+    alert(e.message||String(e));
+  }
+}
+
+addEventListener('jb-auth-ready',render,{once:true});
+</script></body></html>
