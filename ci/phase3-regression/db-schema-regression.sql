@@ -389,6 +389,79 @@ begin
     and exists(select 1 from pg_policies where schemaname='public' and tablename='live_operations' and policyname='deny_client_all'),
     'Security guardrail: critical Live internal tables have RLS enabled and explicit client-deny policies.'
   );
+
+  insert into ci_phase3_schema_results values(
+    '3A-P3-T107',
+    not exists(
+      select 1
+      from pg_class c
+      join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public'
+        and c.relkind='r'
+        and (
+          c.relname like 'live_%'
+          or c.relname in ('public_live_feed','youtube_integration')
+        )
+        and (
+          not c.relrowsecurity
+          or not exists(
+            select 1 from pg_policies p
+            where p.schemaname='public' and p.tablename=c.relname
+          )
+        )
+    ),
+    'Every exposed Phase-3 Live/YouTube table is deliberately covered by RLS and at least one explicit policy.'
+  );
+
+  insert into ci_phase3_schema_results values(
+    '3A-P3-T119',
+    not exists(
+      select 1 from information_schema.columns
+      where table_schema='public' and table_name='public_live_feed'
+        and (
+          column_name ~* '(token|secret|password|credential|grant_version|operation_id|provider_stream_id|provider_broadcast_id)'
+          or column_name in ('assigned_reporter_id','reporter_user_id')
+        )
+    )
+    and not exists(
+      select 1 from (values
+        ('article_id'),('permanent_url'),('headline'),('public_location')
+      ) req(column_name)
+      where not exists(
+        select 1 from information_schema.columns c
+        where c.table_schema='public'
+          and c.table_name='public_live_feed'
+          and c.column_name=req.column_name
+      )
+    ),
+    'Public Live projection exposes required public identity/location fields while excluding known internal identity, authority and credential fields.'
+  );
+
+  insert into ci_phase3_schema_results values(
+    '3A-P3-T121',
+    not exists(
+      select 1
+      from pg_class c
+      join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public'
+        and c.relkind='v'
+        and not ('security_invoker=true'=any(coalesce(c.reloptions,array[]::text[])))
+    ),
+    'All public-schema views have been security-reviewed and currently use security_invoker behavior.'
+  );
+
+  insert into ci_phase3_schema_results values(
+    '3A-P3-T122',
+    not exists(
+      select 1
+      from pg_class c
+      join pg_namespace n on n.oid=c.relnamespace
+      where n.nspname='public'
+        and c.relkind='v'
+        and not ('security_invoker=true'=any(coalesce(c.reloptions,array[]::text[])))
+    ),
+    'Public views follow the Phase-3 security-invoker preference rather than silently bypassing caller RLS context.'
+  );
 end $$;
 
 select
