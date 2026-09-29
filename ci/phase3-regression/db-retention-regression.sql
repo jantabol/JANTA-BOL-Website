@@ -160,7 +160,7 @@ begin
         and record_id=v_c::text
         and record_class='ROUTINE_TEMPORARY'
         and protected_from_routine_cleanup=false
-        and cleanup_eligible_at>=created_at + interval '6 months'
+        and cleanup_eligible_at>=retained_from + interval '7 months'
     )
     and exists(
       select 1 from public.live_retention_registry
