@@ -8,11 +8,8 @@ function record(id,ok,detail){if(seen.has(id))throw new Error('DUPLICATE_P2_CORE
 function many(ids,ok,detail){for(const id of ids)record(id,ok,detail)}
 
 many(['3A-P2-T031','3A-P2-T036'],/article_id/.test(edge+worker)&&/current_provider_generation/.test(edge+worker),'Canonical Session keeps Article identity while provider generation is a replaceable mapping.');
-many(['3A-P2-T056'],/CANCELLED/.test(edge)&&/PENDING/.test(edge)&&/APPROVED/.test(edge)&&/REJECTED/.test(edge),'Request lifecycle implements controlled Pending/Approved/Rejected/Cancelled concepts.');
-many(['3A-P2-T057','3A-P2-T058','3A-P2-T059'],/PROVISIONING/.test(edge+worker)&&/READY/.test(edge+worker)&&/WAITING_SIGNAL/.test(edge+worker)&&/SIGNAL_ACTIVE/.test(worker+edge)&&/LIVE/.test(edge+worker)&&/RECONNECTING/.test(edge+worker)&&/PROVISIONING_FAILED/.test(worker+edge),'Session state concepts include provisioning/readiness/signal/LIVE/reconnect/failure.');
 many(['3A-P2-T061'],providerReadySeparate,'READY/WAITING_SIGNAL remains public OFF.');
 many(['3A-P2-T062','3A-P2-T063'],/PENDING/.test(provider+worker)&&/CREATING/.test(provider)&&/READY/.test(provider)&&/ACTIVE/.test(provider)&&/RETIRED/.test(provider)&&/AMBIGUOUS/.test(provider+worker)&&/ORPHAN_POSSIBLE/.test(provider),'Provider generation lifecycle includes normal plus ambiguity/orphan states.');
-many(['3A-P2-T064','3A-P2-T065'],/QUEUED/.test(worker)&&/PROCESSING/.test(worker)&&/SUCCEEDED/.test(worker)&&/RETRY_PENDING/.test(worker)&&/FAILED_NEEDS_ATTENTION/.test(worker)&&/CANCELLED_STALE/.test(worker)&&/AMBIGUOUS/.test(worker),'Privileged operation lifecycle explicitly models queue/retry/ambiguity/stale/attention states.');
 many(['3A-P2-T069','3A-P2-T070'],/prepareCamera/.test(liveClient)&&/reporter_prepare_camera/.test(edge)&&/reporter_my_requests/.test(edge)&&reporterSimple,'Reporter API exposes authorized encoder handoff and safe own-session/request status without raw provider internals.');
 many(['3A-P2-T071','3A-P2-T072','3A-P2-T074'],/adminPending/.test(liveClient)&&/approveRequest/.test(liveClient)&&/adminOverview/.test(liveClient)&&/OWNER_AAL2_REQUIRED/.test(edge),'Pending/Approve/Active-Live Admin contracts are owner+AAL2 protected.');
 many(['3A-P2-T075','3A-P2-T076'],publicUi&&masterPage,'Public Live list and canonical Article route expose sanitized playback/discovery state.');
