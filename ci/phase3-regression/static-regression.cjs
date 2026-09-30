@@ -117,6 +117,10 @@ const liveClient = read('JANTA_BOL_PHASE_3C_WORKING/phase3a-live-client.js');
 const adminUi = read('JANTA_BOL_PHASE_3C_WORKING/phase3b-admin-ui.js');
 const reporterUi = read('JANTA_BOL_PHASE_3C_WORKING/phase3b-reporter-ui.js');
 const edge = read('CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts');
+const worker = read('CODEX_CURRENT_SUPABASE/functions/jb-live-worker/index.ts');
+const reporterPage = read('JANTA_BOL_PHASE_3C_WORKING/reporter-live.html');
+const publicSite = read('JANTA_BOL_PHASE_3C_WORKING/website-v3.js');
+const backendClient = read('JANTA_BOL_PHASE_3C_WORKING/backend-client.js');
 
 record('3B-T001',
   /global\.JBLive\s*=/.test(liveClient) &&
@@ -211,6 +215,105 @@ record('3B-T079',
 record('3A-P2-T159',
   !/DRONE/.test(reporterUi),
   'Phase 3A/normal Reporter UI does not expose a standalone Drone control layer.');
+
+
+// Phase 3B exact-gap source/security evidence.
+record('3B-T004',
+  /reporter_id:\s*a\.userId/.test(submitBlock) &&
+  !/payload\.reporter_id/.test(submitBlock) &&
+  /userClient\.auth\.getUser\(token\)/.test(edge),
+  'Reporter identity remains server-authenticated; caller-supplied Reporter identity is not trusted.');
+
+const transitionStart=worker.indexOf('if(operationType==="TRANSITION_LIVE")');
+const transitionEnd=worker.indexOf('if(operationType==="REFRESH_PROVIDER_STATE")');
+const transitionBlock=transitionStart>=0&&transitionEnd>transitionStart?worker.slice(transitionStart,transitionEnd):'';
+record('3B-T005',
+  /if\(p\.ok\)/.test(transitionBlock) &&
+  /jb_live_activate_public_internal/.test(transitionBlock) &&
+  /RETRY_PENDING/.test(transitionBlock) &&
+  /FAILED_NEEDS_ATTENTION/.test(transitionBlock),
+  'Public LIVE activation remains gated by provider-confirmed transition; pending/failure paths do not declare success.');
+
+const revokeStart=edge.indexOf('if (action === "admin_revoke_live_permission")');
+const revokeEnd=edge.indexOf('if (action === "admin_suspend_reporter")');
+const revokeBlock=revokeStart>=0&&revokeEnd>revokeStart?edge.slice(revokeStart,revokeEnd):'';
+record('3B-T007',
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(revokeBlock) &&
+  /\.from\("live_sessions"\)[\s\S]*\.select\("assigned_reporter_id"\)/.test(revokeBlock) &&
+  /jb_live_revoke_permission_internal/.test(revokeBlock) &&
+  /jb_live_revoke_capabilities_internal/.test(revokeBlock),
+  'Phase 3A permission revoke is chained to Phase 3B capability/source revoke using the server-trusted assigned Reporter.');
+
+record('3B-T011',
+  /\.from\('public_live_feed'\)/.test(publicSite) &&
+  /\.order\('is_priority',\{ascending:false\}\)/.test(publicSite) &&
+  /PRIORITY LIVE/.test(publicSite),
+  'Public homepage consumes the safe Live projection, sorts Priority first, and renders a Priority label.');
+
+record('3B-T012',
+  /liveRows\.forEach\(x=>liveBox\.appendChild\(liveCard\(x\)\)\)/.test(publicSite) &&
+  /\.in\('public_status',\['LIVE','INTERRUPTED'\]\)/.test(publicSite) &&
+  !/public_live_feed'\)\.update/.test(publicSite),
+  'Priority rendering keeps all returned active/interrupted Lives discoverable and performs no public-feed mutation.');
+
+record('3B-T015',
+  /Expected Duration/.test(reporterPage) &&
+  /expected_duration_minutes:mins/.test(reporterPage) &&
+  /expected_duration_minutes/.test(submitBlock) &&
+  /INVALID_DURATION/.test(submitBlock),
+  'Reporter request captures Expected Duration and the server validates it.');
+
+record('3B-T020',
+  /async function endLive\(sessionId\)\{if\(!confirm\('Live end request bhejna hai\?'\)\)return;/.test(reporterPage),
+  'Reporter End requires an explicit confirmation before the backend End request is sent.');
+
+const completeStart=worker.indexOf('if(operationType==="COMPLETE_LIVE")');
+const completeEnd=worker.indexOf('if(operationType==="RETIRE_STREAM")');
+const completeBlock=completeStart>=0&&completeEnd>completeStart?worker.slice(completeStart,completeEnd):'';
+record('3B-T028',
+  /if\(p\.ok\)/.test(completeBlock) &&
+  /jb_live_finalize_end_internal/.test(completeBlock) &&
+  /RETRY_PENDING/.test(completeBlock) &&
+  /FAILED_NEEDS_ATTENTION/.test(completeBlock) &&
+  !/return json\(\{ok:true[\s\S]*FAILED_NEEDS_ATTENTION/.test(completeBlock),
+  'Provider End cleanup only finalizes after confirmed success; pending/failure remains retry/attention state.');
+
+const adminCorrectStart=edge.indexOf('if (action === "admin_correct_update" || action === "admin_delete_update")');
+const adminCorrectEnd=edge.indexOf('if (action === "admin_feed_register"');
+const adminCorrectBlock=adminCorrectStart>=0&&adminCorrectEnd>adminCorrectStart?edge.slice(adminCorrectStart,adminCorrectEnd):'';
+record('3B-T066',
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(adminCorrectBlock) &&
+  /admin_correct_update/.test(adminCorrectBlock) &&
+  !/auto(?:matic)?[_ -]?public[_ -]?clarification/i.test(edge+reporterUi+adminUi),
+  'Major public correction path remains Super Admin-controlled; no automatic public-clarification publisher exists.');
+
+const feedStart=edge.indexOf('if (action === "admin_feed_register" || action === "admin_feed_confirm" || action === "admin_feed_switch")');
+const feedEnd=edge.indexOf('if (action === "admin_3b_overview")');
+const feedBlock=feedStart>=0&&feedEnd>feedStart?edge.slice(feedStart,feedEnd):'';
+record('3B-T111',
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(feedBlock) &&
+  /p_actor:a\.userId/.test(feedBlock) &&
+  !/DRONE/.test(reporterUi),
+  'Cross-user/source control is not exposed to Reporter UI; feed-source control is server-authenticated owner/AAL2 only.');
+
+const highRiskActions=[
+  'admin_replace_reporter',
+  'admin_force_stop',
+  'admin_final_report_publish'
+];
+const highRiskGuarded=highRiskActions.every(action=>{
+  const i=edge.indexOf(\`if (action === "\${action}")\`);
+  if(i<0)return false;
+  const sample=edge.slice(i,i+500);
+  return /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(sample);
+});
+record('3B-T116',
+  highRiskGuarded &&
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(feedBlock) &&
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(adminCorrectBlock) &&
+  /JB_SUPABASE_SERVICE_ROLE_KEY/.test(edge),
+  'Privileged replacement/Force Stop/feed/delete/final-publish paths enforce server-side owner+AAL2 before internal RPCs.');
+
 
 const fail = results.filter(r=>!r.ok);
 const payload = {
