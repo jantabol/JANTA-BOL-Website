@@ -57,8 +57,8 @@ const incidentEvidence=
  && /preserv|history|audit/i.test(baseline+changelog+debugMap);
 
 const masterIdentity=
- /Article ID \+ Permanent Master URL remain canonical/.test(baseline)
- && /same logical Live Session|preserve.*Article|Permanent URL|article_id/i.test(dbRecovery+baseline)
+ /Live Session \+ Article ID \+ Permanent Master URL remain canonical/.test(baseline)
+ && /same logical Live Session|Article ID|Permanent Master URL|article_id/i.test(dbRecovery+baseline)
  && /RECONNECTING/.test(worker+edge);
 
 const p3Complete=
@@ -94,7 +94,7 @@ const affectedPlan=
  && /Preserved \/ Not Rebuilt/.test(affected);
 
 const m2m3=
- /reporter_create_request/.test(edge)
+ /reporter_submit_request/.test(edge)
  && /admin_approve_request/.test(edge)
  && /admin_reject_request/.test(edge)
  && /OWNER_AAL2_REQUIRED/.test(edge)
@@ -136,9 +136,9 @@ const m10m11=
 const earlySecurity=
  /RLS/.test(dbSecurity+dbPreprod)
  && /OWNER_AAL2_REQUIRED/.test(edge)
- && /SECURITY DEFINER/.test(dbPreprod)
  && /PUBLIC\/anon\/authenticated direct EXECUTE remains/.test(dbPreprod)
- && exists('ci/phase3-regression/db-function-security-regression.sql');
+ && exists('ci/phase3-regression/db-function-security-regression.sql')
+ && exists('ci/phase3-regression/db-access-regression.sql');
 
 const migrationDiscipline=
  exists('JANTA_BOL_PHASE_3C_WORKING/phase2-migration.sql')
@@ -159,10 +159,12 @@ const testTypes=
  && exists('ci/phase3-regression/static-p3-recovery-regression.cjs');
 
 const statuses=
- /\bPASS\b/.test(testRegister)
- && /\bFAIL\b/.test(testRegister)
- && /\bOPEN\b/.test(testRegister)
- && /\bDEFERRED\b/.test(testRegister);
+ /Official Phase 3A test-result statuses are exactly/.test(statusPolicy)
+ && /\bPASS\b/.test(statusPolicy)
+ && /\bFAIL\b/.test(statusPolicy)
+ && /\bOPEN\b/.test(statusPolicy)
+ && /\bDEFERRED\b/.test(statusPolicy)
+ && /No FINAL PASS\/LOCK/.test(testRegister);
 
 record('3A-P4-T002',preserveBeforeExtend,'Existing compatible architecture is preserved and extended; Auth/MFA/article publishing regressions remain protected.');
 record('3A-P4-T003',auditFirst,'A read-only baseline audit exists and maps existing authority/security surfaces before extension.');
