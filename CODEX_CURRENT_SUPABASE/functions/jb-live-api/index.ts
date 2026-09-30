@@ -642,6 +642,18 @@ Deno.serve(async (req: Request) => {
       const sessionId = String(payload.session_id ?? "");
       const reason = textValue(payload.reason ?? "SUPER_ADMIN_REVOKE", 240) || "SUPER_ADMIN_REVOKE";
       if (!validUuid(sessionId)) return json({ ok: false, error: "INVALID_SESSION_ID" }, 400);
+
+      // Capture the server-trusted current Reporter before revoking the 3A membership.
+      // The legacy revoke RPC does not return reporter_user_id, so relying on its
+      // response would silently skip the Phase 3B capability/source revocation.
+      const target = await service.from("live_sessions")
+        .select("assigned_reporter_id")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (target.error) throw target.error;
+      const targetUserId = String(target.data?.assigned_reporter_id ?? "");
+      if (!validUuid(targetUserId)) return json({ ok: false, error: "LIVE_SESSION_NOT_FOUND" }, 404);
+
       const revoked = await service.rpc("jb_live_revoke_permission_internal", {
         p_owner_user_id: a.userId,
         p_session_id: sessionId,
@@ -652,17 +664,16 @@ Deno.serve(async (req: Request) => {
         if (m.includes("NOT_FOUND")) return json({ ok: false, error: "LIVE_SESSION_NOT_FOUND" }, 404);
         throw revoked.error ?? new Error("LIVE_REVOKE_FAILED");
       }
-      const targetUserId = String((revoked.data as Record<string, unknown>)?.reporter_user_id ?? "");
-      if (validUuid(targetUserId)) {
-        const capRevoked = await service.rpc("jb_live_revoke_capabilities_internal", {
-          p_actor_user_id: a.userId,
-          p_session_id: sessionId,
-          p_target_user_id: targetUserId,
-          p_reason: reason,
-        });
-        if (capRevoked.error) throw capRevoked.error;
-      }
-      return json({ ok: true, revocation: revoked.data });
+
+      const capRevoked = await service.rpc("jb_live_revoke_capabilities_internal", {
+        p_actor_user_id: a.userId,
+        p_session_id: sessionId,
+        p_target_user_id: targetUserId,
+        p_reason: reason,
+      });
+      if (capRevoked.error) throw capRevoked.error;
+
+      return json({ ok: true, revocation: revoked.data, capabilities: capRevoked.data });
     }
 
     if (action === "admin_suspend_reporter") {
