@@ -475,22 +475,22 @@ test_id,phase,classification
 3A-P4-T015,3A,integration automated
 3A-P4-T016,3A,integration automated
 3A-P4-T017,3A,backend/API/Supabase automated
-3A-P4-T018,3A,CI fully automated
-3A-P4-T019,3A,CI fully automated
+3A-P4-T018,3A,real-device/manual only
+3A-P4-T019,3A,real-device/manual only
 3A-P4-T020,3A,backend/API/Supabase automated
 3A-P4-T021,3A,backend/API/Supabase automated
 3A-P4-T022,3A,backend/API/Supabase automated
 3A-P4-T023,3A,backend/API/Supabase automated
 3A-P4-T024,3A,CI fully automated
 3A-P4-T025,3A,CI fully automated
-3A-P4-T026,3A,integration automated
-3A-P4-T027,3A,integration automated
-3A-P4-T028,3A,integration automated
+3A-P4-T026,3A,real-device/manual only
+3A-P4-T027,3A,real-device/manual only
+3A-P4-T028,3A,real-device/manual only
 3A-P4-T029,3A,CI fully automated
 3A-P4-T030,3A,integration automated
-3A-P4-T031,3A,CI fully automated
-3A-P4-T032,3A,integration automated
-3A-P4-T033,3A,integration automated
+3A-P4-T031,3A,real-device/manual only
+3A-P4-T032,3A,real-device/manual only
+3A-P4-T033,3A,real-device/manual only
 3A-P4-T034,3A,backend/API/Supabase automated
 3A-P4-T035,3A,backend/API/Supabase automated
 3A-P4-T036,3A,integration automated
@@ -498,7 +498,7 @@ test_id,phase,classification
 3A-P4-T038,3A,integration automated
 3A-P4-T039,3A,backend/API/Supabase automated
 3A-P4-T040,3A,integration automated
-3A-P4-T041,3A,integration automated
+3A-P4-T041,3A,real-device/manual only
 3A-P4-T042,3A,integration automated
 3A-P4-T043,3A,integration automated
 3A-P4-T044,3A,integration automated
