@@ -289,6 +289,14 @@ record('3A-P4-T111',
     && /provider_broadcast_id|provider_stream_id/.test(worker+provider+dbPreprod),
   'Module lock gate and dependency evidence preserve the Reporter request -> Admin review/approve -> durable worker/provider golden path.'
 );
+
+record('3B-T122',
+  fs.existsSync(path.join(ROOT,'ci/phase3-regression/db-regression.sql'))
+    && fs.existsSync(path.join(ROOT,'ci/phase3-regression/db-security-lifecycle-regression.sql'))
+    && fs.existsSync(path.join(ROOT,'ci/phase3-regression/static-security-architecture-regression.cjs'))
+    && fs.existsSync(path.join(ROOT,'JANTA_BOL_PHASE_3C_WORKING/add-news.html')),
+  'Affected Phase 3A Live/security and normal-article regression suites are present; PASS is valid only when this workflow run completes all of those regression steps green.'
+);
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
 const payload={generated_at:new Date().toISOString(),checks:results.length,pass:results.length-fail.length,fail:fail.length,results};
