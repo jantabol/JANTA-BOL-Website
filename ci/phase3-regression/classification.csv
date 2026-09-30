@@ -702,5 +702,5 @@ T119,3B,backend/API/Supabase automated
 T120,3B,integration automated
 T121,3B,real-device/manual only
 T122,3B,AUTOMATED_CI_MAPPED
-T123,3B,integration automated
+T123,3B,evidence-gated final-lock
 T124,3B,evidence-gated final-lock
