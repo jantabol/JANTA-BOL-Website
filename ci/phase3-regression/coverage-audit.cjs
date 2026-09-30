@@ -28,6 +28,7 @@ const suiteFiles=[
   'db-regression.sql',
   'db-schema-regression.sql',
   'db-flow-regression.sql',
+  'db-state-machine-regression.sql',
   'db-access-regression.sql',
   'db-function-security-regression.sql',
   'db-security-lifecycle-regression.sql',
