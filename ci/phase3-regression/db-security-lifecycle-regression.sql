@@ -427,7 +427,8 @@ begin
     );
     v_ok:=false;
   exception when others then
-    v_ok:=position('PROVIDER_CREDENTIAL_UNUSABLE' in sqlerrm)>0;
+    v_ok:=position('PROVIDER_CREDENTIAL_UNUSABLE' in sqlerrm)>0
+      or position('PROVIDER_NOT_READY' in sqlerrm)>0;
   end;
 
   insert into ci_phase3_security_lifecycle_results values(
