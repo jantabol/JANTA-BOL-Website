@@ -168,6 +168,18 @@ const statuses=
 
 record('3A-P4-T002',preserveBeforeExtend,'Existing compatible architecture is preserved and extended; Auth/MFA/article publishing regressions remain protected.');
 record('3A-P4-T003',auditFirst,'A read-only baseline audit exists and maps existing authority/security surfaces before extension.');
+record('3A-P4-T004',
+  /CODE MAP/.test(codeMap)
+    && /Primary files\/modules/.test(codeMap)
+    && /Backend objects/.test(codeMap),
+  'CODE-MAP records concrete file/module ownership and backend responsibilities for controlled changes.'
+);
+record('3A-P4-T006',
+  /CHANGELOG/.test(changelog)
+    && /working copy|checkpoint|commit|migration/i.test(changelog)
+    && /PRETEST-CHG-/.test(changelog),
+  'Version-controlled working-copy/checkpoint evidence and a meaningful implementation CHANGELOG are maintained.'
+);
 record('3A-P4-T005',affectedPlan,'Affected-file planning explicitly separates new, extended and preserved components before implementation.');
 record('3A-P4-T011',m2m3,'Reporter request boundary remains separate from Owner+AAL2 pending-request approve/reject authority.');
 record('3A-P4-T012',m3m4,'Approval remains a privileged Owner+AAL2 decision and durable live_operations worker foundation is present.');
@@ -180,6 +192,15 @@ record('3A-P4-T021',migrationDiscipline,'Database schema changes are preserved i
 record('3A-P4-T022',migrationAdvisor,'Post-change database state verification and Security Advisor review are preserved as explicit evidence.');
 record('3A-P4-T023',testTypes,'CI contains functional, backend/data-integrity, security, provider and recovery test layers.');
 record('3A-P4-T025',statuses,'Official test records preserve explicit PASS/FAIL/OPEN/DEFERRED status vocabulary.');
+record('3A-P4-T029',
+  /action === "admin_pending"/.test(edge)
+    && /Pending Live Requests/.test(liveHtml)
+    && /r\.headline/.test(liveHtml)
+    && /r\.location/.test(liveHtml)
+    && /r\.description/.test(liveHtml)
+    && /r\.expected_duration_minutes/.test(liveHtml),
+  'Admin pending-request review reads backend pending requests and renders the submitted request details before decision.'
+);
 
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
