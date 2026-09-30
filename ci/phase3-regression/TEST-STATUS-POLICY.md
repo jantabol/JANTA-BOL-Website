@@ -15,3 +15,7 @@ Rules:
 - A failed test cannot become PASS by weakening its checker.
 - A DEFERRED test must retain its reason and retest condition.
 - Historical locked PASS records remain preserved unless a material regression contradicts them.
+
+## Failure investigation safety
+
+When a real Live/manual test exposes a bug, record the affected test as FAIL (or OPEN only when evidence is genuinely incomplete), preserve the current safe state during investigation, isolate the exact failed requirement, and do not weaken an existing security or data-integrity control merely to make the test pass.
