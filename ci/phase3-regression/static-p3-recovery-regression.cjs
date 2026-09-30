@@ -79,10 +79,16 @@ const directMediaPath=
   && /stream_name/.test(launch+handoff)
   && !/media.*proxy|proxy.*media|relay.*video/i.test(edge+worker);
 
+const publishStart=backend.indexOf('async function publish(');
+const publishEnd=backend.indexOf('async function unpublish',publishStart);
+const publishBlock=publishStart>=0&&publishEnd>publishStart?backend.slice(publishStart,publishEnd):'';
+const articlePublishingIndependent=
+  /from\('articles'\)/.test(publishBlock)
+  && /status:'published'/.test(publishBlock)
+  && !/jb-youtube-provider|liveBroadcasts|liveStreams|provider_state|live_operations/i.test(publishBlock);
+
 const providerIsolation=
-  /async function publish/.test(backend)
-  && /from\('articles'\)/.test(backend)
-  && !/youtube|jb-youtube-provider|liveBroadcasts|liveStreams/i.test(backend)
+  articlePublishingIndependent
   && /PROVIDER_ADAPTER_NETWORK_ERROR/.test(worker)
   && /RETRY_PENDING/.test(worker);
 
@@ -91,7 +97,7 @@ const mediaOutageIsolation=
   && /jb_live_mark_interrupted_internal/.test(worker)
   && interruptionUi
   && /listPublishedPublic/.test(backend)
-  && !/youtube|liveBroadcasts|liveStreams/i.test(backend);
+  && articlePublishingIndependent;
 
 const sameSessionReconnect=
   /jb_live_mark_interrupted_internal/.test(worker)
