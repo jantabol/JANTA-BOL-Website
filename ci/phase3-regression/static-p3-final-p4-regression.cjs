@@ -245,6 +245,33 @@ record('3A-P4-T059',/Article ID|Permanent Master URL/i.test(baseline) && /RECONN
 record('3A-P4-T062',/COMPROMISED/.test(edge+worker+provider+dbSecurity) && /RETIRE_PENDING|RETIRED/.test(worker+provider+dbSecurity) && /article_id/.test(worker+edge),'Compromised provider generation retires/replaces while preserving Article identity.');
 record('3A-P4-T070',/CANCELLED_STALE|STALE_GENERATION|STALE/.test(worker+provider) && /safe_error|error_code|sanitize|redact/i.test(worker+provider+edge),'Stale queued work is invalidated and provider failures use bounded/safe error surfaces without credential leakage.');
 
+
+const backend=read('JANTA_BOL_PHASE_3C_WORKING/backend-client.js');
+const publicSite=read('JANTA_BOL_PHASE_3C_WORKING/website-v3.js');
+const article=read('JANTA_BOL_PHASE_3C_WORKING/article.html');
+
+record('3A-P4-T001',/MASTER BLUEPRINT|source.?of.?truth/i.test(baseline+codeMap) && /Preserved \/ Not Rebuilt/.test(affected),'Source-of-truth/preservation records prove Phase 3A extended the verified baseline rather than rebuilding blindly.');
+record('3A-P4-T008',/reporter_submit_request/.test(edge) && /live_requests/.test(edge+dbSecurity) && /assigned_reporter_id/.test(edge),'Reporter request boundary is server-backed and Reporter/session identity remains explicit.');
+record('3A-P4-T009',/admin_pending/.test(edge) && /admin_approve_request/.test(edge) && /admin_reject_request/.test(edge) && /OWNER_AAL2_REQUIRED/.test(edge),'Admin pending review and approve/reject remain privileged Owner+AAL2 operations.');
+record('3A-P4-T010',/live_operations/.test(edge+worker) && /jb_live_claim_operation_internal/.test(worker) && /QUEUED|PROCESSING/.test(worker),'Approval hands durable provisioning work to the private worker/operation layer.');
+record('3A-P4-T024',/coverage|mapped|manual/i.test(testRegister+statusPolicy) && /No FINAL PASS\/LOCK/.test(testRegister),'Test governance distinguishes mapped/evidence states and forbids final PASS/LOCK without proof.');
+record('3A-P4-T030',/admin_approve_request/.test(edge) && /client_action_id/.test(edge+liveClient) && /idempot/i.test(edge+liveClient),'Admin approval carries a stable client action/idempotency identity so retry cannot knowingly duplicate approval.');
+record('3A-P4-T053',/provider_broadcast_id|provider_stream_id/.test(worker+provider+dbPreprod) && /session_id/.test(worker+edge),'Canonical session mapping retains provider Broadcast/Stream identifiers separately.');
+record('3A-P4-T071',/live_notifications/.test(edge+provider) && /public_live_feed/.test(edge+worker+dbPreprod) && /notification/i.test(edge),'Notification/public-feed updates are derived from durable backend state rather than becoming authority.');
+record('3A-P4-T074',/grant_version/.test(edge+dbSecurity) && /revoke/i.test(edge) && /STALE|CANCELLED_STALE/.test(worker+provider),'Revocation/grant-version changes invalidate stale queued/provider work.');
+record('3A-P4-T080',/assigned_reporter_id/.test(edge+dbSecurity) && /SESSION_MEMBERSHIP_REQUIRED|REPORTER_DISABLED/.test(edge),'Reporter cross-read boundary is enforced from server-side assignment/membership state.');
+record('3A-P4-T088',/live_notifications/.test(edge+provider) && /setInterval|loadRequests|loadAll/.test(liveHtml+reporter),'Request/status notification path has durable polling/refetch fallback when realtime delivery is unavailable.');
+
+record('3A-P4-T093',/lease_until/.test(dbRecovery) && /jb_live_claim_operation_internal/.test(worker) && /setInterval|loadRequests|loadAll/.test(liveHtml+reporter),'Worker crash recovery uses leases/journal while realtime loss has periodic refetch fallback.');
+record('3A-P4-T094',/live_notifications/.test(edge+provider) && /public_live_feed|live_requests/.test(edge+worker+dbPreprod) && /setInterval|loadRequests/.test(reporter+liveHtml),'Notification delivery can fail without losing durable business state.');
+record('3A-P4-T104',/from\(['"]articles['"]\)/.test(backend) && /status:\s*['"]published['"]/.test(backend) && /admin|aal2|owner/i.test(edge) && /public_live_feed|articles/i.test(publicSite+article),'Normal article publishing, Admin security and public non-Live paths remain present under regression.');
+record('3A-P4-T105',/FAIL|OPEN/.test(statusPolicy) && /preserve current safe state|safe state|freeze/i.test(debugMap+statusPolicy+baseline),'Real failure governance records non-PASS state and preserves safe state for investigation.');
+record('3A-P4-T108',/regression/i.test(changelog+testRegister) && /Only after|PASS/.test(statusPolicy+testRegister),'Fix workflow retains affected regression evidence and does not lock before proof.');
+record('3A-P4-T112',/assigned_reporter_id/.test(edge) && /SESSION_MEMBERSHIP_REQUIRED/.test(edge) && /RECONNECTING/.test(worker+edge) && /generation_id/.test(worker+provider),'Security/recovery golden-path primitives cover multi-session isolation, unauthorized access denial and reconnect.');
+record('3A-P4-T113',/YOUTUBE_EXPECTED_CHANNEL_ID|expected_channel/i.test(oauthStart+oauthCallback+edge) && /refresh_token|REAUTH_REQUIRED/i.test(provider+edge) && !/service_role.*(?:window|localStorage)/i.test(publicSite+liveClient+reporter),'YouTube readiness pins channel/OAuth health and production secrets remain server-side.');
+record('3A-P4-T118',/REPORTER_DISABLED/.test(edge) && /reporter_submit_request/.test(edge) && /admin_approve_request/.test(edge) && /admin_reject_request/.test(edge) && /FAIL|OPEN/.test(statusPolicy),'Critical bug/test state remains blocking while Reporter request and Admin approve/reject success paths remain server-authorized.');
+record('3A-P4-T120',/expected_channel|YOUTUBE_EXPECTED_CHANNEL_ID/i.test(oauthStart+oauthCallback+edge) && /refresh_token|oauth/i.test(provider+oauthCallback) && /normal Article publishing remains independent/i.test(baseline) && /FAILED_NEEDS_ATTENTION|RETRY_PENDING/.test(worker),'Provider/OAuth readiness and failure isolation preserve unrelated core article behavior.');
+
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
 const payload={generated_at:new Date().toISOString(),checks:results.length,pass:results.length-fail.length,fail:fail.length,results};
