@@ -230,7 +230,7 @@ recordMany(['3A-P1-T073'],reporterAuth&&adminFailClosed&&requestCurrentState,'Au
 recordMany(['3A-P1-T087','3A-P1-T088','3A-P1-T089'],reporterLimited&&adminUx&&safeErrors,'Reporter/Admin surfaces remain role-focused and raw backend/provider errors are replaced with bounded user-facing messages.');
 
 recordMany(['3A-P2-T001','3A-P2-T002','3A-P2-T003','3A-P2-T004','3A-P2-T005','3A-P2-T006','3A-P2-T007','3A-P2-T009','3A-P2-T010','3A-P2-T011'],phase2Preserved&&controlMediaSplit&&narrowProvider,'Control plane, media/provider plane and preserved Phase-2 foundation remain separated behind the canonical JANTA BOL system.');
-recordMany(['3A-P2-T012'],phase2Preserved&&/article\.html\?id=/.test(article),'Existing canonical Article engine and Permanent Article URL remain present alongside Live.');
+recordMany(['3A-P2-T012'],phase2Preserved&&/article\.html\?id=/.test(website)&&/permanent_url/.test(website),'Existing canonical Article engine and Permanent Article URL remain present alongside Live.');
 recordMany(['3A-P2-T013'],reporterAuth&&/client\.auth\.getSession\(\)/.test(backend),'Supabase Auth remains the authentication authority; no separate Phase-3 login system is introduced.');
 recordMany(['3A-P2-T014','3A-P2-T015'],controlMediaSplit&&durableQueue&&publicProjection,'Postgres-backed Live state, operations/audit path and safe public projection are represented separately.');
 recordMany(['3A-P2-T016','3A-P2-T017'],requestCurrentState&&controlMediaSplit,'User-facing Edge/API requests authenticate current callers before controlled business actions.');
