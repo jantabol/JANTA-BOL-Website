@@ -101,7 +101,9 @@ const h2=
   && /CANCELLED_STALE/.test(worker);
 
 const h3=
-  /jb-live-worker/.test(edge)
+  !/\/functions\/v1\/jb-live-worker/.test(edge)
+  && /jb_live_approve_request_internal/.test(edge)
+  && /jb_live_claim_operation_internal/.test(worker)
   && /jb-youtube-provider/.test(worker)
   && internalWorker
   && providerInternal
