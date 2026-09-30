@@ -272,6 +272,23 @@ record('3A-P4-T113',/YOUTUBE_EXPECTED_CHANNEL_ID|expected_channel/i.test(oauthSt
 record('3A-P4-T118',/REPORTER_DISABLED/.test(edge) && /reporter_submit_request/.test(edge) && /admin_approve_request/.test(edge) && /admin_reject_request/.test(edge) && /FAIL|OPEN/.test(statusPolicy),'Critical bug/test state remains blocking while Reporter request and Admin approve/reject success paths remain server-authorized.');
 record('3A-P4-T120',/expected_channel|YOUTUBE_EXPECTED_CHANNEL_ID/i.test(oauthStart+oauthCallback+edge) && /refresh_token|oauth/i.test(provider+oauthCallback) && /normal Article publishing remains independent/i.test(baseline) && /FAILED_NEEDS_ATTENTION|RETRY_PENDING/.test(worker),'Provider/OAuth readiness and failure isolation preserve unrelated core article behavior.');
 
+
+record('3A-P4-T089',
+  /public_live_feed/.test(edge+worker+dbPreprod)
+    && /provider_broadcast_id|provider_stream_id/.test(worker+provider+dbPreprod)
+    && /live_notifications/.test(edge+provider)
+    && /PUBLIC/.test(dbPreprod),
+  'Public Live feed is derived from verified durable backend/provider state; notification/realtime delivery alone is not authority.'
+);
+record('3A-P4-T111',
+  /Only after|PASS/.test(statusPolicy+testRegister)
+    && /reporter_submit_request/.test(edge)
+    && /admin_pending/.test(edge)
+    && /admin_approve_request/.test(edge)
+    && /jb_live_claim_operation_internal/.test(worker)
+    && /provider_broadcast_id|provider_stream_id/.test(worker+provider+dbPreprod),
+  'Module lock gate and dependency evidence preserve the Reporter request -> Admin review/approve -> durable worker/provider golden path.'
+);
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
 const payload={generated_at:new Date().toISOString(),checks:results.length,pass:results.length-fail.length,fail:fail.length,results};
