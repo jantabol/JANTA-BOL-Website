@@ -134,6 +134,46 @@ const h6=
 record('3A-P3-T169',edgeReview,'Deployed Phase-3A Edge functions were reviewed against JWT/custom-auth, business authorization and input-validation models; Live API v30 matches reviewed repo source.');
 record('3A-P3-T170',internalWorker&&providerInternal,'Privileged worker/provider path is internal-only, secret-safe, revalidates current operation/session/generation authority and preserves journal/idempotent recovery.');
 record('3A-P3-T172',advisorReviewed,'Supabase Security Advisor was reviewed after implementation; no unresolved finding names Phase-3A Live/YouTube/encoder objects, while broader project warnings remain explicitly tracked.');
+record('3A-P3-T174',
+  apiAuth
+    && /a\.role !== "reporter"/.test(edge)
+    && /REPORTER_REQUIRED/.test(edge)
+    && !/payload\.(?:role|isAdmin|isReporter)|body\.(?:role|isAdmin|isReporter)/.test(edge),
+  'Ordinary authentication alone never grants Reporter authority; role/current Reporter state are derived server-side.'
+);
+record('3A-P3-T175',
+  /reporter_3b_session/.test(edge)
+    && /SESSION_MEMBERSHIP_REQUIRED/.test(edge)
+    && /\.eq\("session_id",sessionId\)\.eq\("user_id",a\.userId\)/.test(edge)
+    && /\.eq\("reporter_id", a\.userId\)/.test(edge),
+  'Reporter-scoped endpoints bind Session/Request access to the authenticated Reporter and reject missing cross-session membership.'
+);
+record('3A-P3-T176',
+  /!ctx\?\.session_active/.test(edge)
+    && /reporterActive: ctx\.reporter_active !== false/.test(edge)
+    && /REPORTER_DISABLED/.test(edge)
+    && /admin_suspend_reporter/.test(edge),
+  'Old JWT alone cannot restore revoked Reporter authority because current auth-session and Reporter-active state are revalidated.'
+);
+record('3A-P3-T177',
+  (edge.match(/OWNER_AAL2_REQUIRED/g)||[]).length>=8
+    && /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(edge),
+  'Admin AAL1 is rejected by elevated Phase-3A control actions before privileged work is issued.'
+);
+record('3A-P3-T178',
+  apiAuth
+    && /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(edge)
+    && /session_active/.test(edge)
+    && /validUuid/.test(edge),
+  'Admin AAL2 is necessary but not sufficient: current session, role and per-action state/input validation still apply.'
+);
+record('3A-P3-T179',
+  /jb_live_actor_context_internal/.test(edge)
+    && /app_role/.test(edge)
+    && /SESSION_MEMBERSHIP_REQUIRED/.test(edge)
+    && !/isAdmin\s*=\s*true|payload\.isAdmin|payload\.role/.test(edge),
+  'Modified client flags or substituted Session IDs have no server-side authority; role and membership come from current backend state.'
+);
 record('3A-P3-T181',h1,'H1 trace is backed by non-reusable stream, hashed one-use handoff, credential lifecycle/retirement and secure transport evidence.');
 record('3A-P3-T182',h2,'H2 trace is backed by immediate revoke/suspend paths, capability invalidation and stale-work cancellation.');
 record('3A-P3-T183',h3,'H3 trace is backed by separated command gateway, internal worker/provider trust planes and no generic privileged SQL/provider proxy.');
