@@ -92,6 +92,41 @@ const payload={
 };
 
 fs.writeFileSync(path.join(out,'coverage-audit.json'),JSON.stringify(payload,null,2));
+const mappingRows=rows
+  .slice()
+  .sort((a,b)=>a.test_id.localeCompare(b.test_id))
+  .map(r=>{
+    let status;
+    if(r.classification==='real-device/manual only') status='MANUAL_DEVICE_ONLY';
+    else if(implemented.has(r.test_id)) status='AUTOMATED_CI_MAPPED';
+    else if(r.phase==='3B' && r.test_id==='T123') status='EVIDENCE_GATED';
+    else status='AUTOMATION_DUE';
+    return {
+      test_id:r.test_id,
+      phase:r.phase,
+      classification:r.classification,
+      status,
+      suites:implemented.has(r.test_id)?[...implemented.get(r.test_id)].sort().join('|'):''
+    };
+  });
+
+const csvEscape=v=>{
+  const s=String(v??'');
+  return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s;
+};
+const mappingCsv=[
+  'test_id,phase,classification,status,suites',
+  ...mappingRows.map(r=>[r.test_id,r.phase,r.classification,r.status,r.suites].map(csvEscape).join(','))
+].join('\n')+'\n';
+fs.writeFileSync(path.join(out,'master-test-mapping.csv'),mappingCsv);
+
+const statusCounts=mappingRows.reduce((a,r)=>(a[r.status]=(a[r.status]||0)+1,a),{});
+fs.writeFileSync(path.join(out,'master-test-mapping-summary.json'),JSON.stringify({
+  generated_at:new Date().toISOString(),
+  source_tests:mappingRows.length,
+  status_counts:statusCounts
+},null,2));
+
 
 let md='# Phase 3 CI coverage audit\n\n';
 md+=`- Source register tests audited: **${payload.source_tests}**\n`;
@@ -102,6 +137,7 @@ md+=`- Real-device/manual-only: **${payload.manual_device_total}**\n\n`;
 md+='| Classification | Total | Implemented now |\n|---|---:|---:|\n';
 for(const [name,v] of Object.entries(byClass)) md+=`| ${name} | ${v.total} | ${v.implemented} |\n`;
 md+='\nClassification is feasibility only. Implemented means an exact source test ID has a checker; PASS still depends on the checker actually succeeding in this CI run.\n';
+md+='\nMaster mapping artifact: `master-test-mapping.csv` contains all 705 source IDs with current mapped/manual/evidence-gated/due status.\n';
 fs.writeFileSync(path.join(out,'coverage-summary.md'),md);
 if(process.env.GITHUB_STEP_SUMMARY) fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,'\n'+md);
 
