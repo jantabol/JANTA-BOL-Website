@@ -7,7 +7,9 @@ create temporary table ci_phase3_security_lifecycle_results(
   detail text not null
 ) on commit drop;
 
-do $$
+grant select,insert,update on ci_phase3_security_lifecycle_results to authenticated, anon;
+
+do $
 declare
   v_owner uuid;
   v_reporter uuid;
