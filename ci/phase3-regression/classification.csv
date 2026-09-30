@@ -39,8 +39,8 @@ test_id,phase,classification
 3A-P1-T038,3A,real-device/manual only
 3A-P1-T039,3A,integration automated
 3A-P1-T040,3A,real-device/manual only
-3A-P1-T041,3A,integration automated
-3A-P1-T042,3A,integration automated
+3A-P1-T041,3A,real-device/manual only
+3A-P1-T042,3A,real-device/manual only
 3A-P1-T043,3A,integration automated
 3A-P1-T044,3A,integration automated
 3A-P1-T045,3A,integration automated
