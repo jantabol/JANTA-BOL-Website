@@ -270,13 +270,15 @@ record('3B-T020',
 const completeStart=worker.indexOf('if(operationType==="COMPLETE_LIVE")');
 const completeEnd=worker.indexOf('if(operationType==="RETIRE_STREAM")');
 const completeBlock=completeStart>=0&&completeEnd>completeStart?worker.slice(completeStart,completeEnd):'';
+const completePending=completeBlock.indexOf('if(p.data?.pending===true||p.data?.ambiguous===true)');
+const completeSuccessBlock=completePending>0?completeBlock.slice(0,completePending):'';
 record('3B-T028',
-  /if\(p\.ok\)/.test(completeBlock) &&
-  /jb_live_finalize_end_internal/.test(completeBlock) &&
+  /if\(p\.ok\)/.test(completeSuccessBlock) &&
+  /jb_live_finalize_end_internal/.test(completeSuccessBlock) &&
+  !/FAILED_NEEDS_ATTENTION/.test(completeSuccessBlock) &&
   /RETRY_PENDING/.test(completeBlock) &&
-  /FAILED_NEEDS_ATTENTION/.test(completeBlock) &&
-  !/return json\(\{ok:true[\s\S]*FAILED_NEEDS_ATTENTION/.test(completeBlock),
-  'Provider End cleanup only finalizes after confirmed success; pending/failure remains retry/attention state.');
+  /FAILED_NEEDS_ATTENTION/.test(completeBlock),
+  'Provider End cleanup only finalizes inside the confirmed-success branch; pending/failure remains retry/attention state.');
 
 const adminCorrectStart=edge.indexOf('if (action === "admin_correct_update" || action === "admin_delete_update")');
 const adminCorrectEnd=edge.indexOf('if (action === "admin_feed_register"');
