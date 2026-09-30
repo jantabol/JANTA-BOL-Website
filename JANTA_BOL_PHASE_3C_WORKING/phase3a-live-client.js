@@ -17,7 +17,18 @@ const endLive=(sessionId)=>api('reporter_end_live',{session_id:sessionId});
 const adminEndLive=(sessionId)=>api('admin_end_live',{session_id:sessionId});
 const adminPending=()=>api('admin_pending');
 const adminOverview=()=>api('admin_overview');
-const approveRequest=(requestId,stateVersion)=>api('admin_approve_request',{request_id:requestId,state_version:stateVersion});
+const approvalActionIds=new Map();
+const approvalActionId=(requestId,stateVersion)=>{
+  const key=String(requestId)+':'+String(stateVersion);
+  let id=approvalActionIds.get(key);
+  if(!id){
+    id=global.crypto?.randomUUID?.();
+    if(!id)throw new Error('ACTION_ID_UNAVAILABLE');
+    approvalActionIds.set(key,id);
+  }
+  return id;
+};
+const approveRequest=(requestId,stateVersion)=>api('admin_approve_request',{request_id:requestId,state_version:stateVersion,client_action_id:approvalActionId(requestId,stateVersion)});
 const rejectRequest=(requestId,stateVersion,reason)=>api('admin_reject_request',{request_id:requestId,state_version:stateVersion,reason});
 const youtubeStatus=()=>api('youtube_status');
 const youtubeConnect=()=>invoke('jb-youtube-oauth-start');
