@@ -22,6 +22,9 @@ if(rows.length!==705) throw new Error('CLASSIFICATION_MANIFEST_MUST_HAVE_705_TES
 const suiteFiles=[
   'static-regression.cjs',
   'static-security-architecture-regression.cjs',
+  'static-p1-functional-regression.cjs',
+  'static-p2-core-regression.cjs',
+  'static-p2-recovery-regression.cjs',
   'db-regression.sql',
   'db-schema-regression.sql',
   'db-flow-regression.sql',
