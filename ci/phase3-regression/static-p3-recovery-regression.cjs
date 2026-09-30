@@ -138,6 +138,20 @@ record('3A-P3-T139',mediaOutageIsolation,'Provider/media failure marks only the 
 record('3A-P3-T141',sameSessionReconnect,'Network/interruption recovery keeps the same logical Live Session and uses RECONNECTING + reconcile state.');
 record('3A-P3-T142',notificationFallback,'Notification delivery is only an accelerator; Admin/Reporter poll durable dashboard/database truth every 20 seconds.');
 record('3A-P3-T143',realtimeFallback,'Realtime loss has explicit periodic refetch fallback; authorization/state truth remains backend-derived.');
+record('3A-P3-T144',
+  /live_operations/.test(worker+edge)
+    && /RETRY_PENDING/.test(worker)
+    && /FAILED_NEEDS_ATTENTION/.test(worker)
+    && providerIsolation,
+  'Queue/worker unavailability leaves Live operations in durable pending/failure states while unrelated Article publishing remains an independent path.'
+);
+record('3A-P3-T145',
+  journalResume
+    && workerLease
+    && reconcile
+    && /live_operation_resume_from_journal/.test(worker),
+  'Worker crash recovery combines operation journal progress, expiring lease ownership and provider reconciliation for controlled resume.'
+);
 
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');
