@@ -578,8 +578,8 @@ test_id,phase,classification
 3A-P4-T118,3A,CI fully automated
 3A-P4-T119,3A,real-device/manual only
 3A-P4-T120,3A,integration automated
-3A-P4-T121,3A,CI fully automated
-3A-P4-T122,3A,CI fully automated
+3A-P4-T121,3A,evidence-gated final-lock
+3A-P4-T122,3A,real-device/manual only
 T001,3B,CI fully automated
 T002,3B,backend/API/Supabase automated
 T003,3B,backend/API/Supabase automated
