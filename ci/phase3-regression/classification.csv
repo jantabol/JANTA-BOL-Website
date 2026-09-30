@@ -622,7 +622,7 @@ T039,3B,backend/API/Supabase automated
 T040,3B,real-device/manual only
 T041,3B,integration automated
 T042,3B,integration automated
-T043,3B,AUTOMATED_CI_MAPPED
+T043,3B,real-device/manual only
 T044,3B,integration automated
 T045,3B,integration automated
 T046,3B,integration automated
@@ -688,7 +688,7 @@ T105,3B,AUTOMATED_CI_MAPPED
 T106,3B,backend/API/Supabase automated
 T107,3B,real-device/manual only
 T108,3B,AUTOMATED_CI_MAPPED
-T109,3B,AUTOMATED_CI_MAPPED
+T109,3B,real-device/manual only
 T110,3B,real-device/manual only
 T111,3B,backend/API/Supabase automated
 T112,3B,real-device/manual only
