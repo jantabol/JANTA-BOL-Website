@@ -385,6 +385,7 @@ declare
   v_repl_session uuid;
   v_generation uuid;
   v_source uuid;
+  v_source2 uuid;
   v_contribution uuid;
   v_url text;
   v_before bigint;
@@ -726,8 +727,58 @@ begin
   )->>'source_id')::uuid into v_source;
 
   perform public.jb_live_confirm_feed_source_internal(v_r1,v_repl_session,v_source);
+
+  -- Provider confirmation is mandatory before a source can become public-authoritative.
+  select (public.jb_live_register_feed_source_internal(
+    v_r1,v_repl_session,'GROUND_PHONE',v_r1,null
+  )->>'source_id')::uuid into v_source2;
+  begin
+    perform public.jb_live_switch_feed_internal(v_owner,v_repl_session,v_source2);
+    insert into ci_phase3_results values('3B-T102',false,'Unconfirmed source unexpectedly became active.');
+  exception when others then
+    insert into ci_phase3_results values(
+      '3B-T102',
+      position('SOURCE_NOT_PROVIDER_CONFIRMED' in sqlerrm)>0
+      and (select active_feed_source_id is null from public.live_sessions where id=v_repl_session),
+      'Feed switch rejects an unconfirmed source; button/intent alone cannot become public truth.'
+    );
+  end;
+
+  perform public.jb_live_switch_feed_internal(v_owner,v_repl_session,v_source);
+
+  insert into ci_phase3_results values(
+    '3B-T100',
+    (select article_id=v_repl_article and id=v_repl_session from public.live_sessions where id=v_repl_session)
+    and (select permanent_url='article.html?id='||v_repl_article::text from public.public_live_feed where article_id=v_repl_article),
+    'Feed switch preserves the same Live Session, Article ID and Permanent Master URL.'
+  );
+
+  insert into ci_phase3_results values(
+    '3B-T101',
+    (select count(*)=1 from public.live_feed_sources where session_id=v_repl_session and source_status='ACTIVE')
+    and (select active_feed_source_id=v_source from public.live_sessions where id=v_repl_session)
+    and (select active_source_type='DRONE' and feed_transition_state='STABLE' from public.public_live_feed where article_id=v_repl_article),
+    'Exactly one provider-confirmed feed source is authoritative after the switch.'
+  );
+
   perform public.jb_live_revoke_capabilities_internal(
     v_owner,v_repl_session,v_r1,'CI drone/source revoke'
+  );
+
+  insert into ci_phase3_results values(
+    '3B-T105',
+    (select session_status<>'ENDED' from public.live_sessions where id=v_repl_session)
+    and (select active_feed_source_id is null from public.live_sessions where id=v_repl_session)
+    and (select public_status='INTERRUPTED' and feed_transition_state='TEMPORARILY_INTERRUPTED' from public.public_live_feed where article_id=v_repl_article),
+    'Active Drone/source failure or revoke does not end the Live Session; it moves public truth to a recoverable interrupted state.'
+  );
+
+  insert into ci_phase3_results values(
+    '3B-T108',
+    exists(select 1 from public.audit_logs where record_id=v_repl_session::text and action='phase3b_feed_switched')
+    and exists(select 1 from public.audit_logs where record_id=v_repl_session::text and action='phase3b_capabilities_revoked')
+    and (select count(*)=1 from public.live_sessions where id=v_repl_session and article_id=v_repl_article),
+    'Feed switch and authority revoke are auditable while canonical session/article identity remains singular.'
   );
 
   begin
