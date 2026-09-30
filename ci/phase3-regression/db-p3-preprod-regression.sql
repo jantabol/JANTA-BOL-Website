@@ -89,7 +89,11 @@ begin
     and (
       p.proconfig is null
       or not exists(select 1 from unnest(p.proconfig) cfg where cfg like 'search_path=%')
-      or has_function_privilege('PUBLIC',p.oid,'EXECUTE')
+      or exists(
+        select 1
+        from aclexplode(coalesce(p.proacl,acldefault('f',p.proowner))) acl
+        where acl.grantee=0 and acl.privilege_type='EXECUTE'
+      )
       or has_function_privilege('anon',p.oid,'EXECUTE')
       or has_function_privilege('authenticated',p.oid,'EXECUTE')
     );
