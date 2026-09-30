@@ -370,7 +370,7 @@ end $$;
 
 
 -- Phase 3B exact-gap evidence. All fixtures remain inside this transaction and roll back.
-do $
+do $$$$
 declare
   v_owner uuid;
   v_r1 uuid;
@@ -789,7 +789,7 @@ begin
     ),
     'Pre-replacement contribution and Reporter attribution remain preserved.'
   );
-end $;
+end $$$$;
 
 select
   case when ok then 'PASS' else 'FAIL' end
