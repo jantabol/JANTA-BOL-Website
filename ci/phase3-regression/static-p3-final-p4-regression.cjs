@@ -218,6 +218,33 @@ record('3A-P4-T035',
   'Worker lease/claim ownership prevents independent double ownership and stale provider generations cannot overwrite the current generation.'
 );
 
+
+const oauthStart=read('CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts');
+const oauthCallback=read('CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts');
+const handoff=read('CODEX_CURRENT_SUPABASE/functions/jb-encoder-handoff/index.ts');
+const launch=read('CODEX_CURRENT_SUPABASE/functions/jb-encoder-launch/index.ts');
+
+record('3A-P4-T036',/YOUTUBE_EXPECTED_CHANNEL_ID|expected_channel/i.test(oauthStart+oauthCallback+edge) && /deployment_environment|environment/i.test(oauthStart+oauthCallback+edge),'YouTube connection is pinned to reviewed channel/environment metadata.');
+record('3A-P4-T037',/CHANNEL_MISMATCH|WRONG_CHANNEL|expected_channel/i.test(oauthCallback+edge) && /state_hash|oauth_state|state/i.test(oauthStart+oauthCallback) && /expires|consum|used_at/i.test(oauthStart+oauthCallback),'Wrong-channel and OAuth state expiry/reuse protections are explicit.');
+record('3A-P4-T038',/refresh_token/i.test(provider+edge) && /access_token/i.test(provider+edge) && /refresh/i.test(provider),'Healthy server-side refresh path can obtain provider access without repeated Founder login.');
+record('3A-P4-T039',/REAUTH_REQUIRED/.test(edge+provider+oauthCallback) && /liveBroadcasts/.test(provider) && /provider_broadcast_id/.test(provider+worker),'Broken authorization enters reauth-required state and approved provisioning persists one Broadcast mapping.');
+record('3A-P4-T040',nonReusable && /liveStreams/.test(provider),'Provider Stream creation is dedicated/non-reusable.');
+record('3A-P4-T042',ambiguity && /findBroadcastByMarker/.test(provider) && reconcileFirst,'Lost Broadcast-create response becomes ambiguity and reconciles before duplicate creation.');
+record('3A-P4-T043',/ORPHAN_POSSIBLE|AMBIGUOUS/.test(provider+worker) && /SERVER_ONLY/.test(provider+worker) && nonReusable,'Uncertain non-reusable Stream is not issued as a trusted credential and uses controlled replacement/reconciliation.');
+record('3A-P4-T044',/boundStreamId/.test(provider) && /provider_stream_status|lifeCycleStatus/.test(provider) && reconcileFirst,'Bind and LIVE-transition uncertainty query actual provider state before retry.');
+record('3A-P4-T045',/retire|delete/i.test(provider) && /provider_stream_status|streams\.list|liveStreams/.test(provider),'Retire cleanup checks known provider Stream state before further destructive action.');
+record('3A-P4-T046',/assigned_reporter_id|reporter_id/.test(handoff+launch+edge) && /SESSION_MEMBERSHIP_REQUIRED|REPORTER/.test(handoff+launch+edge),'Encoder handoff is assigned-Reporter/session scoped and cross-Reporter access is denied.');
+record('3A-P4-T047',/consumed_at|used_at|one.?use/i.test(handoff+launch+dbSecurity) && /token_hash/.test(handoff+launch+dbSecurity),'Consumed encoder handoff is hash-backed and one-use.');
+record('3A-P4-T049',!/stream_key\s+(text|varchar|character varying)/i.test(migration) && /token_hash/.test(migration+dbSecurity),'Normal database schema does not persist a raw stream-key column; handoff stores token hash.');
+record('3A-P4-T054',/permanent_url/.test(edge+worker+migration) && /provider_broadcast_id|provider_stream_id/.test(worker+provider),'Canonical JANTA BOL permanent URL remains separate from replaceable provider identifiers.');
+record('3A-P4-T055',/session_id/.test(worker+provider) && /generation_id/.test(worker+provider) && /assigned_reporter_id/.test(edge),'Live work is scoped by independent session/reporter/provider-generation identities, supporting concurrent isolated Lives.');
+record('3A-P4-T056',/session_id/.test(worker) && /FAILED_NEEDS_ATTENTION|RECONNECTING/.test(worker) && /normal Article publishing remains independent/i.test(baseline),'Failure state is session-scoped and ordinary publishing remains independent.');
+record('3A-P4-T057',/generation_id/.test(worker+provider) && /RECONNECTING/.test(worker+edge) && /session_id/.test(worker),'Each Live has separate provider-generation identity and short interruption uses reconnect state.');
+record('3A-P4-T058',/RECONNECTING/.test(worker+edge) && /same logical Live Session/i.test(baseline+dbRecovery),'Network return reconciles/resumes the same logical Live Session.');
+record('3A-P4-T059',/Article ID|Permanent Master URL/i.test(baseline) && /RECONNECTING/.test(worker+edge) && /signal|health/i.test(worker+provider),'Reconnect preserves Article/permanent identity and absent signal cannot remain falsely healthy.');
+record('3A-P4-T062',/COMPROMISED/.test(edge+worker+provider+dbSecurity) && /RETIRE_PENDING|RETIRED/.test(worker+provider+dbSecurity) && /article_id/.test(worker+edge),'Compromised provider generation retires/replaces while preserving Article identity.');
+record('3A-P4-T070',/CANCELLED_STALE|STALE_GENERATION|STALE/.test(worker+provider) && /safe_error|error_code|sanitize|redact/i.test(worker+provider+edge),'Stale queued work is invalidated and provider failures use bounded/safe error surfaces without credential leakage.');
+
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
 const payload={generated_at:new Date().toISOString(),checks:results.length,pass:results.length-fail.length,fail:fail.length,results};
