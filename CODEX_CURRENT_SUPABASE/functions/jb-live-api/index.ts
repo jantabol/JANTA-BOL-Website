@@ -279,6 +279,20 @@ Deno.serve(async (req: Request) => {
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
+    if (action === "reporter_correct_live_metadata") {
+      if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
+      const sessionId=String(payload.session_id??""), reason=textValue(payload.reason,240);
+      if(!validUuid(sessionId)||!reason) return json({ok:false,error:"INVALID_REQUEST"},400);
+      const x=await service.rpc("jb_live_metadata_correct_internal",{
+        p_actor:a.userId,
+        p_session:sessionId,
+        p_headline:payload.headline==null?null:textValue(payload.headline,300),
+        p_location:payload.location==null?null:textValue(payload.location,300),
+        p_reason:reason
+      });
+      if(x.error) throw x.error; return json({ok:true,result:x.data});
+    }
+
     if (action === "reporter_hide_update") {
       if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
       const id=String(payload.contribution_id??""), reason=textValue(payload.reason,240);
@@ -290,7 +304,7 @@ Deno.serve(async (req: Request) => {
     if (action === "reporter_final_report_save") {
       if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
       const sessionId=String(payload.session_id??""); if(!validUuid(sessionId)) return json({ok:false,error:"INVALID_SESSION_ID"},400);
-      const x=await service.rpc("jb_live_final_report_save_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[]});
+      const x=await service.rpc("jb_live_final_report_save_v2_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[],p_verified_facts:payload.verified_facts??[],p_event_at:payload.event_at??null,p_byline:null});
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
@@ -318,6 +332,20 @@ Deno.serve(async (req: Request) => {
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
+    if (action === "admin_correct_live_metadata") {
+      if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
+      const sessionId=String(payload.session_id??""), reason=textValue(payload.reason,240);
+      if(!validUuid(sessionId)||!reason) return json({ok:false,error:"INVALID_REQUEST"},400);
+      const x=await service.rpc("jb_live_metadata_correct_internal",{
+        p_actor:a.userId,
+        p_session:sessionId,
+        p_headline:payload.headline==null?null:textValue(payload.headline,300),
+        p_location:payload.location==null?null:textValue(payload.location,300),
+        p_reason:reason
+      });
+      if(x.error) throw x.error; return json({ok:true,result:x.data});
+    }
+
     if (action === "admin_replace_reporter") {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
       const sessionId=String(payload.session_id??""), reporterId=String(payload.reporter_user_id??""), reason=textValue(payload.reason,240);
@@ -338,7 +366,7 @@ Deno.serve(async (req: Request) => {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
       const sessionId=String(payload.session_id??""); if(!validUuid(sessionId)) return json({ok:false,error:"INVALID_SESSION_ID"},400);
       if(action.endsWith("_save")){
-        const x=await service.rpc("jb_live_final_report_save_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[]});
+        const x=await service.rpc("jb_live_final_report_save_v2_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[],p_verified_facts:payload.verified_facts??[],p_event_at:payload.event_at??null,p_byline:payload.byline??null});
         if(x.error) throw x.error; return json({ok:true,result:x.data});
       }
       const op=action.endsWith("_publish")?"PUBLISH":"FINALIZE";
