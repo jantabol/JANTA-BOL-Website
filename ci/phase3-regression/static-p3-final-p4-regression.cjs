@@ -201,6 +201,22 @@ record('3A-P4-T029',
     && /r\.expected_duration_minutes/.test(liveHtml),
   'Admin pending-request review reads backend pending requests and renders the submitted request details before decision.'
 );
+record('3A-P4-T034',
+  /operation_step/.test(worker+provider)
+    && /findBroadcastByMarker/.test(provider)
+    && /findStreamByMarker/.test(provider)
+    && /AMBIGUOUS/.test(worker+provider)
+    && /jb_live_claim_operation_internal/.test(worker),
+  'Duplicate queue delivery resumes/reconciles the same durable operation and provider markers instead of knowingly duplicating provider resources.'
+);
+record('3A-P4-T035',
+  /jb_live_claim_operation_internal/.test(worker)
+    && /lease_until/.test(dbRecovery)
+    && /current_provider_generation/.test(worker+provider)
+    && /CANCELLED_STALE/.test(worker)
+    && /STALE_GENERATION/.test(provider),
+  'Worker lease/claim ownership prevents independent double ownership and stale provider generations cannot overwrite the current generation.'
+);
 
 const fail=results.filter(r=>!r.ok);
 const OUT=path.join(ROOT,'ci-results');fs.mkdirSync(OUT,{recursive:true});
