@@ -38,6 +38,15 @@ jobs:
       - name: Run authentication and security architecture regression
         run: node ci/phase3-regression/static-security-architecture-regression.cjs
 
+      - name: Run Phase 3A P1 functional regression
+        run: node ci/phase3-regression/static-p1-functional-regression.cjs
+
+      - name: Run Phase 3A P2 core provider regression
+        run: node ci/phase3-regression/static-p2-core-regression.cjs
+
+      - name: Run Phase 3A P2 recovery regression
+        run: node ci/phase3-regression/static-p2-recovery-regression.cjs
+
       - name: Audit exact regression coverage
         run: node ci/phase3-regression/coverage-audit.cjs
 
