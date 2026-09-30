@@ -17,7 +17,17 @@ many(['3A-P2-T141','3A-P2-T142'],/RETRY_PENDING/.test(worker)&&/FAILED_NEEDS_ATT
 many(['3A-P2-T143','3A-P2-T144'],fallbackTruth,'Realtime/notification outage does not delete business state; fetch/dashboard fallback remains.');
 many(['3A-P2-T145','3A-P2-T146'],multiLive,'Failure blast radius is per Live Session/provider generation, not global.');
 many(['3A-P2-T147','3A-P2-T148','3A-P2-T149'],backendMapping&&masterPage,'Master JANTA BOL data is separate from provider-specific mappings across provider replacement.');
-many(['3A-P2-T150','3A-P2-T151'],/handoff/.test(edge+E.handoff+E.launch)&&!/article_sources|audit_logs|user_roles/.test(E.launch),'Encoder handoff carries only authorized media/session context, not newsroom/Admin model.');
+many(['3A-P2-T150','3A-P2-T151'],
+  /jb_live_consume_handoff_internal/.test(E.launch)
+  && /generation_id/.test(E.launch)
+  && /session_id/.test(E.launch)
+  && /connector_key/.test(E.launch)
+  && /get_encoder_ingest/.test(E.launch)
+  && /rtmps_address/.test(E.launch)
+  && /stream_name/.test(E.launch)
+  && !/\barticle_id\b|article_sources|user_roles|owner_session|admin_/i.test(E.launch),
+  'Encoder-visible launch path is limited to authorized Session/current generation/connector + media ingest context; internal audit remains server-side.'
+);
 many(['3A-P2-T154','3A-P2-T155'],E.configHealth&&E.providerReadySeparate,'Admin can inspect YouTube connection/health and provider readiness stays distinct from editorial approval.');
 many(['3A-P2-T156','3A-P2-T157','3A-P2-T158'],lightweightMobile&&realtimeAccel&&reconcile,'Mobile clients stay lightweight; provider polling/orchestration is centralized and controlled.');
 many(['3A-P2-T160','3A-P2-T161','3A-P2-T162'],separateModule,'Advanced same-session/final-report/grievance workflows are not mixed into Phase-3A Reporter Live path.');
