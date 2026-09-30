@@ -113,7 +113,8 @@ const controlMediaSplit=
   /const service=createClient|const service = createClient/.test(edge) &&
   /SUPABASE_ANON_KEY/.test(edge) &&
   /JB_SUPABASE_SERVICE_ROLE_KEY/.test(edge) &&
-  /jb-live-worker/.test(worker)===false &&
+  !/SUPABASE_ANON_KEY/.test(worker) &&
+  !/auth\.getUser\(/.test(worker) &&
   /jb-youtube-provider/.test(worker) &&
   /JB_SUPABASE_SERVICE_ROLE_KEY/.test(worker) &&
   /PROVIDER_AUTH_REQUIRED/.test(provider);
@@ -139,7 +140,8 @@ const narrowProvider=
 
 const publicProjection=
   /from\('public_live_feed'\)/.test(website) &&
-  /article\.html\?id=/.test(article) &&
+  /article\.html\?id=/.test(website) &&
+  /permanent_url/.test(website) &&
   !/live_provider_generations|encoder_handoffs|live_operations/.test(website) &&
   !/requireOwner|requireReporter|auth\.getUser/.test(website);
 
