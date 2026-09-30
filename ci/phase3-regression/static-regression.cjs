@@ -298,21 +298,20 @@ record('3B-T111',
   !/DRONE/.test(reporterUi),
   'Cross-user/source control is not exposed to Reporter UI; feed-source control is server-authenticated owner/AAL2 only.');
 
-const highRiskActions=[
-  'admin_replace_reporter',
-  'admin_force_stop',
-  'admin_final_report_publish'
-];
-const highRiskGuarded=highRiskActions.every(action=>{
-  const i=edge.indexOf(\`if (action === "\${action}")\`);
-  if(i<0)return false;
-  const sample=edge.slice(i,i+500);
-  return /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(sample);
-});
+const replacementStart=edge.indexOf('if (action === "admin_replace_reporter")');
+const replacementBlock=replacementStart>=0?edge.slice(replacementStart,replacementStart+700):'';
+const forceStopStart=edge.indexOf('if (action === "admin_force_stop")');
+const forceStopBlock=forceStopStart>=0?edge.slice(forceStopStart,forceStopStart+650):'';
+const finalAdminStart=edge.indexOf('if (action === "admin_final_report_save" || action === "admin_final_report_finalize" || action === "admin_final_report_publish")');
+const finalAdminEnd=edge.indexOf('if (action === "admin_grant_final_report_publish")');
+const finalAdminBlock=finalAdminStart>=0&&finalAdminEnd>finalAdminStart?edge.slice(finalAdminStart,finalAdminEnd):'';
 record('3B-T116',
-  highRiskGuarded &&
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(replacementBlock) &&
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(forceStopBlock) &&
   /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(feedBlock) &&
   /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(adminCorrectBlock) &&
+  /admin_final_report_publish/.test(finalAdminBlock) &&
+  /a\.role !== "owner" \|\| a\.aal !== "aal2"/.test(finalAdminBlock) &&
   /JB_SUPABASE_SERVICE_ROLE_KEY/.test(edge),
   'Privileged replacement/Force Stop/feed/delete/final-publish paths enforce server-side owner+AAL2 before internal RPCs.');
 
