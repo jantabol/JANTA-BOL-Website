@@ -29,6 +29,7 @@ const suiteFiles=[
   'static-p3-recovery-regression.cjs',
   'static-p3-incident-regression.cjs',
   'static-p3-preprod-regression.cjs',
+  'static-p3-final-p4-regression.cjs',
   'db-regression.sql',
   'db-schema-regression.sql',
   'db-flow-regression.sql',
