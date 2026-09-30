@@ -293,7 +293,7 @@ begin
   );
 end $$;
 
-do $
+do $$
 declare
   f ci_phase3_access_fixture%rowtype;
   v_count integer:=0;
@@ -310,9 +310,9 @@ begin
     '3A-P3-T115',v_ok,
     'Privileged Live operation journal is denied to direct authenticated client access.'
   );
-end $;
+end $$;
 
-do $
+do $$
 declare
   f ci_phase3_access_fixture%rowtype;
   v_ok boolean:=false;
@@ -332,7 +332,7 @@ begin
     '3A-P3-T116',v_ok,
     'Durable Live work queue/operation state is internal; browser-authenticated clients cannot directly mutate queued work.'
   );
-end $;
+end $$;
 
 do $$
 declare
