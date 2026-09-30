@@ -17,10 +17,22 @@ const endLive=(sessionId)=>api('reporter_end_live',{session_id:sessionId});
 const adminEndLive=(sessionId)=>api('admin_end_live',{session_id:sessionId});
 const adminPending=()=>api('admin_pending');
 const adminOverview=()=>api('admin_overview');
-const approveRequest=(requestId,stateVersion)=>api('admin_approve_request',{request_id:requestId,state_version:stateVersion});
+const approvalActionIds=new Map();
+const approvalActionId=(requestId,stateVersion)=>{
+  const key=String(requestId)+':'+String(stateVersion);
+  let id=approvalActionIds.get(key);
+  if(!id){
+    id=global.crypto?.randomUUID?.();
+    if(!id)throw new Error('ACTION_ID_UNAVAILABLE');
+    approvalActionIds.set(key,id);
+  }
+  return id;
+};
+const approveRequest=(requestId,stateVersion)=>api('admin_approve_request',{request_id:requestId,state_version:stateVersion,client_action_id:approvalActionId(requestId,stateVersion)});
 const rejectRequest=(requestId,stateVersion,reason)=>api('admin_reject_request',{request_id:requestId,state_version:stateVersion,reason});
 const youtubeStatus=()=>api('youtube_status');
 const youtubeConnect=()=>invoke('jb-youtube-oauth-start');
+const youtubeMarkCompromised=()=>api('admin_youtube_mark_compromised');
 const notifications=()=>api('notifications_list');
 const markNotificationRead=(notificationId)=>api('notification_mark_read',{notification_id:notificationId});
 const subscribeNotifications=async(callback)=>{const u=await global.JBBackend.client.auth.getUser();const id=u?.data?.user?.id;if(!id)return null;return global.JBBackend.client.channel('jb-live-notify-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'live_notifications',filter:'recipient_user_id=eq.'+id},payload=>{try{callback(payload)}catch(_){}}).subscribe();};
@@ -54,5 +66,5 @@ const p3bAdminDeleteUpdate=(contributionId,reason)=>api('admin_delete_update',{c
 const p3bFeedRegister=(sessionId,sourceType,controllerUserId,providerGenerationId=null)=>api('admin_feed_register',{session_id:sessionId,source_type:sourceType,controller_user_id:controllerUserId,provider_generation_id:providerGenerationId});
 const p3bFeedConfirm=(sessionId,sourceId)=>api('admin_feed_confirm',{session_id:sessionId,source_id:sourceId});
 const p3bFeedSwitch=(sessionId,sourceId)=>api('admin_feed_switch',{session_id:sessionId,source_id:sourceId});
-global.JBLive={api,context,submitRequest,myRequests,cancelRequest,prepareCamera,endLive,adminEndLive,adminPending,adminOverview,approveRequest,rejectRequest,youtubeStatus,youtubeConnect,notifications,markNotificationRead,subscribeNotifications,subscribePublicLive,revokeLivePermission,suspendReporter,regrantLivePermission,encoderAdminOverview,encoderSwitch,encoderConnectorState,p3bAdminOverview,p3bReporterSession,p3bExpectedEnd,p3bAddUpdate,p3bCorrectUpdate,p3bHideUpdate,p3bFinalSave,p3bFinalSubmit,p3bFinalPublish,p3bFinalCorrectionRequest,p3bAdminControl,p3bReplaceReporter,p3bAddMember,p3bForceStop,p3bGrantFinalPublish,p3bAdminFinalSave,p3bAdminFinalFinalize,p3bAdminFinalPublish,p3bAdminCorrectUpdate,p3bAdminDeleteUpdate,p3bFeedRegister,p3bFeedConfirm,p3bFeedSwitch};
+global.JBLive={api,context,submitRequest,myRequests,cancelRequest,prepareCamera,endLive,adminEndLive,adminPending,adminOverview,approveRequest,rejectRequest,youtubeStatus,youtubeConnect,youtubeMarkCompromised,notifications,markNotificationRead,subscribeNotifications,subscribePublicLive,revokeLivePermission,suspendReporter,regrantLivePermission,encoderAdminOverview,encoderSwitch,encoderConnectorState,p3bAdminOverview,p3bReporterSession,p3bExpectedEnd,p3bAddUpdate,p3bCorrectUpdate,p3bHideUpdate,p3bFinalSave,p3bFinalSubmit,p3bFinalPublish,p3bFinalCorrectionRequest,p3bAdminControl,p3bReplaceReporter,p3bAddMember,p3bForceStop,p3bGrantFinalPublish,p3bAdminFinalSave,p3bAdminFinalFinalize,p3bAdminFinalPublish,p3bAdminCorrectUpdate,p3bAdminDeleteUpdate,p3bFeedRegister,p3bFeedConfirm,p3bFeedSwitch};
 })(window);

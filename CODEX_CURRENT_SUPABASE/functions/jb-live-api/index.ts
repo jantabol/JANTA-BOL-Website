@@ -279,6 +279,20 @@ Deno.serve(async (req: Request) => {
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
+    if (action === "reporter_correct_live_metadata") {
+      if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
+      const sessionId=String(payload.session_id??""), reason=textValue(payload.reason,240);
+      if(!validUuid(sessionId)||!reason) return json({ok:false,error:"INVALID_REQUEST"},400);
+      const x=await service.rpc("jb_live_metadata_correct_internal",{
+        p_actor:a.userId,
+        p_session:sessionId,
+        p_headline:payload.headline==null?null:textValue(payload.headline,300),
+        p_location:payload.location==null?null:textValue(payload.location,300),
+        p_reason:reason
+      });
+      if(x.error) throw x.error; return json({ok:true,result:x.data});
+    }
+
     if (action === "reporter_hide_update") {
       if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
       const id=String(payload.contribution_id??""), reason=textValue(payload.reason,240);
@@ -290,7 +304,7 @@ Deno.serve(async (req: Request) => {
     if (action === "reporter_final_report_save") {
       if (a.role !== "reporter" || !a.reporterActive) return json({ ok:false, error:"REPORTER_REQUIRED" },403);
       const sessionId=String(payload.session_id??""); if(!validUuid(sessionId)) return json({ok:false,error:"INVALID_SESSION_ID"},400);
-      const x=await service.rpc("jb_live_final_report_save_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[]});
+      const x=await service.rpc("jb_live_final_report_save_v2_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[],p_verified_facts:payload.verified_facts??[],p_event_at:payload.event_at??null,p_byline:null});
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
@@ -318,6 +332,20 @@ Deno.serve(async (req: Request) => {
       if(x.error) throw x.error; return json({ok:true,result:x.data});
     }
 
+    if (action === "admin_correct_live_metadata") {
+      if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
+      const sessionId=String(payload.session_id??""), reason=textValue(payload.reason,240);
+      if(!validUuid(sessionId)||!reason) return json({ok:false,error:"INVALID_REQUEST"},400);
+      const x=await service.rpc("jb_live_metadata_correct_internal",{
+        p_actor:a.userId,
+        p_session:sessionId,
+        p_headline:payload.headline==null?null:textValue(payload.headline,300),
+        p_location:payload.location==null?null:textValue(payload.location,300),
+        p_reason:reason
+      });
+      if(x.error) throw x.error; return json({ok:true,result:x.data});
+    }
+
     if (action === "admin_replace_reporter") {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
       const sessionId=String(payload.session_id??""), reporterId=String(payload.reporter_user_id??""), reason=textValue(payload.reason,240);
@@ -338,7 +366,7 @@ Deno.serve(async (req: Request) => {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ok:false,error:"OWNER_AAL2_REQUIRED"},403);
       const sessionId=String(payload.session_id??""); if(!validUuid(sessionId)) return json({ok:false,error:"INVALID_SESSION_ID"},400);
       if(action.endsWith("_save")){
-        const x=await service.rpc("jb_live_final_report_save_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[]});
+        const x=await service.rpc("jb_live_final_report_save_v2_internal",{p_actor:a.userId,p_session:sessionId,p_headline:textValue(payload.headline,300),p_body:String(payload.body??""),p_location:payload.location??null,p_media:payload.media??[],p_verified_facts:payload.verified_facts??[],p_event_at:payload.event_at??null,p_byline:payload.byline??null});
         if(x.error) throw x.error; return json({ok:true,result:x.data});
       }
       const op=action.endsWith("_publish")?"PUBLISH":"FINALIZE";
@@ -580,7 +608,8 @@ Deno.serve(async (req: Request) => {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ ok: false, error: "OWNER_AAL2_REQUIRED" }, 403);
       const requestId = String(payload.request_id ?? "");
       const expectedVersion = Number(payload.state_version ?? 0);
-      if (!validUuid(requestId) || !Number.isInteger(expectedVersion) || expectedVersion < 1) {
+      const clientActionId = String(payload.client_action_id ?? "");
+      if (!validUuid(requestId) || !Number.isInteger(expectedVersion) || expectedVersion < 1 || !validUuid(clientActionId)) {
         return json({ ok: false, error: "INVALID_REQUEST" }, 400);
       }
       const result = await service.rpc("jb_live_approve_request_internal", {
@@ -595,7 +624,18 @@ Deno.serve(async (req: Request) => {
         if (m.includes("REPORTER_DISABLED")) return json({ ok: false, error: "REPORTER_DISABLED" }, 409);
         throw result.error;
       }
-      return json({ ok: true, approval: result.data });
+      await service.from("audit_logs").insert({
+        actor_user_id: a.userId,
+        action: "live_request_approval_action",
+        record_type: "live_request",
+        record_id: requestId,
+        metadata: {
+          client_action_id: clientActionId,
+          state_version: expectedVersion,
+          idempotent: Boolean((result.data as Record<string, unknown>)?.idempotent),
+        },
+      });
+      return json({ ok: true, approval: result.data, client_action_id: clientActionId });
     }
 
     if (action === "admin_reject_request") {
@@ -642,6 +682,18 @@ Deno.serve(async (req: Request) => {
       const sessionId = String(payload.session_id ?? "");
       const reason = textValue(payload.reason ?? "SUPER_ADMIN_REVOKE", 240) || "SUPER_ADMIN_REVOKE";
       if (!validUuid(sessionId)) return json({ ok: false, error: "INVALID_SESSION_ID" }, 400);
+
+      // Capture the server-trusted current Reporter before revoking the 3A membership.
+      // The legacy revoke RPC does not return reporter_user_id, so relying on its
+      // response would silently skip the Phase 3B capability/source revocation.
+      const target = await service.from("live_sessions")
+        .select("assigned_reporter_id")
+        .eq("id", sessionId)
+        .maybeSingle();
+      if (target.error) throw target.error;
+      const targetUserId = String(target.data?.assigned_reporter_id ?? "");
+      if (!validUuid(targetUserId)) return json({ ok: false, error: "LIVE_SESSION_NOT_FOUND" }, 404);
+
       const revoked = await service.rpc("jb_live_revoke_permission_internal", {
         p_owner_user_id: a.userId,
         p_session_id: sessionId,
@@ -652,17 +704,16 @@ Deno.serve(async (req: Request) => {
         if (m.includes("NOT_FOUND")) return json({ ok: false, error: "LIVE_SESSION_NOT_FOUND" }, 404);
         throw revoked.error ?? new Error("LIVE_REVOKE_FAILED");
       }
-      const targetUserId = String((revoked.data as Record<string, unknown>)?.reporter_user_id ?? "");
-      if (validUuid(targetUserId)) {
-        const capRevoked = await service.rpc("jb_live_revoke_capabilities_internal", {
-          p_actor_user_id: a.userId,
-          p_session_id: sessionId,
-          p_target_user_id: targetUserId,
-          p_reason: reason,
-        });
-        if (capRevoked.error) throw capRevoked.error;
-      }
-      return json({ ok: true, revocation: revoked.data });
+
+      const capRevoked = await service.rpc("jb_live_revoke_capabilities_internal", {
+        p_actor_user_id: a.userId,
+        p_session_id: sessionId,
+        p_target_user_id: targetUserId,
+        p_reason: reason,
+      });
+      if (capRevoked.error) throw capRevoked.error;
+
+      return json({ ok: true, revocation: revoked.data, capabilities: capRevoked.data });
     }
 
     if (action === "admin_suspend_reporter") {

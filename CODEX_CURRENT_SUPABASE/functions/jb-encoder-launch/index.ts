@@ -20,6 +20,14 @@ async function sha256hex(v: string) {
   return [...h].map((x) => x.toString(16).padStart(2, "0")).join("");
 }
 
+function isAndroidIntentCapable(req: Request) {
+  const ua = String(req.headers.get("user-agent") ?? "").toLowerCase();
+  // Android WebView commonly renders an unsupported intent URL, including its
+  // credential-bearing query, when no matching encoder handler is installed.
+  // Never issue the provider ingest redirect from a WebView.
+  return ua.includes("android") && !ua.includes("; wv)") && !ua.includes(" version/4.0 chrome/");
+}
+
 function safeLaunchUrl(url: string, launchScheme: string) {
   const u = String(url || "").trim();
   if (!u || u.length > 12000) return false;
@@ -194,6 +202,16 @@ Deno.serve(async (req: Request) => {
   }
 
   if (!safeLaunchUrl(launchUrl, launchScheme)) return textResponse("Streaming app launch link unsafe/invalid hai.", 500);
+  if (!isAndroidIntentCapable(req)) {
+    await service.from("audit_logs").insert({
+      actor_user_id: c.reporter_id || null,
+      action: "encoder_launch_blocked_unsafe_client",
+      record_type: "live_session",
+      record_id: sessionId,
+      metadata: { connector_key: connectorKey, connector_kind: connectorKind, generation_id: generationId },
+    });
+    return textResponse("Is browser se secure Live camera launch supported nahi hai. JANTA BOL Live app/compatible encoder se open karein.", 409);
+  }
 
   await service.from("audit_logs").insert({
     actor_user_id: c.reporter_id || null,

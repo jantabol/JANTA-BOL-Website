@@ -1,0 +1,27 @@
+{
+  "reviewed_on": "2026-09-30",
+  "project_id": "vrffsnkycvjithwtiylt",
+  "phase3a_relevant_unresolved": 0,
+  "phase3a_scope": "Live/YouTube/encoder tables, functions, RLS, grants and Phase 3A Edge/worker authority",
+  "advisor_findings_reviewed": [
+    {
+      "name": "rls_enabled_no_policy",
+      "count": 1,
+      "scope": "public.owner_recovery_physical_checks",
+      "classification": "existing Phase-2 Owner recovery surface; not a Phase-3A Live/YouTube object"
+    },
+    {
+      "name": "authenticated_security_definer_function_executable",
+      "count": 7,
+      "scope": "jb_owner_* / owner recovery functions",
+      "classification": "existing Owner security/recovery RPC surface; dedicated internal checks remain separately regression-tested"
+    },
+    {
+      "name": "auth_leaked_password_protection",
+      "count": 1,
+      "scope": "project-wide Supabase Auth setting",
+      "classification": "global Auth hardening warning, not introduced by Phase-3A DB implementation; remains tracked and must not be misreported as resolved"
+    }
+  ],
+  "phase3a_review_result": "No Security Advisor finding names a Phase-3A Live/YouTube/encoder object or Phase-3A internal function. Broader project warnings remain explicitly open."
+}

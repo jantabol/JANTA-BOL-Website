@@ -129,3 +129,25 @@ Technical integration now supports this manual sequence:
 8. Old/lost sessions and old factor must be absent before incident closure.
 
 IMPORTANT: Step 5 is destructive and must be Founder-observed. The PRE-TEST build does not auto-delete the current real factor just to manufacture a PASS.
+
+## Phase 3A — Tier-1 backend/provider credential incidents
+
+### Supabase backend secret compromise
+Treat as a high-severity infrastructure incident:
+1. Freeze new privileged Live/provider work where practical.
+2. Rotate the compromised Supabase backend/service credential from a known-clean administrative path.
+3. Inspect security/activity logs for suspicious backend/API use.
+4. Verify database integrity, grants/RLS and critical Live identity/state records before normal privileged work resumes.
+5. Redeploy affected server functions/services with the rotated credential.
+6. Investigate provider effects and reconcile every affected Live/provider generation before incident closure.
+7. Preserve Article ID, Live Session ID and Permanent URL; do not manufacture replacement business identities as a shortcut.
+
+### Google refresh token compromise
+Treat as a high-severity provider incident:
+1. Use the Founder-only OAuth compromise containment action to stop new privileged YouTube work and force REAUTH_REQUIRED.
+2. Revoke/replace the compromised Google authorization; do not reuse the suspect refresh token.
+3. Inspect YouTube/Google activity and JANTA BOL audit evidence for unauthorized provider actions.
+4. Reconnect only the verified JANTA BOL channel through the normal Owner+AAL2 OAuth flow.
+5. Reconcile affected Provider Generations and retire/replace compromised provider credentials before declaring recovery complete.
+
+These procedures are incident runbooks, not fake PASS evidence. Actual destructive credential rotation/revocation during a real incident remains Founder-controlled.

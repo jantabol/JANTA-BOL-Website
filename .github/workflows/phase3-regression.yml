@@ -1,0 +1,206 @@
+name: Phase 3A + 3B Regression
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - phase3-regression-ci
+      - phase3c-codex-baseline-2026-09-29
+    paths:
+      - "JANTA_BOL_PHASE_3C_WORKING/**"
+      - "CODEX_CURRENT_SUPABASE/**"
+      - "ci/phase3-regression/**"
+      - ".github/workflows/phase3-regression.yml"
+  pull_request:
+    branches:
+      - phase3c-codex-baseline-2026-09-29
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  static-regression:
+    name: Static / source regression
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Run static regression
+        run: node ci/phase3-regression/static-regression.cjs
+
+      - name: Run authentication and security architecture regression
+        run: node ci/phase3-regression/static-security-architecture-regression.cjs
+
+      - name: Run Phase 3A P1 functional regression
+        run: node ci/phase3-regression/static-p1-functional-regression.cjs
+
+      - name: Run Phase 3A P2 core provider regression
+        run: node ci/phase3-regression/static-p2-core-regression.cjs
+
+      - name: Run Phase 3A P2 recovery regression
+        run: node ci/phase3-regression/static-p2-recovery-regression.cjs
+
+      - name: Run Phase 3A P3 security T20 regression
+        run: node ci/phase3-regression/static-p3-security-regression.cjs
+
+      - name: Run Phase 3A P3 recovery T20 regression
+        run: node ci/phase3-regression/static-p3-recovery-regression.cjs
+
+      - name: Run Phase 3A P3 incident isolation T20 regression
+        run: node ci/phase3-regression/static-p3-incident-regression.cjs
+
+      - name: Run Phase 3A P3 pre-production trace T20 regression
+        run: node ci/phase3-regression/static-p3-preprod-regression.cjs
+
+      - name: Run Phase 3A P3-final + P4 governance T20 regression
+        run: node ci/phase3-regression/static-p3-final-p4-regression.cjs
+
+      - name: Audit exact regression coverage
+        run: node ci/phase3-regression/coverage-audit.cjs
+
+      - name: Upload static evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-static-regression
+          path: ci-results/
+          if-no-files-found: warn
+
+  supabase-regression:
+    name: Supabase transactional regression
+    runs-on: ubuntu-latest
+    needs: static-regression
+    env:
+      PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      PGHOST: aws-0-ap-south-1.pooler.supabase.com
+      PGPORT: "5432"
+      PGDATABASE: postgres
+      PGUSER: postgres.vrffsnkycvjithwtiylt
+      PGSSLMODE: require
+      PGCONNECT_TIMEOUT: "15"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Require database password secret
+        shell: bash
+        run: |
+          if [ -z "$PGPASSWORD" ]; then
+            echo "::error::Missing GitHub Actions secret SUPABASE_DB_PASSWORD. Database regression is fail-closed."
+            exit 1
+          fi
+          echo "::add-mask::$PGPASSWORD"
+
+      - name: Install PostgreSQL client
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y postgresql-client
+
+      - name: Run Supabase core regression
+        shell: bash
+        run: |
+          mkdir -p ci-results
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-regression.sql 2>&1 | tee ci-results/db-regression.log
+
+      - name: Run Phase 3A schema and security regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-schema-regression.sql 2>&1 | tee ci-results/db-schema-regression.log
+
+      - name: Run Phase 3A request flow regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-flow-regression.sql 2>&1 | tee ci-results/db-flow-regression.log
+
+      - name: Run Phase 3A state-machine regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-state-machine-regression.sql 2>&1 | tee ci-results/db-state-machine-regression.log
+
+      - name: Run Phase 3A P3 security T20 database regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-p3-security-regression.sql 2>&1 | tee ci-results/db-p3-security-regression.log
+
+      - name: Run Phase 3A P3 recovery T20 database regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-p3-recovery-regression.sql 2>&1 | tee ci-results/db-p3-recovery-regression.log
+
+      - name: Run Phase 3A P3 incident isolation T20 database regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-p3-incident-regression.sql 2>&1 | tee ci-results/db-p3-incident-regression.log
+
+      - name: Run Phase 3A P3 pre-production trace T20 database regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-p3-preprod-regression.sql 2>&1 | tee ci-results/db-p3-preprod-regression.log
+
+      - name: Run Phase 3A negative access regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-access-regression.sql 2>&1 | tee ci-results/db-access-regression.log
+
+      - name: Run Phase 3A function security regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-function-security-regression.sql 2>&1 | tee ci-results/db-function-security-regression.log
+
+      - name: Run Phase 3A security lifecycle regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-security-lifecycle-regression.sql 2>&1 | tee ci-results/db-security-lifecycle-regression.log
+
+      - name: Run Supabase editorial regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-editorial-regression.sql 2>&1 | tee ci-results/db-editorial-regression.log
+
+      - name: Run Supabase retention regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-retention-regression.sql 2>&1 | tee ci-results/db-retention-regression.log
+
+      - name: Summarize database results
+        if: always()
+        shell: bash
+        run: |
+          {
+            echo "## Phase 3 Supabase regression"
+            echo
+            for f in ci-results/db-regression.log ci-results/db-schema-regression.log ci-results/db-flow-regression.log ci-results/db-state-machine-regression.log ci-results/db-p3-security-regression.log ci-results/db-p3-recovery-regression.log ci-results/db-p3-incident-regression.log ci-results/db-p3-preprod-regression.log ci-results/db-access-regression.log ci-results/db-function-security-regression.log ci-results/db-security-lifecycle-regression.log ci-results/db-editorial-regression.log ci-results/db-retention-regression.log; do
+              if [ -f "$f" ]; then
+                grep -E '^[[:space:]]*(PASS|FAIL) \[' "$f" || true
+              fi
+            done
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload database evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: phase3-supabase-regression
+          path: ci-results/
+          if-no-files-found: warn
