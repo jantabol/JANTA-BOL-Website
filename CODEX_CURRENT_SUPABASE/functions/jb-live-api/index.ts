@@ -580,7 +580,8 @@ Deno.serve(async (req: Request) => {
       if (a.role !== "owner" || a.aal !== "aal2") return json({ ok: false, error: "OWNER_AAL2_REQUIRED" }, 403);
       const requestId = String(payload.request_id ?? "");
       const expectedVersion = Number(payload.state_version ?? 0);
-      if (!validUuid(requestId) || !Number.isInteger(expectedVersion) || expectedVersion < 1) {
+      const clientActionId = String(payload.client_action_id ?? "");
+      if (!validUuid(requestId) || !Number.isInteger(expectedVersion) || expectedVersion < 1 || !validUuid(clientActionId)) {
         return json({ ok: false, error: "INVALID_REQUEST" }, 400);
       }
       const result = await service.rpc("jb_live_approve_request_internal", {
@@ -595,7 +596,18 @@ Deno.serve(async (req: Request) => {
         if (m.includes("REPORTER_DISABLED")) return json({ ok: false, error: "REPORTER_DISABLED" }, 409);
         throw result.error;
       }
-      return json({ ok: true, approval: result.data });
+      await service.from("audit_logs").insert({
+        actor_user_id: a.userId,
+        action: "live_request_approval_action",
+        record_type: "live_request",
+        record_id: requestId,
+        metadata: {
+          client_action_id: clientActionId,
+          state_version: expectedVersion,
+          idempotent: Boolean((result.data as Record<string, unknown>)?.idempotent),
+        },
+      });
+      return json({ ok: true, approval: result.data, client_action_id: clientActionId });
     }
 
     if (action === "admin_reject_request") {
