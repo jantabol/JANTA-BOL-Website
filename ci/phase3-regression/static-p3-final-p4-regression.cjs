@@ -11,6 +11,8 @@ const codeMap=read('JANTA_BOL_PHASE_3C_WORKING/CODE-MAP.md');
 const changelog=read('JANTA_BOL_PHASE_3C_WORKING/CHANGELOG.md');
 const debugMap=read('JANTA_BOL_PHASE_3C_WORKING/DEBUG-MAP.md');
 const testRegister=read('JANTA_BOL_PHASE_3C_WORKING/TEST-REGISTER.md');
+const statusPolicy=read('ci/phase3-regression/TEST-STATUS-POLICY.md');
+const liveHtml=read('JANTA_BOL_PHASE_3C_WORKING/live.html');
 const migration=read('JANTA_BOL_PHASE_3C_WORKING/phase2-migration.sql');
 const advisor=JSON.parse(read('ci/phase3-regression/security-advisor-review.json'));
 const dbSecurity=read('ci/phase3-regression/db-p3-security-regression.sql');
@@ -50,9 +52,9 @@ const businessProviderTruth=
 
 const incidentEvidence=
  /audit_logs/.test(edge+worker+dbIncident)
- && /live_generation_history/.test(dbIncident+dbRecovery)
+ && /live_provider_generations/.test(dbIncident+dbSecurity)
  && /revok|compromis|retir/i.test(edge+worker+dbIncident)
- && /do not|preserv|history|audit/i.test(baseline+changelog+debugMap);
+ && /preserv|history|audit/i.test(baseline+changelog+debugMap);
 
 const masterIdentity=
  /Article ID \+ Permanent Master URL remain canonical/.test(baseline)
@@ -96,7 +98,9 @@ const m2m3=
  && /admin_approve_request/.test(edge)
  && /admin_reject_request/.test(edge)
  && /OWNER_AAL2_REQUIRED/.test(edge)
- && /pending|approve/i.test(admin);
+ && /Pending Live Requests/.test(liveHtml)
+ && /approveRequest/.test(liveHtml)
+ && /rejectRequest/.test(liveHtml);
 
 const m3m4=
  /admin_approve_request/.test(edge)
@@ -133,7 +137,8 @@ const earlySecurity=
  /RLS/.test(dbSecurity+dbPreprod)
  && /OWNER_AAL2_REQUIRED/.test(edge)
  && /SECURITY DEFINER/.test(dbPreprod)
- && /NO.*PUBLIC|no PUBLIC/i.test(dbPreprod);
+ && /PUBLIC\/anon\/authenticated direct EXECUTE remains/.test(dbPreprod)
+ && exists('ci/phase3-regression/db-function-security-regression.sql');
 
 const migrationDiscipline=
  exists('JANTA_BOL_PHASE_3C_WORKING/phase2-migration.sql')
