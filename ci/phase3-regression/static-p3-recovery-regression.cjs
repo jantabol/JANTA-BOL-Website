@@ -129,6 +129,7 @@ record('3A-P3-T072',bindRecovery,'Lost bind response is checked against the actu
 record('3A-P3-T073',liveTransitionRecovery,'Lost LIVE-transition response is reconciled against actual provider lifecycle rather than blindly repeating transition.');
 record('3A-P3-T074',retireRecovery,'Retire cleanup checks known Stream state/absence and treats uncertain destructive results as explicit ambiguity.');
 record('3A-P3-T075',journalResume,'Worker/provider persist and read operation journal step/data so recovery resumes from known progress rather than blindly from zero.');
+record('3A-P3-T077',staleGeneration,'Old-generation jobs are rejected/cancelled when they no longer match the session current provider generation.');
 record('3A-P3-T135',generalRecovery,'Failure paths detect/classify uncertainty, freeze stale/unsafe work, preserve identities and reconcile before continuing.');
 record('3A-P3-T136',preservesBusinessIdentity,'Provider recovery preserves Article/Live Session/Permanent URL identities and does not create random replacement sessions.');
 record('3A-P3-T137',directMediaPath&&reconcile,'Healthy Reporter-to-provider media uses direct RTMPS ingest; control-plane recovery is reconciled separately rather than proxy-killing media.');
