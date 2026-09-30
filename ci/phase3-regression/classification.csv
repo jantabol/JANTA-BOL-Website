@@ -603,7 +603,7 @@ T020,3B,integration automated
 T021,3B,integration automated
 T022,3B,backend/API/Supabase automated
 T023,3B,backend/API/Supabase automated
-T024,3B,real-device/manual only
+T024,3B,AUTOMATED_CI_MAPPED
 T025,3B,integration automated
 T026,3B,integration automated
 T027,3B,backend/API/Supabase automated
@@ -614,7 +614,7 @@ T031,3B,integration automated
 T032,3B,integration automated
 T033,3B,integration automated
 T034,3B,backend/API/Supabase automated
-T035,3B,real-device/manual only
+T035,3B,AUTOMATED_CI_MAPPED
 T036,3B,backend/API/Supabase automated
 T037,3B,integration automated
 T038,3B,integration automated
@@ -622,7 +622,7 @@ T039,3B,backend/API/Supabase automated
 T040,3B,real-device/manual only
 T041,3B,integration automated
 T042,3B,integration automated
-T043,3B,real-device/manual only
+T043,3B,AUTOMATED_CI_MAPPED
 T044,3B,integration automated
 T045,3B,integration automated
 T046,3B,integration automated
@@ -679,19 +679,19 @@ T096,3B,real-device/manual only
 T097,3B,backend/API/Supabase automated
 T098,3B,backend/API/Supabase automated
 T099,3B,real-device/manual only
-T100,3B,real-device/manual only
-T101,3B,real-device/manual only
-T102,3B,real-device/manual only
+T100,3B,AUTOMATED_CI_MAPPED
+T101,3B,AUTOMATED_CI_MAPPED
+T102,3B,AUTOMATED_CI_MAPPED
 T103,3B,real-device/manual only
 T104,3B,real-device/manual only
-T105,3B,real-device/manual only
+T105,3B,AUTOMATED_CI_MAPPED
 T106,3B,backend/API/Supabase automated
 T107,3B,real-device/manual only
-T108,3B,real-device/manual only
-T109,3B,real-device/manual only
-T110,3B,real-device/manual only
+T108,3B,AUTOMATED_CI_MAPPED
+T109,3B,AUTOMATED_CI_MAPPED
+T110,3B,AUTOMATED_CI_MAPPED
 T111,3B,backend/API/Supabase automated
-T112,3B,real-device/manual only
+T112,3B,AUTOMATED_CI_MAPPED
 T113,3B,integration automated
 T114,3B,backend/API/Supabase automated
 T115,3B,integration automated
@@ -701,6 +701,6 @@ T118,3B,integration automated
 T119,3B,backend/API/Supabase automated
 T120,3B,integration automated
 T121,3B,real-device/manual only
-T122,3B,real-device/manual only
+T122,3B,AUTOMATED_CI_MAPPED
 T123,3B,integration automated
-T124,3B,real-device/manual only
+T124,3B,evidence-gated final-lock
