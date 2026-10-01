@@ -116,3 +116,34 @@ Protected workflow run #246 completed:
 - Started B2 Common Audit + Retention — P4-T051–P4-T059.
 - Source-of-truth scope: Master Blueprint Sections 395–480 / RUN-08.
 - First action is implementation/data-model audit before schema/code changes: preserve existing audit/version/history/deletion systems, classify Preserve/Integrate/Extend/Add Missing, then make minimum safe changes.
+
+
+## 2026-10-01 — B2 IMPLEMENTATION + AUTO REGRESSION CHECKPOINT
+
+### Implemented
+- additive common audit/retention/disposition foundation
+- secret-sanitized audit lookup/export path
+- protected audit immutability with locked Live routine-cleanup compatibility
+- domain-owned retention policies + due/extension/hold/archive state/history
+- retention-gated Permanent Delete + retired Article identity ledger
+- public displayed-view ON/OFF/override state preserving raw analytics
+- Android-first Records UI + server Records API
+- service-only privileged Records RPC boundary
+
+### Live verification
+- `jb-records-api` v1 ACTIVE with JWT verification.
+- Supabase migration ledger contains all four B2 migrations.
+- Existing protected audit/version/Live-retention homes remain present and populated.
+- Authenticated direct privileged Records RPC EXECUTE is denied.
+
+### Regression
+- Protected workflow run #296 SUCCESS.
+- B2 static/security regression SUCCESS.
+- B2 transactional regression SUCCESS.
+- Old Phase-3 regression families remained GREEN.
+
+### Test checkpoint
+- PASS: P4-T051, P4-T052, P4-T055, P4-T056, P4-T058.
+- IN PROGRESS: P4-T053, P4-T059.
+- MANUAL NOT RUN: P4-T054, P4-T057.
+- No final B2 lock yet.
