@@ -1,0 +1,158 @@
+# JANTA BOL — PHASE 4 TEST REGISTER
+
+STATUS: ACTIVE EXECUTION RECORD
+DATE STARTED: 2026-10-01
+SOURCE: Phase 4 Final Test Blueprint / Master Execution Pack
+
+## Status vocabulary
+- NOT RUN — no execution evidence yet
+- IN PROGRESS — implementation/test work active; not PASS
+- PASS — required expected result observed with required evidence
+- FAIL — executed and failed
+- DUE — genuine unavailable external dependency recorded with reason + reopen trigger
+- BLOCKED — internal blocker prevents safe execution
+
+NO FAKE PASS. Code existence, a plan, a backup listing or a document alone is not PASS.
+
+## Execution order
+P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
+
+## Register
+
+| Test ID | Topic | Test | Block | Status |
+|---|---|---|---|---|
+| P4-T001 | Governance | Phase 3 Baseline + Source Authority Protection | B0 | IN PROGRESS |
+| P4-T002 | Governance | Evidence-Based Status / No Fake PASS | B0 | IN PROGRESS |
+| P4-T003 | Governance | Single-Home + Duplicate Architecture Audit | B0 | IN PROGRESS |
+| P4-T004 | Governance | Founder Authority + Mobile + Fail-Closed | B0 | NOT RUN — MANUAL |
+| P4-T005 | Grievance | Grievance Creation + Unique Identity + Article Linking | B5 | NOT RUN |
+| P4-T006 | Grievance | Identity + Govt ID + Private Evidence Security | B5 | NOT RUN |
+| P4-T007 | Grievance | Multi-Issue Lifecycle + Urgency + Deadline | B5 | NOT RUN |
+| P4-T008 | Grievance | Duplicate + Evidence + Reopen + Withdrawal | B5 | NOT RUN |
+| P4-T009 | Grievance | Clarification -> Final Decision -> Reply -> Resolve -> Archive | B5 | NOT RUN |
+| P4-T010 | Grievance | Retention + Extension + Hold + Permanent Delete | B5 | NOT RUN |
+| P4-T011 | Grievance | Public Article / Correction / Shared Engines / Failure Isolation | B5 | NOT RUN |
+| P4-T012 | Grievance | Mobile Queue + Founder-Time + Single Authoritative Record | B5 | NOT RUN |
+| P4-T013 | Grievance | Grievance Implementation + Data Model Audit | B5 | NOT RUN |
+| P4-T014 | Grievance | Grievance Coverage + Failure Repair + Regression + Lock | B5 | NOT RUN |
+| P4-T015 | Compliance | Compliance Architecture + Shared Grievance Source | B6 | NOT RUN |
+| P4-T016 | Compliance | Monthly Compliance + Zero-Grievance + Public-Safe Approval | B6 | NOT RUN |
+| P4-T017 | Compliance | Compliance Calendar + Deadline + Notification | B6 | NOT RUN |
+| P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | NOT RUN |
+| P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | NOT RUN |
+| P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | NOT RUN |
+| P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | NOT RUN |
+| P4-T022 | Team | Permission Matrix + Super Admin Reserved Authority + Live Separation | B1 | NOT RUN |
+| P4-T023 | Team | Suspend -> Revoke -> Reactivate -> Permission Change | B1 | NOT RUN |
+| P4-T024 | Team | Internal Reporter Identity + Public Name + Departure + Live History | B1 | NOT RUN |
+| P4-T025 | Team | Lost Device + Common Audit/Notification/Retention + Failure Isolation | B1 | NOT RUN |
+| P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | NOT RUN |
+| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | NOT RUN |
+| P4-T028 | Social | Social Master Article + Distribution Controls | B4 | NOT RUN |
+| P4-T029 | Social | Social Caption + Preview + Independent Platform Status | B4 | NOT RUN |
+| P4-T030 | Social | Social Failure + Retry + Manual Fallback | B4 | NOT RUN |
+| P4-T031 | Social | Social Credentials + Authority + Common Audit/Notification | B4 | NOT RUN |
+| P4-T032 | Social | Social Android + Low-Noise + Founder-Time | B4 | NOT RUN |
+| P4-T033 | Social | Social Implementation + Coverage + Security + Regression Lock | B4 | NOT RUN |
+| P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | NOT RUN |
+| P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | NOT RUN |
+| P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | NOT RUN |
+| P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | NOT RUN |
+| P4-T038 | Ads | Approval -> Payment -> LIVE + Non-Refund Disclosure | B7 | NOT RUN — EXTERNAL |
+| P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | NOT RUN |
+| P4-T040 | Ads | CTA + Analytics + Privacy + Analytics Failure | B7 | NOT RUN |
+| P4-T041 | Ads | Ad Notifications + Audit + Retention + Security + Provider Failure | B7 | NOT RUN |
+| P4-T042 | Ads | Ads Mobile + Founder-Time + Implementation/Coverage/Regression Lock | B7 | NOT RUN |
+| P4-T043 | Notifications | Unified Notification Engine + Existing Live Preservation | B3 | NOT RUN |
+| P4-T044 | Notifications | Cross-Domain Notification Event Matrix | B3 | NOT RUN |
+| P4-T045 | Notifications | Priority + Low-Noise + Recipient Routing + Privacy | B3 | NOT RUN |
+| P4-T046 | Notifications | Notification Center Lifecycle + Direct Action + Reminder | B3 | NOT RUN |
+| P4-T047 | Notifications | External Delivery Failure + Retry + In-App Authority | B3 | NOT RUN |
+| P4-T048 | Notifications | Notification History + Audit/Retention/Security Boundary | B3 | NOT RUN |
+| P4-T049 | Notifications | Mobile Filtering + Grouping + Founder-Time + Critical Safety | B3 | NOT RUN |
+| P4-T050 | Notifications | Notification Implementation + Functional/Privacy/Failure/Regression Lock | B3 | NOT RUN |
+| P4-T051 | Audit/Retention | Common Audit Engine + Immutable Core Audit | B2 | NOT RUN |
+| P4-T052 | Audit/Retention | Article Lifecycle + Delete + Public View Audit | B2 | NOT RUN |
+| P4-T053 | Audit/Retention | Cross-Module Critical Action Audit | B2 | NOT RUN |
+| P4-T054 | Audit/Retention | Audit Lookup + Access + Export + Secret-Free Records | B2 | NOT RUN |
+| P4-T055 | Audit/Retention | Domain-Specific Retention Rules + Identity Preservation | B2 | NOT RUN |
+| P4-T056 | Audit/Retention | Due -> Extension -> Hold -> Permanent Delete Lifecycle | B2 | NOT RUN |
+| P4-T057 | Audit/Retention | Retention Across Domains + Archive/Backup + Evidence/Version Privacy | B2 | NOT RUN |
+| P4-T058 | Audit/Retention | Records Implementation + Migration Integrity | B2 | NOT RUN |
+| P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | NOT RUN |
+| P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
+| P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | NOT RUN |
+| P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | NOT RUN |
+| P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | NOT RUN |
+| P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
+| P4-T065 | Security | Direct Attack / IDOR / Tampering / Cross-Account Test Family | B10 | NOT RUN |
+| P4-T066 | Security | Revocation + Suspension + Super-Admin-Only + Advertiser/Search Isolation | B10 | NOT RUN |
+| P4-T067 | Security | Security Audit + Notification + Failure Isolation + Incident RCA | B10 | NOT RUN |
+| P4-T068 | Security | Security Implementation Audit + Regression + Evidence + Lock | B10 | NOT RUN |
+| P4-T069 | Backup/Recovery | Backup Layers + Security + Health | B11 | NOT RUN |
+| P4-T070 | Backup/Recovery | Real Restore Drill + Identity Preservation | B11 | NOT RUN |
+| P4-T071 | Backup/Recovery | RPO/RTO + Cross-Module Failure-Isolation Matrix | B11 | NOT RUN |
+| P4-T072 | Backup/Recovery | DB Partial Write + Fail-Closed + Retry/Idempotency | B11 | NOT RUN |
+| P4-T073 | Backup/Recovery | Corruption + Deletion + Security Incident + Credential/Config/Deployment Recovery | B11 | NOT RUN |
+| P4-T074 | Backup/Recovery | Post-Restore Verification + Independent Backup + Founder Device Loss | B11 | NOT RUN |
+| P4-T075 | Backup/Recovery | Automatic Recovery Operations + Implementation/Test Coverage + Final Lock | B11 | NOT RUN |
+| P4-T076 | Production | Production Baseline + Hosting + Domain + HTTPS | B12 | NOT RUN |
+| P4-T077 | Production | Permanent URL + Auth/API + Environment Separation | B12 | NOT RUN |
+| P4-T078 | Production | Production DB Migration + Secret Protection | B12 | NOT RUN |
+| P4-T079 | Production | External Provider Production Integration + Adapter Safety | B12 | NOT RUN — EXTERNAL |
+| P4-T080 | Production | Public/Admin Production + Android + Network/Retry/Error Safety | B12 | NOT RUN |
+| P4-T081 | Production | Production Backup + Deployment + Rollback + Cutover | B12 | NOT RUN |
+| P4-T082 | Production | Production Smoke + Real Article/Multi-Device Integration | B12 | NOT RUN |
+| P4-T083 | Production | Production Operations + Audit + Due + Topic-11 Lock | B12 | NOT RUN |
+| P4-T084 | Final Closure | Final Test Governance + Status Integrity | B13 | NOT RUN — FINAL |
+| P4-T085 | Final Closure | Cross-Module Integration Boundary Test | B13 | NOT RUN — FINAL |
+| P4-T086 | Final Closure | Core Article Lifecycle + Live Regression | B13 | NOT RUN — FINAL |
+| P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | NOT RUN — FINAL |
+| P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | NOT RUN — FINAL |
+| P4-T089 | Final Closure | Nothing-Missing / Nothing-Duplicated + Official Records Audit | B13 | NOT RUN — FINAL |
+| P4-T090 | Final Closure | Failure Repair + Unresolved/DUE + Final Build Readiness | B13 | NOT RUN — FINAL |
+| P4-T091 | Final Closure | Production Closure Report + Final Lock + Post-Lock Change Rule | B13 | NOT RUN — FINAL |
+| P4-T092 | Accountability | Accountability Architecture + Applicability + Evidence-First | B8 | NOT RUN |
+| P4-T093 | Accountability | Reason + Cost + Public Impact + Alternatives | B8 | NOT RUN |
+| P4-T094 | Accountability | Questions + Right to Reply + No-Reply + Later Response | B8 | NOT RUN |
+| P4-T095 | Accountability | Ground Verification + Deadline + Responsibility Map | B8 | NOT RUN |
+| P4-T096 | Accountability | Timeline + Master Accountability Record + Outcome + Reopen | B8 | NOT RUN |
+| P4-T097 | Accountability | Neutral Evidence Standard + Conflict + Evidence Integrity + Versioning | B8 | NOT RUN |
+| P4-T098 | Accountability | Correction + Notification + Audit + Retention + Security + Failure + Android | B8 | NOT RUN |
+| P4-T099 | Accountability | Accountability Full Functional + Neutrality + Privacy + Failure + Lock | B8 | NOT RUN |
+| P4-T100 | Search/Analytics | Search Architecture + Long-Term Archive + Public-State Boundary | B9 | NOT RUN |
+| P4-T101 | Search/Analytics | Public Search UX + Filters + Ordering + Pagination + Failure | B9 | NOT RUN |
+| P4-T102 | Search/Analytics | Topic/Tag + Related News + Reporter Discovery | B9 | NOT RUN |
+| P4-T103 | Search/Analytics | Analytics Baseline + Time Ranges + Public Controls + Raw Integrity | B9 | NOT RUN |
+| P4-T104 | Search/Analytics | Search Index Privacy + Correction + Live Identity + Admin Boundary | B9 | NOT RUN |
+| P4-T105 | Search/Analytics | Search Performance + Android + Founder-Time | B9 | NOT RUN |
+| P4-T106 | Search/Analytics | Current Implementation Audit + Historical Topic Adoption | B9 | NOT RUN |
+| P4-T107 | Search/Analytics | Complete Search Functional + Privacy Test Family | B9 | NOT RUN |
+| P4-T108 | Search/Analytics | Complete Analytics Functional + Public Display + Privacy Test Family | B9 | NOT RUN |
+| P4-T109 | Search/Analytics | Failure Isolation + Security + Regression + RCA + Topic Lock | B9 | NOT RUN |
+
+## B0 evidence ledger
+
+### P4-T001
+Current state: IN PROGRESS.
+Evidence required before PASS:
+- Phase-4 branch traced to protected Phase-3 baseline SHA.
+- affected/source maps present.
+- protected Phase-3 CI GREEN on Phase-4 branch.
+
+### P4-T002
+Current state: IN PROGRESS.
+Evidence required before PASS:
+- this register preserves separate implementation/test/PASS states.
+- CI governance checker verifies 109 unique IDs and legal status handling.
+- no manual/provider item auto-PASSed.
+
+### P4-T003
+Current state: IN PROGRESS.
+Evidence required before PASS:
+- CODE-MAP identifies authoritative homes for Article, Auth, Live, Audit, Notification, Retention and Recovery.
+- duplicate/parallel architecture audit has no unjustified competing authority.
+
+### P4-T004
+Current state: NOT RUN — MANUAL.
+Required evidence includes real Android workflow plus Founder authority/fail-closed behavior and Article ID/PURL stability. Existing technical CI/RLS evidence may support the test, but manual/device proof is not inferred from code.
