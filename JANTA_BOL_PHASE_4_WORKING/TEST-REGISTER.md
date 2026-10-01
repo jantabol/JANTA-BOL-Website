@@ -41,13 +41,13 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | NOT RUN |
 | P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | NOT RUN |
 | P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | NOT RUN |
-| P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | NOT RUN |
-| P4-T022 | Team | Permission Matrix + Super Admin Reserved Authority + Live Separation | B1 | NOT RUN |
-| P4-T023 | Team | Suspend -> Revoke -> Reactivate -> Permission Change | B1 | NOT RUN |
-| P4-T024 | Team | Internal Reporter Identity + Public Name + Departure + Live History | B1 | NOT RUN |
-| P4-T025 | Team | Lost Device + Common Audit/Notification/Retention + Failure Isolation | B1 | NOT RUN |
-| P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | NOT RUN |
-| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | NOT RUN |
+| P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | PASS |
+| P4-T022 | Team | Permission Matrix + Super Admin Reserved Authority + Live Separation | B1 | PASS |
+| P4-T023 | Team | Suspend -> Revoke -> Reactivate -> Permission Change | B1 | PASS |
+| P4-T024 | Team | Internal Reporter Identity + Public Name + Departure + Live History | B1 | PASS |
+| P4-T025 | Team | Lost Device + Common Audit/Notification/Retention + Failure Isolation | B1 | PASS |
+| P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | NOT RUN — MANUAL |
+| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | IN PROGRESS — AWAITS T026 |
 | P4-T028 | Social | Social Master Article + Distribution Controls | B4 | NOT RUN |
 | P4-T029 | Social | Social Caption + Preview + Independent Platform Status | B4 | NOT RUN |
 | P4-T030 | Social | Social Failure + Retry + Manual Fallback | B4 | NOT RUN |
@@ -163,3 +163,60 @@ Evidence:
 - No lower-role authority is inferred from the Android screenshot itself; backend/RLS negative regression is the authority evidence.
 
 B0 result: P4-T001–P4-T004 = 4/4 PASS. B0 GOVERNANCE + CI SAFETY CLOSED.
+
+## B1 evidence ledger
+
+### P4-T021 — PASS
+Evidence:
+- Existing 3 Reporter identities were migrated/backfilled into one canonical `team_accounts` lifecycle layer with no duplicate non-owner identity.
+- Rollback-only B1 transaction removed one existing Reporter role, created the same user's pending Team Account, verified no effective newsroom role before activation, then explicitly activated the same Team Account identity and restored Reporter authority.
+- Open browser self-registration was not introduced; Team invite creation is server-side through deployed `jb-team-api` v2.
+- Invite alone does not write `user_roles`; authority begins only at explicit Founder activation.
+- Team invite/activation actions write domain history and common audit records.
+
+### P4-T022 — PASS
+Evidence:
+- Transactional role matrix changed the fixture Reporter to Editor and back.
+- Owner/Super-Admin self-promotion through Team role change was rejected by backend.
+- Newsroom role changes did not auto-create/regrant active Live membership.
+- Browser Team client has no direct privileged Team RPC authority; all operations route through the verified server adapter.
+- Protected Phase-3 Auth/Live/function-security regressions remained GREEN in workflow run #246.
+
+### P4-T023 — PASS
+Evidence:
+- Same simulated stale client identity resolved as Reporter before suspension, no effective role immediately after suspension, Reporter only after controlled reactivation, and Editor after authorized role change.
+- Suspension reuses existing Phase-3 Reporter/Live revocation paths and removes effective newsroom role.
+- Reactivation does not automatically restore old Live grants.
+- Lifecycle changes are recorded in Team history + common audit.
+
+### P4-T024 — PASS
+Evidence:
+- Public Reporter discovery can be toggled independently with `public_name_enabled`.
+- Public-safe directory exposes only Reporter ID + display name and is not a newsroom authority path.
+- Departure test preserved the historical Article, Live Session and Reporter identity while disabling current Reporter authority.
+- Old content/history is therefore not deleted merely because a Reporter departs.
+
+### P4-T025 — PASS
+Evidence:
+- Rollback-only test created a synthetic device session and revoked only that target session.
+- Session revoke produced Team domain history and common `audit_logs` evidence.
+- Invalid Team authority action failed closed while the Article record remained intact.
+- Existing Live notification machinery is reused for current Team critical notifications; B3 remains the future unified-notification home.
+- Full protected Phase-3 security, recovery, editorial and retention regressions were GREEN in workflow run #246.
+
+### P4-T026 — NOT RUN — MANUAL
+Required:
+- Founder real Android flow on the new Team & Reporters UI: open Team screen, verify account/status/role view, practical controls and history presentation.
+- High-risk destructive actions do not need to be performed on a real production teammate merely for UI proof; backend lifecycle behavior is already transactionally tested.
+- No manual PASS will be inferred from code or CI.
+
+### P4-T027 — IN PROGRESS — AWAITS T026
+Technical gate already proven:
+- three applied B1 migrations are mirrored in the repository;
+- `jb-team-api` v2 is ACTIVE with JWT verification;
+- B1 static/security regression GREEN;
+- B1 transactional Team/Authority regression GREEN;
+- protected Phase-3 static + Supabase regression GREEN in workflow run #246;
+- Phase-3 T123 initially caught a new privileged-RPC boundary issue, the checker was NOT weakened, and the architecture was tightened until unchanged T123 passed again.
+
+Final B1 lock waits only for P4-T026 real-device evidence.
