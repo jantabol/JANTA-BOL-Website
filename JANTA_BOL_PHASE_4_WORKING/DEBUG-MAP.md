@@ -85,3 +85,36 @@ For every future bug:
 6. Run affected Phase-3 regression.
 7. Update CHANGELOG + TEST-REGISTER.
 8. Only then mark PASS/LOCK.
+
+---
+
+## B1-DBG-001 — Protected Phase-3 T123 caught new Team RPC surface
+
+### Symptom
+Protected workflow run #233 stopped at old test `3A-P3-T123` after the first B1 Team implementation.
+
+The old checker requires:
+- no anonymous EXECUTE on any public `jb_*` function;
+- no unreviewed authenticated EXECUTE on `jb_*` functions;
+- privileged internal functions remain server/service-only.
+
+### Root cause
+The first B1 draft exposed new Team Owner wrappers directly to `authenticated`, and the public-safe Reporter directory used a `jb_*` name with anonymous EXECUTE. Both conflicted with the existing Phase-3 RPC boundary even though the functions had internal authority checks.
+
+### Rejected shortcut
+The old T123 checker was NOT weakened, deleted, bypassed or broadly whitelisted.
+
+### Minimum safe fix
+- Routed all Team browser actions through verified `jb-team-api` v2.
+- Removed direct authenticated EXECUTE from Team `jb_team_*` wrappers.
+- Kept internal Team mutation functions service-only.
+- Renamed the public-safe read function from `jb_public_reporter_directory()` to `public_reporter_directory()`, preserving the existing rule that no `jb_*` function is anonymous.
+- Added a server-only Team session-list internal function for the adapter.
+- Updated B1 regression to assert the direct browser RPC boundary remains closed.
+
+### Retest
+- Old `db-function-security-regression.sql` rerun unchanged: T053 PASS, T123 PASS.
+- Protected workflow run #246: Phase-3 function security PASS and B1 transactional Team/Authority regression PASS.
+
+### Status
+FIXED / EXACT OLD TEST GREEN
