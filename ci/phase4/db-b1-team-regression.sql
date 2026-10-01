@@ -172,10 +172,10 @@ begin
   perform public.jb_team_change_role_internal(f.owner_id,f.working_team_id,'reporter'::public.app_role,'CI_PUBLIC_NAME');
 
   perform public.jb_team_set_public_name_internal(f.owner_id,f.working_team_id,false);
-  v_hidden:=not exists(select 1 from public.jb_public_reporter_directory() d where d.reporter_id=f.reporter_row_id);
+  v_hidden:=not exists(select 1 from public.public_reporter_directory() d where d.reporter_id=f.reporter_row_id);
 
   perform public.jb_team_set_public_name_internal(f.owner_id,f.working_team_id,true);
-  v_visible:=exists(select 1 from public.jb_public_reporter_directory() d where d.reporter_id=f.reporter_row_id);
+  v_visible:=exists(select 1 from public.public_reporter_directory() d where d.reporter_id=f.reporter_row_id);
 
   perform public.jb_team_depart_internal(f.owner_id,f.working_team_id,'CI_DEPARTURE');
 
@@ -253,16 +253,14 @@ declare
   v_team_denied boolean:=false;
 begin
   select private.current_app_role()::text into v_role;
-  begin
-    perform * from public.jb_team_list();
-  exception when others then
-    v_team_denied:=position('OWNER_AAL2_REQUIRED' in sqlerrm)>0;
-  end;
+  v_team_denied := not has_function_privilege(
+    'authenticated','public.jb_team_list()','EXECUTE'
+  );
 
   insert into ci_p4_b1_results values(
     'P4-T027',
     v_role is null and v_team_denied,
-    'Generic external authenticated identity has no newsroom role and cannot invoke Owner Team management.'
+    'Generic external authenticated identity has no newsroom role and has no direct EXECUTE privilege on Owner Team management RPCs.'
   );
 end $$;
 
