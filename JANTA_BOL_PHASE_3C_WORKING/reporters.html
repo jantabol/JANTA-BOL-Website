@@ -1,1 +1,203 @@
-<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Reporters</title><style>body{font-family:Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}.top{padding:16px;background:#111;border-bottom:2px solid #b30000}.wrap{max-width:900px;margin:auto;padding:16px}.card{background:#171717;border:1px solid #333;border-radius:12px;padding:16px;margin:12px 0}.btn{background:#b30000;color:white;border:0;border-radius:8px;padding:10px 14px;font-weight:700}.btn.alt{background:#333}input,textarea,select{width:100%;padding:10px;margin:6px 0 12px;background:#111;color:#fff;border:1px solid #444;border-radius:7px;box-sizing:border-box}.muted{color:#aaa}.row{display:flex;gap:8px;flex-wrap:wrap}.back{color:#fff}</style></head><body><header class="top"><b>JANTA BOL — Reporters</b></header><main class="wrap"><a class="back" href="admin.html">← Dashboard</a><div class="card"><h2>Reporter Registry</h2><div id="rows"></div></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js"></script><script src="admin-auth.js"></script><script>async function loadReporters(){try{const a=await JBPhase2.reporters();rows.innerHTML=a.map(r=>`<p><b>${JBBackend.esc(r.name)}</b> · ${r.active?'Active':'Disabled'} · LIVE ${r.live_permission?'Allowed':'Not allowed'}</p>`).join('')||'No reporters'}catch(e){rows.textContent=e.message}}if(document.documentElement.dataset.jbAuth==='ready')loadReporters();else addEventListener('jb-auth-ready',loadReporters,{once:true});</script></body></html>
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>JANTA BOL — Team & Reporters</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}
+body{font-family:Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}
+.top{padding:16px;background:#111;border-bottom:2px solid #b30000;position:sticky;top:0;z-index:5}
+.wrap{max-width:980px;margin:auto;padding:14px}
+.card{background:#171717;border:1px solid #333;border-radius:12px;padding:14px;margin:12px 0}
+.member{background:#121212;border:1px solid #303030;border-radius:10px;padding:12px;margin:10px 0}
+.btn{background:#b30000;color:white;border:0;border-radius:8px;padding:10px 12px;font-weight:700;margin:4px 4px 4px 0}
+.btn.alt{background:#333}.btn.warn{background:#8a5b00}.btn.danger{background:#8b0000}.btn:disabled{opacity:.5}
+input,select{width:100%;padding:10px;margin:6px 0 10px;background:#111;color:#fff;border:1px solid #444;border-radius:7px}
+label{font-weight:700;font-size:14px}.muted{color:#aaa;font-size:13px}.ok{color:#8ee59d}.bad{color:#ff9a9a}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.actions{display:flex;gap:6px;flex-wrap:wrap}
+.back{color:#fff}.pill{display:inline-block;padding:3px 8px;border:1px solid #444;border-radius:999px;font-size:12px;margin:2px 4px 2px 0}
+.history,.sessions{margin-top:10px;padding:10px;background:#0d0d0d;border-radius:8px;white-space:pre-wrap;font-size:13px}
+.notice{padding:10px;border-radius:8px;background:#241f13;border:1px solid #5f5124;margin:10px 0}
+@media(max-width:640px){.row{grid-template-columns:1fr}.btn{width:100%;margin-right:0}.actions{display:block}}
+</style>
+</head>
+<body>
+<header class="top"><b>JANTA BOL — Team & Reporters</b></header>
+<main class="wrap">
+<a class="back" href="admin.html">← Dashboard</a>
+
+<div id="msg" class="notice">Team authority state load ho rahi hai…</div>
+
+<section class="card">
+<h2>Invite Team Member</h2>
+<p class="muted">Invite se authority nahi milti. Founder ko alag se Activate karna hoga. Owner/Super Admin role invite se assign nahi hota.</p>
+<div class="row">
+<div><label for="inviteName">Name</label><input id="inviteName" maxlength="120" placeholder="Team member name"></div>
+<div><label for="inviteEmail">Email</label><input id="inviteEmail" type="email" maxlength="320" placeholder="name@example.com"></div>
+</div>
+<div class="row">
+<div><label for="inviteContact">Contact (optional)</label><input id="inviteContact" maxlength="240" placeholder="Phone / internal contact"></div>
+<div><label for="inviteRole">Role</label><select id="inviteRole"><option value="reporter">Reporter</option><option value="editor">Editor</option><option value="admin">Admin</option></select></div>
+</div>
+<button id="inviteBtn" class="btn">Send Invite</button>
+<p class="muted">High-risk team changes require fresh Founder MFA. Live permission is separate and is never auto-granted by newsroom role.</p>
+</section>
+
+<section class="card">
+<div class="actions"><h2 style="flex:1;margin:6px 0">Team Accounts</h2><button id="refreshBtn" class="btn alt">Refresh</button></div>
+<div id="rows">Loading…</div>
+</section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+<script src="phase4-team-client.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const msg=$('msg'), rows=$('rows'), inviteBtn=$('inviteBtn'), refreshBtn=$('refreshBtn');
+let accounts=[];
+
+function show(text,bad=false){msg.textContent=text;msg.className='notice '+(bad?'bad':'');}
+function esc(v){return JBBackend.esc(String(v??''));}
+function shortId(v){const s=String(v||'');return s?s.slice(0,8)+'…':'—';}
+function errText(e){
+  const m=String(e?.message||e||'UNKNOWN_ERROR');
+  if(m.includes('MFA_STEP_UP')||m.includes('RECENT_MFA'))return 'Fresh Founder MFA required. Re-login/verify MFA karke phir try karein.';
+  if(m.includes('AUTH_USER_ALREADY_EXISTS'))return 'Ye email Auth me already registered hai. Existing account ko duplicate invite nahi bheja gaya.';
+  if(m.includes('INVITE_PROVIDER_FAILED'))return 'Invite provider abhi send nahi kar saka. Account ko PASS/Active mark nahi kiya gaya.';
+  return m;
+}
+async function run(label,fn){
+  show(label+'…');
+  try{await fn();show(label+' complete.');await load();}
+  catch(e){show(errText(e),true);}
+}
+function statusLabel(a){
+  const s=String(a.status||'').toUpperCase();
+  return '<span class="pill">'+esc(s)+'</span><span class="pill">'+esc(String(a.assigned_role||'').toUpperCase())+'</span>';
+}
+async function loadHistory(id,box){
+  try{
+    const h=await JBTeam.history(id);
+    box.textContent=h.length?h.map(x=>[
+      x.created_at?new Date(x.created_at).toLocaleString():'-',
+      x.action,
+      (x.old_status||'')+' → '+(x.new_status||''),
+      x.old_role||x.new_role?((x.old_role||'')+' → '+(x.new_role||'')):'',
+      x.reason||''
+    ].filter(Boolean).join(' • ')).join('\n'):'No history yet.';
+  }catch(e){box.textContent=errText(e);}
+}
+async function loadSessions(id,box){
+  try{
+    const s=await JBTeam.sessions(id);
+    box.innerHTML='';
+    if(!s.length){box.textContent='No active sessions.';return;}
+    s.forEach(x=>{
+      const line=document.createElement('div');
+      line.className='member';
+      const info=document.createElement('div');
+      info.textContent=[
+        'Session '+shortId(x.session_id),
+        x.aal||'',
+        x.user_agent||'Unknown device',
+        x.updated_at?new Date(x.updated_at).toLocaleString():''
+      ].filter(Boolean).join(' • ');
+      const b=document.createElement('button');
+      b.className='btn danger';b.textContent='Revoke Session';
+      b.onclick=()=>{if(confirm('Selected session revoke karni hai?'))run('Session revoke',()=>JBTeam.revokeSession(id,x.session_id,'LOST_OR_UNTRUSTED_DEVICE'));};
+      line.append(info,b);box.appendChild(line);
+    });
+  }catch(e){box.textContent=errText(e);}
+}
+function memberCard(a){
+  const d=document.createElement('div');d.className='member';
+  const reporterBits=a.reporter_id
+    ? '<span class="pill">Reporter profile '+esc(shortId(a.reporter_id))+'</span>'+
+      '<span class="pill">Public name '+(a.public_name_enabled?'ON':'OFF')+'</span>'+
+      '<span class="pill">LIVE legacy flag '+(a.live_permission?'ON':'OFF')+'</span>'
+    : '';
+  d.innerHTML=
+    '<div><b>'+esc(a.display_name)+'</b> '+statusLabel(a)+'</div>'+
+    '<div class="muted">Team ID '+esc(shortId(a.team_account_id))+
+    (a.invite_email?' • '+esc(a.invite_email):'')+
+    (a.contact?' • '+esc(a.contact):'')+'</div>'+
+    '<div style="margin-top:5px">'+reporterBits+'</div>'+
+    '<div class="actions"></div><div class="history" hidden></div><div class="sessions" hidden></div>';
+
+  const actions=d.querySelector('.actions'), hist=d.querySelector('.history'), sess=d.querySelector('.sessions');
+
+  const role=document.createElement('select');
+  role.style.maxWidth='160px';role.value=a.assigned_role;
+  ['reporter','editor','admin'].forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v.toUpperCase();role.appendChild(o);});
+  role.value=a.assigned_role;
+  const roleBtn=document.createElement('button');roleBtn.className='btn alt';roleBtn.textContent='Change Role';
+  roleBtn.onclick=()=>{if(role.value===a.assigned_role)return; if(confirm('Role change se active sessions revoke ho sakte hain. Continue?'))run('Role change',()=>JBTeam.changeRole(a.team_account_id,role.value,'FOUNDER_ROLE_CHANGE'));};
+  actions.append(role,roleBtn);
+
+  if(a.status==='pending'){
+    const b=document.createElement('button');b.className='btn';b.textContent='Activate';
+    b.onclick=()=>{if(confirm('Invite verify karke newsroom authority activate karni hai?'))run('Account activation',()=>JBTeam.activate(a.team_account_id));};
+    actions.appendChild(b);
+  }
+  if(a.status==='active'){
+    const b=document.createElement('button');b.className='btn warn';b.textContent='Suspend';
+    b.onclick=()=>{const reason=prompt('Suspend reason');if(reason)run('Account suspension',()=>JBTeam.suspend(a.team_account_id,reason));};
+    actions.appendChild(b);
+  }
+  if(a.status==='suspended'){
+    const b=document.createElement('button');b.className='btn';b.textContent='Reactivate';
+    b.onclick=()=>{if(confirm('Account reactivate karna hai? Purane LIVE grants auto-restore nahi honge.'))run('Account reactivation',()=>JBTeam.reactivate(a.team_account_id));};
+    actions.appendChild(b);
+  }
+  if(a.reporter_id && a.status!=='departed'){
+    const p=document.createElement('button');p.className='btn alt';p.textContent=a.public_name_enabled?'Public Name OFF':'Public Name ON';
+    p.onclick=()=>run('Public-name setting',()=>JBTeam.setPublicName(a.team_account_id,!a.public_name_enabled));
+    actions.appendChild(p);
+  }
+  if(a.user_id && a.status!=='departed'){
+    const s=document.createElement('button');s.className='btn alt';s.textContent='Sessions';
+    s.onclick=async()=>{sess.hidden=!sess.hidden;if(!sess.hidden)await loadSessions(a.team_account_id,sess);};
+    actions.appendChild(s);
+  }
+  if(a.status!=='departed'){
+    const dep=document.createElement('button');dep.className='btn danger';dep.textContent='Mark Departed';
+    dep.onclick=()=>{const reason=prompt('Departure reason');if(reason&&confirm('Account authority revoke karke Departed mark karna hai? Old article/Live history delete nahi hogi.'))run('Departure',()=>JBTeam.depart(a.team_account_id,reason));};
+    actions.appendChild(dep);
+  }
+  const h=document.createElement('button');h.className='btn alt';h.textContent='History';
+  h.onclick=async()=>{hist.hidden=!hist.hidden;if(!hist.hidden)await loadHistory(a.team_account_id,hist);};
+  actions.appendChild(h);
+
+  return d;
+}
+async function load(){
+  try{
+    accounts=await JBTeam.list();
+    rows.innerHTML='';
+    if(!accounts.length){rows.textContent='No team accounts.';return;}
+    accounts.forEach(a=>rows.appendChild(memberCard(a)));
+    show('Team authority state loaded. '+accounts.length+' account(s).');
+  }catch(e){rows.textContent='';show(errText(e),true);}
+}
+inviteBtn.onclick=()=>run('Invite',async()=>{
+  const display_name=$('inviteName').value.trim();
+  const email=$('inviteEmail').value.trim();
+  const contact=$('inviteContact').value.trim();
+  const role=$('inviteRole').value;
+  if(!display_name||!email)throw new Error('Name aur valid email required.');
+  await JBTeam.invite({display_name,email,contact,role});
+  $('inviteName').value='';$('inviteEmail').value='';$('inviteContact').value='';
+});
+refreshBtn.onclick=load;
+
+if(document.documentElement.dataset.jbAuth==='ready')load();
+else addEventListener('jb-auth-ready',load,{once:true});
+</script>
+</body>
+</html>
