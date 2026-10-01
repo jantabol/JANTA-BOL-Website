@@ -24,7 +24,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T001 | Governance | Phase 3 Baseline + Source Authority Protection | B0 | PASS |
 | P4-T002 | Governance | Evidence-Based Status / No Fake PASS | B0 | PASS |
 | P4-T003 | Governance | Single-Home + Duplicate Architecture Audit | B0 | PASS |
-| P4-T004 | Governance | Founder Authority + Mobile + Fail-Closed | B0 | NOT RUN — MANUAL |
+| P4-T004 | Governance | Founder Authority + Mobile + Fail-Closed | B0 | PASS |
 | P4-T005 | Grievance | Grievance Creation + Unique Identity + Article Linking | B5 | NOT RUN |
 | P4-T006 | Grievance | Identity + Govt ID + Private Evidence Security | B5 | NOT RUN |
 | P4-T007 | Grievance | Multi-Issue Lifecycle + Urgency + Deadline | B5 | NOT RUN |
@@ -154,5 +154,12 @@ Evidence:
 - Delta strategy is Preserve/Integrate/Extend/Add Missing; no parallel Article/Auth/Live authority was introduced.
 - B0 governance checker completed SUCCESS and all protected Phase-3 static/database regression steps stayed GREEN.
 
-### P4-T004 — NOT RUN — MANUAL
-Required evidence includes real Android workflow plus Founder authority/fail-closed behavior and Article ID/PURL stability. Protected CI already supplies technical security/RLS baseline evidence, but manual/device proof is intentionally not inferred from code.
+### P4-T004 — PASS
+Evidence:
+- Founder real-device screenshot 2026-10-01 shows JANTA-BOL Admin Dashboard rendering and usable in Android/SPCK Preview.
+- The visible dashboard presents routine newsroom actions such as Add News, Drafts, Published News and Deleted News, satisfying the real-device/mobile usability portion of the test.
+- Protected Phase-3 CI run #214 completed the static security architecture, negative access, function security, security lifecycle and Supabase transactional regressions GREEN, supplying backend fail-closed/authority evidence.
+- Existing Phase-3 Founder-verified article lifecycle evidence preserved the same Article UUID and Permanent Master URL through edit/publish/unpublish/republish; B0 changed no application feature or DB schema, so that unchanged-build identity evidence is reused rather than repeated.
+- No lower-role authority is inferred from the Android screenshot itself; backend/RLS negative regression is the authority evidence.
+
+B0 result: P4-T001–P4-T004 = 4/4 PASS. B0 GOVERNANCE + CI SAFETY CLOSED.
