@@ -71,15 +71,15 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T048 | Notifications | Notification History + Audit/Retention/Security Boundary | B3 | NOT RUN |
 | P4-T049 | Notifications | Mobile Filtering + Grouping + Founder-Time + Critical Safety | B3 | NOT RUN |
 | P4-T050 | Notifications | Notification Implementation + Functional/Privacy/Failure/Regression Lock | B3 | NOT RUN |
-| P4-T051 | Audit/Retention | Common Audit Engine + Immutable Core Audit | B2 | NOT RUN |
-| P4-T052 | Audit/Retention | Article Lifecycle + Delete + Public View Audit | B2 | NOT RUN |
-| P4-T053 | Audit/Retention | Cross-Module Critical Action Audit | B2 | NOT RUN |
-| P4-T054 | Audit/Retention | Audit Lookup + Access + Export + Secret-Free Records | B2 | NOT RUN |
-| P4-T055 | Audit/Retention | Domain-Specific Retention Rules + Identity Preservation | B2 | NOT RUN |
-| P4-T056 | Audit/Retention | Due -> Extension -> Hold -> Permanent Delete Lifecycle | B2 | NOT RUN |
-| P4-T057 | Audit/Retention | Retention Across Domains + Archive/Backup + Evidence/Version Privacy | B2 | NOT RUN |
-| P4-T058 | Audit/Retention | Records Implementation + Migration Integrity | B2 | NOT RUN |
-| P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | NOT RUN |
+| P4-T051 | Audit/Retention | Common Audit Engine + Immutable Core Audit | B2 | PASS |
+| P4-T052 | Audit/Retention | Article Lifecycle + Delete + Public View Audit | B2 | PASS |
+| P4-T053 | Audit/Retention | Cross-Module Critical Action Audit | B2 | IN PROGRESS |
+| P4-T054 | Audit/Retention | Audit Lookup + Access + Export + Secret-Free Records | B2 | NOT RUN — MANUAL |
+| P4-T055 | Audit/Retention | Domain-Specific Retention Rules + Identity Preservation | B2 | PASS |
+| P4-T056 | Audit/Retention | Due -> Extension -> Hold -> Permanent Delete Lifecycle | B2 | PASS |
+| P4-T057 | Audit/Retention | Retention Across Domains + Archive/Backup + Evidence/Version Privacy | B2 | NOT RUN — MANUAL |
+| P4-T058 | Audit/Retention | Records Implementation + Migration Integrity | B2 | PASS |
+| P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | IN PROGRESS |
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
 | P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | NOT RUN |
 | P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | NOT RUN |
@@ -223,3 +223,65 @@ Evidence:
 - Earlier T123 regression was repaired without weakening the old checker; the protected boundary remains GREEN.
 
 B1 result: P4-T021–P4-T027 = 7/7 PASS. B1 TEAM / AUTHORITY EXTENSION CLOSED.
+
+
+## B2 evidence ledger
+
+### P4-T051 — PASS
+Evidence:
+- Phase-4 B2 transactional regression explicitly passed the common audit shape, metadata sanitization and immutable-history checks.
+- Ordinary UPDATE/DELETE attempts against protected audit history are blocked by the immutable guard.
+- Article update/publish/unpublish activity continues to write the existing common `audit_logs` path.
+- Protected workflow run #296 completed SUCCESS with the B2 static and transactional regressions included.
+
+### P4-T052 — PASS
+Evidence:
+- Transactional regression exercised Article correction/status transitions plus public displayed-view controls.
+- Raw analytics views remained unchanged while Public View ON/OFF and displayed-view override state changed independently.
+- Audit history preserved previous/new display state plus raw-view evidence.
+- Existing Article identity/version history remained present.
+
+### P4-T053 — IN PROGRESS
+Current evidence:
+- Live controls, Team lifecycle and Security actions already write the shared `audit_logs` architecture.
+- Existing Grievance status action also writes the common audit path.
+- Full cross-module proof is not yet complete for later Phase-4 domain actions such as unified Notifications, canonical Social, Compliance approval and Ads controls. No PASS is inferred before those integrations exist and are tested.
+
+### P4-T054 — NOT RUN — MANUAL
+Required:
+- Real Android authorized Audit Lookup by representative record IDs.
+- Public/unauthorized access negative proof.
+- Permissioned Audit Export proof and stored-value inspection showing secret-free output.
+
+### P4-T055 — PASS
+Evidence:
+- Transactional regression proved different domain retention policies can coexist; no universal duration is imposed.
+- Article Unpublish preserved the same Article identity.
+- Common retention machinery is separate from domain-specific retention meaning.
+
+### P4-T056 — PASS
+Evidence:
+- Transactional regression exercised DUE -> EXTEND -> DUE -> HOLD -> blocked Permanent Delete -> RELEASE HOLD -> authorized Permanent Delete.
+- Unauthorized delete and Hold-protected delete were denied.
+- Disposition history was preserved and the retired Article identity could not be reused.
+
+### P4-T057 — NOT RUN — MANUAL
+Required:
+- Real Android records workflow plus Archive/Backup distinction, archived-private access, related links/version-evidence privacy and recovery/notification relationship evidence.
+- E8 backup/recovery evidence remains required; code/CI alone is not sufficient.
+
+### P4-T058 — PASS
+Evidence:
+- Supabase migration ledger confirms all four B2 migrations are applied: `phase4_b2_common_records_foundation`, `phase4_b2_retention_policy_index`, `phase4_b2_records_api_context`, `phase4_b2_live_retention_compat_fix`.
+- Existing protected homes remain live and populated: `audit_logs`, `article_versions`, `verification_history`, `live_retention_registry`, and `live_deletion_ledger`.
+- B2 adds common retention/disposition/public-view machinery rather than replacing those historical homes.
+- Direct authenticated EXECUTE on privileged Records RPCs is denied; service-role adapter access is preserved.
+- `jb-records-api` v1 is ACTIVE with JWT verification.
+- Protected workflow run #296 completed the B2 static implementation audit and B2 transactional DB family SUCCESS.
+
+### P4-T059 — IN PROGRESS
+Current:
+- Required protected Phase-3 + B2 static/DB regression is GREEN in workflow run #296.
+- Final Topic lock is not allowed yet because P4-T053 is incomplete and P4-T054/P4-T057 still require real-device/recovery evidence.
+
+B2 current result: 5 / 9 PASS; P4-T053 and P4-T059 IN PROGRESS; P4-T054 and P4-T057 remain manual NOT RUN.
