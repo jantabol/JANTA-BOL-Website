@@ -33,8 +33,10 @@ for(const f of required) assert(exists(f),'required B0 record exists: '+f);
 
 const workflow=read('.github/workflows/phase3-regression.yml');
 assert(workflow.includes('phase4-execution-2026-10-01'),'protected workflow covers Phase-4 execution branch');
-assert(workflow.includes('JANTA_BOL_PHASE_4_WORKING/**'),'protected workflow watches Phase-4 working files');
-assert(workflow.includes('ci/phase4/**'),'protected workflow watches Phase-4 CI files');
+
+const pushBlock=(workflow.match(/push:\n([\s\S]*?)pull_request:/)||[])[1]||'';
+assert(!/\n\s+paths:\s*\n/.test(pushBlock),'Phase-4 branch has no push path filter that could bypass protected CI');
+assert(workflow.includes('node ci/phase4/governance-b0.cjs'),'protected workflow executes the Phase-4 B0 governance checker');
 
 const readme=read('JANTA_BOL_PHASE_4_WORKING/README.md');
 for(const token of ['1–1034','682','P4-T001–P4-T109','15']){
