@@ -93,7 +93,7 @@ Deno.serve(async(req:Request)=>{
     const body=await req.json().catch(()=>({}));
     const action=String(body?.action??"");
     const payload=(body?.payload&&typeof body.payload==="object")?body.payload as JsonRecord:{};
-    const mutating=new Set(["invite","activate","suspend","reactivate","change_role","set_public_name","depart","revoke_session"]);
+    // Fresh MFA is reserved for high-risk authority changes. Public-name visibility is\n    // routine and reversible, while Owner + active session + AAL2 are still enforced above.\n    const mutating=new Set(["invite","activate","suspend","reactivate","change_role","depart","revoke_session"]);
     if(mutating.has(action)&&!recentMfa(claims,600)){
       return json({ok:false,error:"OWNER_RECENT_MFA_REQUIRED"},403);
     }
