@@ -21,9 +21,9 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 
 | Test ID | Topic | Test | Block | Status |
 |---|---|---|---|---|
-| P4-T001 | Governance | Phase 3 Baseline + Source Authority Protection | B0 | IN PROGRESS |
-| P4-T002 | Governance | Evidence-Based Status / No Fake PASS | B0 | IN PROGRESS |
-| P4-T003 | Governance | Single-Home + Duplicate Architecture Audit | B0 | IN PROGRESS |
+| P4-T001 | Governance | Phase 3 Baseline + Source Authority Protection | B0 | PASS |
+| P4-T002 | Governance | Evidence-Based Status / No Fake PASS | B0 | PASS |
+| P4-T003 | Governance | Single-Home + Duplicate Architecture Audit | B0 | PASS |
 | P4-T004 | Governance | Founder Authority + Mobile + Fail-Closed | B0 | NOT RUN — MANUAL |
 | P4-T005 | Grievance | Grievance Creation + Unique Identity + Article Linking | B5 | NOT RUN |
 | P4-T006 | Grievance | Identity + Govt ID + Private Evidence Security | B5 | NOT RUN |
@@ -133,26 +133,26 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 
 ## B0 evidence ledger
 
-### P4-T001
-Current state: IN PROGRESS.
-Evidence required before PASS:
-- Phase-4 branch traced to protected Phase-3 baseline SHA.
-- affected/source maps present.
-- protected Phase-3 CI GREEN on Phase-4 branch.
+### P4-T001 — PASS
+Evidence:
+- Phase-4 branch was created from exact protected Phase-3 SHA `8cbd22b7560f3fc49ecabeabbe88e0c61d9672b8`.
+- Baseline source/affected/code maps exist.
+- Pull request #2 targets `phase3-regression-ci`.
+- Protected workflow run #212 completed both static/source and Supabase transactional jobs SUCCESS on Phase-4 head `028208630f460f28bc0b87a65b104e57a965f907`.
+- No application feature code or DB migration was required for B0.
 
-### P4-T002
-Current state: IN PROGRESS.
-Evidence required before PASS:
-- this register preserves separate implementation/test/PASS states.
-- CI governance checker verifies 109 unique IDs and legal status handling.
-- no manual/provider item auto-PASSed.
+### P4-T002 — PASS
+Evidence:
+- This register keeps implementation/test/PASS states separate.
+- B0 governance checker completed SUCCESS in workflow run #212.
+- Checker verified 109 unique P4 test IDs, no gaps/out-of-range IDs, legal status vocabulary and non-PASS handling for P4-T004/P4-T038/P4-T079.
+- Manual/provider items remain NOT RUN rather than being auto-PASSed.
 
-### P4-T003
-Current state: IN PROGRESS.
-Evidence required before PASS:
-- CODE-MAP identifies authoritative homes for Article, Auth, Live, Audit, Notification, Retention and Recovery.
-- duplicate/parallel architecture audit has no unjustified competing authority.
+### P4-T003 — PASS
+Evidence:
+- CODE-MAP records authoritative homes for Article/PURL, Auth/session, Phase-3 Live, audit/history and recovery.
+- Delta strategy is Preserve/Integrate/Extend/Add Missing; no parallel Article/Auth/Live authority was introduced.
+- B0 governance checker completed SUCCESS and all protected Phase-3 static/database regression steps stayed GREEN.
 
-### P4-T004
-Current state: NOT RUN — MANUAL.
-Required evidence includes real Android workflow plus Founder authority/fail-closed behavior and Article ID/PURL stability. Existing technical CI/RLS evidence may support the test, but manual/device proof is not inferred from code.
+### P4-T004 — NOT RUN — MANUAL
+Required evidence includes real Android workflow plus Founder authority/fail-closed behavior and Article ID/PURL stability. Protected CI already supplies technical security/RLS baseline evidence, but manual/device proof is intentionally not inferred from code.
