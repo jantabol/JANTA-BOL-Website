@@ -11,12 +11,17 @@ async function api(action,payload={}){
   if(!data?.ok)throw new Error(data?.error||'TEAM_API_FAILED');
   return data;
 }
-async function mutation(action,payload={}){
+async function highRiskMutation(action,payload={}){
   await global.JBBackend.requireRecentMfa(600);
   return api(action,payload);
 }
+async function routineMutation(action,payload={}){
+  // Routine, reversible display preference. Current authenticated Owner/AAL2
+  // authority is still enforced by jb-team-api; no 10-minute fresh-MFA gate.
+  return api(action,payload);
+}
 async function invite(payload){
-  const data=await mutation('invite',payload);
+  const data=await highRiskMutation('invite',payload);
   return data.account;
 }
 async function list(){
@@ -32,25 +37,25 @@ async function sessions(teamAccountId){
   return data.sessions||[];
 }
 async function activate(id){
-  return (await mutation('activate',{team_account_id:id})).result;
+  return (await highRiskMutation('activate',{team_account_id:id})).result;
 }
 async function suspend(id,reason){
-  return (await mutation('suspend',{team_account_id:id,reason})).result;
+  return (await highRiskMutation('suspend',{team_account_id:id,reason})).result;
 }
 async function reactivate(id){
-  return (await mutation('reactivate',{team_account_id:id})).result;
+  return (await highRiskMutation('reactivate',{team_account_id:id})).result;
 }
 async function changeRole(id,role,reason='ROLE_CHANGED'){
-  return (await mutation('change_role',{team_account_id:id,role,reason})).result;
+  return (await highRiskMutation('change_role',{team_account_id:id,role,reason})).result;
 }
 async function setPublicName(id,enabled){
-  return (await mutation('set_public_name',{team_account_id:id,enabled:!!enabled})).result;
+  return (await routineMutation('set_public_name',{team_account_id:id,enabled:!!enabled})).result;
 }
 async function depart(id,reason){
-  return (await mutation('depart',{team_account_id:id,reason})).result;
+  return (await highRiskMutation('depart',{team_account_id:id,reason})).result;
 }
 async function revokeSession(id,sessionId,reason='LOST_DEVICE'){
-  return (await mutation('revoke_session',{
+  return (await highRiskMutation('revoke_session',{
     team_account_id:id,session_id:sessionId,reason
   })).result;
 }
