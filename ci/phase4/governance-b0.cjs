@@ -70,7 +70,11 @@ for(const row of rows){
 }
 
 const manualRow=rows.find(x=>x.includes('| P4-T004 |'))||'';
-assert(manualRow.includes('NOT RUN'),'P4-T004 remains non-PASS until real-device proof exists');
+const manualPass=manualRow.includes('| PASS |');
+assert(
+  manualRow.includes('NOT RUN') || (manualPass && register.includes('Founder real-device screenshot 2026-10-01')),
+  'P4-T004 is NOT RUN or has explicit real-device evidence before PASS'
+);
 const external38=rows.find(x=>x.includes('| P4-T038 |'))||'';
 const external79=rows.find(x=>x.includes('| P4-T079 |'))||'';
 assert(external38.includes('NOT RUN') && external79.includes('NOT RUN'),'external tests begin as NOT RUN, not fake PASS');
