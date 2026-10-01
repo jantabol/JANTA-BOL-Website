@@ -1,6 +1,6 @@
 # JANTA BOL — PHASE 4 AFFECTED FILES MAP
 
-STATUS: B1 TEAM / AUTHORITY — TECHNICAL GREEN / MANUAL T026 PENDING
+STATUS: B1 CLOSED ✅ | B2 AUDIT / RETENTION — ACTIVE
 DATE: 2026-10-01
 BRANCH: `phase4-execution-2026-10-01`
 
@@ -91,3 +91,50 @@ HIGH: Auth / session / Live permission / Reporter identity / Article history.
 
 Protected result:
 workflow #246 GREEN across old Phase-3 suites + B1 automated suites.
+
+
+## B2 — Common Audit + Retention — exact map
+
+### Modified
+- `.github/workflows/phase3-regression.yml`
+  - B2 static + transactional regression added.
+- `JANTA_BOL_PHASE_3C_WORKING/admin.html`
+  - Records dashboard entry added.
+- `JANTA_BOL_PHASE_3C_WORKING/trash.html`
+  - Permanent Delete path now routes through the retention gate.
+
+### New
+- `JANTA_BOL_PHASE_3C_WORKING/records.html`
+- `JANTA_BOL_PHASE_3C_WORKING/phase4-records-client.js`
+- `CODEX_CURRENT_SUPABASE/functions/jb-records-api/index.ts`
+- `ci/phase4/static-b2-records-regression.cjs`
+- `ci/phase4/db-b2-records-regression.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b2_common_records_foundation.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b2_retention_policy_index.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b2_records_api_context.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b2_live_retention_compat_fix.sql`
+
+### Live DB objects added / extended
+- common audit sanitizer + immutable audit guard
+- `record_retention_policies`
+- `record_retention_state`
+- `record_retention_history`
+- `record_disposition_ledger`
+- `article_public_view_settings`
+- Records internal RPCs + service-only actor context
+- `jb_owner_permanent_delete_article` extended with retention-due / Hold / retired-identity gates
+
+### Preserved
+- `audit_logs`
+- `article_versions`
+- `verification_history`
+- `live_retention_registry`
+- `live_deletion_ledger`
+- Article ID / Permanent URL identity model
+- locked Phase-3 Live routine-retention behavior
+
+### B2 regression risk
+VERY HIGH: Article lifecycle / audit history / Live retention / Permanent Delete / Security / Recovery.
+
+Protected result so far:
+workflow #296 GREEN across old Phase-3 suites + B1 + B2 static/transactional suites.
