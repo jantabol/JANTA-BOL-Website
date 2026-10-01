@@ -5,14 +5,17 @@ on:
   push:
     branches:
       - phase3-regression-ci
+      - phase4-execution-2026-10-01
       - phase3c-codex-baseline-2026-09-29
     paths:
       - "JANTA_BOL_PHASE_3C_WORKING/**"
+      - "JANTA_BOL_PHASE_4_WORKING/**"
       - "CODEX_CURRENT_SUPABASE/**"
       - "ci/phase3-regression/**"
       - ".github/workflows/phase3-regression.yml"
   pull_request:
     branches:
+      - phase3-regression-ci
       - phase3c-codex-baseline-2026-09-29
       - main
 
