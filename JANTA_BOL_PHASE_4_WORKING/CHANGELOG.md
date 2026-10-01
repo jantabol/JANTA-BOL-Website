@@ -99,3 +99,20 @@ Protected workflow run #246 completed:
 - P4-T025 PASS
 - P4-T026 NOT RUN — real Android proof required
 - P4-T027 IN PROGRESS — final Team lock waits for T026
+
+
+## 2026-10-01 — B1 CLOSED / B2 STARTED
+
+### B1 final evidence
+- P4-T026 real Android Team workflow PASS.
+- Routine Public Name OFF -> ON worked without recent-MFA friction while backend Owner/AAL2 authority remained.
+- High-risk Suspend with stale MFA was denied with `MFA_TOO_OLD`.
+- Team API repository source was aligned with the repaired deployed runtime and redeployed as `jb-team-api` v8 with JWT verification.
+- Generic external authenticated identity had no newsroom role and no direct Owner Team RPC privilege.
+- Protected Phase-3 workflow run #269 completed SUCCESS.
+- P4-T021–P4-T027 = 7/7 PASS. B1 CLOSED.
+
+### B2 start
+- Started B2 Common Audit + Retention — P4-T051–P4-T059.
+- Source-of-truth scope: Master Blueprint Sections 395–480 / RUN-08.
+- First action is implementation/data-model audit before schema/code changes: preserve existing audit/version/history/deletion systems, classify Preserve/Integrate/Extend/Add Missing, then make minimum safe changes.
