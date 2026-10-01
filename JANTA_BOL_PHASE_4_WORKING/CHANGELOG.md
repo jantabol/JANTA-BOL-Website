@@ -54,3 +54,48 @@ A Phase-4 file placed outside the old watched paths could otherwise be pushed wi
 - Governance + CI Safety: CLOSED.
 - Phase-3 protected baseline remains GREEN.
 - Next execution block: B1 Team / Authority Extension — P4-T021–P4-T027.
+
+## 2026-10-01 — B1 TEAM / AUTHORITY EXTENSION — TECHNICAL GATE GREEN
+
+### Live backend
+Applied:
+- `phase4_b1_team_authority_foundation`
+- `phase4_b1_team_api_security_context`
+- `phase4_b1_t123_minimum_security_fix`
+
+Added:
+- canonical Team lifecycle metadata + append-only history
+- active/suspended/departed state separate from stable Auth/Reporter identity
+- public-name visibility control
+- stale-client protection through current backend Team state
+- server-only invite/activation/suspend/reactivate/role/depart/session-revoke authority
+- existing Phase-3 Live suspend/revoke integration
+- deployed `jb-team-api` v2 with JWT + current-session + Owner/AAL2 + recent-MFA mutation checks
+
+Existing three Reporter identities were backfilled without duplicate Team identity.
+
+### Frontend
+- `reporters.html` upgraded to Android-first Team & Reporters management.
+- Added `phase4-team-client.js`.
+- Browser has no direct privileged Team RPC authority; it uses `jb-team-api`.
+
+### CI / RED STOP
+First protected B1 run exposed old Phase-3 T123 failure.
+No old checker was weakened.
+Architecture was tightened so direct Team RPC authority was removed from browser roles and public Reporter discovery no longer uses the privileged `jb_*` namespace.
+
+Unchanged old T123 then passed.
+Protected workflow run #246 completed:
+- Phase-3 static/security suites GREEN
+- Phase-3 Supabase suites GREEN
+- B1 static Team regression GREEN
+- B1 transactional Team/Authority regression GREEN
+
+### Test status
+- P4-T021 PASS
+- P4-T022 PASS
+- P4-T023 PASS
+- P4-T024 PASS
+- P4-T025 PASS
+- P4-T026 NOT RUN — real Android proof required
+- P4-T027 IN PROGRESS — final Team lock waits for T026
