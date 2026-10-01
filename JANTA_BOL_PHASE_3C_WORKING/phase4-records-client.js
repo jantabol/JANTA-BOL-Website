@@ -11,8 +11,50 @@ async function api(action,payload={}){
   if(!data?.ok)throw new Error(data?.error||'RECORDS_API_FAILED');
   return data;
 }
-async function highRisk(action,payload={}){
+async function ensureRecentMfaInteractive(){
+  try{
+    await backend().requireRecentMfa(600);
+    return true;
+  }catch(e){
+    const code=String(e?.message||e||'');
+    if(code!=='MFA_TOO_OLD'&&code!=='MFA_STEP_UP_REQUIRED')throw e;
+  }
+
+  const factors=await backend().mfaListFactors();
+  const verified=(factors?.totp||[]).filter(x=>x?.status==='verified');
+  if(!verified.length)throw new Error('VERIFIED_MFA_FACTOR_REQUIRED');
+
+  let factor=verified[0];
+  if(verified.length>1){
+    const menu=verified.map((x,i)=>`${i+1}. ${String(x.friendly_name||'Verified Factor')}`).join('\n');
+    const picked=prompt(
+      'Fresh MFA ke liye kaunsa Authenticator factor use kar rahe hain?\n\n'+menu+'\n\nFactor number enter karein.'
+    );
+    if(picked===null)throw new Error('MFA_STEP_UP_CANCELLED');
+    const index=Number(picked)-1;
+    if(!Number.isInteger(index)||index<0||index>=verified.length){
+      throw new Error('VALID_MFA_FACTOR_REQUIRED');
+    }
+    factor=verified[index];
+  }
+
+  const otp=prompt(
+    'Fresh '+String(factor.friendly_name||'Authenticator')+' 6-digit code enter karein'
+  );
+  if(otp===null)throw new Error('MFA_STEP_UP_CANCELLED');
+  if(!/^\d{6}$/.test(otp.trim()))throw new Error('VALID_6_DIGIT_CODE_REQUIRED');
+
+  await backend().mfaChallengeAndVerify(factor.id,otp.trim());
+
+  const recent=await backend().recentMfaInfo(600);
+  if(!recent?.ok)throw new Error('MFA_STEP_UP_FAILED');
+
   await backend().requireRecentMfa(600);
+  return true;
+}
+
+async function highRisk(action,payload={}){
+  await ensureRecentMfaInteractive();
   return api(action,payload);
 }
 async function auditLookup(recordType='',recordId='',limit=100){
