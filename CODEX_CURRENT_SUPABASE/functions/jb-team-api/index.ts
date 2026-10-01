@@ -57,15 +57,14 @@ Deno.serve(async(req:Request)=>{
   if(req.method!=="POST")return json({ok:false,error:"METHOD_NOT_ALLOWED"},405);
 
   const supabaseUrl=Deno.env.get("SUPABASE_URL")??"";
-  const anonKey=Deno.env.get("SUPABASE_ANON_KEY")??"";
-  const serviceRoleKey=Deno.env.get("JB_SUPABASE_SERVICE_ROLE_KEY")??"";
-  if(!supabaseUrl||!anonKey||!serviceRoleKey)return json({ok:false,error:"SERVER_CONFIG_ERROR"},500);
+  const serviceRoleKey=Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")??"";
+  if(!supabaseUrl||!serviceRoleKey)return json({ok:false,error:"SERVER_CONFIG_ERROR"},500);
 
   const authHeader=req.headers.get("Authorization")??"";
   if(!authHeader.startsWith("Bearer "))return json({ok:false,error:"AUTH_REQUIRED"},401);
   const token=authHeader.slice(7);
 
-  const userClient=createClient(supabaseUrl,anonKey,{
+  const userClient=createClient(supabaseUrl,serviceRoleKey,{
     global:{headers:{Authorization:authHeader}},
     auth:{persistSession:false,autoRefreshToken:false}
   });
@@ -93,7 +92,9 @@ Deno.serve(async(req:Request)=>{
     const body=await req.json().catch(()=>({}));
     const action=String(body?.action??"");
     const payload=(body?.payload&&typeof body.payload==="object")?body.payload as JsonRecord:{};
-    // Fresh MFA is reserved for high-risk authority changes. Public-name visibility is\n    // routine and reversible, while Owner + active session + AAL2 are still enforced above.\n    const mutating=new Set(["invite","activate","suspend","reactivate","change_role","depart","revoke_session"]);
+    // Fresh MFA is reserved for high-risk authority changes. Public-name visibility is
+    // routine and reversible, while Owner + active session + AAL2 remain enforced above.
+    const mutating=new Set(["invite","activate","suspend","reactivate","change_role","depart","revoke_session"]);
     if(mutating.has(action)&&!recentMfa(claims,600)){
       return json({ok:false,error:"OWNER_RECENT_MFA_REQUIRED"},403);
     }
@@ -231,7 +232,7 @@ Deno.serve(async(req:Request)=>{
     return json({ok:false,error:"UNKNOWN_ACTION"},400);
   }catch(e){
     const code=safeError(e);
-    console.error("jb-team-api",code);
+    console.error("jb-team-api",code,String((e as {message?:unknown})?.message??e));
     return json({ok:false,error:code},code==="TEAM_REQUEST_FAILED"?500:409);
   }
 });
