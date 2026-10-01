@@ -47,7 +47,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T024 | Team | Internal Reporter Identity + Public Name + Departure + Live History | B1 | PASS |
 | P4-T025 | Team | Lost Device + Common Audit/Notification/Retention + Failure Isolation | B1 | PASS |
 | P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | PASS |
-| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | IN PROGRESS |
+| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | PASS |
 | P4-T028 | Social | Social Master Article + Distribution Controls | B4 | NOT RUN |
 | P4-T029 | Social | Social Caption + Preview + Independent Platform Status | B4 | NOT RUN |
 | P4-T030 | Social | Social Failure + Retry + Manual Fallback | B4 | NOT RUN |
@@ -213,13 +213,13 @@ Evidence:
 - This proves the intended split: routine reversible public-name visibility stays Owner/AAL2/backend-authorized without recent-MFA friction, while high-risk Team authority changes remain step-up protected.
 - Android proof is manual evidence; it does not replace the transactional lifecycle/security regressions already recorded under T021-T025.
 
-### P4-T027 — IN PROGRESS
-Technical gate already proven:
-- three applied B1 migrations are mirrored in the repository;
-- `jb-team-api` v2 is ACTIVE with JWT verification;
-- B1 static/security regression GREEN;
-- B1 transactional Team/Authority regression GREEN;
-- protected Phase-3 static + Supabase regression GREEN in workflow run #246;
-- Phase-3 T123 initially caught a new privileged-RPC boundary issue, the checker was NOT weakened, and the architecture was tightened until unchanged T123 passed again.
+### P4-T027 — PASS
+Evidence:
+- Required B1 migrations are mirrored in the repository and the Team API source is aligned with the repaired deployed runtime.
+- `jb-team-api` v8 is ACTIVE with JWT verification; Owner/current-session/AAL2 remain backend authority and recent MFA remains required for high-risk Team mutations.
+- Generic external authenticated identity resolves to no newsroom role and has no EXECUTE privilege on the Owner Team management RPC.
+- P4-T026 real Android evidence is PASS, including routine Public Name toggle and stale-MFA denial for high-risk Suspend.
+- Protected Phase-3 workflow run #269 completed SUCCESS on Phase-4 head `a1c7673dd37090b2a0b1165ec363c282e38a5683`.
+- Earlier T123 regression was repaired without weakening the old checker; the protected boundary remains GREEN.
 
-Final B1 lock waits only for P4-T026 real-device evidence.
+B1 result: P4-T021–P4-T027 = 7/7 PASS. B1 TEAM / AUTHORITY EXTENSION CLOSED.
