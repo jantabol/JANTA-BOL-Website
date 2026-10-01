@@ -46,8 +46,8 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T023 | Team | Suspend -> Revoke -> Reactivate -> Permission Change | B1 | PASS |
 | P4-T024 | Team | Internal Reporter Identity + Public Name + Departure + Live History | B1 | PASS |
 | P4-T025 | Team | Lost Device + Common Audit/Notification/Retention + Failure Isolation | B1 | PASS |
-| P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | NOT RUN — MANUAL |
-| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | IN PROGRESS — AWAITS T026 |
+| P4-T026 | Team | Android Team Management + Founder-Time + Role Simplicity | B1 | PASS |
+| P4-T027 | Team | Team Implementation/Migration + Coverage + Regression + Lock | B1 | IN PROGRESS |
 | P4-T028 | Social | Social Master Article + Distribution Controls | B4 | NOT RUN |
 | P4-T029 | Social | Social Caption + Preview + Independent Platform Status | B4 | NOT RUN |
 | P4-T030 | Social | Social Failure + Retry + Manual Fallback | B4 | NOT RUN |
@@ -204,13 +204,16 @@ Evidence:
 - Existing Live notification machinery is reused for current Team critical notifications; B3 remains the future unified-notification home.
 - Full protected Phase-3 security, recovery, editorial and retention regressions were GREEN in workflow run #246.
 
-### P4-T026 — NOT RUN — MANUAL
-Required:
-- Founder real Android flow on the new Team & Reporters UI: open Team screen, verify account/status/role view, practical controls and history presentation.
-- High-risk destructive actions do not need to be performed on a real production teammate merely for UI proof; backend lifecycle behavior is already transactionally tested.
-- No manual PASS will be inferred from code or CI.
+### P4-T026 — PASS
+Evidence:
+- Founder real Android/SPCK flow loaded the Team & Reporters screen with 3 Team Accounts and usable role/status/history controls.
+- T029 Reporter B Test showed ACTIVE / EDITOR state and existing lifecycle history for role change, suspend and reactivate.
+- Public Name OFF -> ON succeeded on Android without fresh 10-minute MFA after the routine-action fix; the UI refreshed to Public name ON and History recorded a new `team_public_name_changed` event.
+- A high-risk Suspend attempt with stale MFA was blocked with `MFA_TOO_OLD`; the account remained ACTIVE and no new suspension history event was created.
+- This proves the intended split: routine reversible public-name visibility stays Owner/AAL2/backend-authorized without recent-MFA friction, while high-risk Team authority changes remain step-up protected.
+- Android proof is manual evidence; it does not replace the transactional lifecycle/security regressions already recorded under T021-T025.
 
-### P4-T027 — IN PROGRESS — AWAITS T026
+### P4-T027 — IN PROGRESS
 Technical gate already proven:
 - three applied B1 migrations are mirrored in the repository;
 - `jb-team-api` v2 is ACTIVE with JWT verification;
