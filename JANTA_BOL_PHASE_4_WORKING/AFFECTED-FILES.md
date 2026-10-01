@@ -1,6 +1,6 @@
 # JANTA BOL — PHASE 4 AFFECTED FILES MAP
 
-STATUS: B0 BASELINE / PRE-CODING
+STATUS: B1 TEAM / AUTHORITY — TECHNICAL GREEN / MANUAL T026 PENDING
 DATE: 2026-10-01
 BRANCH: `phase4-execution-2026-10-01`
 
@@ -51,3 +51,43 @@ This file records what Phase 4 is allowed to change, what must be preserved, and
 ## Permanent affected-file rule
 
 Before each coding block, replace forecast assumptions with an exact live file/object list. No file is edited merely because it appears in this forecast. Every actual edit must be recorded in CHANGELOG and linked to the affected tests.
+
+## B1 — Team / Authority Extension — exact map
+
+### Modified
+- `JANTA_BOL_PHASE_3C_WORKING/reporters.html`
+  - Android-first Team management UI.
+- `.github/workflows/phase3-regression.yml`
+  - B1 static + transactional regression added.
+
+### New
+- `JANTA_BOL_PHASE_3C_WORKING/phase4-team-client.js`
+- `CODEX_CURRENT_SUPABASE/functions/jb-team-api/index.ts`
+- `ci/phase4/static-b1-team-regression.cjs`
+- `ci/phase4/db-b1-team-regression.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b1_team_authority_foundation.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b1_team_api_security_context.sql`
+- `JANTA_BOL_PHASE_4_WORKING/db/20261001_phase4_b1_t123_minimum_security_fix.sql`
+
+### Live DB objects added/extended
+- `reporters.public_name_enabled`
+- `reporters.updated_at`
+- `team_accounts`
+- `team_account_history`
+- Team service/internal functions
+- `public_reporter_directory()`
+- `private.current_app_role()` extended so non-owner authority requires active Team state.
+
+### Preserved
+- Supabase Auth remains the authentication authority.
+- `user_roles` remains the effective newsroom role authority.
+- `reporters` remains Reporter identity/profile.
+- Phase-3 Live membership/capability/revocation remains separate from newsroom role.
+- Existing Article IDs/PURLs and historical Live sessions are not recreated on Team lifecycle changes.
+- Old Phase-3 T123 checker remains unchanged and GREEN.
+
+### B1 regression risk
+HIGH: Auth / session / Live permission / Reporter identity / Article history.
+
+Protected result:
+workflow #246 GREEN across old Phase-3 suites + B1 automated suites.
