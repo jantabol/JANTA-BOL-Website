@@ -242,10 +242,18 @@ Evidence:
 - Existing Article identity/version history remained present.
 
 ### P4-T053 — IN PROGRESS
-Current evidence:
-- Live controls, Team lifecycle and Security actions already write the shared `audit_logs` architecture.
-- Existing Grievance status action also writes the common audit path.
-- Full cross-module proof is not yet complete for later Phase-4 domain actions such as unified Notifications, canonical Social, Compliance approval and Ads controls. No PASS is inferred before those integrations exist and are tested.
+Backend evidence completed on 2026-10-01:
+- Grievance: existing `grievance_status` actions are present in common `audit_logs`.
+- Live: `phase3b_admin_control`, `phase3b_force_stop`, `live_permission_revoked` and Live metadata-correction actions are present in common `audit_logs`.
+- Team: role change, suspend, reactivate and public-name changes are present in common `audit_logs` while Team domain history remains separate.
+- Security: session revoke, MFA-factor changes, recovery-key and Permanent Delete security actions are present in common `audit_logs`.
+- B2 audit/export machinery is implemented and protected; protected workflow run #302 is SUCCESS after the B2 evidence-record update.
+- Current Social save path persists `social_distribution` but does not yet write its canonical Phase-4 audit action.
+- Current Compliance screen is read-only and does not yet implement Phase-4 approval actions.
+- Current Ads screen is still localStorage/prototype and therefore has no canonical backend ad-control audit event yet.
+- Unified Notification configuration is a later B3 capability and is not yet present.
+Result:
+- Common audit architecture is proven for existing critical domains, but the exact T053 cross-module matrix cannot honestly PASS until B3/B4/B6/B7 implement and test their domain-owned critical actions. No synthetic/fake audit rows were created just to obtain PASS.
 
 ### P4-T054 — NOT RUN — MANUAL
 Required:
