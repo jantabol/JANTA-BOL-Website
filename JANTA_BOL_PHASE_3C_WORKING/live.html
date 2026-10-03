@@ -17,7 +17,7 @@
     <div class="grid two">
       <div class="card"><h2>YouTube Connection</h2><div id="youtubeBox">Loading…</div></div>
       <div class="card"><h2>JANTA BOL Live Engine</h2><div class="muted">Founder yahan dekhega ki kaunsa streaming app LIVE de raha hai. Registered backup app par switch karne ke liye files edit nahi karni.</div><div id="encoderEngineBox">Loading…</div></div>
-      <div class="card" id="notifications"><h2>Notifications</h2><div class="notifyToolbar"><select id="notifyState"><option value="">All states</option><option>UNREAD</option><option>READ</option><option>ACTION_REQUIRED</option><option>RESOLVED</option></select><select id="notifyDomain"><option value="">All domains</option><option value="live">Live</option><option value="grievance">Grievance</option><option value="compliance">Compliance</option><option value="social">Social</option><option value="ads">Ads</option><option value="security">Security</option><option value="team">Team</option><option value="system">System</option></select></div><div id="notificationBox">Loading…</div></div>
+      <div class="card" id="notifications"><h2>Notifications</h2><div class="notifyToolbar"><select id="notifyState"><option value="">All states</option><option>UNREAD</option><option>READ</option><option>ACTION_REQUIRED</option><option>RESOLVED</option></select><select id="notifyDomain"><option value="">All domains</option><option value="live">Live</option><option value="grievance">Grievance</option><option value="compliance">Compliance</option><option value="social">Social</option><option value="ads">Ads</option><option value="security">Security</option><option value="team">Team</option><option value="system">System</option></select></div><div id="notificationConfigBox" class="muted"></div><div id="notificationBox">Loading…</div></div>
     </div>
     <div class="card"><h2>Pending Live Requests</h2><div id="pendingBox">Loading…</div></div>
     <div class="card"><h2>Live Sessions</h2><div class="muted">Setup, READY, LIVE, reconnect, ended aur security states yahan canonical backend se aate hain.</div><div id="sessionBox">Loading…</div></div>
@@ -50,7 +50,8 @@ async function suspendReporter(id){const reason=prompt('Reporter suspension reas
 function notificationActionHref(n){const p=String(n.action_path||'');return /^(?:[a-z0-9._-]+\.html)(?:[?#][^\\s]*)?$/i.test(p)?p:''}
 function notificationGroup(n){if(n.action_required)return 'Action Required';if(n.priority==='CRITICAL')return 'Critical';if(n.lifecycle_state==='UNREAD')return 'Unread';if(n.lifecycle_state==='RESOLVED')return 'Resolved';return 'Earlier'}
 function notificationRank(n){return n.action_required?0:n.priority==='CRITICAL'?1:n.priority==='HIGH'?2:n.lifecycle_state==='UNREAD'?3:n.lifecycle_state==='RESOLVED'?5:4}
-async function loadNotifications(){try{
+async function loadNotificationConfig(){try{const d=await JBLive.notificationConfig();const rows=d.config||[];notificationConfigBox.innerHTML=rows.map(x=>`<span class="pill">${esc(x.config_key)}: ${x.enabled?'ON':'OFF'}${x.protected_critical?' · protected':''}</span>`).join('')}catch(_){notificationConfigBox.textContent=''}}
+async function loadNotifications(){try{await loadNotificationConfig();
  const filters={lifecycle_state:notifyState.value||undefined,domain:notifyDomain.value||undefined};
  const d=await JBLive.notifications(filters),list=(d.notifications||[]).slice().sort((a,b)=>notificationRank(a)-notificationRank(b)||new Date(b.created_at)-new Date(a.created_at));let last='';
  notificationBox.innerHTML=list.slice(0,50).map(n=>{const g=notificationGroup(n),head=g!==last?'<div class="notifyGroup">'+esc(g)+'</div>':'';last=g;const href=notificationActionHref(n);
