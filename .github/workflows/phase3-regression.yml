@@ -5,14 +5,11 @@ on:
   push:
     branches:
       - phase3-regression-ci
+      - phase4-execution-2026-10-01
       - phase3c-codex-baseline-2026-09-29
-    paths:
-      - "JANTA_BOL_PHASE_3C_WORKING/**"
-      - "CODEX_CURRENT_SUPABASE/**"
-      - "ci/phase3-regression/**"
-      - ".github/workflows/phase3-regression.yml"
   pull_request:
     branches:
+      - phase3-regression-ci
       - phase3c-codex-baseline-2026-09-29
       - main
 
@@ -61,6 +58,15 @@ jobs:
 
       - name: Run Phase 3A P3-final + P4 governance T20 regression
         run: node ci/phase3-regression/static-p3-final-p4-regression.cjs
+
+      - name: Run Phase 4 B0 governance integrity
+        run: node ci/phase4/governance-b0.cjs
+
+      - name: Run Phase 4 B1 team static/security regression
+        run: node ci/phase4/static-b1-team-regression.cjs
+
+      - name: Run Phase 4 B2 audit/retention static/security regression
+        run: node ci/phase4/static-b2-records-regression.cjs
 
       - name: Audit exact regression coverage
         run: node ci/phase3-regression/coverage-audit.cjs
@@ -183,6 +189,18 @@ jobs:
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-retention-regression.sql 2>&1 | tee ci-results/db-retention-regression.log
 
+      - name: Run Phase 4 B1 transactional Team/Authority regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b1-team-regression.sql 2>&1 | tee ci-results/db-p4-b1-team-regression.log
+
+      - name: Run Phase 4 B2 transactional Audit/Retention regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b2-records-regression.sql 2>&1 | tee ci-results/db-p4-b2-records-regression.log
+
       - name: Summarize database results
         if: always()
         shell: bash
@@ -190,7 +208,7 @@ jobs:
           {
             echo "## Phase 3 Supabase regression"
             echo
-            for f in ci-results/db-regression.log ci-results/db-schema-regression.log ci-results/db-flow-regression.log ci-results/db-state-machine-regression.log ci-results/db-p3-security-regression.log ci-results/db-p3-recovery-regression.log ci-results/db-p3-incident-regression.log ci-results/db-p3-preprod-regression.log ci-results/db-access-regression.log ci-results/db-function-security-regression.log ci-results/db-security-lifecycle-regression.log ci-results/db-editorial-regression.log ci-results/db-retention-regression.log; do
+            for f in ci-results/db-regression.log ci-results/db-schema-regression.log ci-results/db-flow-regression.log ci-results/db-state-machine-regression.log ci-results/db-p3-security-regression.log ci-results/db-p3-recovery-regression.log ci-results/db-p3-incident-regression.log ci-results/db-p3-preprod-regression.log ci-results/db-access-regression.log ci-results/db-function-security-regression.log ci-results/db-security-lifecycle-regression.log ci-results/db-editorial-regression.log ci-results/db-retention-regression.log ci-results/db-p4-b1-team-regression.log ci-results/db-p4-b2-records-regression.log; do
               if [ -f "$f" ]; then
                 grep -E '^[[:space:]]*(PASS|FAIL) \[' "$f" || true
               fi

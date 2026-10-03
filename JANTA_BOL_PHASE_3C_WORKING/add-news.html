@@ -82,7 +82,7 @@
   </form>
 </main>
 <div id="reviewModal" class="hidden" style="position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:9999;padding:18px;overflow:auto"><div class="form-card" style="max-width:700px;margin:30px auto"><h2>✅ Final Review Before Publish</h2><div id="reviewContent" class="record"></div><div class="actions" style="margin-top:16px"><button class="btn secondary" id="cancelReview" type="button">Back / Edit</button><button class="btn primary" id="confirmPublish" type="button">Confirm Publish</button></div></div></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js?v=20261003-b4-rpc1"></script><script src="admin-auth.js"></script>
 <script>
 (function(){
   const $=id=>document.getElementById(id); let editing=null, origin='new', previousVerification='Pending Verification', autoTimer=null, publishingItem=null, autoBusy=false, manualBusy=false, autoQueued=false, lastSavedSnapshot=null, conflictMode=false;
@@ -95,6 +95,11 @@
   function setDistrict(v){const known=['Shivpuri','Guna','Ashoknagar'];if(!v){$('district').value='';return}if(known.includes(v))$('district').value=v;else{$('district').value='Other';$('customDistrict').value=v;$('customDistrictWrap').classList.remove('hidden')}}
   function splitLines(v){return v.split(/\n+/).map(x=>x.trim()).filter(Boolean)}
   function fieldsToItem(){const base=editing?JSON.parse(JSON.stringify(editing)):{id:'',version:0,slug:'',status:'draft'};Object.assign(base,{headline:$('headline').value.trim(),summary:$('summary').value.trim(),content:$('content').value.trim(),category:$('category').value,location:$('location').value.trim(),author:$('author').value.trim(),geoLevel:$('geoLevel').value,district:selectedDistrict(),newsDate:$('publishDate').value,newsTime:$('publishTime').value,breaking:$('breaking').checked,topStory:$('topStory').checked});base.media={coverImageUrl:$('coverImageUrl').value.trim(),additionalMediaUrls:splitLines($('additionalMediaUrls').value),youtubeUrl:$('youtubeUrl').value.trim()};base.internalSource={type:$('sourceType').value,name:$('sourceName').value.trim(),url:$('sourceUrl').value.trim(),informationDate:$('sourceDate').value,note:$('internalNote').value.trim(),verificationStatus:$('verificationStatus').value,evidence:$('evidence').value.trim(),publicAttribution:$('publicAttribution').value.trim()};base.social={enabled:$('socialEnabled').checked,facebook:$('facebook').checked,instagram:$('instagram').checked,whatsapp:$('whatsapp').checked,youtube:$('youtubeSocial').checked,caption:$('socialCaption').value.trim()};base.verificationNote=$('verificationNote').value.trim();return base}
+  async function persistSocial(articleId,social){
+    if(!articleId||!social)throw new Error('SOCIAL_PREFERENCES_MISSING');
+    if(!window.JBPhase2?.saveSocial)throw new Error('SOCIAL_CLIENT_NOT_READY');
+    return await JBPhase2.saveSocial({article_id:articleId,enabled:!!social.enabled,facebook:!!social.facebook,instagram:!!social.instagram,whatsapp:!!social.whatsapp,youtube:!!social.youtube,caption:social.caption||'',status:{}});
+  }
   function autosaveSnapshot(i){
   const x=JSON.parse(JSON.stringify(i));
   delete x.version;
@@ -272,6 +277,12 @@
         prevVerification:previousVerification
       });
       editing=saved;
+      try{
+        await persistSocial(saved.id,i.social);
+      }catch(socialError){
+        state('PUBLISHED • Social preferences failed to save',false);
+        throw new Error('Article publish ho gaya, lekin Social Distribution save nahi hua: '+(socialError?.message||'UNKNOWN_SOCIAL_ERROR'));
+      }
       previousVerification=saved.internalSource.verificationStatus;
       lastSavedSnapshot=autosaveSnapshot(saved);
       state('SYNCED • Draft Version '+saved.version);
@@ -313,6 +324,7 @@
         prevVerification:previousVerification
       });
       editing=saved;
+      await persistSocial(saved.id,i.social);
       previousVerification=saved.internalSource.verificationStatus;
       lastSavedSnapshot=autosaveSnapshot(saved);
       state('PUBLISHED • Backend confirmed • Version '+saved.version);
@@ -391,6 +403,7 @@
       });
 
       editing=saved;
+      await persistSocial(saved.id,i.social);
       previousVerification=saved.internalSource.verificationStatus;
       if(
   savedVerificationNote &&

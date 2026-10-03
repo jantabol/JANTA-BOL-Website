@@ -49,6 +49,10 @@ begin
     and has_function_privilege('authenticated',p.oid,'EXECUTE')
     and p.proname not in (
       'jb_is_owner',
+      'jb_social_history_internal',
+      'jb_social_record_attempt_internal',
+      'jb_social_save_preferences_internal',
+      'jb_social_set_global_internal',
       'jb_owner_confirm_recovery_physical_check',
       'jb_owner_list_sessions',
       'jb_owner_permanent_delete_article',
@@ -85,6 +89,24 @@ begin
         and pg_get_functiondef(p.oid) not ilike '%OWNER_REQUIRED%'
       )
     );
+
+
+  if exists(
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname in ('jb_social_history_internal','jb_social_record_attempt_internal','jb_social_save_preferences_internal')
+      and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE')
+           or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+           or pg_get_functiondef(p.oid) not ilike '%jb_social_allowed%')
+  ) then v_bad_owner_guard:=v_bad_owner_guard+1; end if;
+
+  if exists(
+    select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='jb_social_set_global_internal'
+      and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE')
+           or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+           or pg_get_functiondef(p.oid) not ilike '%current_owner_aal2%')
+  ) then v_bad_owner_guard:=v_bad_owner_guard+1; end if;
 
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
