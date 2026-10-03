@@ -33,7 +33,7 @@ const rejectRequest=(requestId,stateVersion,reason)=>api('admin_reject_request',
 const youtubeStatus=()=>api('youtube_status');
 const youtubeConnect=()=>invoke('jb-youtube-oauth-start');
 const youtubeMarkCompromised=()=>api('admin_youtube_mark_compromised');
-const notifications=()=>api('notifications_list');
+const notifications=(filters={})=>api('notifications_list',filters);
 const markNotificationRead=(notificationId)=>api('notification_mark_read',{notification_id:notificationId});
 const resolveNotification=(notificationId)=>api('notification_resolve',{notification_id:notificationId});
 const subscribeNotifications=async(callback)=>{const u=await global.JBBackend.client.auth.getUser();const id=u?.data?.user?.id;if(!id)return null;return global.JBBackend.client.channel('jb-live-notify-'+id).on('postgres_changes',{event:'INSERT',schema:'public',table:'live_notifications',filter:'recipient_user_id=eq.'+id},payload=>{try{callback(payload)}catch(_){}}).subscribe();};
