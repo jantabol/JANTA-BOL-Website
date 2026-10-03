@@ -761,7 +761,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === "notifications_list") {
       let notesQuery = service.from("live_notifications").select(
-        "id,domain,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at"
+        "id,domain,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,acknowledged_at,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at,reminder_count,last_reminded_at,due_at"
       ).eq("recipient_user_id", a.userId);
       const requestedState = typeof payload.lifecycle_state === "string" ? payload.lifecycle_state : "";
       const requestedDomain = typeof payload.domain === "string" ? payload.domain : "";
@@ -785,6 +785,24 @@ Deno.serve(async (req: Request) => {
       });
       if (marked.error) throw marked.error;
       if (marked.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_FOUND" }, 404);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_acknowledge") {
+      const notificationId = Number(payload.notification_id ?? 0);
+      if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
+      const x = await service.rpc("jb_notification_acknowledge_internal", { p_user_id: a.userId, p_notification_id: notificationId });
+      if (x.error) throw x.error;
+      if (x.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_ACTIONABLE" }, 409);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_config_set") {
+      if (a.role !== "owner") return json({ ok: false, error: "OWNER_REQUIRED" }, 403);
+      const key = textValue(payload.config_key, 80);
+      if (!key || typeof payload.enabled !== "boolean") return json({ ok: false, error: "INVALID_NOTIFICATION_CONFIG" }, 400);
+      const x = await service.rpc("jb_notification_config_set_internal", { p_actor: a.userId, p_key: key, p_enabled: payload.enabled });
+      if (x.error) return json({ ok: false, error: String(x.error.message || "NOTIFICATION_CONFIG_FAILED").slice(0,120) }, 409);
       return json({ ok: true });
     }
 
