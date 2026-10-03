@@ -68,5 +68,5 @@
 - Failure isolation: provider state/history never changes Article ID/PURL or article published state; MANUAL mode rejects fake Posted success.
 - Shared engines: social state changes use existing `audit_logs`; Failed/Pending history routes into B3 notification domain adapter; Topic-8 retention policy `social_history_v1`.
 - Frontend: `add-news.html` persists its social controls to canonical social_distribution after article save/publish; `social.html` reads backend global setting, displays independent states and provides manual-share fallback.
-- Client: `phase2-client.js` social settings/save/attempt/history RPC adapters.
+- Client: `phase2-client.js` social settings/save/attempt/history RPC adapters; authenticated direct INSERT/UPDATE/DELETE on `social_distribution` is revoked and preference writes use `jb_social_save_preferences_internal`, preventing client-forged Posted/provider state.
 - Provider credentials are not stored/exposed in frontend; real API/provider execution remains dependency-gated for testing.
