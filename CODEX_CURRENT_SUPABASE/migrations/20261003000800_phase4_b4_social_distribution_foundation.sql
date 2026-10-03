@@ -1,0 +1,24 @@
+-- Phase 4 B4 canonical Social Distribution foundation.
+-- Applied to production as migrations phase4_b4_social_distribution_foundation
+-- and phase4_b4_social_notification_adapter on 2026-10-03.
+-- This tracked migration intentionally documents the live schema contract; production migration history remains authoritative.
+
+-- Existing public.social_distribution remains the canonical per-article home.
+-- Added columns: last_attempt_at timestamptz, last_error_code text,
+-- attempt_count integer >= 0, provider_mode MANUAL|API.
+-- Added public.social_settings singleton (global_enabled) with Owner+AAL2 mutation RPC.
+-- Added public.social_distribution_history append-only attempt/status evidence.
+-- RLS: social_distribution is available only to active newsroom owner/admin/editor through private.jb_social_allowed().
+-- No anon access to social settings/history and no provider credential storage in browser/database social rows.
+-- RPCs:
+--   public.jb_social_set_global_internal(boolean)
+--   public.jb_social_record_attempt_internal(uuid,text,text,text)
+--   public.jb_social_history_internal(uuid)
+-- Security behavior:
+--   article must already be published before a distribution attempt;
+--   global and per-article switches must be ON;
+--   platform must be selected;
+--   MANUAL provider mode rejects fake Posted state;
+--   attempts are audited and retained;
+--   Failed/Pending attempt history emits through the existing B3 social notification adapter.
+-- Retention policy: social_history_v1 / 365 days / no automatic disposition.
