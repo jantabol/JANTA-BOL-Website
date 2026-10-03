@@ -760,9 +760,18 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "notifications_list") {
-      const notes = await service.from("live_notifications").select(
+      let notesQuery = service.from("live_notifications").select(
         "id,domain,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at"
-      ).eq("recipient_user_id", a.userId).order("created_at", { ascending: false }).limit(50);
+      ).eq("recipient_user_id", a.userId);
+      const requestedState = typeof payload.lifecycle_state === "string" ? payload.lifecycle_state : "";
+      const requestedDomain = typeof payload.domain === "string" ? payload.domain : "";
+      if (requestedState) notesQuery = notesQuery.eq("lifecycle_state", requestedState);
+      if (requestedDomain) notesQuery = notesQuery.eq("domain", requestedDomain);
+      const notes = await notesQuery
+        .order("action_required", { ascending: false })
+        .order("priority", { ascending: true })
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (notes.error) throw notes.error;
       return json({ ok: true, notifications: notes.data ?? [] });
     }
