@@ -245,7 +245,8 @@ Status: WORKING COPY ONLY. Baseline folder remains untouched.
 - Date: 2026-10-03.
 - Integrated existing `social_distribution` rather than rebuilding it; add-news social controls now persist to the canonical table.
 - Replaced frontend/local-only global social authority with backend `social_settings`; protected global mutation requires Owner+AAL2.
-- Added newsroom distribution boundary for active Owner/Admin/Editor without adding publish authority.
+- Added newsroom distribution boundary for Owner (existing AAL2 preserved) and active Admin/Editor without adding publish authority.
+- Hardened write boundary after architecture review: authenticated clients cannot directly INSERT/UPDATE/DELETE canonical social rows; preference changes use a narrow RPC, while status/provider state is server-controlled. This prevents forged `Posted` success.
 - Added independent per-platform attempt/status history, safe failure code, attempt count, audit evidence, retention policy and B3 notification routing for Pending/Failed.
 - Added provider-independent manual-share fallback; MANUAL mode cannot be recorded as automated Posted success.
 - Social provider failure is isolated from article publication/PURL identity.
