@@ -761,7 +761,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === "notifications_list") {
       let notesQuery = service.from("live_notifications").select(
-        "id,domain,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,acknowledged_at,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at,reminder_count,last_reminded_at,due_at"
+        "id,domain,notification_type,priority,consequence,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,acknowledged_at,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at,reminder_count,last_reminded_at,due_at"
       ).eq("recipient_user_id", a.userId);
       const requestedState = typeof payload.lifecycle_state === "string" ? payload.lifecycle_state : "";
       const requestedDomain = typeof payload.domain === "string" ? payload.domain : "";
@@ -769,11 +769,16 @@ Deno.serve(async (req: Request) => {
       if (requestedDomain) notesQuery = notesQuery.eq("domain", requestedDomain);
       const notes = await notesQuery
         .order("action_required", { ascending: false })
-        .order("priority", { ascending: true })
         .order("created_at", { ascending: false })
         .limit(50);
       if (notes.error) throw notes.error;
-      return json({ ok: true, notifications: notes.data ?? [] });
+      const rank = (x: Record<string, unknown>) => x.priority === "CRITICAL" ? 0 : x.priority === "HIGH" ? 1 : 2;
+      const ordered = [...(notes.data ?? [])].sort((x,y) =>
+        Number(Boolean(y.action_required))-Number(Boolean(x.action_required)) ||
+        rank(x)-rank(y) ||
+        String(y.created_at).localeCompare(String(x.created_at))
+      );
+      return json({ ok: true, notifications: ordered });
     }
 
     if (action === "notification_mark_read") {
