@@ -96,8 +96,9 @@
   function splitLines(v){return v.split(/\n+/).map(x=>x.trim()).filter(Boolean)}
   function fieldsToItem(){const base=editing?JSON.parse(JSON.stringify(editing)):{id:'',version:0,slug:'',status:'draft'};Object.assign(base,{headline:$('headline').value.trim(),summary:$('summary').value.trim(),content:$('content').value.trim(),category:$('category').value,location:$('location').value.trim(),author:$('author').value.trim(),geoLevel:$('geoLevel').value,district:selectedDistrict(),newsDate:$('publishDate').value,newsTime:$('publishTime').value,breaking:$('breaking').checked,topStory:$('topStory').checked});base.media={coverImageUrl:$('coverImageUrl').value.trim(),additionalMediaUrls:splitLines($('additionalMediaUrls').value),youtubeUrl:$('youtubeUrl').value.trim()};base.internalSource={type:$('sourceType').value,name:$('sourceName').value.trim(),url:$('sourceUrl').value.trim(),informationDate:$('sourceDate').value,note:$('internalNote').value.trim(),verificationStatus:$('verificationStatus').value,evidence:$('evidence').value.trim(),publicAttribution:$('publicAttribution').value.trim()};base.social={enabled:$('socialEnabled').checked,facebook:$('facebook').checked,instagram:$('instagram').checked,whatsapp:$('whatsapp').checked,youtube:$('youtubeSocial').checked,caption:$('socialCaption').value.trim()};base.verificationNote=$('verificationNote').value.trim();return base}
   async function persistSocial(articleId,social){
-    if(!articleId||!social||!window.JBPhase2)return;
-    await JBPhase2.saveSocial({article_id:articleId,enabled:!!social.enabled,facebook:!!social.facebook,instagram:!!social.instagram,whatsapp:!!social.whatsapp,youtube:!!social.youtube,caption:social.caption||'',status:{}});
+    if(!articleId||!social)throw new Error('SOCIAL_PREFERENCES_MISSING');
+    if(!window.JBPhase2?.saveSocial)throw new Error('SOCIAL_CLIENT_NOT_READY');
+    return await JBPhase2.saveSocial({article_id:articleId,enabled:!!social.enabled,facebook:!!social.facebook,instagram:!!social.instagram,whatsapp:!!social.whatsapp,youtube:!!social.youtube,caption:social.caption||'',status:{}});
   }
   function autosaveSnapshot(i){
   const x=JSON.parse(JSON.stringify(i));
@@ -276,7 +277,12 @@
         prevVerification:previousVerification
       });
       editing=saved;
-      await persistSocial(saved.id,i.social);
+      try{
+        await persistSocial(saved.id,i.social);
+      }catch(socialError){
+        state('PUBLISHED • Social preferences failed to save',false);
+        throw new Error('Article publish ho gaya, lekin Social Distribution save nahi hua: '+(socialError?.message||'UNKNOWN_SOCIAL_ERROR'));
+      }
       previousVerification=saved.internalSource.verificationStatus;
       lastSavedSnapshot=autosaveSnapshot(saved);
       state('SYNCED • Draft Version '+saved.version);
