@@ -239,3 +239,15 @@ Status: WORKING COPY ONLY. Baseline folder remains untouched.
 - Added low-noise Android notification center UI to existing `live.html` and dashboard entry in `admin.html`.
 - Provider delivery is deliberately adapter/outbox-based; no unapproved external provider was invented. Provider-dependent execution remains test/DUE governed.
 - Coding completion does not itself mark P4-T043–P4-T050 PASS; RUN-07 evidence/testing is separate.
+
+
+## PHASE4-B4-CHG-001 — Deep Social Distribution coding
+- Date: 2026-10-03.
+- Integrated existing `social_distribution` rather than rebuilding it; add-news social controls now persist to the canonical table.
+- Replaced frontend/local-only global social authority with backend `social_settings`; protected global mutation requires Owner+AAL2.
+- Added newsroom distribution boundary for active Owner/Admin/Editor without adding publish authority.
+- Added independent per-platform attempt/status history, safe failure code, attempt count, audit evidence, retention policy and B3 notification routing for Pending/Failed.
+- Added provider-independent manual-share fallback; MANUAL mode cannot be recorded as automated Posted success.
+- Social provider failure is isolated from article publication/PURL identity.
+- Added low-noise mobile workflow in existing `social.html`; no provider secret/token is stored in browser code.
+- Coding completion is not P4-T028–P4-T033 PASS. RUN-05 testing remains separate.
