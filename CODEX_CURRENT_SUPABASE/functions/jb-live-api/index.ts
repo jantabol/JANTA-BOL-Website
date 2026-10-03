@@ -761,7 +761,7 @@ Deno.serve(async (req: Request) => {
 
     if (action === "notifications_list") {
       const notes = await service.from("live_notifications").select(
-        "id,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at"
+        "id,domain,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at"
       ).eq("recipient_user_id", a.userId).order("created_at", { ascending: false }).limit(50);
       if (notes.error) throw notes.error;
       return json({ ok: true, notifications: notes.data ?? [] });
@@ -770,12 +770,24 @@ Deno.serve(async (req: Request) => {
     if (action === "notification_mark_read") {
       const notificationId = Number(payload.notification_id ?? 0);
       if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
-      const marked = await service.rpc("jb_live_notification_mark_read_internal", {
+      const marked = await service.rpc("jb_notification_mark_read_internal", {
         p_user_id: a.userId,
         p_notification_id: notificationId,
       });
       if (marked.error) throw marked.error;
       if (marked.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_FOUND" }, 404);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_resolve") {
+      const notificationId = Number(payload.notification_id ?? 0);
+      if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
+      const resolved = await service.rpc("jb_notification_resolve_internal", {
+        p_user_id: a.userId,
+        p_notification_id: notificationId,
+      });
+      if (resolved.error) throw resolved.error;
+      if (resolved.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_FOUND" }, 404);
       return json({ ok: true });
     }
 
