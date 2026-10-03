@@ -107,3 +107,9 @@ Flow-G recovery note: the later `FIXCHECK` edit was verified as a genuine local 
 | #038 | Version 4 existing draft edited offline. Local edit was initially protected (`OFFLINE / NOT SYNCED`), but offline page reload failed to recover the matching article shadow and exposed an uninitialized/blank Add News form. Reconnect did not restore the correction in that run. Root cause localized in `add-news.html` init/autosave recovery ordering; fix prepared. | FAIL observed → FIX PREPARED → FOUNDER RETEST REQUIRED |
 
 Connected rule: #037 remains historical FINAL PASS; after #038 fix, perform a separate #037 regression recheck without rewriting the historical PASS record.
+
+## PHASE 4 — RUN-07 UNIFIED NOTIFICATIONS
+
+| Test | Result | Evidence | Status |
+|---|---|---|---|
+| P4-T043 — Unified Notification Engine + Existing Live Preservation | Existing Phase-3 Live notification triggers remain installed and route through `private.jb_live_safe_notify` into the single common `jb_notification_emit_internal` / `public.live_notifications` engine. All 144 pre-B3 Live notification rows remain preserved. Protected Phase 3A+3B workflow run #353 completed SUCCESS: static/source regression and Supabase transactional regression both SUCCESS. | E1: GitHub Actions run 353. E5: live notification trigger/row verification. E7: B3 migrations + `jb-live-api` + client/code-map changes. | PASS / LOCKED — 2026-10-03 |
