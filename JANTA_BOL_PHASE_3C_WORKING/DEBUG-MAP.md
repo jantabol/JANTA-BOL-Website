@@ -126,3 +126,9 @@ Status: WORKING / NOT FINAL LOCK RECORD
 **Localized fix:** Recover matching `editId` shadow before network fetch when offline; use it as fetch-failure fallback; block `scheduleAutosave()` while an existing article is uninitialized (`editId && !editing`).
 
 **Regression scope:** #038 direct retest; #037 connected offline→online sync recheck. Historical #037 PASS remains unchanged.
+
+## PHASE4-B4-SEC-001 — Social status direct-write bypass caught during coding review — 2026-10-03
+- Finding: initial B4 extension still allowed authenticated RLS-approved newsroom clients to directly update social_distribution.status, which could bypass the server rule that MANUAL provider mode must never claim automated Posted success.
+- Root cause: legacy table-level ALL write path was broader than the new server-controlled attempt lifecycle.
+- Minimum safe fix: revoked authenticated INSERT/UPDATE/DELETE on canonical social rows; added narrow jb_social_save_preferences_internal for enabled/platform/caption preferences; status/history/provider outcomes remain server-controlled through attempt RPC. Existing Owner path retains AAL2.
+- No test PASS claimed from this fix; B4 RUN-05 remains pending after coding closure.
