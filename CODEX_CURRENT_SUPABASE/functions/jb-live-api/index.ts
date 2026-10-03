@@ -802,6 +802,13 @@ Deno.serve(async (req: Request) => {
       return json({ ok: true });
     }
 
+    if (action === "notification_config_list") {
+      if (a.role !== "owner") return json({ ok: false, error: "OWNER_REQUIRED" }, 403);
+      const x = await service.from("notification_config").select("config_key,enabled,protected_critical,updated_at").order("config_key");
+      if (x.error) throw x.error;
+      return json({ ok: true, config: x.data ?? [] });
+    }
+
     if (action === "notification_config_set") {
       if (a.role !== "owner") return json({ ok: false, error: "OWNER_REQUIRED" }, 403);
       const key = textValue(payload.config_key, 80);
