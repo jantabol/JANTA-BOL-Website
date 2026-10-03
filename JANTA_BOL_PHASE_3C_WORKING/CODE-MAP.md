@@ -47,3 +47,14 @@
   - matching existing-article local shadow is recovered before server fetch when offline;
   - matching shadow is fallback recovery when server/API fetch fails;
   - normal online same-version recovery and version-conflict paths remain intact.
+
+## PHASE 4 B3 — Unified Notifications (2026-10-03)
+- Protected home preserved: `public.live_notifications` + Phase-3 Live triggers/realtime client.
+- Existing `private.jb_live_safe_notify` now adapts Live events into `jb_notification_emit_internal`; no parallel notification engine.
+- Common domain adapter: `jb_notification_emit_domain_internal` for grievance/compliance/social/ads/security/team/system integrations as those domain blocks become active.
+- Lifecycle: UNREAD / READ / ACTION_REQUIRED / RESOLVED + acknowledgement, direct action path, due/reminder/escalation and dedupe.
+- Delivery: in-app authority + `notification_delivery_history` + `notification_delivery_outbox` external retry state. External failure cannot mutate domain truth.
+- Security/privacy: authorized active-recipient check, safe-content guard, owner-only protected config, RLS/no direct authenticated access to internal history/config/outbox.
+- Retention: notification history links to Topic-8 `record_retention_policies/state`; notification delivery history remains distinct from `audit_logs`.
+- Android UI: `live.html#notifications` unified inbox with state/domain filters, action-first/priority grouping, read/ack/open/resolve controls; `admin.html` exposes Notifications entry.
+- Client/API: `phase3a-live-client.js`, `jb-live-api` preserve existing notification list/read/realtime behavior and add lifecycle/config support.
