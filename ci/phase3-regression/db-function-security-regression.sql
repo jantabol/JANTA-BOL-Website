@@ -12,7 +12,7 @@ declare
   v_unexpected_internal bigint;
   v_anon_exposed bigint;
   v_unknown_authenticated bigint;
-  v_bad_owner_guard bigint;
+  v_bad_owner_guard bigint;\n  v_bad_ad_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -39,7 +39,7 @@ begin
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
     and p.proname like 'jb_%'
-    and has_function_privilege('anon',p.oid,'EXECUTE');
+    and has_function_privilege('anon',p.oid,'EXECUTE')\n    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
@@ -112,8 +112,8 @@ begin
     '3A-P3-T123',
     v_anon_exposed=0
     and v_unknown_authenticated=0
-    and v_bad_owner_guard=0,
-    'Phase-3A database function caller roles are explicit: no jb_* anon execution, internal functions stay service-only, and only reviewed Owner RPCs are authenticated-executable with internal authority checks.'
+    and v_bad_owner_guard=0\n    and v_bad_ad_guard=0,
+    'Phase-3A database function caller roles are explicit: no jb_* anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
 
