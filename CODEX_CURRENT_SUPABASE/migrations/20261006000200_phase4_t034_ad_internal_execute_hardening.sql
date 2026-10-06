@@ -1,0 +1,1 @@
+-- P4-T034 explicit execute boundary for the high-risk transition authority.\n-- Production migration: phase4_t034_ad_internal_execute_hardening.\nrevoke execute on function public.jb_ad_transition_internal(uuid,text,text) from public, anon;\ngrant execute on function public.jb_ad_transition_internal(uuid,text,text) to authenticated;\n
