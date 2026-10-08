@@ -204,6 +204,12 @@ jobs:
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b2-records-regression.sql 2>&1 | tee ci-results/db-p4-b2-records-regression.log
 
+      - name: Run Phase 4 B6 read-only deadline regression
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b6-deadline-regression.sql 2>&1 | tee ci-results/db-p4-b6-deadline-regression.log
+
       - name: Summarize database results
         if: always()
         shell: bash
