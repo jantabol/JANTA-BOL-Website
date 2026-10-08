@@ -24,3 +24,6 @@ Deadline refresh is an authenticated staff RPC. pg_cron executes in a database j
 
 ## Security / scope
 No LIVE production rows changed during this audit. No PASS or LOCK assigned. Keep B6 T017 IN PROGRESS.
+
+## 2026-10-08 LIVE execution of read-only authorization assertions
+A DO-block executed through the Supabase SQL connector without exception: verified refresh function contains p4_staff_allowed gate; delivery attempt function exists and is not directly executable by anon/authenticated; confirmed compliance cron remains absent. This is targeted security evidence only, not notification-delivery proof or complete T017 PASS. Repository SQL artifact: ci/phase4/db-b6-notification-delivery-audit.sql (commit 7716a6e88e7ed9ba151f0d60feca31ee2e428720). The repository SQL file has NOT been independently run in GitHub Actions yet.
