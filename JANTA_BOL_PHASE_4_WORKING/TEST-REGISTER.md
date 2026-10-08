@@ -40,7 +40,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T017 | Compliance | Compliance Calendar + Deadline + Notification | B6 | NOT RUN |
 | P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | PASS + LOCK (SYNTHETIC LIFECYCLE ONLY; REAL GOVERNMENT SUBMISSION DEFERRED) |
 | P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | IN PROGRESS — isolated real backend-client.js publishing fault-injection mock PASS (CI #456 static SUCCESS), LIVE read-only article RLS/trigger isolation inspected; official MIB/MeitY source trace PARTIAL. Real authenticated publishing API during compliance failure + complete legal applicability still DUE. Evidence: evidence/P4-T019-2026-10-08.md |
-| P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | AUDIT IN PROGRESS — CMP-033–037; CI #456 PASS on head 46e82e2, T015–T017 register discrepancy needs evidence reconciliation, T019 external real API outage blocked; evidence/P4-T020-2026-10-08.md; NOT PASS/LOCK |
+| P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | AUDIT IN PROGRESS — CMP-035 FAIL/RCA/RETEST verified (#428 FAIL → 84ac19b CI-only fix → #430 PASS); CMP-033 LIVE backend exists but tracked compliance.html read-only UI source gap; CMP-036 #456 CI PASS; CMP-034 full coverage and T015–T017 evidence discrepancy DUE; CMP-037 NOT LOCK. Evidence: evidence/P4-T020-2026-10-08.md |
 | P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | PASS |
 | P4-T022 | Team | Permission Matrix + Super Admin Reserved Authority + Live Separation | B1 | PASS |
 | P4-T023 | Team | Suspend -> Revoke -> Reactivate -> Permission Change | B1 | PASS |
