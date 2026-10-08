@@ -41,7 +41,7 @@ begin
   where n.nspname='public'
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
-    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_public_active_ads');
+    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
