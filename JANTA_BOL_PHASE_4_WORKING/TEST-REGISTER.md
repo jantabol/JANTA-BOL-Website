@@ -39,7 +39,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T016 | Compliance | Monthly Compliance + Zero-Grievance + Public-Safe Approval | B6 | NOT RUN |
 | P4-T017 | Compliance | Compliance Calendar + Deadline + Notification | B6 | NOT RUN |
 | P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | PASS + LOCK (SYNTHETIC LIFECYCLE ONLY; REAL GOVERNMENT SUBMISSION DEFERRED) |
-| P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | IN PROGRESS — LIVE security negatives + Android evidence; CI #446 GREEN (37774608131); official-source trace PARTIAL; isolated publishing fault-injection still pending. Evidence: evidence/P4-T019-2026-10-08.md |
+| P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | IN PROGRESS — isolated real backend-client.js publishing fault-injection mock PASS (CI #456 static SUCCESS), LIVE read-only article RLS/trigger isolation inspected; official MIB/MeitY source trace PARTIAL. Real authenticated publishing API during compliance failure + complete legal applicability still DUE. Evidence: evidence/P4-T019-2026-10-08.md |
 | P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | NOT RUN |
 | P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | PASS |
 | P4-T022 | Team | Permission Matrix + Super Admin Reserved Authority + Live Separation | B1 | PASS |
