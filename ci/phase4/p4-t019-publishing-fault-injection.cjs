@@ -20,7 +20,7 @@ async function run(){
       then(resolve,reject){
         const work=()=>{
           state.calls.push({table,kind:op.kind});
-          if(table.startsWith('compliance'))return {data:null,error:new Error('SIMULATED_COMPLIANCE_OUTAGE')};
+          if(table.startsWith('compliance'))return state.complianceDown ? {data:null,error:new Error('SIMULATED_COMPLIANCE_OUTAGE')} : {data:[],error:null};
           if(table==='user_roles')return {data:{role:state.role},error:null};
           if(table==='articles'){
             if(op.kind==='update'){
@@ -66,6 +66,8 @@ async function run(){
   await assert.rejects(()=>backend.publish(article,{expectedVersion:999}),/VERSION_CONFLICT/);
   assert.deepEqual(clone(),saved,'Version conflict must not corrupt stored data');
   state.complianceDown=false;
+  const recoveredCompliance=await client.from('compliance_tasks').select('*');
+  assert.equal(recoveredCompliance.error,null,'Compliance API mock must recover');
   const recovered=await backend.getArticle('synthetic-t019',{privateData:true});
   assert.equal(recovered.status,'published','Published article readable after simulated recovery');
   console.log('PASS [P4-T019-MOCK] compliance outage + owner/AAL2 denial + publish + conflict integrity + recovery');
