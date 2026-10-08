@@ -11,6 +11,7 @@ body{font:16px/1.5 Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}.top{
 <label for="summary">Public-safe summary (no names, IDs, contacts or evidence)</label><textarea id="summary" rows="3" maxlength="5000"></textarea>
 <button class="btn" id="approve" type="button">Approve Internal Report</button>
 <p class="muted">यह केवल internal approval है; public publish अलग backend authority action है।</p><div id="months"></div></div>
+<div class="card"><h2>Compliance Notifications</h2><p class="muted">In-app delivery to your signed-in account. External WhatsApp/SMS/email delivery is not implied.</p><button class="btn alt" id="noticesReload" type="button">Refresh Notifications</button><div id="complianceNotices" role="status" aria-live="polite">Loading…</div></div>
 <div class="card"><h2>Deadline Tracking</h2><button class="btn alt" id="deadlines" type="button">Refresh Deadline States</button><p class="muted">Upcoming / Due Soon / Due Today / Overdue; changes are audited in backend history.</p></div>
 <div class="card" role="status" aria-live="polite"><strong>Result</strong><div id="notice">Ready after authentication.</div></div>
 </main>
@@ -19,9 +20,31 @@ body{font:16px/1.5 Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}.top{
 (function(){'use strict';
 const el=id=>document.getElementById(id), esc=s=>JBBackend.esc(String(s??''));let busy=false,ready=false;
 function msg(s){el('notice').textContent=String(s)}
-function lock(v){busy=v;for(const id of ['reload','generate','approve','deadlines'])el(id).disabled=v}
+function lock(v){busy=v;for(const id of ['reload','generate','approve','deadlines','noticesReload'])el(id).disabled=v}
 async function rpc(name,args){const {data,error}=await JBBackend.client.rpc(name,args||{});if(error)throw error;return data}
 function validMonth(){const v=el('month').value;if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v))throw Error('Valid report month select करें');return v+'-01'}
+async function refreshNotices(){
+ const box=el('complianceNotices');
+ const {data:{user},error:authError}=await JBBackend.client.auth.getUser();
+ if(authError||!user){box.textContent='Notification access unavailable. Sign in again.';return}
+ const {data,error}=await JBBackend.client.from('live_notifications')
+  .select('id,notification_type,title,safe_message,created_at,lifecycle_state,action_required,action_path')
+  .eq('recipient_user_id',user.id).eq('domain','compliance')
+  .order('created_at',{ascending:false}).limit(20);
+ if(error){box.textContent='Notifications unavailable: '+error.message;return}
+ box.replaceChildren();
+ if(!data?.length){box.textContent='No compliance notifications';return}
+ for(const n of data){
+  const row=document.createElement('div');row.className='entry';
+  const title=document.createElement('strong');title.textContent=n.title||n.notification_type||'Compliance notice';row.append(title);
+  const meta=document.createElement('div');meta.className='muted';meta.textContent=(n.created_at?new Date(n.created_at).toLocaleString('hi-IN'):'')+' · '+(n.lifecycle_state||'UNREAD');row.append(meta);
+  const detail=document.createElement('div');detail.textContent=n.safe_message||'';row.append(detail);
+  if(n.action_required&&n.action_path==='compliance.html'){
+   const action=document.createElement('a');action.className='back';action.href='compliance.html';action.textContent='Open compliance';row.append(action)
+  }
+  box.append(row)
+ }
+}
 async function refresh(){const tasks=await JBPhase2.compliance();
 el('rows').innerHTML=tasks.map(x=>'<div class="entry"><b>'+esc(x.title)+'</b> · '+esc(x.status)+'<br><small>Deadline: '+esc(x.deadline_state||'—')+' | Due: '+esc(x.due_at||'—')+'</small></div>').join('')||'No tasks';
 const {data,error}=await JBBackend.client.from('compliance_monthly_reports').select('month_start,grievance_count,resolved_count,zero_grievance,status').order('month_start',{ascending:false}).limit(24);
@@ -34,7 +57,8 @@ el('reload').onclick=()=>act(async()=>{});
 el('generate').onclick=()=>act(async()=>{const m=validMonth();if(!confirmAction(m+' की grievance counts generate/refresh करें?'))throw Error('Cancelled');await JBPhase4.complianceMonth(m)});
 el('approve').onclick=()=>act(async()=>{const m=validMonth(),s=el('summary').value.trim();if(!s)throw Error('Public-safe summary required');if(!confirmAction(m+' की internal report APPROVE करें? कोई government submission नहीं होगा।'))throw Error('Cancelled');await JBPhase4.complianceApproveMonth(m,s)});
 el('deadlines').onclick=()=>act(async()=>{if(!confirmAction('Current LIVE deadline states refresh करें?'))throw Error('Cancelled');await rpc('jb_compliance_refresh_deadlines_internal',{})});
-async function boot(){if(ready)return;ready=true;el('month').value=new Date().toISOString().slice(0,7);await act(async()=>{});}
+el('noticesReload').onclick=()=>act(async()=>{await refreshNotices()});
+async function boot(){if(ready)return;ready=true;el('month').value=new Date().toISOString().slice(0,7);await act(async()=>{await refreshNotices()});}
 if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 })();
 </script></body></html>
