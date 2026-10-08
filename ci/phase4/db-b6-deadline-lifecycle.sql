@@ -13,6 +13,8 @@ declare
  v_expected text;
  v_due timestamptz;
  v_history integer;
+ v_notice_count integer;
+ v_repeat integer;
  v_unauth boolean:=false;
 begin
  select user_id into v_owner from public.user_roles where role='owner'::public.app_role limit 1;
@@ -38,10 +40,18 @@ begin
  select deadline_state into v_state from public.compliance_tasks where id=v_task;
  select count(*) into v_history from public.compliance_history
  where task_id=v_task and event_type='deadline_'||v_expected;
- if v_changed<1 or v_state<>v_expected or v_history<>1 then
+ select count(*) into v_notice_count from public.live_notifications
+ where domain='compliance' and record_type='compliance_task' and record_id=v_task::text
+ and dedupe_key='compliance:'||v_task::text||':deadline:'||v_expected;
+ if v_changed<1 or v_state<>v_expected or v_history<>1 or v_notice_count<>1 then
  raise exception 'T017_TRANSITION_FAIL expected % actual % changed % history %',v_expected,v_state,v_changed,v_history;
  end if;
- raise notice 'PASS [P4-T017-%] persisted state and history',v_expected;
+ v_repeat:=public.jb_compliance_refresh_deadlines_internal(v_now);
+ if v_repeat<>0 or (select count(*) from public.live_notifications
+ where domain='compliance' and record_id=v_task::text
+ and dedupe_key='compliance:'||v_task::text||':deadline:'||v_expected)<>1
+ then raise exception 'T017_REPEAT_DEDUPE_FAILED %',v_expected; end if;
+ raise notice 'PASS [P4-T017-%] state, history, notification record, idempotence',v_expected;
  end loop;
  -- Completed obligations should not be touched.
  update public.compliance_tasks set status='complete',due_at=v_now+interval '4 days' where id=v_task;
