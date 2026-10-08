@@ -68,6 +68,9 @@ jobs:
       - name: Run Phase 4 B2 audit/retention static/security regression
         run: node ci/phase4/static-b2-records-regression.cjs
 
+      - name: Run P4-T019 isolated publishing fault-injection regression
+        run: node ci/phase4/p4-t019-publishing-fault-injection.cjs
+
       - name: Audit exact regression coverage
         run: node ci/phase3-regression/coverage-audit.cjs
 
