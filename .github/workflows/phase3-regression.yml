@@ -210,6 +210,12 @@ jobs:
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b6-deadline-regression.sql 2>&1 | tee ci-results/db-p4-b6-deadline-regression.log
 
+      - name: Run Phase 4 B6 transactional deadline lifecycle
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b6-deadline-lifecycle.sql 2>&1 | tee ci-results/db-p4-b6-deadline-lifecycle.log
+
       - name: Summarize database results
         if: always()
         shell: bash
