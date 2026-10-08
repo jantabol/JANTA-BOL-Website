@@ -22,7 +22,7 @@ function msg(s){el('notice').textContent=String(s)}
 function lock(v){busy=v;for(const id of ['reload','generate','approve','deadlines'])el(id).disabled=v}
 async function rpc(name,args){const {data,error}=await JBBackend.client.rpc(name,args||{});if(error)throw error;return data}
 function validMonth(){const v=el('month').value;if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v))throw Error('Valid report month select करें');return v+'-01'}
-async function refresh(){const [tasks,reports]=await Promise.all([JBPhase2.compliance(),rpc('jb_compliance_tasks_internal',{}).catch(()=>null)]);
+async function refresh(){const tasks=await JBPhase2.compliance();
 el('rows').innerHTML=tasks.map(x=>'<div class="entry"><b>'+esc(x.title)+'</b> · '+esc(x.status)+'<br><small>Deadline: '+esc(x.deadline_state||'—')+' | Due: '+esc(x.due_at||'—')+'</small></div>').join('')||'No tasks';
 const {data,error}=await JBBackend.client.from('compliance_monthly_reports').select('month_start,grievance_count,resolved_count,zero_grievance,status').order('month_start',{ascending:false}).limit(24);
 if(error){el('months').textContent='Monthly report read unavailable: '+error.message;return}
