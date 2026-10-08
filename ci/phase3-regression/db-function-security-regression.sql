@@ -68,7 +68,7 @@ begin
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
-      'jb_compliance_transition_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
+      'jb_compliance_transition_internal','jb_compliance_task_prepare_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
       'jb_grievance_link_duplicate_internal','jb_grievance_reopen_internal','jb_grievance_reporter_clarify_internal',
       'jb_grievance_set_priority_internal','jb_grievance_submit_internal','jb_grievance_transition_internal','jb_grievance_asset_internal','jb_grievance_my_clarifications','jb_grievance_permanent_delete_internal','jb_grievance_reporter_choices','jb_grievance_retention_internal','jb_grievance_submit_receipt','jb_grievance_workflow_internal','jb_public_active_ads'
     );
