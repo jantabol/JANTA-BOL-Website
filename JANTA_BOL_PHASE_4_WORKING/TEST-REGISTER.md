@@ -38,7 +38,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T015 | Compliance | Compliance Architecture + Shared Grievance Source | B6 | NOT RUN |
 | P4-T016 | Compliance | Monthly Compliance + Zero-Grievance + Public-Safe Approval | B6 | NOT RUN |
 | P4-T017 | Compliance | Compliance Calendar + Deadline + Notification | B6 | NOT RUN |
-| P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | NOT RUN |
+| P4-T018 | Compliance | Government Submission Full Lifecycle | B6 | IN PROGRESS |
 | P4-T019 | Compliance | Compliance Security + Audit + Failure + Mobile + Founder-Time | B6 | NOT RUN |
 | P4-T020 | Compliance | Compliance Implementation + Coverage + Regression + Lock | B6 | NOT RUN |
 | P4-T021 | Team | Team Invite -> Identity -> Role -> Activation | B1 | PASS |
