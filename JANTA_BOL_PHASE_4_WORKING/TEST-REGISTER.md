@@ -336,4 +336,10 @@ Source recovered at `162d1b36b751339b21224e79667c0f9f13d7d947` on `codex/b7-reco
 - Local Chromium was unavailable and its download failed; no new browser success is claimed. Existing Android and paid-LIVE deferrals remain. Read-only live campaign count is zero.
 - No production database definition, business row, payment, verification flag or permission was changed.
 
-T035/T036 remain IN PROGRESS. T036 lifecycle/retention/delete proof and T037-T042 are not complete. Fresh remote CI is pending this code commit and must be verified before closure.
+T035/T036 remain IN PROGRESS. T036 lifecycle/retention/delete proof and T037-T042 are not complete.
+
+Fresh remote evidence verified for code commit `d64c83dc6c2d16bf0c09a5e16d16935bb660f833`:
+
+- Protected Phase 3A + 3B Regression: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37981663751 - SUCCESS; static/source and Supabase transactional jobs both successful.
+- T035 candidate gate: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37981663797 - SUCCESS; source checks including 22/22 client cases, isolated PostgreSQL rollback regression and real anonymous read-only HTTP/security-denial job successful.
+- These results validate this code change and the automated suites only. They do not establish Vercel deployment, real browser playback, Android E3, real paid-LIVE delivery or final B7 closure.
