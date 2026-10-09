@@ -33,5 +33,7 @@ jobs:
           node ci/phase4/static-b2-records-regression.cjs
           node ci/phase4/p4-t019-publishing-fault-injection.cjs
           node ci/phase3-regression/coverage-audit.cjs
+      - name: P4-T035 candidate contract assertions
+        run: node ci/phase4/p4-t035-static-contract.cjs
       - name: Advertisement renderer syntax
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
