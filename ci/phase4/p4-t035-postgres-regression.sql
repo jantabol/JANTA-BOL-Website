@@ -34,7 +34,44 @@ insert into evidence select 'invalid placement hidden',count(*)=0 from public.jb
 insert into evidence select 'anon can execute canonical',has_function_privilege('anon','public.jb_ad_public_feed(text,text)','EXECUTE');
 insert into evidence select 'anon can execute legacy',has_function_privilege('anon','public.jb_public_active_ads(text)','EXECUTE');
 insert into evidence select 'trigger denies direct anon',not has_function_privilege('anon','private.p4_validate_ad_creative_media()','EXECUTE');
-do $$
+-- Expected trigger errors are caught inside a nested savepoint-style PL/pgSQL block.
+do $
+declare v text;
+begin
+ begin
+  insert into public.ad_creatives(id,campaign_id,creative_type,approved)
+  values ('40000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','image',true);
+  insert into evidence values ('empty approved image rejected',false);
+ exception when sqlstate '22023' then
+  get stacked diagnostics v=message_text;
+  insert into evidence values ('empty approved image rejected',v='CREATIVE_CONTENT_REQUIRED');
+ end;
+ begin
+  insert into public.ad_creatives(id,campaign_id,creative_type,media_url,approved)
+  values ('40000000-0000-0000-0000-000000000002','10000000-0000-0000-0000-000000000001','image','http://bad.example/ad.png',true);
+  insert into evidence values ('non-HTTPS image rejected',false);
+ exception when sqlstate '22023' then
+  get stacked diagnostics v=message_text;
+  insert into evidence values ('non-HTTPS image rejected',v='INVALID_MEDIA_URL');
+ end;
+ begin
+  insert into public.ad_creatives(id,campaign_id,creative_type,text_body,cta_type,cta_target,approved)
+  values ('40000000-0000-0000-0000-000000000003','10000000-0000-0000-0000-000000000001','text','valid','website','http://bad.example',true);
+  insert into evidence values ('non-HTTPS CTA rejected',false);
+ exception when sqlstate '22023' then
+  get stacked diagnostics v=message_text;
+  insert into evidence values ('non-HTTPS CTA rejected',v='HTTPS_CTA_REQUIRED');
+ end;
+ begin
+  insert into public.ad_creatives(id,campaign_id,creative_type,text_body,cta_type,cta_target,approved)
+  values ('40000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','text','valid','call','invalid-phone',true);
+  insert into evidence values ('invalid phone CTA rejected',false);
+ exception when sqlstate '22023' then
+  get stacked diagnostics v=message_text;
+  insert into evidence values ('invalid phone CTA rejected',v='PHONE_CTA_REQUIRED');
+ end;
+end $;
+do $
 declare n int;
 begin
  select count(*) into n from evidence where not pass;
