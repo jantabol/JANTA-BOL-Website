@@ -55,8 +55,8 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T032 | Social | Social Android + Low-Noise + Founder-Time | B4 | NOT RUN |
 | P4-T033 | Social | Social Implementation + Coverage + Security + Regression Lock | B4 | NOT RUN |
 | P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | NOT RUN |
-| P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | NOT RUN |
-| P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | NOT RUN |
+| P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | IN PROGRESS |
+| P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | IN PROGRESS |
 | P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | NOT RUN |
 | P4-T038 | Ads | Approval -> Payment -> LIVE + Non-Refund Disclosure | B7 | NOT RUN — EXTERNAL |
 | P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | NOT RUN |
@@ -314,7 +314,7 @@ Engineering source: `codex/b7-reconcile-20261009`, code commit `1e3e217dfabeb852
 | Renderer runtime | Isolated Chromium verifies text escaping, label, image load, 360px layout, video controls, stale responses, safe CTA/media, news survival and zero GPS calls | Local synthetic browser harness | Supporting evidence only; video playback, deployed site and Android not proven |
 | T35-09/10/11 | Actual Android photo/text/video/label/placement/privacy run not performed | No E3 supplied | DUE |
 | T35-12 | Evidence gate remains open | This register | NOT PASS / NOT LOCKED |
-| P4-T034 | Previous PASS + LOCK is preserved as historical status | Original Founder evidence still to reconcile | No new final PASS claim |
+| Historical P4-T034 evidence | Previous PASS + LOCK is preserved as historical status | Original Founder evidence still to reconcile | No new final PASS claim |
 | P4-T036–T042 | No new end-to-end completion established in this checkpoint | Master Blueprint | NOT newly PASS / not locked |
 
 Protection: only the intended public-feed definition changed during deployment; its grants and the remaining application function definitions/permissions were unchanged in the before/after comparison. Creative data was unchanged. No old regression test was removed or relaxed. The wider candidate SQL was not blindly deployed.
@@ -322,3 +322,18 @@ Protection: only the intended public-feed definition changed during deployment; 
 Raw Production exports were excluded from the GitHub commit after automatic approval review rejected their upload. This register contains a sanitized engineering summary, not raw Production definitions/records.
 
 Next actual gate: identify the exact frontend version running on Android and obtain E3 plus real positive campaign evidence. Continue the remaining B7 requirements without treating this checkpoint as B7 completion.
+
+## B7 continuation - 10 October 2026 (India)
+
+Source recovered at `162d1b36b751339b21224e79667c0f9f13d7d947` on `codex/b7-reconcile-20261009`. No B7 final test is newly PASS or LOCKED.
+
+- T035 defect reproduced: structured Guna/Ashoknagar Article districts reached the ad feed as global. `scopeForArticle()` now uses supported explicit districts, preserving Local-Pichhore priority and legacy Shivpuri classification. No GPS or free-text location inference.
+- T036 defect reproduced: timezone-free datetime-local values were sent to a UTC database. A read-only timestamp conversion confirmed India 09:00 was interpreted as India 14:30. The client now validates dates/order and sends explicit UTC instants to the unchanged Owner/AAL2 RPC. Admin shows saved schedule values in device time with a timezone label.
+- Existing HEAD governance failure reproduced: a historical evidence row beginning with `P4-T034` became a 110th canonical test row with an empty status. GitHub run `37943636324` failed at B0; its Supabase job was skipped. Only that historical row label was repaired; the checker and 109 canonical rows are preserved.
+- `ci/phase4/b7-client-regression.cjs`: 22/22 local behavior checks, including supported districts, UTC conversion, invalid inputs rejected before RPC, backend denial propagation, and actual Admin inline field/render/click logic in a Node VM. The initial 20-test suite failed 14 cases on old code. These are isolated client tests, not real browser/Android E3 evidence.
+- All 10 existing Phase-3 static suites, B0/B1/B2, T019 fault injection, exact coverage audit and 23 T035 contract assertions succeeded locally after repair. Both workflows now run the new client suite. No old check was relaxed or removed.
+- Vercel verification BLOCKED: project detail/deployment access returns 403 for scope `shubhamshrivastava295-9848`. Project-list visibility is not deployed-URL/commit proof. No Vercel release was made.
+- Local Chromium was unavailable and its download failed; no new browser success is claimed. Existing Android and paid-LIVE deferrals remain. Read-only live campaign count is zero.
+- No production database definition, business row, payment, verification flag or permission was changed.
+
+T035/T036 remain IN PROGRESS. T036 lifecycle/retention/delete proof and T037-T042 are not complete. Fresh remote CI is pending this code commit and must be verified before closure.

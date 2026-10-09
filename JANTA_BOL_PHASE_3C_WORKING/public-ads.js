@@ -5,6 +5,8 @@ function safe(value){try{const u=new URL(String(value||''));return u.protocol===
 function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
 function scopeForArticle(item){
  if(item?.geoLevel==='Local-Pichhore')return 'local';
+ const district=String(item?.district||'').trim().toLowerCase();
+ if(['shivpuri','guna','ashoknagar'].includes(district))return 'district:'+district;
  if(item?.geoLevel==='Shivpuri')return 'district:shivpuri';
  return 'global';
 }

@@ -1,5 +1,12 @@
 # JANTA BOL — PHASE 4 AFFECTED FILES MAP
 
+## 2026-10-10 B7 client corrections
+
+- Runtime: `JANTA_BOL_PHASE_3C_WORKING/{public-ads.js,phase4-domain-client.js,ads.html,index.html,article.html}`. Article district targeting, schedule conversion/display and script cache versions only.
+- Tests: `ci/phase4/b7-client-regression.cjs` and one new step in each existing workflow; all existing gates preserved.
+- Records: TEST-REGISTER, CODE-MAP, DEBUG-MAP, AFFECTED-FILES and CHANGELOG; historical-row formatting repair and IN PROGRESS T035/T036 status.
+- Preserved: Article identity/publishing, Live, auth, shared grievance/compliance APIs, production data and permissions. No SQL migration or deployment.
+
 STATUS: B1 CLOSED ✅ | B2 AUDIT / RETENTION — ACTIVE
 DATE: 2026-10-01
 BRANCH: `phase4-execution-2026-10-01`

@@ -118,3 +118,10 @@ For every block:
 - `ci/phase4/p4-t035-live-http-readonly.cjs`: independent timeout per HTTP request; all original assertions retained.
 - Both existing GitHub workflows include the B7 work branch. Protected suites remain enabled.
 - Current status and CI links live in TEST-REGISTER.md; no parallel status authority is introduced.
+
+## B7 client corrections - 10 October 2026
+
+- T035: `public-ads.js` uses normalized Article `district` with existing geography classification; public page script versions advance together. No new location authority.
+- T036: `phase4-domain-client.js` validates device-local schedule fields and sends ISO UTC to existing `jb_ad_schedule_internal`. `ads.html` displays stored schedule in device time and labels timezone. Backend authority unchanged.
+- `ci/phase4/b7-client-regression.cjs` covers these behaviors and actual inline Admin handlers; both workflows invoke it. Node VM tests do not replace real-device proof.
+- Historical evidence table labels must not create duplicate canonical test rows. The original governance checker is unchanged.

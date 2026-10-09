@@ -1,5 +1,12 @@
 # JANTA BOL — PHASE 4 DEBUG MAP
 
+## 2026-10-10 B7 continuation
+
+- T035 first divergence: Article normalization supplies `district`, but `scopeForArticle()` ignored it. Supported structured districts now select their matching ad scope; local/legacy behavior is preserved.
+- T036 first divergence: `adSchedule()` forwarded timezone-free local fields to a UTC timestamptz RPC. India 09:00 became 14:30. Convert validated device time to explicit UTC; preserve backend errors and timezone configuration.
+- HEAD CI regression: `162d1b3` added a historical `| P4-T034 |` row parsed as an extra canonical row. Rename its label; retain checker and prior evidence.
+- Deployment blocker: Vercel detail/deployment access returns scope 403. A listed project is not deployed-URL/commit proof.
+
 STATUS: ACTIVE
 DATE: 2026-10-01
 BRANCH: `phase4-execution-2026-10-01`

@@ -72,6 +72,9 @@ jobs:
       - name: Run P4-T019 isolated publishing fault-injection regression
         run: node ci/phase4/p4-t019-publishing-fault-injection.cjs
 
+      - name: Run B7 article scope and schedule behavior
+        run: node --test ci/phase4/b7-client-regression.cjs
+
       - name: Audit exact regression coverage
         run: node ci/phase3-regression/coverage-audit.cjs
 

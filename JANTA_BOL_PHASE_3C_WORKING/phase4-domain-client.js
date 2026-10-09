@@ -17,6 +17,22 @@ async function adRows(){await owner();const {data,error}=await c().from('ad_camp
 const adTransition=(id,status,note='')=>rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
 const adCreative=(id,x)=>rpc('jb_ad_save_creative_internal',{p_campaign:id,p_type:x.type,p_media:x.media||null,p_text:x.text||null,p_cta_type:x.ctaType||null,p_cta_target:x.ctaTarget||null});
 const adConfirmPayment=(id,ref,amount)=>rpc('jb_ad_confirm_payment_internal',{p_campaign:id,p_provider_ref:ref||'',p_amount_minor:Number(amount||0)});
-const adSchedule=(id,start,end)=>rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:start,p_ends_at:end});
+function scheduleInstant(value){
+ const text=typeof value==='string'?value.trim():'';
+ const parts=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/.exec(text);
+ if(!parts)throw Error('INVALID_SCHEDULE');
+ const [year,month,day,hour,minute,second]=parts.slice(1,7).map(v=>Number(v||0));
+ const date=new Date(text),lastDay=new Date(Date.UTC(year,month,0)).getUTCDate();
+ if(!Number.isFinite(date.getTime())||month<1||month>12||day<1||day>lastDay||hour>23||minute>59||second>59)throw Error('INVALID_SCHEDULE');
+ // datetime-local has no offset: interpret it in the device zone, then send UTC.
+ // Reject nonexistent local times rather than silently moving a campaign start.
+ if(!parts[8]&&(date.getFullYear()!==year||date.getMonth()+1!==month||date.getDate()!==day||date.getHours()!==hour||date.getMinutes()!==minute||date.getSeconds()!==second))throw Error('INVALID_SCHEDULE');
+ return date.toISOString();
+}
+async function adSchedule(id,start,end){
+ const startsAt=scheduleInstant(start),endsAt=scheduleInstant(end);
+ if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
+ return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
+}
 g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adRows,adTransition,adCreative,adConfirmPayment,adSchedule};
 })(window);

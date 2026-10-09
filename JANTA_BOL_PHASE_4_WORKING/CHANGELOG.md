@@ -1,5 +1,12 @@
 # JANTA BOL — PHASE 4 CHANGELOG
 
+## 2026-10-10 - B7 continuation
+
+- Fix supported Article-district targeting and device-time schedule serialization/display.
+- Add 22 isolated behavior checks to both workflows.
+- Repair duplicate historical T034 row that broke B0 governance at previous HEAD; retain original checker.
+- Record Vercel scope 403, unavailable local browser and outstanding Android/LIVE gates without granting PASS/LOCK.
+
 ## 2026-10-01 — B0 START
 
 ### Baseline

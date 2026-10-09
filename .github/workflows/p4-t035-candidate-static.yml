@@ -38,6 +38,8 @@ jobs:
         run: node ci/phase4/p4-t035-static-contract.cjs
       - name: Advertisement renderer syntax
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+      - name: B7 article scope and schedule behavior
+        run: node --test ci/phase4/b7-client-regression.cjs
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
