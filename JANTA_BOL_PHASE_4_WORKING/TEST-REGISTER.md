@@ -293,3 +293,32 @@ Current:
 - Final Topic lock is not allowed yet because P4-T053 is incomplete and P4-T054/P4-T057 still require real-device/recovery evidence.
 
 B2 current result: 5 / 9 PASS; P4-T053 and P4-T059 IN PROGRESS; P4-T054 and P4-T057 remain manual NOT RUN.
+
+
+## B7 / P4-T035 — verified checkpoint, 09 October 2026
+
+Engineering source: `codex/b7-reconcile-20261009`, code commit `1e3e217dfabeb852ebca0632cdde309ecfbb1e9f`.
+
+**P4-T035 remains IN PROGRESS, NOT PASS, NOT LOCKED.** No other B7 final test is newly marked PASS.
+
+| Check | Actual result | Evidence source | Status / remaining work |
+|---|---|---|---|
+| T35-01 source baseline | Main/candidate ancestry and deployed B7 definitions/permissions inspected; candidate retained | Git commit above; current catalog audit | B7 source baseline verified; whole-platform source parity is not claimed |
+| T35-02 isolated SQL | 33 assertions pass, including six valid call/WhatsApp cases and historical draft preservation | Candidate CI run 37942726859, attempt 2, isolated PostgreSQL job | PASS for this suite only |
+| T35-03/04 security hardening | Existing public search paths and private-trigger restrictions preserved | Protected function-security CI | VERIFIED |
+| T35-05 legacy route | Existing delegation to canonical feed preserved | Protected DB and isolated SQL checks | VERIFIED |
+| T35-06 creative validation | Positive/negative CTA and content tests; unchanged legacy draft handling retained | Isolated SQL suite | VERIFIED; earlier phone-regex suspicion was a diagnostic escaping mistake, not a Production defect |
+| T35-07 input/compatibility/API | Empty/oversized scope defect reproduced with eligible isolated campaign; minimum guard deployed. Historical drafts unchanged in rollback verification. Actual HTTP private-table reads denied | Migration `p4_t035_public_feed_input_guard`, version `20261009141706`; candidate CI HTTP job | Backend checks VERIFIED; deployed browser/runtime privacy and positive LIVE payload still DUE |
+| T35-08 protected regression | Full source + Supabase transactional workflow SUCCESS after migration, including B1/B2/B6 | https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37942726926 (attempt 2) | PASS for required automated regression run |
+| Public HTTP | Transport/schema assertions and eight anonymous private-table denial cases SUCCESS after deployment | https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37942726859 (attempt 2) | Empty public feeds are not positive paid-LIVE proof |
+| Renderer runtime | Isolated Chromium verifies text escaping, label, image load, 360px layout, video controls, stale responses, safe CTA/media, news survival and zero GPS calls | Local synthetic browser harness | Supporting evidence only; video playback, deployed site and Android not proven |
+| T35-09/10/11 | Actual Android photo/text/video/label/placement/privacy run not performed | No E3 supplied | DUE |
+| T35-12 | Evidence gate remains open | This register | NOT PASS / NOT LOCKED |
+| P4-T034 | Previous PASS + LOCK is preserved as historical status | Original Founder evidence still to reconcile | No new final PASS claim |
+| P4-T036–T042 | No new end-to-end completion established in this checkpoint | Master Blueprint | NOT newly PASS / not locked |
+
+Protection: only the intended public-feed definition changed during deployment; its grants and the remaining application function definitions/permissions were unchanged in the before/after comparison. Creative data was unchanged. No old regression test was removed or relaxed. The wider candidate SQL was not blindly deployed.
+
+Raw Production exports were excluded from the GitHub commit after automatic approval review rejected their upload. This register contains a sanitized engineering summary, not raw Production definitions/records.
+
+Next actual gate: identify the exact frontend version running on Android and obtain E3 plus real positive campaign evidence. Continue the remaining B7 requirements without treating this checkpoint as B7 completion.

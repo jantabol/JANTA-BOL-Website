@@ -106,3 +106,15 @@ For every block:
 6. Run protected Phase-3 CI.
 7. Record evidence/status in TEST-REGISTER.
 8. If old CI fails: RED STOP and repair before next block.
+
+
+## B7 minimum reconciliation patch — 09 October 2026
+
+- Canonical UI remains `JANTA_BOL_PHASE_3C_WORKING/ads.html`; public renderer remains `public-ads.js` / `public-ads.css` in that folder. Existing article/publishing/auth homes are preserved.
+- `db/20261009140153_p4_t035_public_feed_input_guard.sql`: definition-hash-guarded, unique-target patch of the existing public ad feed. Only placement/scope input checks are added; no domain rows are rewritten. Applied Production ledger version is `20261009141706` (tool-assigned version differs from local CLI filename).
+- `db/p4_t035_public_ads_review.sql`: wider historical review candidate; NOT a declaration of exact Production parity. Do not apply it as a blanket synchronization.
+- `ci/phase4/p4-t035-postgres-regression.sql`: existing isolated suite plus valid phone and old-draft compatibility coverage.
+- `ci/phase4/p4-t035-http-access-denial.cjs`: anonymous read-only private-table denial probes; no real records retrieved or logged.
+- `ci/phase4/p4-t035-live-http-readonly.cjs`: independent timeout per HTTP request; all original assertions retained.
+- Both existing GitHub workflows include the B7 work branch. Protected suites remain enabled.
+- Current status and CI links live in TEST-REGISTER.md; no parallel status authority is introduced.
