@@ -38,6 +38,17 @@ jobs:
       - name: Advertisement renderer syntax
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
 
+  anonymous-http:
+    name: Production anonymous HTTP read-only contract (no writes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Read-only production HTTP contract
+        run: node ci/phase4/p4-t035-live-http-readonly.cjs
+
   candidate-postgres:
     name: Isolated PostgreSQL advertisement regression (no production connection)
     runs-on: ubuntu-latest
