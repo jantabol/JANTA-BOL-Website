@@ -92,6 +92,39 @@ begin
   insert into evidence values ('invalid phone CTA rejected',v='PHONE_CTA_REQUIRED');
  end;
 end $guard$;
+-- Positive CTA controls detect validators that reject every phone number.
+do $positive$
+declare v_phone text; v_type text;
+begin
+ foreach v_phone in array array['+919876543210','9876543210','91 98765-43210'] loop
+  foreach v_type in array array['call','whatsapp'] loop
+   begin
+    insert into public.ad_creatives(id,campaign_id,creative_type,text_body,cta_type,cta_target,approved)
+    values(gen_random_uuid(),'10000000-0000-0000-0000-000000000001','text','Valid phone test',v_type,v_phone,true);
+    insert into evidence values('valid '||v_type||' '||v_phone,true);
+   exception when sqlstate '22023' then
+    insert into evidence values('valid '||v_type||' '||v_phone,false);
+   end;
+  end loop;
+ end loop;
+end $positive$;
+-- Disposable fixture only: emulate pre-hardening drafts without modifying production.
+alter table public.ad_creatives disable trigger p4_validate_ad_creative_media;
+insert into public.ad_creatives(id,campaign_id,creative_type,media_url,approved)
+values('50000000-0000-0000-0000-000000000001','10000000-0000-0000-0000-000000000001','image','http://legacy.invalid/banner.png',false);
+alter table public.ad_creatives enable trigger p4_validate_ad_creative_media;
+update public.ad_creatives set approved=false where id='50000000-0000-0000-0000-000000000001';
+insert into evidence select 'legacy draft preserved unchanged',media_url='http://legacy.invalid/banner.png' and not approved
+from public.ad_creatives where id='50000000-0000-0000-0000-000000000001';
+do $legacy$
+begin
+ begin
+  update public.ad_creatives set approved=true where id='50000000-0000-0000-0000-000000000001';
+  insert into evidence values('legacy invalid draft approval denied',false);
+ exception when sqlstate '22023' then insert into evidence values('legacy invalid draft approval denied',true);
+ end;
+end $legacy$;
+insert into evidence select 'null scope denied',count(*)=0 from public.jb_ad_public_feed('homepage',null);
 do $guard$
 declare n int;
 begin

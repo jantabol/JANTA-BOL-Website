@@ -6,6 +6,7 @@ on:
     branches:
       - phase3-regression-ci
       - phase4-execution-2026-10-01
+      - codex/b7-reconcile-20261009
       - phase3c-codex-baseline-2026-09-29
   pull_request:
     branches:

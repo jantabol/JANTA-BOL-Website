@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - codex/p4-t035-reviewed-fixes-20261009
+      - codex/b7-reconcile-20261009
   workflow_dispatch:
 permissions:
   contents: read
@@ -48,6 +49,8 @@ jobs:
           node-version: '20'
       - name: Read-only production HTTP contract
         run: node ci/phase4/p4-t035-live-http-readonly.cjs
+      - name: Anonymous private-table access denial
+        run: node ci/phase4/p4-t035-http-access-denial.cjs
 
   candidate-postgres:
     name: Isolated PostgreSQL advertisement regression (no production connection)

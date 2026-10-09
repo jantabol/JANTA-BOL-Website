@@ -7,12 +7,11 @@ const config=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/supabase-config.js','ut
 const url=config.match(/url:\s*'([^']+)'/)?.[1];
 const key=config.match(/publishableKey:\s*'([^']+)'/)?.[1];
 assert(url?.startsWith('https://') && key?.startsWith('sb_publishable_'),'Missing public config');
-const timeout=AbortSignal.timeout(15000);
 const forbidden=['advertiser_id','payment','provider_ref','verification_state','risk_level','internal_note','contact','created_by','paid_at'];
 const expected=['campaign_id','creative_id','creative_type','media_url','text_body','cta_type','cta_target','label'];
 let checks=0;
 async function rpc(name,args){
- const res=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args),signal:timeout});
+ const res=await fetch(url+'/rest/v1/rpc/'+name,{method:'POST',headers:{apikey:key,Authorization:'Bearer '+key,'Content-Type':'application/json',Accept:'application/json'},body:JSON.stringify(args),signal:AbortSignal.timeout(30000)});
  const raw=await res.text();let data;try{data=JSON.parse(raw)}catch{throw Error(name+' HTTP '+res.status+' non-JSON: '+raw.slice(0,160))}
  assert.equal(res.status,200,name+' HTTP '+res.status+' '+JSON.stringify(data).slice(0,300));
  assert(Array.isArray(data),name+' response must be an array');
