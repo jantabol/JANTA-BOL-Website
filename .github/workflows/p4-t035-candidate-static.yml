@@ -37,3 +37,35 @@ jobs:
         run: node ci/phase4/p4-t035-static-contract.cjs
       - name: Advertisement renderer syntax
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+
+  candidate-postgres:
+    name: Isolated PostgreSQL advertisement regression (no production connection)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: p4_t035
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d p4_t035"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: p4_t035
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/p4-t035-postgres-fixture.sql
+      - name: Apply candidate SQL to disposable database only
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/p4_t035_public_ads_review.sql
+      - name: Run transaction rollback regression
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/p4-t035-postgres-regression.sql
