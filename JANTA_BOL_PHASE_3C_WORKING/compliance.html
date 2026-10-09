@@ -1,1 +1,64 @@
-<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Compliance</title><style>body{font-family:Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}.top{padding:16px;background:#111;border-bottom:2px solid #b30000}.wrap{max-width:900px;margin:auto;padding:16px}.card{background:#171717;border:1px solid #333;border-radius:12px;padding:16px;margin:12px 0}.btn{background:#b30000;color:white;border:0;border-radius:8px;padding:10px 14px;font-weight:700}.btn.alt{background:#333}input,textarea,select{width:100%;padding:10px;margin:6px 0 12px;background:#111;color:#fff;border:1px solid #444;border-radius:7px;box-sizing:border-box}.muted{color:#aaa}.row{display:flex;gap:8px;flex-wrap:wrap}.back{color:#fff}</style></head><body><header class="top"><b>JANTA BOL — Compliance</b></header><main class="wrap"><a class="back" href="admin.html">← Dashboard</a><div class="card"><h2>Compliance Tasks</h2><div id="rows"></div></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js"></script><script src="admin-auth.js"></script><script>async function loadCompliance(){try{const a=await JBPhase2.compliance();rows.innerHTML=a.map(x=>`<p><b>${JBBackend.esc(x.title)}</b> · ${JBBackend.esc(x.status)}</p>`).join('')||'No tasks'}catch(e){rows.textContent=e.message}}if(document.documentElement.dataset.jbAuth==='ready')loadCompliance();else addEventListener('jb-auth-ready',loadCompliance,{once:true});</script></body></html>
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JANTA BOL — Compliance</title><meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+body{font:16px/1.5 Arial,sans-serif;background:#0d0d0d;color:#eee;margin:0}.top{padding:16px;background:#111;border-bottom:2px solid #b30000}.wrap{max-width:860px;margin:auto;padding:16px}.card{background:#171717;border:1px solid #333;border-radius:12px;padding:16px;margin:12px 0}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.btn{background:#b30000;color:#fff;border:0;border-radius:8px;padding:10px 14px;font-weight:bold;min-height:44px}.btn.alt{background:#333}.btn:disabled{opacity:.5}input,textarea{box-sizing:border-box;width:100%;padding:11px;background:#111;color:#fff;border:1px solid #555;border-radius:7px;margin:5px 0 12px}.muted{color:#aaa}.entry{border-top:1px solid #333;padding:12px 0}.back{color:#fff}#notice{white-space:pre-wrap}
+</style></head>
+<body><header class="top"><strong>JANTA BOL — Compliance</strong></header><main class="wrap"><a class="back" href="admin.html">← Dashboard</a>
+<p class="muted">Super Admin + AAL2 only. Government submission इस पेज से नहीं होता।</p>
+<div class="card"><h2>Compliance Tasks</h2><button class="btn alt" id="reload" type="button">Refresh</button><div id="rows">Security check pending…</div></div>
+<div class="card"><h2>Monthly Compliance</h2><label for="month">Report month</label><input type="month" id="month"><button class="btn alt" id="generate" type="button">Generate / Refresh Draft Counts</button>
+<p class="muted">यह रिपोर्ट डेटा अपडेट करता है; अपने आप सरकारी submission या public publishing नहीं करता।</p>
+<label for="summary">Public-safe summary (no names, IDs, contacts or evidence)</label><textarea id="summary" rows="3" maxlength="5000"></textarea>
+<button class="btn" id="approve" type="button">Approve Internal Report</button>
+<p class="muted">यह केवल internal approval है; public publish अलग backend authority action है।</p><div id="months"></div></div>
+<div class="card"><h2>Compliance Notifications</h2><p class="muted">In-app delivery to your signed-in account. External WhatsApp/SMS/email delivery is not implied.</p><button class="btn alt" id="noticesReload" type="button">Refresh Notifications</button><div id="complianceNotices" role="status" aria-live="polite">Loading…</div></div>
+<div class="card"><h2>Deadline Tracking</h2><button class="btn alt" id="deadlines" type="button">Refresh Deadline States</button><p class="muted">Upcoming / Due Soon / Due Today / Overdue; changes are audited in backend history.</p></div>
+<div class="card" role="status" aria-live="polite"><strong>Result</strong><div id="notice">Ready after authentication.</div></div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js"></script><script src="phase4-domain-client.js"></script><script src="admin-auth.js"></script>
+<script>
+(function(){'use strict';
+const el=id=>document.getElementById(id), esc=s=>JBBackend.esc(String(s??''));let busy=false,ready=false;
+function msg(s){el('notice').textContent=String(s)}
+function lock(v){busy=v;for(const id of ['reload','generate','approve','deadlines','noticesReload'])el(id).disabled=v}
+async function rpc(name,args){const {data,error}=await JBBackend.client.rpc(name,args||{});if(error)throw error;return data}
+function validMonth(){const v=el('month').value;if(!/^\d{4}-(0[1-9]|1[0-2])$/.test(v))throw Error('Valid report month select करें');return v+'-01'}
+async function refreshNotices(){
+ const box=el('complianceNotices');
+ const {data:{user},error:authError}=await JBBackend.client.auth.getUser();
+ if(authError||!user){box.textContent='Notification access unavailable. Sign in again.';return}
+ const {data,error}=await JBBackend.client.from('live_notifications')
+  .select('id,notification_type,title,safe_message,created_at,lifecycle_state,action_required,action_path')
+  .eq('recipient_user_id',user.id).eq('domain','compliance')
+  .order('created_at',{ascending:false}).limit(20);
+ if(error){box.textContent='Notifications unavailable: '+error.message;return}
+ box.replaceChildren();
+ if(!data?.length){box.textContent='No compliance notifications';return}
+ for(const n of data){
+  const row=document.createElement('div');row.className='entry';
+  const title=document.createElement('strong');title.textContent=n.title||n.notification_type||'Compliance notice';row.append(title);
+  const meta=document.createElement('div');meta.className='muted';meta.textContent=(n.created_at?new Date(n.created_at).toLocaleString('hi-IN'):'')+' · '+(n.lifecycle_state||'UNREAD');row.append(meta);
+  const detail=document.createElement('div');detail.textContent=n.safe_message||'';row.append(detail);
+  if(n.action_required&&n.action_path==='compliance.html'){
+   const action=document.createElement('a');action.className='back';action.href='compliance.html';action.textContent='Open compliance';row.append(action)
+  }
+  box.append(row)
+ }
+}
+async function refresh(){const tasks=await JBPhase2.compliance();
+el('rows').innerHTML=tasks.map(x=>'<div class="entry"><b>'+esc(x.title)+'</b> · '+esc(x.status)+'<br><small>Deadline: '+esc(x.deadline_state||'—')+' | Due: '+esc(x.due_at||'—')+'</small></div>').join('')||'No tasks';
+const {data,error}=await JBBackend.client.from('compliance_monthly_reports').select('month_start,grievance_count,resolved_count,zero_grievance,status').order('month_start',{ascending:false}).limit(24);
+if(error){el('months').textContent='Monthly report read unavailable: '+error.message;return}
+el('months').innerHTML=(data||[]).map(x=>'<div class="entry"><b>'+esc(x.month_start)+'</b> · '+esc(x.status)+' · Grievances: '+esc(x.grievance_count)+' · Resolved: '+esc(x.resolved_count)+' · Zero: '+esc(x.zero_grievance)+'</div>').join('')||'No monthly reports';
+}
+async function act(fn){if(!ready||busy)return;lock(true);try{await fn();await refresh();msg('Action completed. Current backend data refreshed.')}catch(e){msg('Action failed: '+(e?.message||e))}finally{lock(false)}}
+function confirmAction(t){return window.confirm(t)}
+el('reload').onclick=()=>act(async()=>{});
+el('generate').onclick=()=>act(async()=>{const m=validMonth();if(!confirmAction(m+' की grievance counts generate/refresh करें?'))throw Error('Cancelled');await JBPhase4.complianceMonth(m)});
+el('approve').onclick=()=>act(async()=>{const m=validMonth(),s=el('summary').value.trim();if(!s)throw Error('Public-safe summary required');if(!confirmAction(m+' की internal report APPROVE करें? कोई government submission नहीं होगा।'))throw Error('Cancelled');await JBPhase4.complianceApproveMonth(m,s)});
+el('deadlines').onclick=()=>act(async()=>{if(!confirmAction('Current LIVE deadline states refresh करें?'))throw Error('Cancelled');await rpc('jb_compliance_refresh_deadlines_internal',{})});
+el('noticesReload').onclick=()=>act(async()=>{await refreshNotices()});
+async function boot(){if(ready)return;ready=true;el('month').value=new Date().toISOString().slice(0,7);await act(async()=>{await refreshNotices()});}
+if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
+})();
+</script></body></html>

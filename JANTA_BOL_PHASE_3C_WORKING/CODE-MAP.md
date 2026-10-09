@@ -47,3 +47,26 @@
   - matching existing-article local shadow is recovered before server fetch when offline;
   - matching shadow is fallback recovery when server/API fetch fails;
   - normal online same-version recovery and version-conflict paths remain intact.
+
+## PHASE 4 B3 — Unified Notifications (2026-10-03)
+- Protected home preserved: `public.live_notifications` + Phase-3 Live triggers/realtime client.
+- Existing `private.jb_live_safe_notify` now adapts Live events into `jb_notification_emit_internal`; no parallel notification engine.
+- Common domain adapter: `jb_notification_emit_domain_internal` for grievance/compliance/social/ads/security/team/system integrations as those domain blocks become active.
+- Lifecycle: UNREAD / READ / ACTION_REQUIRED / RESOLVED + acknowledgement, direct action path, due/reminder/escalation and dedupe.
+- Delivery: in-app authority + `notification_delivery_history` + `notification_delivery_outbox` external retry state. External failure cannot mutate domain truth.
+- Security/privacy: authorized active-recipient check, safe-content guard, owner-only protected config, RLS/no direct authenticated access to internal history/config/outbox.
+- Retention: notification history links to Topic-8 `record_retention_policies/state`; notification delivery history remains distinct from `audit_logs`.
+- Android UI: `live.html#notifications` unified inbox with state/domain filters, action-first/priority grouping, read/ack/open/resolve controls; `admin.html` exposes Notifications entry.
+- Client/API: `phase3a-live-client.js`, `jb-live-api` preserve existing notification list/read/realtime behavior and add lifecycle/config support.
+
+
+## PHASE 4 B4 — Social Distribution (2026-10-03)
+- Canonical home preserved: `public.social_distribution`; no second article/publishing engine.
+- Global backend setting: `public.social_settings` + Owner/AAL2 mutation RPC.
+- Attempt/status evidence: `public.social_distribution_history`; independent platform states remain Posted/Pending/Failed/Manual Share/Not Selected.
+- Authority: `private.jb_social_allowed()` permits active newsroom Owner/Admin/Editor distribution without granting article-publish authority; Reporter/anon are excluded.
+- Failure isolation: provider state/history never changes Article ID/PURL or article published state; MANUAL mode rejects fake Posted success.
+- Shared engines: social state changes use existing `audit_logs`; Failed/Pending history routes into B3 notification domain adapter; Topic-8 retention policy `social_history_v1`.
+- Frontend: `add-news.html` persists its social controls to canonical social_distribution after article save/publish; `social.html` reads backend global setting, displays independent states and provides manual-share fallback.
+- Client: `phase2-client.js` social settings/save/attempt/history RPC adapters; authenticated direct INSERT/UPDATE/DELETE on `social_distribution` is revoked and preference writes use `jb_social_save_preferences_internal`, preventing client-forged Posted/provider state.
+- Provider credentials are not stored/exposed in frontend; real API/provider execution remains dependency-gated for testing.

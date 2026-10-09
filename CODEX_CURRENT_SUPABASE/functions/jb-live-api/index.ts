@@ -760,22 +760,73 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "notifications_list") {
-      const notes = await service.from("live_notifications").select(
-        "id,notification_type,priority,title,safe_message,record_type,record_id,created_at,read_at"
-      ).eq("recipient_user_id", a.userId).order("created_at", { ascending: false }).limit(50);
+      let notesQuery = service.from("live_notifications").select(
+        "id,domain,notification_type,priority,consequence,title,safe_message,record_type,record_id,created_at,read_at,lifecycle_state,action_required,acknowledged_at,resolved_at,action_path,delivery_state,delivery_attempts,last_delivery_error_code,next_retry_at,reminder_count,last_reminded_at,due_at"
+      ).eq("recipient_user_id", a.userId);
+      const requestedState = typeof payload.lifecycle_state === "string" ? payload.lifecycle_state : "";
+      const requestedDomain = typeof payload.domain === "string" ? payload.domain : "";
+      if (requestedState) notesQuery = notesQuery.eq("lifecycle_state", requestedState);
+      if (requestedDomain) notesQuery = notesQuery.eq("domain", requestedDomain);
+      const notes = await notesQuery
+        .order("action_required", { ascending: false })
+        .order("created_at", { ascending: false })
+        .limit(50);
       if (notes.error) throw notes.error;
-      return json({ ok: true, notifications: notes.data ?? [] });
+      const rank = (x: Record<string, unknown>) => x.priority === "CRITICAL" ? 0 : x.priority === "HIGH" ? 1 : 2;
+      const ordered = [...(notes.data ?? [])].sort((x,y) =>
+        Number(Boolean(y.action_required))-Number(Boolean(x.action_required)) ||
+        rank(x)-rank(y) ||
+        String(y.created_at).localeCompare(String(x.created_at))
+      );
+      return json({ ok: true, notifications: ordered });
     }
 
     if (action === "notification_mark_read") {
       const notificationId = Number(payload.notification_id ?? 0);
       if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
-      const marked = await service.rpc("jb_live_notification_mark_read_internal", {
+      const marked = await service.rpc("jb_notification_mark_read_internal", {
         p_user_id: a.userId,
         p_notification_id: notificationId,
       });
       if (marked.error) throw marked.error;
       if (marked.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_FOUND" }, 404);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_acknowledge") {
+      const notificationId = Number(payload.notification_id ?? 0);
+      if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
+      const x = await service.rpc("jb_notification_acknowledge_internal", { p_user_id: a.userId, p_notification_id: notificationId });
+      if (x.error) throw x.error;
+      if (x.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_ACTIONABLE" }, 409);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_config_list") {
+      if (a.role !== "owner") return json({ ok: false, error: "OWNER_REQUIRED" }, 403);
+      const x = await service.from("notification_config").select("config_key,enabled,protected_critical,updated_at").order("config_key");
+      if (x.error) throw x.error;
+      return json({ ok: true, config: x.data ?? [] });
+    }
+
+    if (action === "notification_config_set") {
+      if (a.role !== "owner") return json({ ok: false, error: "OWNER_REQUIRED" }, 403);
+      const key = textValue(payload.config_key, 80);
+      if (!key || typeof payload.enabled !== "boolean") return json({ ok: false, error: "INVALID_NOTIFICATION_CONFIG" }, 400);
+      const x = await service.rpc("jb_notification_config_set_internal", { p_actor: a.userId, p_key: key, p_enabled: payload.enabled });
+      if (x.error) return json({ ok: false, error: String(x.error.message || "NOTIFICATION_CONFIG_FAILED").slice(0,120) }, 409);
+      return json({ ok: true });
+    }
+
+    if (action === "notification_resolve") {
+      const notificationId = Number(payload.notification_id ?? 0);
+      if (!Number.isInteger(notificationId) || notificationId < 1) return json({ ok: false, error: "INVALID_NOTIFICATION_ID" }, 400);
+      const resolved = await service.rpc("jb_notification_resolve_internal", {
+        p_user_id: a.userId,
+        p_notification_id: notificationId,
+      });
+      if (resolved.error) throw resolved.error;
+      if (resolved.data !== true) return json({ ok: false, error: "NOTIFICATION_NOT_FOUND" }, 404);
       return json({ ok: true });
     }
 

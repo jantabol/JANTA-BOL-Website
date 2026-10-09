@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trash - JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Deleted News / Trash</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice">Soft Delete same Article ID ko reserve karta hai. Permanent Delete Owner/Super Admin-only irreversible action hai aur recent 2FA required hai.</div><div id="trash"><div class="empty">Loading…</div></div></main>
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Trash - JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Deleted News / Trash</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice">Soft Delete same Article ID ko reserve karta hai. Permanent Delete ke liye retention DUE, no active Hold, Owner recent MFA aur final confirmations required hain. Retention/hold state <a href="records.html">Records</a> me manage karein.</div><div id="trash"><div class="empty">Loading…</div></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="admin-auth.js"></script><script>
 'use strict';
 const root=document.getElementById('trash');
@@ -25,11 +25,13 @@ async function render(){
   try{
     const a=await JBBackend.listTrash();
     if(!a.length){root.innerHTML='<div class="empty">Trash empty hai.</div>';return}
-    root.innerHTML=a.map(n=>`<article class="card"><span class="badge">DELETED</span><h2>${JBBackend.esc(n.headline||'Untitled')}</h2><p class="muted">Previous: ${JBBackend.esc(n.previousStatus||'draft')} • ID: ${JBBackend.esc(n.id)} • Version: ${n.version}</p><div class="buttons"><button class="action primary" onclick="restore('${n.id}',${n.version})">Restore</button><button class="action danger" onclick="perma('${n.id}')">Permanent Delete</button></div></article>`).join('');
+    root.innerHTML=a.map(n=>`<article class="card"><span class="badge">DELETED</span><h2>${JBBackend.esc(n.headline||'Untitled')}</h2><p class="muted">Previous: ${JBBackend.esc(n.previousStatus||'draft')} • ID: ${JBBackend.esc(n.id)} • Version: ${n.version}</p><div class="buttons"><button class="action primary" onclick="restore('${n.id}',${n.version})">Restore</button><button class="action secondary" onclick="records('${n.id}')">Records / Retention</button><button class="action danger" onclick="perma('${n.id}')">Permanent Delete</button></div></article>`).join('');
   }catch(e){
     root.innerHTML='<div class="notice">'+JBBackend.esc(e.message)+'</div>';
   }
 }
+
+function records(id){location.href='records.html?article='+encodeURIComponent(id)}
 
 async function restore(id,v){
   if(!confirm('Restore this news from Trash?'))return;

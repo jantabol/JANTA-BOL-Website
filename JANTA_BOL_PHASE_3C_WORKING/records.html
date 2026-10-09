@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Audit & Retention - JANTA-BOL Admin</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>JANTA-BOL Admin</h1>
+  <p>Audit + Retention Records</p>
+</header>
+<main class="page">
+  <a class="back-link" href="admin.html">← Dashboard</a>
+
+  <div class="notice backend">
+    Common records system existing Article/Live/Team history ko replace nahi karta.
+    Audit protected hai; retention duration domain-specific rahegi.
+  </div>
+  <div id="status" class="notice">Secure records state load hone ka wait…</div>
+
+  <section class="card">
+    <h2>Audit Lookup</h2>
+    <div class="field"><label>Record Type</label><input id="auditType" placeholder="article / live_session / team_account"></div>
+    <div class="field"><label>Record ID</label><input id="auditId" placeholder="UUID ya record ID"></div>
+    <div class="buttons">
+      <button class="action primary" id="auditLookupBtn">Lookup</button>
+      <button class="action secondary" id="auditExportBtn">Export JSON</button>
+    </div>
+    <div id="auditOut" class="record">No lookup yet.</div>
+  </section>
+
+  <section class="card">
+    <h2>Retention Record</h2>
+    <div class="grid-2">
+      <div class="field"><label>Domain</label><input id="domain" value="article"></div>
+      <div class="field"><label>Record Type</label><input id="recordType" value="article"></div>
+    </div>
+    <div class="field"><label>Record ID</label><input id="recordId" placeholder="Article / Grievance / Live / Campaign / Team ID"></div>
+    <div class="field"><label>Policy Key (optional)</label><input id="policyKey" placeholder="Domain policy key"></div>
+    <div class="field"><label>Due / Extension Time</label><input id="dueAt" type="datetime-local"></div>
+    <div class="field"><label>Reason</label><input id="reason" placeholder="Required for Hold / Release / Archive"></div>
+
+    <div class="buttons">
+      <button class="action secondary" data-ret="LOAD">Load</button>
+      <button class="action primary" data-ret="REGISTER">Register</button>
+      <button class="action warning" data-ret="MARK_DUE">Mark Due</button>
+      <button class="action secondary" data-ret="EXTEND">Extend</button>
+      <button class="action danger" data-ret="HOLD">Hold</button>
+      <button class="action secondary" data-ret="RELEASE_HOLD">Release Hold</button>
+      <button class="action secondary" data-ret="ARCHIVE">Archive</button>
+    </div>
+    <div id="retentionOut" class="record">No record loaded.</div>
+  </section>
+
+  <section class="card">
+    <h2>Public View Count Display</h2>
+    <p class="muted">Raw views change nahi honge. Yahan sirf public display ON/OFF aur optional displayed-view override control hota hai.</p>
+    <div class="field"><label>Article ID</label><input id="viewArticleId" placeholder="Article UUID"></div>
+    <div class="switch-row"><label class="switch-item"><input id="viewsEnabled" type="checkbox"> Public view count ON</label></div>
+    <div class="field"><label>Display Override (optional)</label><input id="viewOverride" type="number" min="0" inputmode="numeric" placeholder="Blank = raw actual views"></div>
+    <div class="buttons">
+      <button class="action secondary" id="viewLoadBtn">Load</button>
+      <button class="action primary" id="viewSaveBtn">Save Display State</button>
+    </div>
+    <div id="viewOut" class="record">No Article loaded.</div>
+  </section>
+
+  <section class="card">
+    <h2>Permanent Delete Gate</h2>
+    <div class="notice">
+      Article pehle Trash me hona chahiye, retention <strong>DUE</strong> hona chahiye,
+      active Hold nahi hona chahiye, aur fresh MFA required hai. Identity disposition ledger me retire hogi.
+    </div>
+    <div class="field"><label>Article ID</label><input id="deleteArticleId" placeholder="Deleted Article UUID"></div>
+    <button class="action danger" id="deleteBtn">Permanent Delete</button>
+  </section>
+
+  <section class="card">
+    <h2>Due / Hold / Archive Queue</h2>
+    <button class="action secondary" id="dueListBtn">Refresh Queue</button>
+    <div id="dueOut" class="record">Queue not loaded.</div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=102fix1"></script>
+<script src="backend-client.js?v=102fix1"></script>
+<script src="phase4-records-client.js?v=p4-b2-2"></script>
+<script src="admin-auth.js"></script>
+<script>
+'use strict';
+const $=id=>document.getElementById(id);
+const esc=v=>JBBackend.esc(String(v??''));
+const pretty=v=>JSON.stringify(v,null,2);
+const isoFromLocal=v=>v?new Date(v).toISOString():null;
+
+function setStatus(msg,good=false){
+  const x=$('status');x.textContent=msg;x.className=good?'notice status-good':'notice';
+}
+function renderRows(rows){
+  if(!rows?.length)return '<span class="muted">No matching audit rows.</span>';
+  return rows.map(r=>'<div style="margin-bottom:10px"><strong>'+esc(r.action)+'</strong> · '+esc(r.record_type)+' · '+esc(r.record_id||'-')+
+    '<br><span class="muted">'+esc(r.created_at)+' · Actor '+esc(r.actor_user_id||'system')+'</span>'+
+    '<pre style="white-space:pre-wrap;margin:6px 0 0">'+esc(pretty(r.metadata||{}))+'</pre></div>').join('');
+}
+async function lookupAudit(){
+  try{
+    const rows=await JBRecords.auditLookup($('auditType').value,$('auditId').value,100);
+    $('auditOut').innerHTML=renderRows(rows);setStatus('Audit lookup loaded.',true);
+  }catch(e){setStatus(e.message);}
+}
+async function exportAudit(){
+  try{
+    const x=await JBRecords.auditExport($('auditType').value,$('auditId').value,500);
+    $('auditOut').innerHTML='<pre style="white-space:pre-wrap">'+esc(pretty(x))+'</pre>';
+    const blob=new Blob([pretty(x)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+    a.download='janta-bol-audit-export-'+Date.now()+'.json';a.click();
+    setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    setStatus('Permissioned audit export created and audit trail recorded.',true);
+  }catch(e){setStatus(e.message);}
+}
+function retentionIdentity(){
+  return {
+    domain:$('domain').value.trim().toLowerCase(),
+    recordType:$('recordType').value.trim().toLowerCase(),
+    recordId:$('recordId').value.trim()
+  };
+}
+async function loadRetention(){
+  try{
+    const x=retentionIdentity();
+    const r=await JBRecords.retentionGet(x.domain,x.recordType,x.recordId);
+    $('retentionOut').innerHTML='<pre style="white-space:pre-wrap">'+esc(pretty(r))+'</pre>';
+    setStatus('Retention state/history loaded.',true);
+  }catch(e){setStatus(e.message);}
+}
+async function retentionAction(action){
+  const x=retentionIdentity();
+  try{
+    if(action==='LOAD')return loadRetention();
+    if(action==='REGISTER'){
+      await JBRecords.retentionRegister(x.domain,x.recordType,x.recordId,$('policyKey').value.trim()||null,isoFromLocal($('dueAt').value));
+    }else{
+      await JBRecords.retentionAction(x.domain,x.recordType,x.recordId,action,$('reason').value.trim()||null,isoFromLocal($('dueAt').value));
+    }
+    await loadRetention();
+  }catch(e){setStatus(e.message);}
+}
+async function loadViews(){
+  try{
+    const x=await JBRecords.publicViewsGet($('viewArticleId').value.trim());
+    $('viewsEnabled').checked=!!x.public_views_enabled;
+    $('viewOverride').value=x.display_override==null?'':x.display_override;
+    $('viewOut').innerHTML='<pre style="white-space:pre-wrap">'+esc(pretty(x))+'</pre>';
+    setStatus('View-count display state loaded. Raw counts preserved.',true);
+  }catch(e){setStatus(e.message);}
+}
+async function saveViews(){
+  try{
+    const raw=$('viewOverride').value.trim();
+    const x=await JBRecords.publicViewsSet(
+      $('viewArticleId').value.trim(),
+      $('viewsEnabled').checked,
+      raw===''?null:Number(raw)
+    );
+    $('viewOut').innerHTML='<pre style="white-space:pre-wrap">'+esc(pretty(x))+'</pre>';
+    setStatus('Public view display state saved and audited.',true);
+  }catch(e){setStatus(e.message);}
+}
+async function permanentDelete(){
+  const id=$('deleteArticleId').value.trim();
+  if(!confirm('Permanent Delete irreversible hai. Retention DUE aur no-Hold verify hone ke baad record permanently delete hoga. Continue?'))return;
+  if(!confirm('FINAL CONFIRMATION: Article content delete karna hai?'))return;
+  try{
+    await JBRecords.permanentDeleteArticle(id);
+    setStatus('Permanent Delete complete. Identity disposition ledger me retired hai.',true);
+  }catch(e){setStatus(e.message);}
+}
+async function loadDue(){
+  try{
+    const rows=await JBRecords.retentionDueList();
+    $('dueOut').innerHTML=rows.length?'<pre style="white-space:pre-wrap">'+esc(pretty(rows))+'</pre>':'<span class="muted">No due/hold/archive records.</span>';
+    setStatus('Records queue loaded.',true);
+  }catch(e){setStatus(e.message);}
+}
+
+$('auditLookupBtn').onclick=lookupAudit;
+$('auditExportBtn').onclick=exportAudit;
+document.querySelectorAll('[data-ret]').forEach(b=>b.onclick=()=>retentionAction(b.dataset.ret));
+$('viewLoadBtn').onclick=loadViews;
+$('viewSaveBtn').onclick=saveViews;
+$('deleteBtn').onclick=permanentDelete;
+$('dueListBtn').onclick=loadDue;
+
+addEventListener('jb-auth-ready',()=>{
+  const q=new URLSearchParams(location.search).get('article');
+  if(q){
+    $('recordId').value=q;$('viewArticleId').value=q;$('deleteArticleId').value=q;$('auditType').value='article';$('auditId').value=q;
+  }
+  setStatus('Records authority ready.',true);
+  loadDue();
+},{once:true});
+</script>
+</body>
+</html>

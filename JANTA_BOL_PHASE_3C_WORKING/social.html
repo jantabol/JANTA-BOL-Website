@@ -1,8 +1,11 @@
-<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Social Distribution - JANTA-BOL</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Per-News Social Distribution</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice backend">Auto-post API connected nahi hai. Per-news selection/status Supabase backend me save hoga. Website publish social integration se independent rahega.</div><div id="list"></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js"></script><script src="admin-auth.js"></script><script>
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Social Distribution - JANTA-BOL</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="topbar"><h1>JANTA-BOL Admin</h1><p>Per-News Social Distribution</p></header><main class="page"><a class="back-link" href="admin.html">← Dashboard</a><div class="notice backend">Website article master record hai. Provider API configured nahi hai, isliye automated Posted success claim nahi hoga; Manual Share fallback available rahega.</div>
+<section class="card"><h2>Global Social Distribution</h2><label class="switch-item"><input type="checkbox" id="globalSocial"> Social Distribution globally ON</label><p class="muted" id="globalState">Loading…</p></section><div id="list"></div></main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js?v=20261003-b4-rpc1"></script><script src="admin-auth.js"></script><script>
 'use strict';
 const statuses=['Posted','Pending','Failed','Manual Share','Not Selected'];
 const root=document.getElementById('list');
-let rowsCache=[];
+const globalSocial=document.getElementById('globalSocial');
+const globalState=document.getElementById('globalState');
+let rowsCache=[]; let globalEnabled=false;
 
 function statusValue(row,p){
   return (row.status||{})[p]||'Not Selected';
@@ -17,9 +20,17 @@ function optionEl(value,current){
 }
 
 async function saveStatus(row,platform,value){
-  const next={...(row.status||{}),[platform]:value};
-  row.status=next;
-  await JBPhase2.saveSocial(row);
+  if(value==='Posted') throw new Error('Provider API configured nahi hai; fake Posted allowed nahi.');
+  await JBPhase2.socialAttempt(row.article_id,platform,value,value==='Failed'?'PROVIDER_UNAVAILABLE':null);
+  row.status={...(row.status||{}),[platform]:value};
+}
+async function manualShare(row,platform){
+  await JBPhase2.socialAttempt(row.article_id,platform,'Manual Share',null);
+  const articleUrl=new URL('article.html?id='+encodeURIComponent(row.article_id),location.href).href;
+  const text=((row.caption||row.articles?.title||'JANTA BOL')+' '+articleUrl).trim();
+  if(navigator.share){await navigator.share({title:row.articles?.title||'JANTA BOL',text,url:articleUrl});}
+  else {await navigator.clipboard?.writeText(text); alert('Share text copied.');}
+  await render();
 }
 
 function rowCard(row){
@@ -56,7 +67,7 @@ function rowCard(row){
     const label=document.createElement('label');
     label.textContent=platform.toUpperCase()+' Status';
     const select=document.createElement('select');
-    statuses.forEach(s=>select.appendChild(optionEl(s,statusValue(row,platform))));
+    statuses.filter(s=>s!=='Posted').forEach(s=>select.appendChild(optionEl(s,statusValue(row,platform))));
     select.onchange=async()=>{
       select.disabled=true;
       try{
@@ -68,7 +79,7 @@ function rowCard(row){
         select.disabled=false;
       }
     };
-    field.append(label,select);
+    const share=document.createElement('button'); share.type='button'; share.className='action secondary'; share.textContent='Manual Share'; share.disabled=!globalEnabled||!row.enabled||!row[platform]; share.onclick=()=>manualShare(row,platform).catch(e=>alert(e.message||String(e))); field.append(label,select,share);
     grid.appendChild(field);
   });
   card.appendChild(grid);
@@ -92,6 +103,7 @@ function rowCard(row){
 async function render(){
   root.textContent='Loading…';
   try{
+    const settings=await JBPhase2.socialSettings(); globalEnabled=!!settings.global_enabled; globalSocial.checked=globalEnabled; globalState.textContent=globalEnabled?'Global: ON':'Global: OFF — article publishing unaffected';
     rowsCache=await JBPhase2.socialRows();
     root.textContent='';
     if(!rowsCache.length){
@@ -107,6 +119,7 @@ async function render(){
   }
 }
 
+globalSocial.onchange=async()=>{globalSocial.disabled=true;try{await JBPhase2.setSocialGlobal(globalSocial.checked);await render();}catch(e){alert('Global setting failed: '+(e.message||String(e)));await render();}finally{globalSocial.disabled=false;}};
 if(document.documentElement.dataset.jbAuth==='ready')render();
 else addEventListener('jb-auth-ready',render,{once:true});
 </script></body></html>

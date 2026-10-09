@@ -126,3 +126,16 @@ Status: WORKING / NOT FINAL LOCK RECORD
 **Localized fix:** Recover matching `editId` shadow before network fetch when offline; use it as fetch-failure fallback; block `scheduleAutosave()` while an existing article is uninitialized (`editId && !editing`).
 
 **Regression scope:** #038 direct retest; #037 connected offline→online sync recheck. Historical #037 PASS remains unchanged.
+
+## PHASE4-B4-SEC-001 — Social status direct-write bypass caught during coding review — 2026-10-03
+- Finding: initial B4 extension still allowed authenticated RLS-approved newsroom clients to directly update social_distribution.status, which could bypass the server rule that MANUAL provider mode must never claim automated Posted success.
+- Root cause: legacy table-level ALL write path was broader than the new server-controlled attempt lifecycle.
+- Minimum safe fix: revoked authenticated INSERT/UPDATE/DELETE on canonical social rows; added narrow jb_social_save_preferences_internal for enabled/platform/caption preferences; status/history/provider outcomes remain server-controlled through attempt RPC. Existing Owner path retains AAL2.
+- No test PASS claimed from this fix; B4 RUN-05 remains pending after coding closure.
+
+
+## PHASE4-B4-CI-001 — Protected function-security CI RED — 2026-10-03
+- Evidence: protected Phase-3 run #386 failed only 3A-P3-T123 after B4 introduced new authenticated jb_social_* RPCs; static regression stayed GREEN.
+- RCA: Phase-3 function-security inventory intentionally fail-closes every new authenticated jb_* RPC until it is explicitly reviewed. The B4 RPCs were secure/guarded but absent from the inventory allowlist, so the checker correctly rejected the new authority surface.
+- Minimum safe fix: extended the existing security inventory (not bypassed/deleted) to explicitly enumerate the B4 social RPCs and added guard assertions: no anon execute; authenticated execute only for reviewed functions; social preference/attempt/history functions must contain jb_social_allowed; global setting must contain current_owner_aal2.
+- Exact protected CI rerun required GREEN before B4 coding closure.

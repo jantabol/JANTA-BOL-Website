@@ -230,3 +230,25 @@ Status: WORKING COPY ONLY. Baseline folder remains untouched.
 - Connected risk fixed: `scheduleAutosave()` now refuses to save an existing article while `editId` exists but `editing` has not initialized, preventing a blank form from replacing the previously preserved local correction after connectivity changes.
 - `init()` now checks a matching existing-article shadow before a network-dependent fetch when offline, and falls back to the matching shadow if the server/API request fails.
 - No schema/RLS/backend-client change. #038 requires Founder manual retest before PASS/LOCK.
+
+## PHASE4-B3-CHG-001 — Unified Notifications coding
+- Date: 2026-10-03.
+- Preserved the existing Phase-3 `live_notifications` home and realtime semantics; extended it instead of creating a competing engine.
+- Added canonical cross-domain notification adapter, consequence-based priority, recipient/revocation checks, privacy guard, dedupe, read/ack/resolved lifecycle, direct action paths, reminders/escalation, delivery history, retention link, external outbox/retry state, and protected configuration.
+- Existing Phase-3 Live trigger path now enters the common notification emitter through `private.jb_live_safe_notify`.
+- Added low-noise Android notification center UI to existing `live.html` and dashboard entry in `admin.html`.
+- Provider delivery is deliberately adapter/outbox-based; no unapproved external provider was invented. Provider-dependent execution remains test/DUE governed.
+- Coding completion does not itself mark P4-T043–P4-T050 PASS; RUN-07 evidence/testing is separate.
+
+
+## PHASE4-B4-CHG-001 — Deep Social Distribution coding
+- Date: 2026-10-03.
+- Integrated existing `social_distribution` rather than rebuilding it; add-news social controls now persist to the canonical table.
+- Replaced frontend/local-only global social authority with backend `social_settings`; protected global mutation requires Owner+AAL2.
+- Added newsroom distribution boundary for Owner (existing AAL2 preserved) and active Admin/Editor without adding publish authority.
+- Hardened write boundary after architecture review: authenticated clients cannot directly INSERT/UPDATE/DELETE canonical social rows; preference changes use a narrow RPC, while status/provider state is server-controlled. This prevents forged `Posted` success.
+- Added independent per-platform attempt/status history, safe failure code, attempt count, audit evidence, retention policy and B3 notification routing for Pending/Failed.
+- Added provider-independent manual-share fallback; MANUAL mode cannot be recorded as automated Posted success.
+- Social provider failure is isolated from article publication/PURL identity.
+- Added low-noise mobile workflow in existing `social.html`; no provider secret/token is stored in browser code.
+- Coding completion is not P4-T028–P4-T033 PASS. RUN-05 testing remains separate.
