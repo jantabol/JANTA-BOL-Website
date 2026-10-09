@@ -1,13 +1,19 @@
 -- P4-T017: read-only backend deadline boundaries and authority checks.
 -- No LIVE records are created, changed, or deleted.
 DO $test$
-DECLARE v_src text; v_now timestamptz := '2026-10-08 12:00:00+00'; v_case record; v_actual text;
+DECLARE v_src text; v_core text; v_now timestamptz := '2026-10-08 12:00:00+00'; v_case record; v_actual text;
 BEGIN
 SELECT pg_get_functiondef(p.oid) INTO v_src FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace
 WHERE n.nspname='public' AND p.proname='jb_compliance_refresh_deadlines_internal';
 IF v_src IS NULL THEN RAISE EXCEPTION 'T017: refresh function absent'; END IF;
-IF position('status<>''complete''' in v_src)=0 THEN RAISE EXCEPTION 'T017: completed-task exclusion absent'; END IF;
-IF position('jb_notification_emit_domain_internal' in v_src)=0 OR position('compliance_history' in v_src)=0 THEN RAISE EXCEPTION 'T017: notification or history hook absent'; END IF;
+-- The public wrapper delegates to the canonical private worker. Trace that edge;
+-- do not demand that the wrapper duplicate the worker's lifecycle implementation.
+IF position('private.jb_compliance_deadline_tick_core' in v_src)=0
+   OR position('private.p4_staff_allowed' in v_src)=0
+THEN RAISE EXCEPTION 'T017: guarded canonical worker delegation absent'; END IF;
+SELECT pg_get_functiondef('private.jb_compliance_deadline_tick_core(timestamptz,uuid)'::regprocedure) INTO v_core;
+IF v_core IS NULL OR position('status<>''complete''' in v_core)=0 THEN RAISE EXCEPTION 'T017: completed-task exclusion absent in worker'; END IF;
+IF position('jb_notification_emit_internal' in v_core)=0 OR position('compliance_history' in v_core)=0 THEN RAISE EXCEPTION 'T017: canonical notification or history hook absent'; END IF;
 FOR v_case IN SELECT * FROM (VALUES
  ('upcoming',v_now+interval '4 days'),
  ('due_soon',v_now+interval '2 days'),
