@@ -27,7 +27,7 @@ update public.advertisers set verification_state='verified' where risk_level='hi
 update public.ad_campaigns set status='paused' where id='10000000-0000-0000-0000-000000000001';
 insert into evidence select 'verified high risk eligible',count(*)=1 from public.jb_ad_public_feed('homepage','global');
 update public.ad_campaigns set status='live',paid_at=null where id='10000000-0000-0000-0000-000000000002';
-insert into evidence select 'paid timestamp required',count(*)=1 from public.jb_ad_public_feed('homepage','global');
+insert into evidence select 'paid timestamp required',count(*)=0 from public.jb_ad_public_feed('homepage','global');
 update public.ad_campaigns set status='paused' where id='10000000-0000-0000-0000-000000000001';
 insert into evidence select 'no active eligible',count(*)=0 from public.jb_ad_public_feed('homepage','global');
 insert into evidence select 'invalid placement hidden',count(*)=0 from public.jb_ad_public_feed('invalid','global');
