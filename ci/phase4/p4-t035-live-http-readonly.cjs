@@ -31,7 +31,13 @@ async function rpc(name,args){
  await rpc('jb_ad_public_feed',{p_placement:'article',p_scope:'district:shivpuri'});
  const invalid=await rpc('jb_ad_public_feed',{p_placement:'invalid',p_scope:'global'});
  assert.equal(invalid.length,0,'invalid placement must fail closed');checks++;
+ const badScope=await rpc('jb_ad_public_feed',{p_placement:'homepage',p_scope:''});
+ assert.equal(badScope.length,0,'empty scope must fail closed');checks++;
+ const oversized=await rpc('jb_ad_public_feed',{p_placement:'homepage',p_scope:'x'.repeat(101)});
+ assert.equal(oversized.length,0,'oversized scope must fail closed');checks++;
  const legacy=await rpc('jb_public_active_ads',{p_placement:'homepage'});
+ const legacyInvalid=await rpc('jb_public_active_ads',{p_placement:'invalid'});
+ assert.equal(legacyInvalid.length,0,'legacy invalid placement must fail closed');checks++;
  // Existing production legacy route may still be vulnerable; fail on any unpaid/unverified leak only
  // after independently establishing eligibility. Never treat an empty result as positive proof.
  if(global.length===0&&legacy.length!==0)throw Error('Legacy public route returns ads absent from canonical feed');
