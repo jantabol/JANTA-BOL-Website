@@ -35,7 +35,7 @@ insert into evidence select 'anon can execute canonical',has_function_privilege(
 insert into evidence select 'anon can execute legacy',has_function_privilege('anon','public.jb_public_active_ads(text)','EXECUTE');
 insert into evidence select 'trigger denies direct anon',not has_function_privilege('anon','private.p4_validate_ad_creative_media()','EXECUTE');
 -- Expected trigger errors are caught inside a nested savepoint-style PL/pgSQL block.
-do $
+do $guard$
 declare v text;
 begin
  begin
@@ -70,12 +70,12 @@ begin
   get stacked diagnostics v=message_text;
   insert into evidence values ('invalid phone CTA rejected',v='PHONE_CTA_REQUIRED');
  end;
-end $;
-do $
+end $guard$;
+do $guard$
 declare n int;
 begin
  select count(*) into n from evidence where not pass;
  if n>0 then raise exception 'P4_T035_ISOLATED_REGRESSION_FAILED: %', (select string_agg(test,', ') from evidence where not pass); end if;
-end $$;
+end $guard$;
 select case when pass then 'PASS' else 'FAIL' end || ' [P4-T035] ' || test from evidence order by test;
 rollback;
