@@ -34,6 +34,27 @@ insert into evidence select 'invalid placement hidden',count(*)=0 from public.jb
 insert into evidence select 'anon can execute canonical',has_function_privilege('anon','public.jb_ad_public_feed(text,text)','EXECUTE');
 insert into evidence select 'anon can execute legacy',has_function_privilege('anon','public.jb_public_active_ads(text)','EXECUTE');
 insert into evidence select 'trigger denies direct anon',not has_function_privilege('anon','private.p4_validate_ad_creative_media()','EXECUTE');
+-- T035 supported creative formats, latest approved version, label and scope.
+update public.ad_campaigns set status='live',paid_at=now()
+where id='10000000-0000-0000-0000-000000000001';
+insert into public.ad_creatives(id,campaign_id,creative_type,media_url,approved,version)
+values ('20000000-0000-0000-0000-000000000004','10000000-0000-0000-0000-000000000001','image','https://example.org/banner.png',true,2);
+insert into evidence select 'image creative returned',
+  count(*)=1 from public.jb_ad_public_feed('homepage','global')
+  where creative_type='image' and media_url='https://example.org/banner.png' and label='विज्ञापन';
+insert into public.ad_creatives(id,campaign_id,creative_type,media_url,approved,version)
+values ('20000000-0000-0000-0000-000000000005','10000000-0000-0000-0000-000000000001','video','https://example.org/spot.mp4',true,3);
+insert into evidence select 'video creative returned',
+  count(*)=1 from public.jb_ad_public_feed('homepage','global')
+  where creative_type='video' and media_url='https://example.org/spot.mp4' and label='विज्ञापन';
+insert into evidence select 'legacy video label and content',
+  count(*)=1 from public.jb_public_active_ads('homepage')
+  where creative_type='video' and label='विज्ञापन';
+insert into evidence select 'empty scope denied',count(*)=0 from public.jb_ad_public_feed('homepage','');
+insert into evidence select 'oversized scope denied',count(*)=0 from public.jb_ad_public_feed('homepage',repeat('x',101));
+insert into evidence select 'wrong placement denied',count(*)=0 from public.jb_ad_public_feed('article','global');
+update public.ad_campaigns set status='paused'
+where id='10000000-0000-0000-0000-000000000001';
 -- Expected trigger errors are caught inside a nested savepoint-style PL/pgSQL block.
 do $guard$
 declare v text;
