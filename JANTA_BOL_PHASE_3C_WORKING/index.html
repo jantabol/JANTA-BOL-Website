@@ -7,7 +7,7 @@
   <title>JANTA BOL</title>
 
   <link rel="stylesheet" href="style.css">
-<style id="jb-public-ad-style">.jb-public-ad{margin:16px auto;padding:12px;border:1px solid #666;border-radius:8px;max-width:780px;overflow-wrap:anywhere}.jb-public-ad-label{font-size:12px;font-weight:700;opacity:.85;margin-bottom:8px}.jb-public-ad-image,.jb-public-ad-video{display:block;width:100%;height:auto;max-height:300px;object-fit:contain}.jb-public-ad-text{white-space:pre-wrap;line-height:1.6}.jb-public-ad-cta{display:inline-block;margin-top:8px;text-decoration:underline}</style></head>
+<link rel="stylesheet" href="public-ads.css?v=p4t035-review-2"></head>
 
 <body>
 
@@ -101,6 +101,9 @@
 </div>
 
 </section>
+<section class="jb-ad-region" aria-label="विज्ञापन क्षेत्र">
+<label for="jb-ad-scope">विज्ञापन क्षेत्र <select id="jb-ad-scope"><option value="global">सभी</option><option value="local">स्थानीय</option><option value="district:shivpuri">शिवपुरी जिला</option><option value="district:guna">गुना जिला</option><option value="district:ashoknagar">अशोकनगर जिला</option></select></label>
+<div data-jb-ad-placement="homepage"></div></section>
 <section class="district-section">
 
     <h2><span class="pin">📍</span> शिवपुरी जिला</h2>
@@ -959,5 +962,7 @@
 
   
 
-<div data-jb-ad-placement="homepage" aria-live="polite"></div><script src="public-ads.js?v=p4t035-1"></script><script>addEventListener('load',function(){if(window.JBPublicAds)JBPublicAds.render('homepage','global')});</script></body>
+<script src="public-ads.js?v=p4t035-review-2"></script><script>
+(function(){const choice=document.getElementById('jb-ad-scope');function refresh(){window.JBPublicAds?.render('homepage',choice.value)}choice.addEventListener('change',refresh);refresh()})();
+</script></body>
 </html>

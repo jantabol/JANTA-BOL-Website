@@ -14,6 +14,7 @@ declare
   v_unknown_authenticated bigint;
   v_bad_owner_guard bigint;
   v_bad_ad_guard bigint;
+  v_bad_public_ad_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -41,6 +42,7 @@ begin
   where n.nspname='public'
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
+    and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
     and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
@@ -49,6 +51,7 @@ begin
   where n.nspname='public'
     and p.proname like 'jb_%'
     and has_function_privilege('authenticated',p.oid,'EXECUTE')
+    and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
     and p.proname not in (
       'jb_is_owner',
       'jb_social_history_internal',
@@ -126,13 +129,34 @@ begin
     and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
+
+  -- This one public read signature is intentionally reviewed; no wildcard exemption.
+  select count(*) into v_bad_public_ad_guard
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  join pg_language l on l.oid=p.prolang
+  where n.nspname='public' and p.proname in('jb_ad_public_feed','jb_public_active_ads')
+    and (not p.prosecdef or l.lanname<>'sql'
+      or not has_function_privilege('anon',p.oid,'EXECUTE')
+      or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+      or p.proconfig is distinct from array['search_path=pg_catalog']::text[]
+      or p.prosrc ~* '\m(insert|update|delete|truncate|drop|alter|create|grant|revoke|execute)\M'
+      or (p.proname='jb_ad_public_feed' and
+         (p.prosrc not ilike '%public.ad_payments%' or p.prosrc not ilike '%public.advertisers%'
+          or p.prosrc not ilike '%non_refund_accepted_at%' or p.prosrc not ilike '%verification_state%'
+          or pg_get_function_result(p.oid) <> 'TABLE(campaign_id uuid, creative_id uuid, creative_type text, media_url text, text_body text, cta_type text, cta_target text, label text)'))
+      or (p.proname='jb_public_active_ads' and p.prosrc not ilike '%public.jb_ad_public_feed%'));
+  if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname in('jb_ad_public_feed','jb_public_active_ads'))<>2
+  then v_bad_public_ad_guard:=v_bad_public_ad_guard+1; end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
     and v_unknown_authenticated=0
     and v_bad_owner_guard=0
-    and v_bad_ad_guard=0,
-    'Phase-3A database function caller roles are explicit: no jb_* anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
+    and v_bad_ad_guard=0
+    and v_bad_public_ad_guard=0,
+    'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
 
