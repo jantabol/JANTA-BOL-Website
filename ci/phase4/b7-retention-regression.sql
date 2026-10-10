@@ -3,11 +3,30 @@
 -- Never touches Supabase or actual advertiser evidence. One rollback.
 begin;
 do $before$
+declare legacy_due timestamptz;held public.record_retention_state%rowtype;
 begin
- if (select count(*) from public.record_retention_state)<>0
-   or (select count(*) from public.ad_history)<>0
- then raise exception 'FIXTURE_EXPECTS_NO_PREEXISTING_COMMERCIAL_HISTORY';end if;
- raise notice 'PASS [ADS-053 setup] all existing B3 retention homes present; no parallel ledger';
+ if (select count(*) from public.record_retention_state)<>2
+   or (select count(*) from public.ad_history)<>2
+ then raise exception 'LEGACY_AD_HISTORY_BACKFILL_FAILED';end if;
+ select r.retention_due_at into legacy_due
+ from public.record_retention_state r
+ join public.ad_history h on h.id::text=r.record_id
+ where h.event_type='legacy_missing_registry';
+ if legacy_due is null
+  or legacy_due<now()+interval '2494 days'
+  or legacy_due>now()+interval '2496 days'
+ then raise exception 'BACKFILL_DID_NOT_PRESERVE_OLD_EVENT_ORIGINAL_DATE';end if;
+ select r.* into held from public.record_retention_state r
+ join public.ad_history h on h.id::text=r.record_id
+ where h.event_type='legacy_held_record';
+ if held.lifecycle_state<>'hold' or held.hold_active<>true
+   or held.hold_reason<>'PREEXISTING_TEST_LEGAL_HOLD'
+   or held.retention_due_at<now()+interval '99 days'
+ then raise exception 'BACKFILL_OVERWROTE_PREEXISTING_LEGAL_HOLD';end if;
+ if (select count(*) from public.record_retention_history
+   where metadata->>'source'='b7_legacy_history_backfill')<>1
+ then raise exception 'LEGACY_BACKFILL_HISTORY_NOT_PRECISELY_ONE';end if;
+ raise notice 'PASS [ADS-053] legacy event backfilled by original date; existing HOLD unchanged; no parallel ledger';
 end $before$;
 
 -- Advertiser/public-origin event: no privilege escalation/Owner impersonation.
@@ -55,8 +74,8 @@ begin
   if msg<>'B7_COMMERCIAL_HISTORY_APPEND_ONLY' then
    raise exception 'HISTORY_DELETE_GUARD_WRONG: %',msg;end if;
  end;
- if (select count(*) from public.ad_history)<>1
-   or (select count(*) from public.record_retention_state)<>1
+ if (select count(*) from public.ad_history)<>3
+   or (select count(*) from public.record_retention_state)<>3
  then raise exception 'FAILED_MUTATION_REMOVED_HISTORY_OR_RETENTION';end if;
  raise notice 'PASS [ADS-052] actor/time/evidence history immutable for direct privileged UPDATE/DELETE';
 end $history_immutability$;
@@ -69,10 +88,10 @@ values('30000000-0000-0000-0000-000000000004','ad_request_clarified',
 select set_config('b7.test_actor_uid','',true);
 do $append_only$
 begin
- if (select count(*) from public.ad_history)<>2
-   or (select count(*) from public.record_retention_state)<>2
+ if (select count(*) from public.ad_history)<>4
+   or (select count(*) from public.record_retention_state)<>4
    or (select count(*) from public.record_retention_history
-       where action='retention_registered')<>2
+       where action='retention_registered')<>3
  then raise exception 'AD_CORRECTION_REPLACED_EVIDENCE';end if;
  raise notice 'PASS [ADS-052] new owner clarification gets new record+retention, old evidence remains';
 end $append_only$;
@@ -173,7 +192,7 @@ begin
  if (select count(*) from public.ad_campaigns
    where id='30000000-0000-0000-0000-000000000004')<>1
  then raise exception 'NEWS_OR_AD_REQUEST_CORRUPTED';end if;
- if (select count(*) from public.ad_history)<>2
+ if (select count(*) from public.ad_history)<>4
  then raise exception 'AD_HISTORY_COUNT_WRONG';end if;
  raise notice 'PASS [ADS-052/053] original ads intact; NO paid/ad deletion or automatic legal disposition';
 end $request_remains$;
