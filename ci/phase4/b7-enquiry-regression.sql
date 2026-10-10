@@ -11,6 +11,7 @@ begin
    jsonb_build_object('n','a','w','9876543210','consent',true,'origin','homepage','error','INVALID_ENQUIRY_OR_CONSENT'),
    jsonb_build_object('n','Test Shop','w','','consent',true,'origin','homepage','error','INVALID_ENQUIRY_OR_CONSENT'),
    jsonb_build_object('n','Test Shop','w','abc@gmail.com','consent',true,'origin','homepage','error','INVALID_WHATSAPP_NUMBER'),
+   jsonb_build_object('n','Test Shop','w','+911234567890','consent',true,'origin','homepage','error','INVALID_WHATSAPP_NUMBER'),
    jsonb_build_object('n','Test Shop','w','9876543210','consent',false,'origin','homepage','error','INVALID_ENQUIRY_OR_CONSENT'),
    jsonb_build_object('n','Test Shop','w','9876543210','consent',true,'origin','district:guna','error','INVALID_ENQUIRY_ORIGIN'),
    jsonb_build_object('n','Test Shop','w','9876543210','consent',true,'origin',null,'error','INVALID_ENQUIRY_ORIGIN'),
