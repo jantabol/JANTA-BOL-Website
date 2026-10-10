@@ -22,6 +22,7 @@ create table public.ad_campaigns(
  advertiser_id uuid references public.advertisers(id) not null,
  package_id uuid,status text default 'requested',placement text default 'homepage',
  scope text default 'global',request_kind text default 'standard',
+ approved_at timestamptz, paid_at timestamptz,
  package_snapshot jsonb default '{}'::jsonb,
  created_at timestamptz default now()
 );
