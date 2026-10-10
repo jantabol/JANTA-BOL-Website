@@ -406,3 +406,40 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_retention_audit_REVIEW_ONLY.sql
       - name: Reject history/media rewrite, cascade deletion, legal hold bypass and stale policy
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-regression.sql
+
+
+  b7-notification-postgres:
+    name: B7 notifications reuse B3 Owner domain with payment, portal and outage fallback (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_notifications
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_notifications"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_notifications
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic ads and real-contract B3 notification shim
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+      - name: Apply staged Owner manual payment and B3-only notification adapter
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Exercise Owner-only request, verification, paid, LIVE, hide, renewal and change through B3 with outage
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-regression.sql
