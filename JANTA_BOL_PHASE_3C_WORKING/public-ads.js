@@ -80,13 +80,14 @@ async function render(placement,scope='global'){
   const {data,error}=await g.JBBackend.client.rpc('jb_ad_public_feed',{p_placement:placement,p_scope:scope});
   if(!current()||error||!Array.isArray(data)||!data.length)return;
   const ad=data[0],box=node('aside','jb-public-ad');box.setAttribute('aria-label','विज्ञापन');
+  let mediaNode=null;
   box.append(node('div','jb-public-ad-label','विज्ञापन'));
   if(ad.creative_type==='text'&&String(ad.text_body||'').trim())box.append(node('p','jb-public-ad-text',ad.text_body));
   else if(ad.creative_type==='image'&&safe(ad.media_url)){
-   const img=node('img','jb-public-ad-image');img.src=safe(ad.media_url);img.alt='विज्ञापन';img.loading='lazy';img.referrerPolicy='no-referrer';
+   const img=node('img','jb-public-ad-image');mediaNode=img;img.src=safe(ad.media_url);img.alt='विज्ञापन';img.loading='lazy';img.referrerPolicy='no-referrer';
    img.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(img);
   }else if(ad.creative_type==='video'&&safe(ad.media_url)){
-   const video=node('video','jb-public-ad-video');video.src=safe(ad.media_url);video.controls=true;video.preload='none';video.playsInline=true;
+   const video=node('video','jb-public-ad-video');mediaNode=video;video.src=safe(ad.media_url);video.controls=true;video.preload='none';video.playsInline=true;
    video.setAttribute('aria-label','वीडियो विज्ञापन');video.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(video);
   }else return;
   const link=cta(ad);
@@ -102,12 +103,28 @@ async function render(placement,scope='global'){
    if(placement==='article'&&
       scopeForVerifiedArticleId(articleId)===scope&&
       typeof g.JBAdAnalytics?.prepare==='function'){
-    try{
-     const reporting=g.JBAdAnalytics.prepare({
-      element:box,ctaElement,articleId,campaignId:ad.campaign_id,creativeId:ad.creative_id
-     });
-     if(reporting&&typeof reporting.catch==='function')reporting.catch(()=>{});
-    }catch(_){}
+    let reportStarted=false;
+    const beginReport=()=>{
+     if(reportStarted||!current()||box.isConnected===false)return;
+     reportStarted=true;
+     try{
+      const reporting=g.JBAdAnalytics.prepare({
+       element:box,ctaElement,articleId,campaignId:ad.campaign_id,creativeId:ad.creative_id
+      });
+      if(reporting&&typeof reporting.catch==='function')reporting.catch(()=>{});
+     }catch(_){}
+    };
+    // Text is immediately rendered. Images and video MUST display actual
+    // content before a 50%/1s view token is prepared. A slow/broken image
+    // or unloaded video controls are NOT billable ad exposure evidence.
+    if(!mediaNode)beginReport();
+    else if(mediaNode.tagName==='IMG'){
+     if(mediaNode.complete&&mediaNode.naturalWidth>0)beginReport();
+     else mediaNode.addEventListener('load',beginReport,{once:true});
+    }else if(mediaNode.tagName==='VIDEO'){
+     if(mediaNode.readyState>=2)beginReport();
+     else mediaNode.addEventListener('loadeddata',beginReport,{once:true});
+    }
    }
   }
  }catch(_){if(current())slot.replaceChildren()}
