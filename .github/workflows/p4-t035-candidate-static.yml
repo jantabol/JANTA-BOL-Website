@@ -287,3 +287,41 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_inventory_guard_REVIEW_ONLY.sql
       - name: Prove 600+400 booking, overbook rejection, immutability and shared audit
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-inventory-regression.sql
+
+  b7-single-feed-postgres:
+    name: B7 single canonical anonymous Article-ID feed and homepage (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_canonical_feed
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_canonical_feed"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_canonical_feed
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap existing paid/weight/Article fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+      - name: Apply review-only payment, verified geography, weighted private helper and canonical cutover
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql
+      - name: Anonymous Article ID cannot forge location; legacy homepage retained; no second selection authority
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-single-feed-regression.sql
