@@ -31,6 +31,12 @@
 <h2>Advertiser change requests — Owner review</h2>
 <p class="meta">Only text request is queued. Accepted for work does NOT replace a LIVE approved photo, video or targeting; Founder separately approves a new version.</p>
 <div id="changeRequestRows">Loading…</div></section>
+<section class="card">
+<details><summary>Advertisement notification delivery issues (Owner only)</summary>
+<p class="meta">Only existing in-app notifications can be retried. WhatsApp, email or push is NEVER marked sent here. Original immutable failure audit is preserved.</p>
+<button class="btn" type="button" onclick="loadAdNotificationIssues()">Load pending notification issues</button>
+<div id="adNotificationIssues" role="status" aria-live="polite"></div>
+</details></section>
 <div id="rows"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-manualpay"></script><script src="admin-auth.js"></script>
 <script>'use strict';
@@ -69,6 +75,37 @@ async function loadPackages(){
   box.innerHTML=packageList.map(p=>`<div class="meta"><b>${esc(p.name)}</b> · ${esc(p.placement)} · ${esc(p.price_minor)} ${esc(p.currency)} paise · ${esc(p.duration_days)} days · weight ${esc(p.weight)} · version ${esc(p.version)} · ${p.active?'active':'inactive'} <button class="btn" onclick="editPackage('${esc(p.id)}')">Edit</button></div>`).join('')||'<p class="meta">No packages configured.</p>';
   chooser.innerHTML='<option value="">Custom / no package selected</option>'+packageList.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.placement)} — ₹${esc((Number(p.price_minor)/100).toFixed(2))}</option>`).join('');
  }catch(e){box.textContent=e.message;chooser.innerHTML='<option value="">Package list unavailable</option>';}
+}
+async function loadAdNotificationIssues(){
+ const box=document.getElementById('adNotificationIssues');
+ if(!box)return;
+ box.textContent='Checking Owner-only delivery failures…';
+ try{
+  const rows=await JBPhase4.adNotificationFailures();
+  box.innerHTML=rows.filter(x=>
+    Number.isSafeInteger(Number(x?.audit_id))&&Number(x.audit_id)>0
+  ).map(x=>{
+    const id=Number(x.audit_id);
+    return '<div class="card"><b>Failure audit #'+id+'</b>'+
+     '<p class="meta">'+esc(x.event)+' · '+esc(x.record_type)+
+     ' · '+esc(x.record_id)+' · '+esc(x.created_at)+'</p>'+
+     '<button class="btn" type="button" onclick="retryAdNotification('+id+
+     ')">Retry in-app only (Owner/AAL2)</button></div>';
+  }).join('')||'<p class="meta">No pending ad in-app notification failures.</p>';
+ }catch(_){
+  box.textContent='Notification issue queue unavailable until safe backend rollout.';
+ }
+}
+async function retryAdNotification(id){
+ const box=document.getElementById('adNotificationIssues');
+ if(box)box.textContent='Retrying B3 in-app notification only…';
+ try{
+  if(await JBPhase4.adRetryNotification(id)!==true)
+   throw Error('B3_IN_APP_NOT_CONFIRMED');
+  await loadAdNotificationIssues();
+ }catch(_){
+  if(box)box.textContent='In-app retry not confirmed. Original failure audit remains pending; no external message sent claim.';
+ }
 }
 async function loadRenewalRequests(){
  const box=document.getElementById('renewalRows');
