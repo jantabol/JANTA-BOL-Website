@@ -90,7 +90,8 @@ async function render(placement,scope='global'){
    video.setAttribute('aria-label','वीडियो विज्ञापन');video.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(video);
   }else return;
   const link=cta(ad);
-  if(link?.url){const a=node('a','jb-public-ad-cta',link.label);a.href=link.url;if(!link.url.startsWith('tel:'))a.target='_blank';a.rel='noopener noreferrer sponsored';box.append(a)}
+  let ctaElement=null;
+  if(link?.url){const a=node('a','jb-public-ad-cta',link.label);a.href=link.url;if(!link.url.startsWith('tel:'))a.target='_blank';a.rel='noopener noreferrer sponsored';box.append(a);ctaElement=a}
   if(current()){
    slot.append(box);
    // Staged/optional: only a server-bound Article UUID is eligible for a
@@ -103,7 +104,7 @@ async function render(placement,scope='global'){
       typeof g.JBAdAnalytics?.prepare==='function'){
     try{
      const reporting=g.JBAdAnalytics.prepare({
-      element:box,articleId,campaignId:ad.campaign_id,creativeId:ad.creative_id
+      element:box,ctaElement,articleId,campaignId:ad.campaign_id,creativeId:ad.creative_id
      });
      if(reporting&&typeof reporting.catch==='function')reporting.catch(()=>{});
     }catch(_){}
