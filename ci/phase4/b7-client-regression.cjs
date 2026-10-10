@@ -478,3 +478,44 @@ test('ADS-047 Owner renewal queue is read-only and escapes supplied labels',asyn
  assert.match(html,/No automatic payment or campaign extension/);
  assert.doesNotMatch(html,/Approve renewal|onclick="approveRenewal/);
 });
+
+
+test('ADS-014 staged authoritative Article scope: only verified Article UUID input, no claimed district',()=>{
+ const {window}=client(),api=window.JBPublicAds;
+ assert.equal(api.scopeForVerifiedArticleId('10000000-0000-0000-0000-000000000001'),
+   'article:10000000-0000-0000-0000-000000000001');
+ assert.equal(api.scopeForVerifiedArticleId('A0000000-0000-0000-0000-000000000001'),
+   'article:a0000000-0000-0000-0000-000000000001');
+ for(const invalid of ['','local','district:guna','shivpuri',
+  '10000000-0000-0000-0000-000000000001 OR TRUE',
+  'article:10000000-0000-0000-0000-000000000001',
+  null,'10000000-0000-0000-0000-0000000000xx']){
+  assert.equal(api.scopeForVerifiedArticleId(invalid),'');
+ }
+});
+test('ADS-014 staged adapter: one RPC selection per Article opening, no free-text viewer geo',async()=>{
+ const {window,context,calls}=client();
+ let cleared=0;
+ const slot={dataset:{jbAdPlacement:'article'},replaceChildren(){cleared++}};
+ context.document={querySelectorAll:()=>[slot]};
+ const api=window.JBPublicAds;
+ assert.equal(await api.renderVerifiedArticle('local'),false);
+ assert.equal(calls.length,0);
+ assert.equal(await api.renderVerifiedArticle('10000000-0000-0000-0000-000000000001'),true);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls)),[{
+  name:'jb_ad_public_feed',
+  args:{p_placement:'article',p_scope:'article:10000000-0000-0000-0000-000000000001'}
+ }]);
+ assert.equal(cleared,1);
+ assert.equal(await api.renderVerifiedArticle('10000000-0000-0000-0000-000000000001'),true);
+ assert.equal(calls.length,1,'already-open article cannot trigger second ad rotation');
+});
+test('ADS-014 cutover remains unlinked until signed-off LGD/E3 and backend pairing',()=>{
+ const source=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/public-ads.js','utf8');
+ const article=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/article.html','utf8');
+ assert.match(source,/renderVerifiedArticle/);
+ assert.doesNotMatch(article,/renderVerifiedArticle\(/);
+ assert.match(article,/Permanent Article ID/);
+ assert.match(article,/shareUrl\(\)/);
+ assert.doesNotMatch(source,/navigator\.geolocation|getCurrentPosition/);
+});
