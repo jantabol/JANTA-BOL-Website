@@ -13,7 +13,7 @@ begin
  where action='ad_notification_retry_succeeded'
    and metadata->>'original_failure_id'=v_failure_id::text;
  select count(*) into v_notices from public.live_notifications
- where domain='ads' and notification_type='ad_hidden'
+ where domain='ads' and notification_type='ad_approved'
    and record_id='30000000-0000-0000-0000-000000000001'
    and delivery_state='IN_APP_READY';
  if v_failed_count<>1 or v_ok_count<>1 or v_notices<>1 then
