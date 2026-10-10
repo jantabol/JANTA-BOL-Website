@@ -4,6 +4,7 @@ on:
     branches:
       - codex/p4-t035-reviewed-fixes-20261009
       - codex/b7-reconcile-20261009
+      - codex/b7-blueprint-20261010
   workflow_dispatch:
 permissions:
   contents: read
