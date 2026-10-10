@@ -159,6 +159,28 @@ begin
       where n.nspname='public' and p.proname in('jb_ad_public_feed','jb_public_active_ads'))<>2
   then v_bad_public_ad_guard:=v_bad_public_ad_guard+1; end if;
 
+  -- B7 single-feed cutover conditional guard: still ONE reviewed public RPC.
+  -- New Article identity selection is accepted ONLY when the canonical
+  -- SQL projection derives it from a published Article UUID, never
+  -- client-supplied 'district:x' / GPS. Legacy alias must delegate.
+  -- Existing 3A-P3-T123 checks above remain fully enforced.
+  if exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+     where n.nspname='public' and p.proname='jb_ad_public_feed'
+       and p.prosrc ilike '%private.b7_weighted_article_candidate%')
+  then
+    if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname='jb_ad_public_feed'
+       and p.prosrc ilike '%article:%'
+       and p.prosrc ilike '%p_placement=%'
+       and p.prosrc ilike '%p_scope=%'
+       and p.prosrc ilike '%public.ad_campaign_area_grants%'
+       and p.prosrc ilike '%g.area_level in%'
+       and p.prosrc not ilike '%c.scope=p_scope%'
+    ) then v_bad_public_ad_guard:=v_bad_public_ad_guard+1;end if;
+    if has_function_privilege('anon','private.b7_weighted_article_candidate(uuid)'::regprocedure,'EXECUTE')
+    then v_bad_public_ad_guard:=v_bad_public_ad_guard+1;end if;
+  end if;
+
   -- ADS-002: conditional until migration is deployed. Once present, this exact
   -- anon API is reviewed for explicit consent and no other legacy public intake.
   -- Keep prior T123 checks, never whitelist unknown jb_* signatures.
