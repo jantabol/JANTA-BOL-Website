@@ -6,9 +6,9 @@ create role service_role nologin;
 create schema private;
 create schema auth;
 create extension if not exists pgcrypto;
-create function auth.uid() returns uuid language sql stable as $select null::uuid$;
+create function auth.uid() returns uuid language sql stable as $$select null::uuid$$;
 create function private.p4_owner_allowed()
-returns boolean language sql stable as $select coalesce(current_setting('b7.test_owner',true),'')='enabled'$;
+returns boolean language sql stable as $$select coalesce(current_setting('b7.test_owner',true),'')='enabled'$$;
 create table public.articles(id uuid primary key,status text not null);
 create table public.ad_packages(
  id uuid primary key,name text,placement text,active boolean default true,
