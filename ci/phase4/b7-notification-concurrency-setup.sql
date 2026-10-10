@@ -7,7 +7,7 @@ insert into public.audit_logs(
  '11111111-1111-1111-1111-111111111111',
  'ad_notification_failed','ad_campaign',
  '30000000-0000-0000-0000-000000000001',
- '{"event":"ad_hidden","delivery":"NOT_CONFIRMED","retry":"OWNER_REVIEW_REQUIRED","sqlstate":"P0001"}'::jsonb,
+ '{"event":"ad_approved","delivery":"NOT_CONFIRMED","retry":"OWNER_REVIEW_REQUIRED","sqlstate":"P0001"}'::jsonb,
  clock_timestamp()
 );
 do $ready$
