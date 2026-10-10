@@ -166,3 +166,12 @@ Protected workflow run #246 completed:
 - Added pending-only renewal through preexisting renewal ledger with token-bound actor provenance, no silent campaign extension, status/payment or slot change. Legacy authenticated advertiser renewal rows remain compatible in isolated fixture.
 - Added dedicated disposable PostgreSQL negative/positive sessions A/B, revoked/replay, creative immutability, old JWT renewal preservation and Owner-only queues. Candidate CI includes new job; protected Phase3/4 CI remains mandatory.
 - Final gate remains **IN PROGRESS**. E2 production parity, E3 Android, E5 actual notifications/audit and other B7 features are due. Never auto deploy staging review SQL; no P4-T039 PASS/LOCK and no B8.
+
+
+## 2026-10-10 — B7-G3 Geography hardening / exact Article area matching candidate
+- Started G3 from protected Phase-3+4 GREEN source commit `9c3ace9292290b87bba7ac2b753200ed55a30326`; did NOT rebuild B7 or touch Production.
+- Created additive staging-review LGD district/tehsil schema with source versions, verified parent relation, canonical Article structured verified metadata and immutable exact campaign area grants. No real MP codes/district/tehsil data claimed imported.
+- Added Owner/AAL2 protected Article geo proof, campaign grant and verified parent guards; one PRIVATE Article-ID-based eligibility matcher (not a second public feed). Unknown/blank/unverified tehsil fails closed; only reviewed National-unknown fallback allowed.
+- Added isolated disposable PostgreSQL fixture and 25 Article-to-campaign positive/negative cases; directory/code mismatch, unverified tehsil, district-only vs tehsil-only, multi-district, no viewer GPS, paid-booking change denial, direct role/privilege denial, audit and no Article ID rewrite tested.
+- Protected T123 security inventory extended with two exact reviewed Owner RPC names and conditional new geo-table security rules; all existing check logic preserved, not disabled.
+- Full B7-G3 launch cannot be declared until the complete official 55-district and verified tehsil code catalog, production-compatible backend selection, Android E3 and E5 source proof are present. P4-T035 / P4-T037 remain IN PROGRESS, B7 NOT LOCKED.
