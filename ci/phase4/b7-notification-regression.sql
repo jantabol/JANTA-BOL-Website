@@ -149,17 +149,17 @@ select set_config('b7.test_notify_down','',true);
 -- ADS-055: Founder can recover the failed in-app notification using its
 -- existing immutable audit ID, without inventing a WhatsApp SENT receipt.
 do $retry$
-declare id bigint;rows jsonb;msg text;n int;
+declare v_failure_id bigint;rows jsonb;msg text;n int;
 begin
- select a.id into id from public.audit_logs a
+ select a.id into v_failure_id from public.audit_logs a
  where a.action='ad_notification_failed'
    and a.record_id='30000000-0000-0000-0000-000000000006';
- if id is null then raise exception 'MISSING_NOTIFICATION_FAILURE_TO_RETRY';end if;
+ if v_failure_id is null then raise exception 'MISSING_NOTIFICATION_FAILURE_TO_RETRY';end if;
 
  -- First prove the still-broken B3 service cannot be falsely acknowledged.
  perform set_config('b7.test_notify_down','yes',true);
  begin
-  perform public.jb_ad_notification_retry_internal(id);
+  perform public.jb_ad_notification_retry_internal(v_failure_id);
   raise exception 'FAILED_DELIVERY_RETRY_WAS_ACKNOWLEDGED';
  exception when others then
   get stacked diagnostics msg=message_text;
@@ -168,22 +168,22 @@ begin
  end;
  if exists(select 1 from public.audit_logs
   where action='ad_notification_retry_succeeded'
-    and metadata->>'original_failure_id'=id::text)
+    and metadata->>'original_failure_id'=v_failure_id::text)
  then raise exception 'FALSE_IN_APP_DELIVERY_RECEIPT';end if;
  perform set_config('b7.test_notify_down','',true);
 
  rows:=public.jb_ad_notification_failures_internal();
- if jsonb_array_length(rows)<>1 or (rows->0->>'audit_id')::bigint<>id
+ if jsonb_array_length(rows)<>1 or (rows->0->>'audit_id')::bigint<>v_failure_id
  then raise exception 'OWNER_FAILED_NOTIFICATION_QUEUE_WRONG: %',rows;end if;
- if not public.jb_ad_notification_retry_internal(id) then
+ if not public.jb_ad_notification_retry_internal(v_failure_id) then
    raise exception 'OWNER_RETRY_FAILED';end if;
- if not public.jb_ad_notification_retry_internal(id) then
+ if not public.jb_ad_notification_retry_internal(v_failure_id) then
    raise exception 'IDEMPOTENT_SECOND_RETRY_FAILED';end if;
  select count(*) into n from public.live_notifications where domain='ads';
  if n<>13 then raise exception 'OWNER_RETRY_CREATED_DUPLICATE_OR_MISSING_NOTICE: %',n;end if;
  if (select count(*) from public.audit_logs
      where action='ad_notification_retry_succeeded'
-       and metadata->>'original_failure_id'=id::text)<>1
+       and metadata->>'original_failure_id'=v_failure_id::text)<>1
  then raise exception 'RETRY_AUDIT_MISSING_OR_DUPLICATE';end if;
  if jsonb_array_length(public.jb_ad_notification_failures_internal())<>0
  then raise exception 'RECOVERED_FAILURE_STILL_IN_QUEUE';end if;
@@ -204,7 +204,7 @@ begin
     raise exception 'NONOWNER_FAILURE_LIST_NOT_DENIED: %',msg;end if;
  end;
  begin
-  perform public.jb_ad_notification_retry_internal(id);
+  perform public.jb_ad_notification_retry_internal(v_failure_id);
   raise exception 'AAL1_CAN_RETRY_AD_NOTIFICATION';
  exception when others then
   get stacked diagnostics msg=message_text;
