@@ -419,3 +419,42 @@ test('ADS-045 Owner queue escapes advertiser-supplied text and cannot silently a
  assert.match(html,/Reject request/);
  assert.match(html,/accepted_for_work/);
 });
+
+
+test('ADS-047 advertiser portal requests renewal pending only, no direct period mutation',()=>{
+ const page=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/advertiser-portal.html','utf8');
+ assert.match(page,/id="renewalForm"/);
+ assert.match(page,/jb_ad_portal_request_renewal/);
+ assert.match(page,/p_token:token,p_requested_end:when/);
+ assert.match(page,/Renewal Request Pending/);
+ assert.match(page,/Owner की स्वीकृति/);
+ assert.doesNotMatch(page,/jb_ad_schedule_internal|jb_ad_transition_internal|jb_ad_confirm_manual_payment_internal/);
+});
+test('ADS-047 Owner-only renewal queue client refuses unauthorised actor',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adRenewalRequests(),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ await window.JBPhase4.adRenewalRequests();
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
+  name:'jb_ad_owner_renewals_internal',args:{}
+ });
+});
+test('ADS-047 Owner renewal queue is read-only and escapes supplied labels',async()=>{
+ const {window,context,elements}=adminClient();
+ window.JBPhase4.adRenewalRequests=async()=>[{
+  id:'aaaaaaaa-0000-0000-0000-000000000001',
+  campaign_id:'bbbbbbbb-0000-0000-0000-000000000002',
+  status:'pending',request_channel:'portal',
+  requested_end_at:'2026-11-01T19:00:00+05:30<script>'
+ }];
+ await vm.runInContext('loadRenewalRequests()',context);
+ const html=elements.get('renewalRows').innerHTML;
+ assert.match(html,/Pending renewal|Renewal/);
+ assert.match(html,/Source portal/);
+ assert.match(html,/&lt;script&gt;/);
+ assert.doesNotMatch(html,/<script>/);
+ assert.match(html,/No automatic payment or campaign extension/);
+ assert.doesNotMatch(html,/Approve renewal|onclick="approveRenewal/);
+});
