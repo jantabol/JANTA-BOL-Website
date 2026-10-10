@@ -21,6 +21,7 @@ declare
   v_bad_geo_guard bigint;
   v_bad_inventory_guard bigint;
   v_bad_qualified_view_guard bigint;
+  v_bad_ad_notification_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -76,7 +77,7 @@ begin
       'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
-      'jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
+      'jb_ad_notification_failures_internal','jb_ad_notification_retry_internal','jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
        'jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
        'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
@@ -137,7 +138,8 @@ begin
   where n.nspname='public'
     and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
        'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal','jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
-        'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal')
+        'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal',
+        'jb_ad_notification_failures_internal','jb_ad_notification_retry_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
 
@@ -395,6 +397,68 @@ begin
     then v_bad_qualified_view_guard:=v_bad_qualified_view_guard+1;end if;
   end if;
 
+  -- B7/ADS-051/052/053/055: conditional until the Notification/Audit
+  -- REVIEW migrations are applied. The exact two new Owner RPCs require
+  -- AAL2 and ALL new B7 events go to existing B3 live_notifications only.
+  v_bad_ad_notification_guard:=0;
+  if to_regprocedure('public.jb_ad_notification_retry_internal(bigint)') is not null
+    or to_regprocedure('public.jb_ad_notification_failures_internal()') is not null
+  then
+    select count(*) into v_bad_ad_notification_guard
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname in('jb_ad_notification_retry_internal',
+                      'jb_ad_notification_failures_internal')
+      and (not p.prosecdef
+        or has_function_privilege('anon',p.oid,'EXECUTE')
+        or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+        or p.prosrc not ilike '%p4_owner_allowed%');
+    if v_bad_ad_notification_guard<>0
+       or (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+            where n.nspname='public' and p.proname in(
+             'jb_ad_notification_retry_internal',
+             'jb_ad_notification_failures_internal'))<>2
+       or to_regclass('public.live_notifications') is null
+       or to_regprocedure('public.jb_notification_emit_internal(uuid,text,text,text,text,text,text,text,boolean,text,text,jsonb)') is null
+       or to_regprocedure('private.b7_ad_emit_inapp_owner(text,text,text,text,boolean,text)') is null
+       or has_function_privilege('anon',
+          'private.b7_ad_emit_inapp_owner(text,text,text,text,boolean,text)'::regprocedure,
+          'EXECUTE')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.ad_campaigns'::regclass
+             and t.tgname='b7_notify_ad_campaign' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.ad_payments'::regclass
+             and t.tgname='b7_notify_ad_payment' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.audit_logs'::regclass
+             and t.tgname='trg_jb_audit_immutable_guard' and t.tgenabled='O')
+       or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+          where n.nspname='public' and p.proname='jb_ad_notification_retry_internal'
+            and p.prosrc ilike '%ad_notification_failed%'
+            and p.prosrc ilike '%ad_notification_retry_succeeded%'
+            and p.prosrc ilike '%private.b7_ad_emit_inapp_owner%')
+    then v_bad_ad_notification_guard:=v_bad_ad_notification_guard+1;end if;
+  end if;
+  if exists(select 1 from pg_trigger t
+       where t.tgrelid='public.ad_history'::regclass
+         and t.tgname='b7_ad_history_immutable') then
+    if not exists(select 1 from pg_trigger t
+        where t.tgrelid='public.ad_history'::regclass
+          and t.tgname='b7_register_ad_history_retention' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+        where t.tgrelid='public.ad_campaigns'::regclass
+          and t.tgname='b7_ad_campaign_delete_retention_guard' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+        where t.tgrelid='public.ad_creatives'::regclass
+          and t.tgname='b7_approved_creative_immutable' and t.tgenabled='O')
+       or not exists(select 1 from public.record_retention_policies
+        where policy_key='ads_history_v1' and domain='ads'
+          and record_type='ad_history' and active and automatic_disposition=false
+          and default_retention_days>=2555)
+    then v_bad_ad_notification_guard:=v_bad_ad_notification_guard+1;end if;
+  end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
@@ -406,7 +470,8 @@ begin
     and v_bad_portal_change_guard=0
     and v_bad_geo_guard=0
     and v_bad_inventory_guard=0
-    and v_bad_qualified_view_guard=0,
+    and v_bad_qualified_view_guard=0
+    and v_bad_ad_notification_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
