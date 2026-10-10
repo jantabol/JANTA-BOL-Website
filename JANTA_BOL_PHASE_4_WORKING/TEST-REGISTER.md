@@ -57,7 +57,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | NOT RUN |
 | P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | IN PROGRESS |
 | P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | IN PROGRESS |
-| P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | NOT RUN |
+| P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | IN PROGRESS |
 | P4-T038 | Ads | Approval -> Payment -> LIVE + Non-Refund Disclosure | B7 | NOT RUN — EXTERNAL |
 | P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | NOT RUN |
 | P4-T040 | Ads | CTA + Analytics + Privacy + Analytics Failure | B7 | NOT RUN |
@@ -343,3 +343,8 @@ Fresh remote evidence verified for code commit `d64c83dc6c2d16bf0c09a5e16d16935b
 - Protected Phase 3A + 3B Regression: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37981663751 - SUCCESS; static/source and Supabase transactional jobs both successful.
 - T035 candidate gate: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/37981663797 - SUCCESS; source checks including 22/22 client cases, isolated PostgreSQL rollback regression and real anonymous read-only HTTP/security-denial job successful.
 - These results validate this code change and the automated suites only. They do not establish Vercel deployment, real browser playback, Android E3, real paid-LIVE delivery or final B7 closure.
+
+## B7 T037 partial checkpoint — 10 Oct 2026 (NOT PASS)
+
+Canonical `codex/b7-reconcile-20261009` package UI commit `fc4e6fa0d16770b3cdbe1f6806bb7ef5f7c1b334` modifies `JANTA_BOL_PHASE_3C_WORKING/ads.html`, `phase4-domain-client.js`, and extends `ci/phase4/b7-client-regression.cjs`. Owner/AAL2 existing package RPC, active-only booking dropdown, price minor/version/weight display and client validation were wired to the existing B7 backend, with no new authority home. Exact GitHub source passed 16 isolated V8 assertions; this is not final Node CI or real E3. Read-only live Supabase audit: 0 packages, 0 package versions, 5 campaigns, 0 LIVE, plus confirmed Owner package RPC and RLS/grants. A proposed weighted public-feed query planned successfully under EXPLAIN and a 4000-draw fixture returned 997/3003 selections (approximately 1:3), but this is NOT actual live rotation proof. REVIEW-ONLY SQL candidate commit `57d5d460d93d7a1393d08de3b3c9d255334638b5` is stored at `JANTA_BOL_PHASE_4_WORKING/review/b7_t037_weighted_feed_REVIEW_ONLY.sql`; NOT deployed or applied. Vercel READY preview target=null for client SHA, not production or Android evidence. Inventory/visibility caps, authenticated package-create/price-snapshot tests, staged weighted rotation, full protected CI, E2+E3+E5 remain due. No Production DB data/permission/DDL change; no B8 changes. **P4-T037 IN PROGRESS — NOT PASS / NOT LOCKED.**
+
