@@ -368,11 +368,26 @@ test('ADS-041 Owner portal credentials: require Owner and reject malformed campa
  window.JBBackend.requireOwner=async()=>true;
  await assert.rejects(()=>window.JBPhase4.adIssuePortal('malformed-id'),/INVALID_CAMPAIGN_ID/);
  await window.JBPhase4.adIssuePortal('aaaaaaaa-0000-0000-0000-000000000001');
+ assert.equal(calls.length,2);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls)),[
+  {name:'jb_ad_owner_change_requests_internal',args:{}},
+  {name:'jb_ad_issue_portal_internal',
+   args:{p_campaign:'aaaaaaaa-0000-0000-0000-000000000001'}}
+ ]);
+});
+test('ADS-041 migration rollout fail closed: cannot issue temporary advertiser password while unsafe old photo RPC exists',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>true;
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});
+  if(name==='jb_ad_owner_change_requests_internal')
+   return {data:null,error:new Error('PGRST202: new safe portal migration not deployed')};
+  return {data:true,error:null};
+ };
+ await assert.rejects(()=>window.JBPhase4.adIssuePortal('aaaaaaaa-0000-0000-0000-000000000001'),/migration not deployed/);
  assert.equal(calls.length,1);
- assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
-  name:'jb_ad_issue_portal_internal',
-  args:{p_campaign:'aaaaaaaa-0000-0000-0000-000000000001'}
- });
+ assert.equal(calls[0].name,'jb_ad_owner_change_requests_internal');
+ assert.equal(calls.some(c=>c.name==='jb_ad_issue_portal_internal'),false);
 });
 test('ADS-041 admin issue button: shows one-time credential only to Owner UI',async()=>{
  const {context,elements,window}=adminClient();
