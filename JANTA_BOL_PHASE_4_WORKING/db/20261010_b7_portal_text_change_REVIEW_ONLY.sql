@@ -226,4 +226,99 @@ revoke all on function public.jb_ad_portal_login(text,text) from public,anon,aut
 grant execute on function public.jb_ad_portal_login(text,text) to anon,authenticated,service_role;
 
 
+
+-- ADS-047: reuse the ORIGINAL ad_renewal_requests authority/home.
+-- Portal token is not a Supabase auth.uid(), so do NOT invent a Founder UID.
+-- Preserve the old JWT requester path while explicitly recording portal origin.
+alter table public.ad_renewal_requests
+ alter column requested_by drop not null,
+ add column if not exists request_channel text not null default 'account',
+ add column if not exists source_portal_session uuid;
+
+do $pending_check$
+begin
+ if exists(select 1 from public.ad_renewal_requests r
+   where r.status='pending'
+   group by r.campaign_id having count(*)>1)
+ then raise exception 'B7_EXISTING_RENEWAL_PENDING_DUPLICATES_RECONCILE';end if;
+ if not exists(select 1 from pg_constraint
+   where conrelid='public.ad_renewal_requests'::regclass
+     and conname='b7_renewal_request_channel_check')
+ then
+   alter table public.ad_renewal_requests
+   add constraint b7_renewal_request_channel_check check(
+     (request_channel='account' and requested_by is not null)
+     or (request_channel='portal' and source_portal_session is not null
+         and requested_by is null)
+   );
+ end if;
+end $pending_check$;
+create unique index if not exists b7_one_pending_renewal_per_campaign
+ on public.ad_renewal_requests(campaign_id) where status='pending';
+
+create or replace function public.jb_ad_portal_request_renewal(
+ p_token text,p_requested_end timestamptz
+) returns uuid language plpgsql security definer
+set search_path to 'pg_catalog','public','extensions'
+as $renew$
+declare v_session uuid;v_campaign uuid;v_old_end timestamptz;v_request uuid;
+begin
+ if p_token is null or p_token !~ '^[0-9a-f]{48}$'
+ then raise exception 'ADVERTISER_SESSION_REQUIRED';end if;
+ if p_requested_end is null or not isfinite(p_requested_end)
+    or p_requested_end<=now() then
+   raise exception 'INVALID_RENEWAL_END';end if;
+ select s.id,s.campaign_id,c.ends_at into v_session,v_campaign,v_old_end
+ from public.ad_portal_sessions s
+ join public.ad_campaigns c on c.id=s.campaign_id
+ join public.ad_portal_credentials k on k.campaign_id=s.campaign_id
+ where s.token_hash=encode(extensions.digest(p_token,'sha256'),'hex')
+   and s.revoked_at is null and s.expires_at>now()
+   and k.revoked_at is null
+   and c.status in ('approved','payment_pending','paid','live','paused','hidden','expired')
+ limit 1;
+ if v_campaign is null then raise exception 'ADVERTISER_SESSION_REQUIRED';end if;
+ if v_old_end is not null and p_requested_end<=v_old_end then
+   raise exception 'INVALID_RENEWAL_END';end if;
+ perform pg_catalog.pg_advisory_xact_lock(
+   pg_catalog.hashtextextended('b7_renew:'||v_campaign::text,0));
+ if exists(select 1 from public.ad_renewal_requests r
+   where r.campaign_id=v_campaign and r.status='pending')
+ then raise exception 'RENEWAL_ALREADY_PENDING';end if;
+ insert into public.ad_renewal_requests(
+  campaign_id,requested_by,requested_end_at,request_channel,source_portal_session
+ ) values(v_campaign,null,p_requested_end,'portal',v_session)
+ returning id into v_request;
+ insert into public.ad_history(campaign_id,event_type,note)
+ values(v_campaign,'renewal_requested',
+        'Advertiser portal request '||v_request::text||
+        ' pending Owner new terms/payment. Requested end='||p_requested_end::text);
+ -- Never update ad_campaigns.ends_at, paid_at, status or ad_payments here.
+ return v_request;
+end $renew$;
+revoke all on function public.jb_ad_portal_request_renewal(text,timestamptz)
+ from public,anon,authenticated;
+grant execute on function public.jb_ad_portal_request_renewal(text,timestamptz)
+ to anon,authenticated,service_role;
+
+create or replace function public.jb_ad_owner_renewals_internal()
+returns jsonb language plpgsql stable security definer
+set search_path to 'pg_catalog','public','private'
+as $renew_queue$
+declare v jsonb;
+begin
+ if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
+ select coalesce(jsonb_agg(jsonb_build_object(
+   'id',r.id,'campaign_id',r.campaign_id,'status',r.status,
+   'requested_end_at',r.requested_end_at,'request_channel',r.request_channel,
+   'created_at',r.created_at) order by r.created_at desc),'[]'::jsonb)
+ into v from public.ad_renewal_requests r;
+ return v;
+end $renew_queue$;
+revoke all on function public.jb_ad_owner_renewals_internal()
+ from public,anon,authenticated;
+grant execute on function public.jb_ad_owner_renewals_internal()
+ to authenticated,service_role;
+
+
 commit;
