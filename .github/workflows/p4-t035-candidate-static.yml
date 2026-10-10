@@ -214,3 +214,40 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
       - name: Assert published Article identity, Gwalior/Pichhore mismatch, unknown fallback, AAL2 and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-regression.sql
+
+  b7-weighted-postgres:
+    name: B7 private server weighted Article selection, geo and payment (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_weighted
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_weighted"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_weighted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap existing payment fixture and synthetic weighted Article data
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+      - name: Apply independent manual receipt/Owner, exact Article geo and private weight candidates
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+      - name: 3200 weighted Article selections / geo privacy / payment proof / negative and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-regression.sql
