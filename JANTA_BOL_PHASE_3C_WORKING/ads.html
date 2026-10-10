@@ -24,6 +24,10 @@
 <input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
 <div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
 <section class="card">
+<h2>Advertiser Renewal Requests — Owner review</h2>
+<p class="meta">Pending renewal NEVER changes LIVE/end date. New quote, actual payment proof, inventory and schedule require Owner's separate approval.</p>
+<div id="renewalRows">Loading…</div></section>
+<section class="card">
 <h2>Advertiser change requests — Owner review</h2>
 <p class="meta">Only text request is queued. Accepted for work does NOT replace a LIVE approved photo, video or targeting; Founder separately approves a new version.</p>
 <div id="changeRequestRows">Loading…</div></section>
@@ -62,6 +66,19 @@ async function loadPackages(){
   box.innerHTML=packageList.map(p=>`<div class="meta"><b>${esc(p.name)}</b> · ${esc(p.placement)} · ${esc(p.price_minor)} ${esc(p.currency)} paise · ${esc(p.duration_days)} days · weight ${esc(p.weight)} · version ${esc(p.version)} · ${p.active?'active':'inactive'} <button class="btn" onclick="editPackage('${esc(p.id)}')">Edit</button></div>`).join('')||'<p class="meta">No packages configured.</p>';
   chooser.innerHTML='<option value="">Custom / no package selected</option>'+packageList.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.placement)} — ₹${esc((Number(p.price_minor)/100).toFixed(2))}</option>`).join('');
  }catch(e){box.textContent=e.message;chooser.innerHTML='<option value="">Package list unavailable</option>';}
+}
+async function loadRenewalRequests(){
+ const box=document.getElementById('renewalRows');
+ try{
+  const rows=await JBPhase4.adRenewalRequests();
+  box.innerHTML=rows.filter(x=>/^[0-9a-f-]{36}$/i.test(String(x?.id||''))).map(x=>
+   '<div class="card"><b>Renewal '+esc(x.id)+'</b>'+
+   '<p class="meta">Campaign '+esc(x.campaign_id)+' · '+esc(x.status)+
+   ' · Source '+esc(x.request_channel||'account')+'</p>'+
+   '<p>Requested end: '+esc(x.requested_end_at||'')+'</p>'+
+   '<p class="meta">No automatic payment or campaign extension. Founder must review new terms.</p></div>'
+  ).join('')||'<p class="meta">No renewal requests.</p>';
+ }catch(_){box.textContent='Renewal queue unavailable (backend deployment may be pending).';}
 }
 async function loadChangeRequests(){
  const box=document.getElementById('changeRequestRows');
@@ -142,5 +159,5 @@ async function payment(id){
  }catch(e){alert(e.message);}
 }
 document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');const chosen=document.getElementById('requestedPackage').value;const p=packageList.find(x=>x.id===chosen);if(chosen&&(!p||!p.active||p.placement!==placementEl.value))throw Error('PACKAGE_PLACEMENT_MISMATCH');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,package:chosen||null,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
-function boot(){load();loadPackages();loadChangeRequests();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
+function boot(){load();loadPackages();loadChangeRequests();loadRenewalRequests();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 </script></body></html>
