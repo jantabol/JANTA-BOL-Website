@@ -461,3 +461,45 @@ jobs:
           wait "$P2" || { cat /tmp/b7-retry-b.log; exit 1; }
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-verify.sql
 
+
+
+  b7-original-b3-contract-postgres:
+    name: B7 ads notifications with actual preexisting B3 migrations, real delivery history and retention (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_original_b3
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_original_b3"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_original_b3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare canonical B3 source-table compatibility, ads and retention fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-setup.sql
+      - name: Apply existing B3 migration files verbatim (not a reimplemented emitter)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000100_phase4_b3_unified_notifications_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000200_phase4_b3_notification_delivery_and_adapters.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000500_phase4_b3_notification_privacy_priority_reminders.sql
+      - name: Integrate existing B3 emitter through B7 in-app adapter, never production
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Real B3 in-app EMITTED receipt, original retention, Owner revoked/retry and secret-denial regression
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-regression.sql
