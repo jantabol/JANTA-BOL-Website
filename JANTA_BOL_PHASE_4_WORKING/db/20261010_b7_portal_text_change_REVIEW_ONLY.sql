@@ -164,4 +164,66 @@ revoke all on function public.jb_ad_decide_change_request_internal(uuid,text,tex
 grant execute on function public.jb_ad_decide_change_request_internal(uuid,text,text)
  to authenticated,service_role;
 
+
+-- ADS-041: Existing Owner issuance keeps the same authority; add one-use
+-- behavior to the issued TEMPORARY secret, without invalidating the valid
+-- short-lived token created by the first successful login.
+alter table public.ad_portal_credentials
+ add column if not exists consumed_at timestamptz;
+
+create or replace function private.b7_portal_reissue_reset()
+returns trigger language plpgsql security definer
+set search_path to 'pg_catalog','public'
+as $reset$
+begin
+ if new.secret_hash is distinct from old.secret_hash then
+   new.consumed_at:=null;
+ end if;
+ return new;
+end $reset$;
+drop trigger if exists b7_portal_reissue_resets_consumption on public.ad_portal_credentials;
+create trigger b7_portal_reissue_resets_consumption
+before update of secret_hash on public.ad_portal_credentials
+for each row execute function private.b7_portal_reissue_reset();
+revoke all on function private.b7_portal_reissue_reset() from public,anon,authenticated;
+
+create or replace function public.jb_ad_portal_login(p_login text,p_secret text)
+returns text language plpgsql security definer
+set search_path to 'pg_catalog','public','extensions'
+as $login$
+declare v public.ad_portal_credentials;t text;
+begin
+ if length(btrim(coalesce(p_login,'')))<3
+    or length(btrim(coalesce(p_login,'')))>100
+    or length(coalesce(p_secret,''))<8 then
+   raise exception 'INVALID_ADVERTISER_LOGIN';end if;
+
+ select * into v
+ from public.ad_portal_credentials
+ where login_id=upper(btrim(p_login))
+   and revoked_at is null and consumed_at is null
+ for update;
+ if not found or v.secret_hash is null or
+    v.secret_hash is distinct from extensions.crypt(p_secret,v.secret_hash)
+ then raise exception 'INVALID_ADVERTISER_LOGIN';end if;
+
+ if not exists(select 1 from public.ad_campaigns c
+  where c.id=v.campaign_id
+    and c.status in ('approved','payment_pending','paid','live','paused','hidden','expired'))
+ then raise exception 'ADVERTISER_SESSION_REQUIRED';end if;
+
+ update public.ad_portal_credentials
+ set consumed_at=now() where campaign_id=v.campaign_id;
+ t:=encode(extensions.gen_random_bytes(24),'hex');
+ insert into public.ad_portal_sessions(campaign_id,token_hash,expires_at)
+ values(v.campaign_id,encode(extensions.digest(t,'sha256'),'hex'),now()+interval '12 hours');
+ insert into public.ad_history(campaign_id,event_type,note)
+ values(v.campaign_id,'portal_first_login',
+        'One-time credential consumed; server issued short-lived opaque session.');
+ return t;
+end $login$;
+revoke all on function public.jb_ad_portal_login(text,text) from public,anon,authenticated;
+grant execute on function public.jb_ad_portal_login(text,text) to anon,authenticated,service_role;
+
+
 commit;
