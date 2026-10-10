@@ -4,9 +4,11 @@ create role anon nologin;
 create role authenticated nologin;
 create role service_role nologin;
 create schema private;
+create schema auth;
 create extension if not exists pgcrypto;
+create function auth.uid() returns uuid language sql stable as $select null::uuid$;
 create function private.p4_owner_allowed()
-returns boolean language sql stable as $$select false$$;
+returns boolean language sql stable as $select coalesce(current_setting('b7.test_owner',true),'')='enabled'$;
 create table public.articles(id uuid primary key,status text not null);
 create table public.ad_packages(
  id uuid primary key,name text,placement text,active boolean default true,
@@ -15,7 +17,8 @@ create table public.ad_packages(
 create table public.advertisers(
  id uuid primary key default gen_random_uuid(), name text not null,
  contact text not null,verification_state text default 'pending',
- risk_level text default 'normal',created_at timestamptz default now()
+ risk_level text default 'normal',created_at timestamptz default now(),
+ updated_at timestamptz default now()
 );
 create table public.ad_campaigns(
  id uuid primary key default gen_random_uuid(),
@@ -29,6 +32,12 @@ create table public.ad_campaigns(
 create table public.ad_history(
  id bigint generated always as identity,campaign_id uuid,
  event_type text not null,note text not null default '',
+ actor_user_id uuid,
+ created_at timestamptz default now()
+);
+create table public.audit_logs(
+ id bigint generated always as identity,actor_user_id uuid,action text,
+ record_type text,record_id text,metadata jsonb default '{}'::jsonb,
  created_at timestamptz default now()
 );
 insert into public.articles(id,status) values
