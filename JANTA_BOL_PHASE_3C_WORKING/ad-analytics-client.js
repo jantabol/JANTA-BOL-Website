@@ -12,7 +12,7 @@ function hexRandom(){
  g.crypto.getRandomValues(arr);
  return Array.from(arr,b=>b.toString(16).padStart(2,'0')).join('');
 }
-async function prepare({element,articleId,campaignId,creativeId}={}){
+async function prepare({element,articleId,campaignId,creativeId,ctaElement}={}){
  if(!element||element.isConnected===false||pending.has(element)||
     !uuid.test(String(articleId||''))||
     !uuid.test(String(campaignId||''))||
@@ -32,6 +32,26 @@ async function prepare({element,articleId,campaignId,creativeId}={}){
      element.isConnected===false)return false;
   // Ticket is held in a closure ONLY. No HTML attribute, query string,
   // cookie, durable storage or raw-ID tracking is ever written.
+  // User-initiated CTA clicks never intercept/delay the original link.
+  // Count at most one CLAIM per approved, ticket-bound displayed CTA.
+  // Browsers set isTrusted=false for synthetic dispatchEvent()/element.click().
+  if(ctaElement?.tagName==='A'&&
+     typeof ctaElement.addEventListener==='function'&&
+     (typeof element.contains!=='function'||element.contains(ctaElement))){
+   let clicked=false;
+   ctaElement.addEventListener('click',event=>{
+    if(clicked||event?.isTrusted!==true||event.defaultPrevented||
+       element.isConnected===false||ctaElement.isConnected===false||
+       g.document?.visibilityState==='hidden')return;
+    clicked=true;
+    // No preventDefault/stopPropagation: News and real CTA work even if
+    // the stats connection disappears or navigation happens immediately.
+    try{
+     const report=g.JBBackend?.client?.rpc('jb_ad_record_ticket_click',{p_token:data});
+     if(report&&typeof report.catch==='function')report.catch(()=>{});
+    }catch(_){}
+   },{passive:true});
+  }
   g.JBAdViewability.watch(element,async()=>{
    try{
     const receipt=await g.JBBackend?.client?.rpc(
