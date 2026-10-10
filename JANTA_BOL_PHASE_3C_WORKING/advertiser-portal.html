@@ -39,6 +39,13 @@ a{color:#ffa0a0}output{display:block;white-space:pre-wrap;overflow-wrap:anywhere
 <textarea id="changeText" minlength="10" maxlength="1000" required
  placeholder="उदाहरण: कृपया मेरे विज्ञापन की फोटो बदलने पर विचार करें।"></textarea>
 <button id="changeButton" type="submit">अनुरोध भेजें</button>
+</form></div>
+<div class="card"><h2>विज्ञापन Renewal Request</h2>
+<p class="note">यह केवल अवधि बढ़ाने का अनुरोध है। Owner का नया Price/Terms Approval, वास्तविक Payment Verification और Schedule पूरा हुए बिना कोई विज्ञापन अपने-आप LIVE या Extend नहीं होगा।</p>
+<form id="renewalForm">
+<label for="renewalEnd">प्रस्तावित नई समाप्ति तारीख और समय</label>
+<input id="renewalEnd" type="datetime-local" required>
+<button id="renewalButton" type="submit">Renewal Request भेजें</button>
 </form></div></section>
 <p id="portalFeedback" role="status" aria-live="polite" class="status" hidden></p>
 <p class="note"><a href="index.html">← खबरों पर वापस जाएँ</a></p>
@@ -121,6 +128,34 @@ el('changeForm').addEventListener('submit',async event=>{
   feedback(String(e?.message||'').includes('CHANGE_REQUEST_COOLDOWN')?
    'हाल में अनुरोध भेजा गया है। कृपया कुछ मिनट बाद कोशिश करें।':
    'अभी अनुरोध दर्ज नहीं हो पाया। सत्र और नेटवर्क जाँचें।');
+ }finally{button.disabled=false;}
+});
+el('renewalForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(!event.target.reportValidity())return;
+ if(!token||expiry<=Date.now()){clear();feedback('सत्र समाप्त हो गया है।');return;}
+ const button=el('renewalButton'),value=el('renewalEnd').value;
+ let when;
+ try{
+  const date=new Date(value);
+  if(!value||!Number.isFinite(date.getTime()))throw Error('BAD_END');
+  when=date.toISOString();
+ }catch(_){feedback('Renewal के लिए सही तारीख और समय चुनें।');return;}
+ button.disabled=true;
+ try{
+  const id=await rpc('jb_ad_portal_request_renewal',{
+    p_token:token,p_requested_end:when
+  });
+  if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))throw Error('RECEIPT_MISSING');
+  feedback('Renewal Request Pending है।\nRequest ID: '+id+
+    '\nOwner की स्वीकृति, नए Terms और Payment के बिना विज्ञापन अवधि नहीं बढ़ेगी।');
+  el('renewalEnd').value='';
+ }catch(e){
+  const reason=String(e?.message||'');
+  feedback(reason.includes('RENEWAL_ALREADY_PENDING')?
+   'इस विज्ञापन की Renewal Request पहले से Pending है।':
+   reason.includes('INVALID_RENEWAL_END')?
+   'नई समाप्ति तारीख वर्तमान समाप्ति तारीख से आगे होनी चाहिए।':
+   'Renewal Request अभी दर्ज नहीं हो पाई। बाद में कोशिश करें।');
  }finally{button.disabled=false;}
 });
 el('logoutButton').addEventListener('click',()=>{clear();feedback('आप लॉगआउट हो गए हैं।');});
