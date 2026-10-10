@@ -511,3 +511,40 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
       - name: Real B3 in-app EMITTED receipt, original retention, Owner revoked/retry and secret-denial regression
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-regression.sql
+
+
+  b7-storage-rls-critical-postgres:
+    name: B7 critical storage policy OR-bypass RCA and Owner-preserving fix (disposable PostgreSQL only)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_storage_policy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_storage_policy"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_storage_policy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baseline old roles and exact observed Storage bucket/policy shape
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-fixture.sql
+      - name: Reproduce original B5 broad permissive OR policy in disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-before-regression.sql
+      - name: Apply review-only minimum-safe-change (NEVER Production)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql
+      - name: Private editorial/grievance anon and AAL1 denial, public read and Owner AAL2 upload positive
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-after-regression.sql
