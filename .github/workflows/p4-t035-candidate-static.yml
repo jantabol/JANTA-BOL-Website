@@ -182,3 +182,35 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
       - name: Assert cross-advertiser isolation, no media edit, Owner queue and audit
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-regression.sql
+
+  b7-geo-postgres:
+    name: B7 verified Article LGD geo + Owner area grant isolation (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_geo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_geo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_geo
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic Article/campaign fixtures (no production data)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-fixture.sql
+      - name: Apply G3 review-only schema and Owner-authorized exact-area matcher
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+      - name: Assert published Article identity, Gwalior/Pichhore mismatch, unknown fallback, AAL2 and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-regression.sql
