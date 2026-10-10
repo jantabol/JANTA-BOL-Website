@@ -443,3 +443,21 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
       - name: Exercise Owner-only request, verification, paid, LIVE, hide, renewal and change through B3 with outage
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-regression.sql
+      - name: Concurrent Owner retries (real two-session PostgreSQL)
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-setup.sql
+          AUDIT_ID=$(psql -X -At -v ON_ERROR_STOP=1 -c "select id from public.audit_logs where action='ad_notification_failed' limit 1")
+          if [[ ! "$AUDIT_ID" =~ ^[0-9]+$ ]]; then
+            echo "FAIL: audit ID not available"; exit 1
+          fi
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-a.log 2>&1 &
+          P1=$!
+          sleep 0.10
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-b.log 2>&1 &
+          P2=$!
+          wait "$P1" || { cat /tmp/b7-retry-a.log; exit 1; }
+          wait "$P2" || { cat /tmp/b7-retry-b.log; exit 1; }
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-verify.sql
+
