@@ -106,6 +106,8 @@ async function render(placement,scope='global'){
     let reportStarted=false;
     const beginReport=()=>{
      if(reportStarted||!current()||box.isConnected===false)return;
+     if(mediaNode?.tagName==='IMG'&&(!mediaNode.complete||mediaNode.naturalWidth<=0))return;
+     if(mediaNode?.tagName==='VIDEO'&&mediaNode.readyState<2)return;
      reportStarted=true;
      try{
       const reporting=g.JBAdAnalytics.prepare({
