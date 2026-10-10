@@ -9,7 +9,7 @@ function safe(value){
   const raw=String(value||'');
   if(/[\u0000-\u001f\u007f]/.test(raw))return '';
   const u=new URL(raw);
-  if(u.protocol!=='https:'||u.username||u.password)return '';
+  if(!(u.protocol==='https:')||u.username||u.password)return '';
   const h=u.hostname.toLowerCase();
   // Public links must use DNS names, not localhost, IP literal, IPv6, or
   // RFC1918 / intranet / internal destinations.
