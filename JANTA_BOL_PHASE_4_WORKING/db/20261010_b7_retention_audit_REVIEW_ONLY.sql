@@ -35,12 +35,18 @@ begin
  if v_days is null or v_days<2555 then
    raise exception 'B7_RETENTION_POLICY_NOT_READY';end if;
 
- v_due:=clock_timestamp()+make_interval(days=>v_days);
+ -- Any imported/backdated event must use its ORIGINAL evidence timestamp,
+ -- exactly as the historical backfill does; migration date is not the
+ -- beginning of a fresh 7-year clock.
+ if new.created_at is null or not isfinite(new.created_at) then
+  raise exception 'B7_AD_HISTORY_TIMESTAMP_INVALID';end if;
+ v_due:=new.created_at+make_interval(days=>v_days);
  insert into public.record_retention_state(
   domain,record_type,record_id,policy_key,lifecycle_state,
   retention_due_at,updated_by,updated_at
  ) values('ads','ad_history',new.id::text,'ads_history_v1',
-          'active',v_due,auth.uid(),clock_timestamp())
+          case when v_due<=clock_timestamp() then 'due' else 'active' end,
+          v_due,auth.uid(),clock_timestamp())
  on conflict(domain,record_type,record_id) do nothing
  returning * into v_record;
  if found then
