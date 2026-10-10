@@ -201,6 +201,57 @@ update public.ad_creatives
 set cta_target='https://advertiser.example.test/promo'
 where id='40000000-0000-0000-0000-000000000005';
 
+
+-- ADS-029: a reader can keep the Article and its single paid ad open for
+-- twenty minutes. The short 3-min impression report has expired, but a
+-- real user may still click the original safe CTA without rotating the ad.
+update public.ad_view_tickets
+set issued_at=clock_timestamp()-interval '21 minutes',
+    expires_at=clock_timestamp()-interval '18 minutes'
+where token_hash=encode(extensions.digest(
+ current_setting('b7.fixture_unsafe_cta_token',true),'sha256'),'hex');
+
+set local role anon;
+do $click_after_reading$
+declare t text;
+begin
+ t:=current_setting('b7.fixture_unsafe_cta_token',true);
+ if not public.jb_ad_record_ticket_click(t)
+ then raise exception 'PINNED_AD_CTA_CLICK_LOST_AFTER_20_MINUTES';end if;
+ if public.jb_ad_record_ticket_click(t)
+ then raise exception 'LATE_AD_CTA_CLICK_REPLAY_ALLOWED';end if;
+ if public.jb_ad_qualify_view_ticket(t)
+ then raise exception 'EXPIRED_IMPRESSION_INFLATED_BY_LATE_CLICK';end if;
+ raise notice 'PASS [ADS-029/048] 21-minute pinned reading retains exactly one genuine CTA click, not a late impression';
+end $click_after_reading$;
+reset role;
+
+set local role anon;
+do $issue_older$
+declare t text;
+begin
+ t:=public.jb_ad_issue_view_ticket(
+  '10000000-0000-0000-0000-000000000001',
+  '30000000-0000-0000-0000-000000000005',
+  '40000000-0000-0000-0000-000000000005',repeat('1',32));
+ perform set_config('b7.fixture_overlong_cta_token',t,true);
+end $issue_older$;
+reset role;
+update public.ad_view_tickets
+set issued_at=clock_timestamp()-interval '31 minutes',
+    expires_at=clock_timestamp()-interval '28 minutes'
+where token_hash=encode(extensions.digest(
+ current_setting('b7.fixture_overlong_cta_token',true),'sha256'),'hex');
+set local role anon;
+do $overlong_click$
+begin
+ if public.jb_ad_record_ticket_click(
+   current_setting('b7.fixture_overlong_cta_token',true))
+ then raise exception 'STALE_CLICK_TOKEN_STILL_ACCEPTED';end if;
+ raise notice 'PASS [ADS-050] over-30-minute stale click ticket rejected';
+end $overlong_click$;
+reset role;
+
 do $ledger$
 declare report jsonb; t text;cnt int;
 begin
@@ -216,7 +267,7 @@ begin
   '30000000-0000-0000-0000-000000000005');
  if (report->>'total')::int<>1 or (report->>'unverified_legacy')::int<>1
    or (report->>'today')::int<>1 or (report->>'clicks_verified')::int<>0
-   or (report->>'clicks_reported')::int<>1
+   or (report->>'clicks_reported')::int<>2
    or report->>'anti_bot_verified'<>'false'
  then raise exception 'OWNER_STATS_MIXED_RAW_WITH_QUALIFIED: %',report;end if;
  if exists(select 1 from information_schema.columns
@@ -297,10 +348,10 @@ reset role;
 
 do $final$
 begin
- if (select count(*) from public.ad_view_tickets)<>3
+ if (select count(*) from public.ad_view_tickets)<>4
  then raise exception 'TICKET_ISSUE_COUNT_WRONG';end if;
- if (select count(*) from public.ad_events where qualified=true)<>2
-   or (select count(*) from public.ad_events where event_type='click' and qualified=true)<>1
+ if (select count(*) from public.ad_events where qualified=true)<>3
+   or (select count(*) from public.ad_events where event_type='click' and qualified=true)<>2
  then raise exception 'QUALIFIED_COUNT_DUPLICATED';end if;
  if (select count(*) from public.articles where id='10000000-0000-0000-0000-000000000001')<>1
  then raise exception 'CANONICAL_ARTICLE_ID_CHANGED';end if;
