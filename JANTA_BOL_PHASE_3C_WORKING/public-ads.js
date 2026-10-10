@@ -10,6 +10,40 @@ function scopeForArticle(item){
  if(item?.geoLevel==='Shivpuri')return 'district:shivpuri';
  return 'global';
 }
+/* ADS-013: Keep the canonical news body as text, and move only the existing
+   single ad region. A list item, tiny heading, photo caption or blank line
+   is not an editorial paragraph. Short news keeps the existing end fallback. */
+function semanticParagraph(value){
+ const s=String(value||'').trim();
+ return s.length>=20 && s.split(/\s+/u).length>=3
+  && !/^(?:[-*•]\s+|\d+[.)]\s+|(?:photo|caption|image|फोटो|चित्र|तस्वीर|कैप्शन)\s*[:：])/iu.test(s);
+}
+function articleParagraphOffset(value){
+ const text=String(value||'');
+ const breaks=/\r?\n[ \t]*(?:\r?\n[ \t]*)+/g;
+ const paragraphs=[];let start=0,match;
+ while((match=breaks.exec(text))!==null){
+  if(semanticParagraph(text.slice(start,match.index)))paragraphs.push({end:match.index});
+  start=breaks.lastIndex;
+ }
+ if(semanticParagraph(text.slice(start)))paragraphs.push({end:text.length});
+ if(paragraphs.length<3)return null;
+ // Exactly three paragraphs: after paragraph two; longer articles: after three.
+ return paragraphs[paragraphs.length===3?1:2].end;
+}
+function placeArticleSlot(root){
+ const body=root?.querySelector?.('.article .body');
+ const region=document.querySelector('.jb-ad-region');
+ if(!body||!region||region.parentNode===body)return false;
+ const textNode=body.firstChild;
+ if(!textNode||textNode.nodeType!==3)return false;
+ const offset=articleParagraphOffset(textNode.textContent);
+ if(offset===null)return false;
+ // splitText preserves every original character and existing Article ID/URL.
+ const tail=textNode.splitText(offset);
+ body.insertBefore(region,tail);
+ return true;
+}
 function cta(ad){
  if(ad.cta_type==='website'||ad.cta_type==='map')return {url:safe(ad.cta_target),label:ad.cta_type==='map'?'नक्शा देखें':'अधिक जानकारी'};
  if((ad.cta_type==='call'||ad.cta_type==='whatsapp')&&/^\+?[0-9][0-9 ()-]{5,19}$/.test(String(ad.cta_target||''))){
@@ -41,5 +75,5 @@ async function render(placement,scope='global'){
   if(current())slot.append(box);
  }catch(_){if(current())slot.replaceChildren()}
 }
-g.JBPublicAds={render,scopeForArticle};
+g.JBPublicAds={render,scopeForArticle,articleParagraphOffset,placeArticleSlot};
 })(window);
