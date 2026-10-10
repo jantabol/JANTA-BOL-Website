@@ -48,10 +48,41 @@ function scheduleInstant(value){
  if(!parts[8]&&(date.getFullYear()!==year||date.getMonth()+1!==month||date.getDate()!==day||date.getHours()!==hour||date.getMinutes()!==minute||date.getSeconds()!==second))throw Error('INVALID_SCHEDULE');
  return date.toISOString();
 }
+
+async function adSetApprovedQuote(id,amount,termsRef){
+ await owner();
+ if(amount===''||!Number.isSafeInteger(Number(amount))||Number(amount)<=0||
+    String(termsRef||'').trim().length<8||!id)throw Error('INVALID_QUOTE_TERMS');
+ return rpc('jb_ad_set_approved_quote_internal',{
+  p_campaign:id,p_price_minor:Number(amount),p_terms_ref:String(termsRef).trim()
+ });
+}
+async function adConfirmManualPayment(id,x){
+ await owner();
+ const amount=Number(x?.amountMinor),method=String(x?.method||'').trim().toLowerCase();
+ const ref=String(x?.reference||'').trim(),evidence=String(x?.evidenceRef||'').trim();
+ const consent=String(x?.acceptanceRef||'').trim(),note=String(x?.verificationNote||'').trim();
+ if(!id||String(x?.confirm||'')!=='CONFIRM'||x?.amountMinor===''||
+    !Number.isSafeInteger(amount)||amount<=0||
+    !['upi','bank','cash'].includes(method)||ref.length<8||ref.length>120||
+    evidence.length<8||consent.length<8||note.length<10)
+   throw Error('MANUAL_PAYMENT_EVIDENCE_REQUIRED');
+ let receivedAt,acceptedAt;
+ try{receivedAt=scheduleInstant(x?.receiptAt);acceptedAt=scheduleInstant(x?.acceptedAt);}
+ catch(_){throw Error('INVALID_PAYMENT_TIMESTAMP');}
+ if(Date.parse(acceptedAt)>Date.parse(receivedAt)||Date.parse(receivedAt)>Date.now())
+   throw Error('INVALID_PAYMENT_TIMESTAMP');
+ return rpc('jb_ad_confirm_manual_payment_internal',{
+  p_campaign:id,p_reference:ref,p_amount_minor:amount,p_method:method,
+  p_receipt_at:receivedAt,p_evidence_ref:evidence,p_acceptance_ref:consent,
+  p_terms_accepted_at:acceptedAt,p_verification_note:note,
+  p_confirm:'CONFIRM'
+ });
+}
 async function adSchedule(id,start,end){
  const startsAt=scheduleInstant(start),endsAt=scheduleInstant(end);
  if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
  return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
 }
-g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adTransition,adCreative,adConfirmPayment,adSchedule};
+g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adTransition,adCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
 })(window);
