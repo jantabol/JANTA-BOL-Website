@@ -629,3 +629,55 @@ test('ADS-048 safe CTA: approved schemes and targets work; javascript/data/file/
   }else assert.equal(hook.ctaElement,null);
  }
 });
+
+
+test('ADS-049 Owner qualified analytics client needs AAL2 and exact campaign UUID',async()=>{
+ const {window,calls}=client();
+ const id='30000000-0000-0000-0000-000000000005';
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adQualifiedAnalytics(id),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ await assert.rejects(()=>window.JBPhase4.adQualifiedAnalytics('malicious-id'),/INVALID_CAMPAIGN_ID/);
+ assert.equal(calls.length,0);
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});
+  return {data:{today:2,total:14,clicks_reported:1,
+   reach_type:'client_reported_estimate_not_unique_people'},error:null};
+ };
+ const data=await window.JBPhase4.adQualifiedAnalytics(id);
+ assert.equal(data.today,2);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls)),[{
+  name:'jb_ad_qualified_analytics_internal',args:{p_campaign:id}
+ }]);
+});
+test('ADS-049 Owner report distinguishes unverified raw from estimated views and clicks, no XSS',async()=>{
+ const {context,window,elements}=adminClient();
+ const id='30000000-0000-0000-0000-000000000005';
+ window.JBPhase4.adQualifiedAnalytics=async()=>({
+  today:2,d7:5,d30:17,total:20,clicks_reported:4,
+  unverified_legacy:9,reach_type:'client_reported_estimate_not_unique_people',
+  clicks_verified:0,anti_bot_verified:false
+ });
+ await vm.runInContext("qualifiedStats('"+id+"')",context);
+ const el=elements.get('qualified-stats-'+id);
+ assert.equal(el.hidden,false);
+ assert.match(el.textContent,/Today qualified-claim views: 2/);
+ assert.match(el.textContent,/Reported CTA clicks: 4/);
+ assert.match(el.textContent,/Old unverified raw events \(separate\): 9/);
+ assert.match(el.textContent,/Unique-human\/bot-free reach: NOT VERIFIED/);
+ assert.match(el.textContent,/News Article views: independent/);
+ assert.doesNotMatch(el.textContent,/Verified unique visitor/i);
+});
+test('ADS-049 Owner analytics fails closed on undeployed backend, never substitutes legacy stats',async()=>{
+ const {context,window,elements}=adminClient();
+ const id='30000000-0000-0000-0000-000000000005';
+ window.JBPhase4.adQualifiedAnalytics=async()=>{throw Error('PGRST202')};
+ await vm.runInContext("qualifiedStats('"+id+"')",context);
+ const output=elements.get('qualified-stats-'+id).textContent;
+ assert.match(output,/unavailable/);
+ assert.doesNotMatch(output,/Today qualified-claim views: 0/);
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/onclick="qualifiedStats/);
+ assert.doesNotMatch(html,/jb_ad_event\(|jb_ad_record_event\(/);
+});
