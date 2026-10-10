@@ -344,3 +344,78 @@ test('ADS-037 Admin UI: no legacy one-click confirmation path',async()=>{
  assert.equal(calls.length,1);
  assert.equal(calls[0].name,'jb_ad_confirm_manual_payment_internal');
 });
+
+
+test('ADS-041 advertiser portal page: private per-tab token, text-only request, no media input',()=>{
+ const page=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/advertiser-portal.html','utf8');
+ assert.match(page,/jb_ad_portal_login/);
+ assert.match(page,/jb_ad_portal_campaign/);
+ assert.match(page,/jb_ad_portal_submit_creative/);
+ assert.match(page,/p_type:'text',p_media:null,p_text:note/);
+ assert.match(page,/sessionStorage\.setItem/);
+ assert.doesNotMatch(page,/localStorage\./);
+ assert.doesNotMatch(page,/\bsetInterval\s*\(/);
+ assert.doesNotMatch(page,/type="file"|geolocation|getCurrentPosition|p_scope:/);
+ assert.doesNotMatch(page,/p_type:'image'|p_type:'video'/);
+ assert.match(page,/campaignDetails'\)\.textContent/);
+ assert.match(page,/creativeDetails'\)\.textContent/);
+});
+test('ADS-041 Owner portal credentials: require Owner and reject malformed campaign IDs',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adIssuePortal('aaaaaaaa-0000-0000-0000-000000000001'),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ await assert.rejects(()=>window.JBPhase4.adIssuePortal('malformed-id'),/INVALID_CAMPAIGN_ID/);
+ await window.JBPhase4.adIssuePortal('aaaaaaaa-0000-0000-0000-000000000001');
+ assert.equal(calls.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
+  name:'jb_ad_issue_portal_internal',
+  args:{p_campaign:'aaaaaaaa-0000-0000-0000-000000000001'}
+ });
+});
+test('ADS-041 admin issue button: shows one-time credential only to Owner UI',async()=>{
+ const {context,elements,window}=adminClient();
+ window.JBPhase4.adIssuePortal=async()=>[{login_id:'JB-OWNER',temporary_secret:'SYNTHETIC-TEMP-SECRET'}];
+ await vm.runInContext("issuePortal('fixture-campaign')",context);
+ const slot=elements.get('portal-login-fixture-campaign');
+ assert.equal(slot.hidden,false);
+ assert.match(slot.textContent,/JB-OWNER/);
+ assert.match(slot.textContent,/SYNTHETIC-TEMP-SECRET/);
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/advertiser-portal\.html/);
+ assert.match(html,/manual/);
+});
+test('ADS-045/046 Owner change-request decision: rejected without AAL2 or note',async()=>{
+ const {window,calls}=client();
+ const id='aaaaaaaa-0000-0000-0000-000000000001';
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adChangeRequests(),/OWNER_AAL2_REQUIRED/);
+ await assert.rejects(()=>window.JBPhase4.adDecideChange(id,'accepted_for_work','Reviewed new image'),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ await assert.rejects(()=>window.JBPhase4.adDecideChange(id,'live','Must fail'),/INVALID_CHANGE_DECISION/);
+ await assert.rejects(()=>window.JBPhase4.adDecideChange(id,'accepted_for_work','short'),/INVALID_CHANGE_DECISION/);
+ assert.equal(calls.length,0);
+ await window.JBPhase4.adDecideChange(id,'accepted_for_work','Reviewed media studio work request');
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
+  name:'jb_ad_decide_change_request_internal',
+  args:{p_request:id,p_decision:'accepted_for_work',p_note:'Reviewed media studio work request'}
+ });
+});
+test('ADS-045 Owner queue escapes advertiser-supplied text and cannot silently approve media',async()=>{
+ const {context,elements,window}=adminClient();
+ window.JBPhase4.adChangeRequests=async()=>[{
+  id:'aaaaaaaa-0000-0000-0000-000000000001',
+  campaign_id:'bbbbbbbb-0000-0000-0000-000000000002',
+  status:'pending',created_at:'2026-10-10T11:00:00Z',
+  note:'<img src=x onerror=alert(1)> please change photo'
+ }];
+ await vm.runInContext('loadChangeRequests()',context);
+ const html=elements.get('changeRequestRows').innerHTML;
+ assert.match(html,/&lt;img/);
+ assert.doesNotMatch(html,/<img src=x/);
+ assert.match(html,/Accept for media review/);
+ assert.match(html,/Reject request/);
+ assert.match(html,/accepted_for_work/);
+});
