@@ -178,6 +178,31 @@ begin
  raise notice 'PASS [G3/ADS-028] no paid/grant rewrite, unverified or wrong-parent targeting and no duplicate';
 end $invalid_grants$;
 
+-- SERVICE_ROLE_DIRECT_GRANT_GUARD: privileged direct SQL is not a substitute
+-- for an active authenticated Owner AAL2 action.
+do $direct_guard$
+declare msg text;
+begin
+ perform set_config('b7.test_owner','',true);
+ begin
+  insert into public.ad_campaign_area_grants(
+    campaign_id,area_level,district_lgd_code,
+    allow_unknown_geo,reviewed_terms_ref,reviewed_by
+  ) values(
+    '20000000-0000-0000-0000-000000000009','district','101',
+    false,'DIRECT-SERVICE-TEST',auth.uid());
+  raise exception 'DIRECT_NONOWNER_GRANTED_AREA';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED'
+   then raise exception 'DIRECT_INSERT_GUARD_FAILED: %',msg;end if;
+ end;
+ perform set_config('b7.test_owner','enabled',true);
+ if (select count(*) from public.ad_campaign_area_grants)<>8
+ then raise exception 'DIRECT_INSERT_LEFT_SIDE_EFFECT';end if;
+ raise notice 'PASS [G3] privileged direct insert also requires Owner AAL2';
+end $direct_guard$;
+
 create temp table b7_geo_expect(
  article uuid,campaign uuid,eligible boolean,note text);
 insert into b7_geo_expect(article,campaign,eligible,note) values
