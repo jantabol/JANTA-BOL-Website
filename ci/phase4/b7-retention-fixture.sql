@@ -2,6 +2,11 @@
 -- Disposable PostgreSQL 17 only. Reuse b7-payment-fixture.sql first.
 -- The source B3 tables/policy are simulated to test the B7 trigger's
 -- compatibility; THIS IS NOT a proof against real LIVE B3 permissions.
+-- Unlike the older payment fixture's fixed Owner identity, this separate
+-- retention job needs to model anonymous requests with auth.uid() IS NULL.
+create or replace function auth.uid() returns uuid language sql stable
+as $uid$ select nullif(current_setting('b7.test_actor_uid',true),'')::uuid $uid$;
+
 create table public.record_retention_policies(
  policy_key text primary key,domain text not null,record_type text not null,
  default_retention_days integer,
