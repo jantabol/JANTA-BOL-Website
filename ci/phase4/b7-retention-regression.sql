@@ -164,6 +164,104 @@ begin
  raise notice 'PASS [ADS-046/052] original approved creative immutable; unapproved draft remains editable';
 end $approved_creative$;
 
+-- ADS-046/052 First-divergence: the ACTUAL existing Owner SAVE and
+-- APPROVE RPCs toggle approved flags when replacing a creative. The prior
+-- blanket immutable trigger would reject legitimate version replacement.
+-- Both flags can change ONLY under Owner/AAL2, but old media/text/CTA and
+-- created_at/version NEVER change, including after revocation.
+do $owner_version_replacement$
+declare old_id uuid;v2 uuid;msg text;
+begin
+ select id into old_id from public.ad_creatives
+ where campaign_id='30000000-0000-0000-0000-000000000001'
+    and approved=true limit 1;
+ if old_id is null then raise exception 'APPROVED_CREATIVE_FIXTURE_MISSING';end if;
+ if not (select approved_once from public.ad_creatives where id=old_id)
+ then raise exception 'CURRENT_APPROVED_NOT_MARKED_STICKY';end if;
+
+ -- Owner=AAL1/anonymous cannot revoke even the approval flag.
+ begin
+  update public.ad_creatives set approved=false where id=old_id;
+  raise exception 'AAL1_REVOKED_ORIGINAL_APPROVED_VERSION';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED' then
+   raise exception 'CREATIVE_UNAUTHORIZED_REVOKE_WRONG: %',msg;end if;
+ end;
+
+ -- Existing Owner version-save code does UPDATE approved=false then
+ -- INSERT new approved version; it MUST still work after migration.
+ perform set_config('b7.test_owner','enabled',true);
+ update public.ad_creatives set approved=false
+ where campaign_id='30000000-0000-0000-0000-000000000001';
+ if not exists(select 1 from public.ad_creatives
+   where id=old_id and approved=false and approved_once=true
+     and text_body='Verified advertisement creative' and version=1)
+ then raise exception 'ORIGINAL_CREATIVE_VERSION_CHANGED_WHEN_REVOKED';end if;
+
+ begin
+  update public.ad_creatives set text_body='Backdoor edit after revocation'
+  where id=old_id;
+  raise exception 'REVOKED_OLD_CREATIVE_TEXT_EDITED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE' then
+   raise exception 'PREVIOUSLY_APPROVED_NOT_IMMUTABLE: %',msg;end if;
+ end;
+ begin
+  update public.ad_creatives set version=200,cta_target='https://evil.test'
+  where id=old_id;
+  raise exception 'REVOKED_OLD_CREATIVE_LINK_OR_VERSION_EDITED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE' then
+   raise exception 'PREVIOUS_APPROVED_LINK_NOT_IMMUTABLE: %',msg;end if;
+ end;
+ begin
+  update public.ad_creatives set approved_once=false where id=old_id;
+  raise exception 'STICKY_EVIDENCE_RESET_BY_OWNER';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_APPROVED_CREATIVE_STICKY_FLAG_REQUIRED' then
+   raise exception 'STICKY_STATE_NOT_PROTECTED: %',msg;end if;
+ end;
+ begin
+  delete from public.ad_creatives where id=old_id;
+  raise exception 'REVOKED_OLD_APPROVED_VERSION_DELETED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE' then
+   raise exception 'OLD_CREATIVE_DELETE_NOT_BLOCKED: %',msg;end if;
+ end;
+
+ insert into public.ad_creatives(campaign_id,approved,creative_type,text_body,
+                                  version,cta_type,cta_target)
+ values('30000000-0000-0000-0000-000000000001',false,'text',
+        'New Owner revised advertisement',2,'website',
+        'https://advertiser.example.test/revised')
+ returning id into v2;
+ update public.ad_creatives set text_body='New approved version 2' where id=v2;
+ update public.ad_creatives set approved=true where id=v2;
+ if not exists(select 1 from public.ad_creatives
+   where id=v2 and version=2 and approved=true and approved_once=true
+     and cta_target='https://advertiser.example.test/revised')
+ then raise exception 'NEW_CREATIVE_VERSION_NOT_APPROVED_BY_OWNER';end if;
+ if (select count(*) from public.ad_creatives
+   where campaign_id='30000000-0000-0000-0000-000000000001'
+     and approved=true)<>1 then
+  raise exception 'MULTIPLE_SIMULTANEOUS_APPROVED_CREATIVES';end if;
+ perform set_config('b7.test_owner','',true);
+ begin
+  update public.ad_creatives set approved=false where id=v2;
+  raise exception 'AAL1_REVOKED_NEW_APPROVED_VERSION';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED' then
+   raise exception 'SECOND_VERSION_AAL1_BYPASS: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-046/052] Owner version replacement works; old + new approved versions remain immutable after revocation; AAL1 denied';
+end $owner_version_replacement$;
+
 do $missing_policy$
 declare msg text;total_before bigint;
 begin
