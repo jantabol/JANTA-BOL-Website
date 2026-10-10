@@ -30,7 +30,11 @@ begin
  for update;
  if not found then return false;end if;
  v_now:=clock_timestamp();
- if v.click_at is not null or v_now>=v.expires_at then
+ -- ADS-029: the Article stays pinned for a 20-minute reading session.
+ -- Viewability reporting remains short (3 min) but a real user may
+ -- open the approved CTA later. Permit a bounded 30-minute click window
+ -- without extending the view/impression ticket or auto-refreshing the ad.
+ if v.click_at is not null or v_now>=v.issued_at+interval '30 minutes' then
    return false;
  end if;
 
