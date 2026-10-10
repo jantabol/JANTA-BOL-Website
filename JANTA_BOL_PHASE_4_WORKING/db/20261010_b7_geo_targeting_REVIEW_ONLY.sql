@@ -165,6 +165,44 @@ revoke all on function public.jb_ad_set_article_geo_internal(uuid,text,text,text
 grant execute on function public.jb_ad_set_article_geo_internal(uuid,text,text,text,text)
  to authenticated,service_role;
 
+-- Even an accidentally privileged SQL insert cannot forge a paid/expanded
+-- geography without an Owner AAL2 decision and verified parent links.
+create or replace function private.b7_area_grant_insert_guard()
+returns trigger language plpgsql security definer
+set search_path to 'pg_catalog','public','private'
+as $grant_guard$
+declare v public.ad_campaigns;d public.ad_geo_mp_districts;
+        t public.ad_geo_mp_tehsils;
+begin
+ if not private.p4_owner_allowed() or new.reviewed_by is distinct from auth.uid()
+ then raise exception 'OWNER_AAL2_REQUIRED';end if;
+ select * into v from public.ad_campaigns where id=new.campaign_id for update;
+ if not found or v.status not in('requested','review','approved','payment_pending')
+   or v.paid_at is not null
+   or exists(select 1 from public.ad_payments p
+     where p.campaign_id=v.id and p.status='confirmed')
+ then raise exception 'PAID_OR_INVALID_AREA_CHANGE_BLOCKED';end if;
+ if new.area_level in ('district','tehsil') then
+  select * into d from public.ad_geo_mp_districts
+    where lgd_code=new.district_lgd_code and verified=true;
+  if not found then raise exception 'UNVERIFIED_DISTRICT_CODE';end if;
+  if new.area_level='tehsil' then
+   select * into t from public.ad_geo_mp_tehsils
+    where lgd_code=new.tehsil_lgd_code
+      and district_lgd_code=d.lgd_code and verified=true;
+   if not found then raise exception 'UNVERIFIED_TEHSIL_PARENT';end if;
+  end if;
+ end if;
+ return new;
+end $grant_guard$;
+drop trigger if exists b7_area_grant_insert_guard
+ on public.ad_campaign_area_grants;
+create trigger b7_area_grant_insert_guard
+before insert on public.ad_campaign_area_grants
+for each row execute function private.b7_area_grant_insert_guard();
+revoke all on function private.b7_area_grant_insert_guard()
+ from public,anon,authenticated;
+
 -- Existing campaign remains the booking SOT. Exact area grants are append-only
 -- commercial terms, not a rewrite of the legacy free-text scope.
 create or replace function public.jb_ad_grant_area_internal(
