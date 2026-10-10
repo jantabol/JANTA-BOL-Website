@@ -35,7 +35,11 @@ create table public.ad_campaigns(
 create table public.ad_creatives(
  id uuid primary key default gen_random_uuid(),
  campaign_id uuid references public.ad_campaigns(id),
- approved boolean default false,creative_type text default 'text',text_body text
+ approved boolean not null default false,creative_type text default 'text',
+ text_body text,media_url text,cta_type text,cta_target text,
+ label text not null default 'Vigyapan',
+ version integer not null default 1,
+ created_at timestamptz not null default now()
 );
 create table public.ad_payments(
  id uuid primary key default gen_random_uuid(),
