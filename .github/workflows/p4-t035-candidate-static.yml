@@ -45,6 +45,8 @@ jobs:
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-viewability.js
           node --test ci/phase4/b7-viewability-regression.cjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-analytics-client.js
+          node --test ci/phase4/b7-analytics-client-regression.cjs
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
