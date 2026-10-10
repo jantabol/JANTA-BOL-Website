@@ -527,14 +527,15 @@ function adRenderFixture(){
   querySelectorAll:()=>slots,
   createElement(tag){return {
    tagName:tag.toUpperCase(),className:'',textContent:'',isConnected:false,
-   attrs:{},children:[],setAttribute(k,v){this.attrs[k]=v},
+   attrs:{},handlers:{},children:[],complete:false,naturalWidth:0,readyState:0,
+   setAttribute(k,v){this.attrs[k]=v},
    append(item){this.children.push(item)},
-   addEventListener(){}
+   addEventListener(k,fn){this.handlers[k]=fn}
   }}
  };
  context.document=doc;
  const slot={dataset:{jbAdPlacement:'article'},
-  replaceChildren(){placed.length=0},
+  replaceChildren(){for(const node of placed)node.isConnected=false;placed.length=0},
   append(node){node.isConnected=true;placed.push(node)}
  };
  slots.push(slot);
@@ -680,4 +681,58 @@ test('ADS-049 Owner analytics fails closed on undeployed backend, never substitu
  const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
  assert.match(html,/onclick="qualifiedStats/);
  assert.doesNotMatch(html,/jb_ad_event\(|jb_ad_record_event\(/);
+});
+
+
+test('ADS-049 media must render real pixels before any qualified-view ticket is issued',async()=>{
+ const fixture={
+  campaign_id:'30000000-0000-0000-0000-000000000005',
+  creative_id:'40000000-0000-0000-0000-000000000005',
+  media_url:'https://assets.example.test/picture.jpg',
+  label:'विज्ञापन',cta_type:null
+ };
+ for(const kind of ['image','video']){
+  const f=adRenderFixture();let count=0;
+  f.window.JBBackend.client.rpc=async()=>({
+   data:[{...fixture,creative_type:kind}],error:null
+  });
+  f.window.JBAdAnalytics={prepare(){count++}};
+  await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+  assert.equal(f.placed.length,1,'image/video card should render, not block News');
+  const media=f.placed[0].children.find(x=>x.tagName===(kind==='image'?'IMG':'VIDEO'));
+  assert.ok(media,kind+' media node missing');
+  assert.equal(count,0,'no view claims before bytes/first frame');
+  if(kind==='image'){
+   assert.equal(typeof media.handlers.load,'function');
+   media.handlers.load();
+   assert.equal(count,0,'synthetic load event with 0 natural width not proof');
+   media.naturalWidth=120;media.complete=true;media.handlers.load();
+  }else{
+   assert.equal(typeof media.handlers.loadeddata,'function');
+   media.handlers.loadeddata();
+   assert.equal(count,0,'video without frame must not count');
+   media.readyState=2;media.handlers.loadeddata();
+  }
+  assert.equal(count,1,'start observer only after real media becomes displayable');
+  // Multiple load/data events cannot issue a second ticket.
+  media.handlers[kind==='image'?'load':'loadeddata']();
+  assert.equal(count,1);
+ }
+});
+test('ADS-049 broken media never reports a view and never blanks News article',async()=>{
+ const f=adRenderFixture();let count=0;
+ f.window.JBBackend.client.rpc=async()=>({
+  data:[{
+    campaign_id:'30000000-0000-0000-0000-000000000005',
+    creative_id:'40000000-0000-0000-0000-000000000005',
+    creative_type:'image',media_url:'https://assets.example.test/broken.png'
+  }],error:null
+ });
+ f.window.JBAdAnalytics={prepare(){count++}};
+ await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+ const media=f.placed[0].children.find(x=>x.tagName==='IMG');
+ media.handlers.error();
+ assert.equal(f.placed.length,0,'only broken ad box removed');
+ media.complete=true;media.naturalWidth=120;media.handlers.load();
+ assert.equal(count,0,'removed ad must not receive ticket after late load');
 });
