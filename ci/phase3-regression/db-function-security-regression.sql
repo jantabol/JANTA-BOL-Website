@@ -17,6 +17,7 @@ declare
   v_bad_public_ad_guard bigint;
   v_bad_public_enquiry_guard bigint;
   v_bad_portal_change_guard bigint;
+  v_bad_portal_renewal_check bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -45,7 +46,7 @@ begin
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
     and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
-    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
+    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
@@ -69,10 +70,10 @@ begin
       'jb_verify_owner_recovery_key',
       'jb_ad_analytics_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
-      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
+      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
-      'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal',
+      'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
       'jb_compliance_transition_internal','jb_compliance_task_prepare_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
       'jb_grievance_link_duplicate_internal','jb_grievance_reopen_internal','jb_grievance_reporter_clarify_internal',
@@ -130,7 +131,7 @@ begin
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
     and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
-       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal')
+       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
 
@@ -205,6 +206,32 @@ begin
     if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
       where n.nspname='public' and p.proname='jb_ad_portal_campaign'
         and p.prosrc ilike '%cr.approved=true%')
+    then v_bad_portal_change_guard:=v_bad_portal_change_guard+1;end if;
+  end if;
+
+
+  -- B7/ADS-047: portal renewal request is a reviewed exact anonymous
+  -- signature ONLY for pending insert into the existing renewal ledger.
+  -- Client may never extend campaign dates, grant paid or activate LIVE.
+  if exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='jb_ad_portal_request_renewal')
+  then
+    select count(*) into v_bad_portal_renewal_check
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public' and p.proname='jb_ad_portal_request_renewal'
+      and (p.oid <> to_regprocedure(
+            'public.jb_ad_portal_request_renewal(text,timestamp with time zone)')
+           or not p.prosecdef
+           or not has_function_privilege('anon',p.oid,'EXECUTE')
+           or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+           or p.prosrc not ilike '%public.ad_renewal_requests%'
+           or p.prosrc not ilike '%RENEWAL_ALREADY_PENDING%'
+           or p.prosrc ilike '%update public.ad_campaigns%'
+           or p.prosrc ilike '%insert into public.ad_campaigns%');
+    if v_bad_portal_renewal_check<>0
+      or not exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace
+            where n.nspname='public' and t.relname='ad_renewal_requests' and t.relrowsecurity)
+      or has_table_privilege('anon','public.ad_renewal_requests','SELECT')
     then v_bad_portal_change_guard:=v_bad_portal_change_guard+1;end if;
   end if;
 
