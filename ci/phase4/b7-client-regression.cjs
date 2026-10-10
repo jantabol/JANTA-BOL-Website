@@ -91,3 +91,31 @@ test('T036 admin UI: schedule button uses converted UTC arguments and preserves 
   assert.equal(calls[0].args.p_starts_at,'2026-10-10T03:30:00.000Z');
   assert.equal(calls[0].args.p_ends_at,'2026-10-10T04:30:00.000Z');
 });
+
+test('T037: package fetch stays behind Owner authority',async()=>{
+ const {window}=client();window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED');};
+ await assert.rejects(()=>window.JBPhase4.adPackages(),/OWNER_AAL2_REQUIRED/);
+});
+test('T037: package mutation rejects invalid data before backend write',async()=>{
+ const {window,calls}=client();window.JBBackend.requireOwner=async()=>true;
+ for(const item of [{name:'',placement:'homepage',priceMinor:10,durationDays:1,weight:1},{name:'Good',placement:'homepage',priceMinor:-1,durationDays:1,weight:1},{name:'Good',placement:'other',priceMinor:10,durationDays:1,weight:1},{name:'Good',placement:'homepage',priceMinor:10,durationDays:0,weight:1},{name:'Good',placement:'homepage',priceMinor:10,durationDays:1,weight:0},{name:'Good',placement:'homepage',priceMinor:'',durationDays:1,weight:1}])
+ await assert.rejects(()=>window.JBPhase4.adSavePackage(item),/INVALID_PACKAGE/);
+ assert.equal(calls.length,0);
+});
+test('T037: package save delegates to AAL2-protected RPC with precise arguments',async()=>{
+ const {window,calls}=client();window.JBBackend.requireOwner=async()=>true;
+ await window.JBPhase4.adSavePackage({id:null,name:'  District Banner  ',placement:'article',priceMinor:'159900',durationDays:'30',weight:'2'});
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{name:'jb_ad_save_package_internal',args:{p_id:null,p_name:'District Banner',p_placement:'article',p_price:159900,p_duration:30,p_weight:2}});
+});
+test('T037 admin UI: package versions and only active bookable options',async()=>{
+ const {context,elements,window}=adminClient();
+ window.JBPhase4.adPackages=async()=>[
+  {id:'11111111-1111-1111-1111-111111111111',name:'New A',placement:'article',price_minor:129900,currency:'INR',duration_days:7,weight:2,active:true,version:3},
+  {id:'22222222-2222-2222-2222-222222222222',name:'Old B',placement:'homepage',price_minor:9900,currency:'INR',duration_days:1,weight:1,active:false,version:1}
+ ];
+ await vm.runInContext('loadPackages()',context);
+ assert.match(elements.get('packageRows').innerHTML,/version 3/);
+ assert.match(elements.get('packageRows').innerHTML,/Old B/);
+ assert.match(elements.get('requestedPackage').innerHTML,/New A/);
+ assert.doesNotMatch(elements.get('requestedPackage').innerHTML,/Old B/);
+});
