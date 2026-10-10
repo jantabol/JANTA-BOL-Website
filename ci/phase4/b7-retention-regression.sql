@@ -196,4 +196,45 @@ begin
  then raise exception 'AD_HISTORY_COUNT_WRONG';end if;
  raise notice 'PASS [ADS-052/053] original ads intact; NO paid/ad deletion or automatic legal disposition';
 end $request_remains$;
+
+-- A later IMPORT of old evidence must retain the ORIGINAL creation date,
+-- rather than making it appear newly created and silently extending the
+-- Founder/legal seven-year policy by the age of that imported record.
+do $backdated_import$
+declare v_old bigint;v_due bigint;v_old_state public.record_retention_state%rowtype;
+        v_due_state public.record_retention_state%rowtype;
+begin
+ insert into public.ad_history(campaign_id,event_type,note,actor_user_id,created_at)
+ values('30000000-0000-0000-0000-000000000004',
+   'legacy_import_recent','Imported 60-day-old commercial evidence',null,
+   clock_timestamp()-interval '60 days')
+ returning id into v_old;
+ select * into v_old_state from public.record_retention_state
+ where domain='ads' and record_type='ad_history' and record_id=v_old::text;
+ if v_old_state.lifecycle_state<>'active'
+    or v_old_state.retention_due_at < now()+interval '2494 days'
+    or v_old_state.retention_due_at > now()+interval '2496 days'
+ then raise exception 'BACKDATED_IMPORTED_EVIDENCE_MISDATED';end if;
+
+ insert into public.ad_history(campaign_id,event_type,note,actor_user_id,created_at)
+ values('30000000-0000-0000-0000-000000000004',
+   'legacy_import_overdue','Imported 2600-day-old archived evidence',null,
+   clock_timestamp()-interval '2600 days')
+ returning id into v_due;
+ select * into v_due_state from public.record_retention_state
+ where domain='ads' and record_type='ad_history' and record_id=v_due::text;
+ if v_due_state.lifecycle_state<>'due'
+    or v_due_state.retention_due_at>now()-interval '44 days'
+    or v_due_state.retention_due_at<now()-interval '46 days'
+ then raise exception 'OVERDUE_EVIDENCE_NOT_RETAINED_WITH_DUE_STATE';end if;
+ if (select count(*) from public.ad_history)<>6
+   or (select count(*) from public.record_retention_state)<>6
+ then raise exception 'BACKDATED_AD_HISTORY_NOT_PRESERVED';end if;
+ if not exists(select 1 from public.record_retention_state r
+   join public.ad_history h on h.id::text=r.record_id
+   where h.event_type='legacy_held_record'
+     and r.hold_active and r.lifecycle_state='hold')
+ then raise exception 'PREVIOUS_HOLD_RELEASED_DURING_NEW_IMPORT';end if;
+ raise notice 'PASS [ADS-053] backdated new event uses original timestamp; expired record marked due, not deleted; HOLD preserved';
+end $backdated_import$;
 rollback;
