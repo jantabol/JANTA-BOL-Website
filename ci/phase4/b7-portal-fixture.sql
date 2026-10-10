@@ -62,9 +62,9 @@ values
  ('bbbbbbbb-1000-0000-0000-000000000001','bbbbbbbb-0000-0000-0000-000000000002','text','ACTIVE-B',1,true);
 insert into public.ad_portal_credentials(campaign_id,login_id,secret_hash)
 values
- ('aaaaaaaa-0000-0000-0000-000000000001','JB-A','unused-fixture'),
- ('bbbbbbbb-0000-0000-0000-000000000002','JB-B','unused-fixture'),
- ('cccccccc-0000-0000-0000-000000000003','JB-C','unused-fixture');
+ ('aaaaaaaa-0000-0000-0000-000000000001','JB-A',extensions.crypt('test-secret-A',extensions.gen_salt('bf',10))),
+ ('bbbbbbbb-0000-0000-0000-000000000002','JB-B',extensions.crypt('test-secret-B',extensions.gen_salt('bf',10))),
+ ('cccccccc-0000-0000-0000-000000000003','JB-C',extensions.crypt('test-secret-C',extensions.gen_salt('bf',10)));
 insert into public.ad_portal_sessions(campaign_id,token_hash,expires_at,revoked_at)
 values
  ('aaaaaaaa-0000-0000-0000-000000000001',encode(extensions.digest(repeat('a',48),'sha256'),'hex'),now()+interval '2 hours',null),
