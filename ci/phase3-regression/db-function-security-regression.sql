@@ -70,7 +70,7 @@ begin
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
       'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
-      'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal',
+      'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
       'jb_compliance_transition_internal','jb_compliance_task_prepare_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
       'jb_grievance_link_duplicate_internal','jb_grievance_reopen_internal','jb_grievance_reporter_clarify_internal',
@@ -127,7 +127,7 @@ begin
   from pg_proc p
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
-    and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal')
+    and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
 
