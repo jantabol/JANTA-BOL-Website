@@ -198,6 +198,30 @@ begin
 end $unsafe_cta$;
 reset role;
 update public.ad_creatives
+set cta_target='https://127.0.0.1:8443/root'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $reject_ip_cta$
+begin
+ if public.jb_ad_record_ticket_click(
+  current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'LOCAL_IP_CTA_CLICK_ALLOWED';end if;
+ raise notice 'PASS [ADS-056] approved creative pointing to loopback IP cannot create paid click';
+end $reject_ip_cta$;
+reset role;
+update public.ad_creatives
+set cta_target='https://owner.gateway.internal/private'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $reject_internal_cta$
+begin
+ if public.jb_ad_record_ticket_click(
+  current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'INTERNAL_HOST_CTA_CLICK_ALLOWED';end if;
+ raise notice 'PASS [ADS-056] private .internal destination cannot create paid click';
+end $reject_internal_cta$;
+reset role;
+update public.ad_creatives
 set cta_target='https://advertiser.example.test/promo'
 where id='40000000-0000-0000-0000-000000000005';
 
