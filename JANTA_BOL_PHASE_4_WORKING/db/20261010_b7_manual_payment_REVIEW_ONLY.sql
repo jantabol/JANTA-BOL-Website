@@ -77,7 +77,7 @@ begin
  if new.currency<>'INR' or coalesce(new.amount_minor,0)<=0
     or length(btrim(coalesce(new.provider_ref,'')))<8
     or length(btrim(coalesce(new.provider_ref,'')))>120
-    or new.method not in ('upi','bank','cash')
+    or new.method is null or new.method not in ('upi','bank','cash')
     or length(btrim(coalesce(new.evidence_ref,'')))<8
     or length(btrim(coalesce(new.acceptance_ref,'')))<8
     or length(btrim(coalesce(new.verification_note,'')))<10
@@ -86,7 +86,7 @@ begin
     or new.terms_accepted_at<now()-interval '365 days'
     or new.receipt_at<now()-interval '365 days'
     or new.verified_by is distinct from auth.uid()
-    or new.verified_at is null then
+    or new.verified_at is null or new.verified_at>now() then
    raise exception 'MANUAL_PAYMENT_EVIDENCE_REQUIRED';end if;
  select * into c from public.ad_campaigns where id=new.campaign_id for update;
  if not found or c.status not in('approved','payment_pending') or
@@ -108,6 +108,7 @@ begin
  -- Advertiser's acceptance must precede receipt. Owner cannot manufacture it
  -- from merely clicking CONFIRM; an independent acceptance reference is required.
  if new.terms_accepted_at>new.receipt_at or
+    new.terms_accepted_at<c.agreed_terms_recorded_at or
     new.terms_accepted_at>c.agreed_terms_recorded_at + interval '365 days'
  then raise exception 'TERMS_ACCEPTANCE_CHRONOLOGY_INVALID';end if;
  return new;
