@@ -2,7 +2,23 @@
 (function(g){'use strict';
 const requests=new WeakMap();
 const pinnedArticleSlots=new WeakSet(); // ADS-025: one article opening -> one selection, never rotate in-place.
-function safe(value){try{const u=new URL(String(value||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch(_){return ''}}
+/* ADS-056: a malicious local or private address is not a public Ad CTA
+   or media host. No GPS/IP collection or URL proxy is introduced. */
+function safe(value){
+ try{
+  const raw=String(value||'');
+  if(/[\u0000-\u001f\u007f]/.test(raw))return '';
+  const u=new URL(raw);
+  if(u.protocol!=='https:'||u.username||u.password)return '';
+  const h=u.hostname.toLowerCase();
+  // Public links must use DNS names, not localhost, IP literal, IPv6, or
+  // RFC1918 / intranet / internal destinations.
+  if(!h.includes('.')||h.startsWith('.')||h.endsWith('.')||/\s/.test(h))return '';
+  if(/(^|\.)(localhost|local|internal)$/.test(h))return '';
+  if(/^([0-9]{1,3}\.){3}[0-9]{1,3}$/.test(h)||h.includes(':')||h.startsWith('['))return '';
+  return u.href;
+ }catch(_){return ''}
+}
 function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
 function scopeForArticle(item){
  if(item?.geoLevel==='Local-Pichhore')return 'local';
