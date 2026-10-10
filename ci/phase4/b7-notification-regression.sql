@@ -145,6 +145,76 @@ begin
 end $failure$;
 select set_config('b7.test_notify_down','',true);
 
+
+-- ADS-055: Founder can recover the failed in-app notification using its
+-- existing immutable audit ID, without inventing a WhatsApp SENT receipt.
+do $retry$
+declare id bigint;rows jsonb;msg text;n int;
+begin
+ select a.id into id from public.audit_logs a
+ where a.action='ad_notification_failed'
+   and a.record_id='30000000-0000-0000-0000-000000000006';
+ if id is null then raise exception 'MISSING_NOTIFICATION_FAILURE_TO_RETRY';end if;
+
+ -- First prove the still-broken B3 service cannot be falsely acknowledged.
+ perform set_config('b7.test_notify_down','yes',true);
+ begin
+  perform public.jb_ad_notification_retry_internal(id);
+  raise exception 'FAILED_DELIVERY_RETRY_WAS_ACKNOWLEDGED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'SIMULATED_B3_NOTIFICATION_DOWN' then
+    raise exception 'RETRY_OUTAGE_FAIL_CLOSED_WRONG: %',msg;end if;
+ end;
+ if exists(select 1 from public.audit_logs
+  where action='ad_notification_retry_succeeded'
+    and metadata->>'original_failure_id'=id::text)
+ then raise exception 'FALSE_IN_APP_DELIVERY_RECEIPT';end if;
+ perform set_config('b7.test_notify_down','',true);
+
+ rows:=public.jb_ad_notification_failures_internal();
+ if jsonb_array_length(rows)<>1 or (rows->0->>'audit_id')::bigint<>id
+ then raise exception 'OWNER_FAILED_NOTIFICATION_QUEUE_WRONG: %',rows;end if;
+ if not public.jb_ad_notification_retry_internal(id) then
+   raise exception 'OWNER_RETRY_FAILED';end if;
+ if not public.jb_ad_notification_retry_internal(id) then
+   raise exception 'IDEMPOTENT_SECOND_RETRY_FAILED';end if;
+ select count(*) into n from public.live_notifications where domain='ads';
+ if n<>13 then raise exception 'OWNER_RETRY_CREATED_DUPLICATE_OR_MISSING_NOTICE: %',n;end if;
+ if (select count(*) from public.audit_logs
+     where action='ad_notification_retry_succeeded'
+       and metadata->>'original_failure_id'=id::text)<>1
+ then raise exception 'RETRY_AUDIT_MISSING_OR_DUPLICATE';end if;
+ if jsonb_array_length(public.jb_ad_notification_failures_internal())<>0
+ then raise exception 'RECOVERED_FAILURE_STILL_IN_QUEUE';end if;
+ if not exists(select 1 from public.live_notifications
+   where record_id='30000000-0000-0000-0000-000000000006'
+     and notification_type='ad_requested'
+     and delivery_state='IN_APP_READY') then
+  raise exception 'RECOVERED_INAPP_AD_REQUEST_NOT_DELIVERED';end if;
+ raise notice 'PASS [ADS-055] Owner audited retry eventually creates 1 B3 in-app notice; no WhatsApp SENT, 2nd retry idempotent';
+
+ perform set_config('b7.test_owner','',true);
+ begin
+  perform public.jb_ad_notification_failures_internal();
+  raise exception 'AAL1_CAN_SEE_AD_NOTIFICATION_FAILURES';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED' then
+    raise exception 'NONOWNER_FAILURE_LIST_NOT_DENIED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_notification_retry_internal(id);
+  raise exception 'AAL1_CAN_RETRY_AD_NOTIFICATION';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED' then
+    raise exception 'NONOWNER_RETRY_NOT_DENIED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-054/055] only Owner with AAL2 can inspect and retry failed ad notifications';
+ perform set_config('b7.test_owner','enabled',true);
+end $retry$;
+
 do $preservation$
 begin
  if (select count(*) from public.ad_payments where status='confirmed')<>1
