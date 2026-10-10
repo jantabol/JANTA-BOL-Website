@@ -129,3 +129,13 @@ For every block:
 - T036: `phase4-domain-client.js` validates device-local schedule fields and sends ISO UTC to existing `jb_ad_schedule_internal`. `ads.html` displays stored schedule in device time and labels timezone. Backend authority unchanged.
 - `ci/phase4/b7-client-regression.cjs` covers these behaviors and actual inline Admin handlers; both workflows invoke it. Node VM tests do not replace real-device proof.
 - Historical evidence table labels must not create duplicate canonical test rows. The original governance checker is unchanged.
+
+
+## B7 / P4-T039 Owner and advertiser portal source map — 10 Oct 2026 (staging ONLY)
+
+- Canonical campaign/creative authority remains LIVE `public.ad_campaigns` / `public.ad_creatives` (unchanged). Original `ad_portal_credentials`, `ad_portal_sessions`, `ad_renewal_requests`, `ad_history`, common `audit_logs` stay home.
+- New **review-only** `db/20261010_b7_portal_text_change_REVIEW_ONLY.sql`: one dedicated `ad_change_requests` workflow table (NOT a second creative SOT), text-only compatibility for `jb_ad_portal_submit_creative`, approved creative projection in `jb_ad_portal_campaign`, exact Owner queue/decision RPC, one-time temp login consumption, and pending portal renewal in EXISTING `ad_renewal_requests`. No automatic LIVE transition, creative replace, payment, geo or schedule mutation from advertiser.
+- UI: `JANTA_BOL_PHASE_3C_WORKING/advertiser-portal.html` (own approved view, one-time login, tab session, text request, pending renewal); `ads.html` (Owner issues one-time credentials, reviews change requests and renewals; manual WhatsApp follow-up only).
+- Client Owner router: `JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js` (Owner-restricted issue, Owner list/decide change, Owner renewal list), no new general News/Admin authority.
+- CI: `ci/phase4/b7-portal-fixture.sql` + `b7-portal-regression.sql` in existing `p4-t035-candidate-static.yml` isolated Postgres; `ci/phase4/b7-client-regression.cjs` VM/source guard; explicit reviewed signatures and denied direct media/renewal in old `ci/phase3-regression/db-function-security-regression.sql` T123 without broad whitelisting.
+- This staged change is **NOT** Production DB applied, merged or final P4-T039 PASS. Android E3, real AAL2/anon/live Supabase parity, full Owner manual renewal processing, history/notification integration and broader B7 gates are DUE. No B8 coding.
