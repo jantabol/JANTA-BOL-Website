@@ -158,3 +158,11 @@ Protected workflow run #246 completed:
 - IN PROGRESS: P4-T053, P4-T059.
 - MANUAL NOT RUN: P4-T054, P4-T057.
 - No final B2 lock yet.
+
+
+## 2026-10-10 — B7 P4-T039 advertiser portal staged implementation (NOT PASS)
+- Preserved all previously coded canonical campaigns, creatives, original ad sessions, renewal requests and payment security. No changes made to production database.
+- Staged Owner-first advertiser portal: one-time temporary credential, a short-lived per-tab token, own campaign/approved creative projection, textual change requests ONLY; upload/media/geo approval remains Founder-controlled. Owner queue and decision do not flip approved versions.
+- Added pending-only renewal through preexisting renewal ledger with token-bound actor provenance, no silent campaign extension, status/payment or slot change. Legacy authenticated advertiser renewal rows remain compatible in isolated fixture.
+- Added dedicated disposable PostgreSQL negative/positive sessions A/B, revoked/replay, creative immutability, old JWT renewal preservation and Owner-only queues. Candidate CI includes new job; protected Phase3/4 CI remains mandatory.
+- Final gate remains **IN PROGRESS**. E2 production parity, E3 Android, E5 actual notifications/audit and other B7 features are due. Never auto deploy staging review SQL; no P4-T039 PASS/LOCK and no B8.
