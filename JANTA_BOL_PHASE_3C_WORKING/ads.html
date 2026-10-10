@@ -48,6 +48,9 @@ async function load(){try{const a=await JBPhase4.adRows();document.getElementByI
 </div>
 <div id="portal-login-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
 <p class="meta">Temporary login is shown here ONLY once. Owner manually delivers it after verification; no WhatsApp delivery is assumed. Regenerating revokes older sessions.</p>
+<div class="row"><button class="btn" type="button" onclick="qualifiedStats('${x.id}')">View estimated ad analytics (Owner)</button></div>
+<div id="qualified-stats-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
+<p class="meta">Paid views and CTA clicks are client-reported estimates; NOT unique people or independently verified bot-free reach. Historical raw events remain separate.</p>
 <details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL"><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save and approve creative (Founder)</button>
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
 <div class="row"><label>शुरू<input id="st-${x.id}" type="datetime-local" value="${localScheduleValue(x.starts_at)}"></label><label>समाप्त<input id="en-${x.id}" type="datetime-local" value="${localScheduleValue(x.ends_at)}"></label><button class="btn" onclick="scheduleAd('${x.id}')">Schedule</button></div>
@@ -135,6 +138,28 @@ async function issuePortal(id){
    '\nTemporary password (show once): '+item.temporary_secret+
    '\nManually deliver to verified advertiser. Do not save in public logs.';
  }catch(e){receipt.textContent='Login issue failed: '+e.message;}
+}
+async function qualifiedStats(id){
+ const box=document.getElementById('qualified-stats-'+id);
+ if(!box)return;
+ box.hidden=false;
+ box.textContent='Loading Owner-only analytics…';
+ try{
+  const data=await JBPhase4.adQualifiedAnalytics(id);
+  const count=n=>Number.isSafeInteger(Number(n))&&Number(n)>=0?String(Number(n)):'Not available';
+  box.textContent='CLIENT-REPORTED AD ACTIVITY (not verified humans)'
+   +'\nToday qualified-claim views: '+count(data.today)
+   +'\nLast 7 days: '+count(data.d7)
+   +'\nLast 30 days: '+count(data.d30)
+   +'\nTotal qualified-claim views: '+count(data.total)
+   +'\nReported CTA clicks: '+count(data.clicks_reported)
+   +'\nOld unverified raw events (separate): '+count(data.unverified_legacy)
+   +'\nUnique-human/bot-free reach: NOT VERIFIED'
+   +'\nNews Article views: independent / not included';
+ }catch(_){
+  // No fallback to raw ad events: that would present fake impression counts.
+  box.textContent='Qualified analytics unavailable until secure backend deployment and Owner verification.';
+ }
 }
 async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});load();}catch(e){alert(e.message);}}
 async function scheduleAd(id){try{await JBPhase4.adSchedule(id,document.getElementById('st-'+id).value,document.getElementById('en-'+id).value);load();}catch(e){alert(e.message);}}
