@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="hi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>विज्ञापन के लिए संपर्क करें — JANTA BOL</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101010;color:#f6f6f6;font:16px/1.55 Arial,sans-serif}
+header{padding:16px;background:#090909;border-bottom:2px solid #b30000}header a{color:#fff;text-decoration:none;font-weight:bold}
+main{max-width:560px;margin:20px auto;padding:0 16px 40px}
+form{background:#191919;border:1px solid #444;border-radius:12px;padding:18px}
+label{display:block;margin:16px 0 6px}input,textarea,button{font:inherit}
+input:not([type=checkbox]),textarea{display:block;width:100%;min-height:44px;padding:10px;border:1px solid #888;border-radius:7px;color:#fff;background:#272727}
+textarea{min-height:88px;resize:vertical}
+.check{display:flex;align-items:flex-start;gap:10px;margin:16px 0}.check input{width:22px;height:22px;flex:0 0 auto}
+button{min-height:46px;width:100%;border:none;border-radius:7px;background:#b30000;color:#fff;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5;cursor:wait}
+.notice{color:#ccc;font-size:14px}.feedback{margin:12px 0;padding:10px;border-radius:7px;white-space:pre-wrap}
+.feedback[hidden]{display:none}.success{background:#173923}.error{background:#472020}
+a{color:#ff9090}
+</style></head><body>
+<header><a href="index.html">JANTA <span style="color:#ff3535">BOL</span></a></header>
+<main><h1>विज्ञापन के लिए संपर्क करें</h1>
+<p class="notice">यह केवल संपर्क अनुरोध है; विज्ञापन स्वीकृत या LIVE नहीं होगा। समाचार पढ़ने के लिए किसी जानकारी की जरूरत नहीं है।</p>
+<form id="enquiry">
+<label for="adName">व्यक्ति / व्यवसाय का नाम *</label>
+<input id="adName" name="name" type="text" autocomplete="name" maxlength="160" minlength="2" required>
+<label for="adWhatsApp">WhatsApp नंबर (देश कोड सहित) *</label>
+<input id="adWhatsApp" name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" placeholder="+91 98765 43210" required>
+<label for="adNote">व्यवसाय का छोटा विवरण (वैकल्पिक)</label>
+<textarea id="adNote" name="note" maxlength="500" placeholder="आप क्या प्रचारित करना चाहते हैं?"></textarea>
+<label class="check" for="adConsent"><input id="adConsent" type="checkbox" required>
+<span>मैं सहमत हूँ कि JANTA BOL की टीम विज्ञापन सत्यापन के लिए मेरे दिए गए WhatsApp नंबर पर संपर्क कर सकती है। *</span></label>
+<p class="notice">नंबर केवल विज्ञापन संपर्क और सत्यापन के लिए लिया जाएगा; इसे सार्वजनिक News Page पर नहीं दिखाया जाएगा। टीम बाद में स्वयं WhatsApp पर संपर्क करेगी, कोई स्वचालित संदेश भेजने का वादा नहीं है।</p>
+<button id="adSubmit" type="submit">अनुरोध भेजें</button>
+<div id="adFeedback" class="feedback" role="status" aria-live="polite" hidden></div>
+</form><p><a href="index.html">← समाचार पर वापस जाएँ</a></p></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script><script src="backend-client.js"></script>
+<script>
+(function(){
+ 'use strict';
+ const form=document.getElementById('enquiry'),button=document.getElementById('adSubmit'),out=document.getElementById('adFeedback');
+ const params=new URLSearchParams(location.search);
+ const origin=params.get('origin')==='article'?'article':'homepage';
+ const article=origin==='article'?params.get('id'):null;
+ function show(message,ok){
+  out.hidden=false;out.className='feedback '+(ok?'success':'error');out.textContent=message;
+ }
+ form.addEventListener('submit',async function(event){
+  event.preventDefault();
+  if(!form.reportValidity()||button.disabled)return;
+  const name=document.getElementById('adName').value.trim(),
+        whatsapp=document.getElementById('adWhatsApp').value.trim(),
+        note=document.getElementById('adNote').value.trim(),
+        consent=document.getElementById('adConsent').checked;
+  if(!consent||!name||!whatsapp){show('नाम, WhatsApp नंबर और संपर्क सहमति जरूरी है।',false);return;}
+  button.disabled=true;out.hidden=true;
+  try{
+   if(!window.JBBackend?.client)throw Error('BACKEND_NOT_READY');
+   const {data,error}=await JBBackend.client.rpc('jb_ad_public_enquiry',{
+    p_name:name,p_whatsapp:whatsapp,p_consent:consent,p_origin:origin,
+    p_article:article||null,p_note:note||null
+   });
+   if(error)throw error;
+   if(typeof data!=='string'||!/^[0-9a-f-]{36}$/i.test(data))throw Error('REQUEST_RECEIPT_MISSING');
+   show('आपकी विज्ञापन Request Submit हो गई है।\nRequest ID: '+data+'\nस्थिति: Pending\nसत्यापन के लिए कुछ समय बाद आपके दिए गए WhatsApp नंबर पर संदेश भेजा जाएगा।',true);
+   form.reset();
+  }catch(e){
+   const code=String(e?.message||'');
+   show(code.includes('ENQUIRY_COOLDOWN')?'इस नंबर से हाल में अनुरोध आया है। कृपया कुछ समय बाद प्रयास करें।':
+        code.includes('INVALID_WHATSAPP')?'कृपया सही देश कोड वाला WhatsApp नंबर लिखें।':
+        code.includes('INVALID_ARTICLE_CONTEXT')?'समाचार लिंक बदल गया है। कृपया मुख्य पेज से अनुरोध भेजें।':
+        'अभी अनुरोध दर्ज नहीं हो पाया। कृपया थोड़ी देर बाद प्रयास करें।',false);
+  }finally{button.disabled=false}
+ });
+})();
+</script></body></html>
