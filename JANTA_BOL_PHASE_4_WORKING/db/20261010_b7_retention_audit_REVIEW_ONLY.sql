@@ -144,25 +144,71 @@ create trigger b7_ad_campaign_delete_retention_guard
 revoke all on function private.b7_ad_campaign_delete_retention_guard()
  from public,anon,authenticated;
 
--- An approved creative is an immutable signed commercial version, not an
--- editable photo/link/CTA. New media must be approved as a NEW version.
--- Fail closed for historical review; do not silently invalidate an old
--- published creative after it has already been served.
+-- ADS-046/052: keep the canonical existing creative SAVE + APPROVE
+-- functions working; both intentionally revoke old versions (approved ->
+-- false) and approve a new or selected one (false -> true). The previous
+-- trigger disallowed *any* UPDATE of approved=true and therefore broke
+-- those existing Owner/AAL2 RPCs and all subsequent creative revisions.
+--
+-- approved_once is a STICKY evidence bit, not another creative store:
+-- no image, video, link, CTA, text, version, ownership or original creation
+-- timestamp can be rewritten after its FIRST approval, including when
+-- current approved=false due to a newer version.
+alter table public.ad_creatives
+ add column if not exists approved_once boolean not null default false;
+
+-- Backfill current approved plus older versions proven by existing
+-- append-only ad_history. Do not reset or modify previously sticky rows.
+-- Legacy audited event formats are inspected; unknown historical records
+-- must be independently reconciled before production cutover.
+update public.ad_creatives cr
+set approved_once=true
+where cr.approved=true
+ or exists (
+  select 1 from public.ad_history h
+  where h.campaign_id=cr.campaign_id
+    and h.event_type='creative_approved'
+    and (h.note='version '||cr.version::text
+      or h.note='Creative version '||cr.version::text||' approved.')
+ );
+
 create or replace function private.b7_approved_creative_immutable()
 returns trigger language plpgsql security definer
-set search_path to 'pg_catalog'
+set search_path to 'pg_catalog','public','private'
 as $creative$
 begin
- if old.approved=true then
-  raise exception 'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE';
+ if tg_op='DELETE' then
+  if old.approved_once or old.approved then
+   raise exception 'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE';
+  end if;
+  return old;
  end if;
- return coalesce(new,old);
+ -- An existing approved version remains immutable even while inactive.
+ if old.approved_once or old.approved then
+  if (to_jsonb(new)-'approved'-'approved_once')
+       is distinct from (to_jsonb(old)-'approved'-'approved_once') then
+   raise exception 'B7_APPROVED_CREATIVE_VERSION_IMMUTABLE';
+  end if;
+ end if;
+ if old.approved_once and not new.approved_once then
+  raise exception 'B7_APPROVED_CREATIVE_STICKY_FLAG_REQUIRED';
+ end if;
+ -- Only the existing Founder/Owner AAL2 authority can toggle the
+ -- approved flag. Direct client UPDATE cannot approve or revoke a creative.
+ if new.approved is distinct from old.approved then
+  if not private.p4_owner_allowed() then
+   raise exception 'OWNER_AAL2_REQUIRED';
+  end if;
+ end if;
+ -- The only permitted mutation to a formerly approved version is its
+ -- Owner-controlled approval/revocation flag. New drafts stay editable.
+ new.approved_once:=old.approved_once or old.approved or new.approved;
+ return new;
 end $creative$;
 drop trigger if exists b7_approved_creative_immutable on public.ad_creatives;
 create trigger b7_approved_creative_immutable
  before update or delete on public.ad_creatives
- for each row when (old.approved=true)
- execute function private.b7_approved_creative_immutable();
+ for each row execute function private.b7_approved_creative_immutable();
 revoke all on function private.b7_approved_creative_immutable()
  from public,anon,authenticated;
 
