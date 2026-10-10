@@ -62,6 +62,12 @@ test('ADS-049: >=50% viewport continuously for >=1000ms qualifies once',()=>{
  f.advance(1);assert.equal(count,1);assert.equal(f.disconnected,1);
  f.advance(300000);assert.equal(count,1);assert.equal(f.tasks.size,0);
 });
+test('ADS-049: scrolling within >=50% does not restart continuous one-second timer',()=>{
+ const f=browser();let count=0;f.api.watch(f.el,()=>count++);
+ f.fire(.55);f.advance(300);f.fire(.85);f.advance(300);
+ f.fire(.62);f.advance(399);assert.equal(count,0);
+ f.advance(1);assert.equal(count,1);
+});
 test('ADS-049: fast scroll to 10% at 900ms resets elapsed view',()=>{
  const f=browser();let count=0;f.api.watch(f.el,()=>count++);
  f.fire(1);f.advance(900);f.fire(.1);f.advance(5000);
