@@ -175,3 +175,11 @@ Protected workflow run #246 completed:
 - Added isolated disposable PostgreSQL fixture and 25 Article-to-campaign positive/negative cases; directory/code mismatch, unverified tehsil, district-only vs tehsil-only, multi-district, no viewer GPS, paid-booking change denial, direct role/privilege denial, audit and no Article ID rewrite tested.
 - Protected T123 security inventory extended with two exact reviewed Owner RPC names and conditional new geo-table security rules; all existing check logic preserved, not disabled.
 - Full B7-G3 launch cannot be declared until the complete official 55-district and verified tehsil code catalog, production-compatible backend selection, Android E3 and E5 source proof are present. P4-T035 / P4-T037 remain IN PROGRESS, B7 NOT LOCKED.
+
+
+## 2026-10-10 — B7-G4 weighted candidates and non-dilution inventory (NOT LAUNCH / NOT PASS)
+- Built a purely PRIVATE Article-ID-weighted selection candidate without touching the legacy public advertisement feed or its Article URL. 1:2:3 package snapshot version weights tested in PostgreSQL; invalid paid, hidden, expired, wrong-district or malformed creative excluded.
+- Built reviewed global per-placement capacity windows and immutable Owner-accepted guaranteed minimum reservations with row-serialized quota checks and evidence source. Concurrent additions serialize on the capacity row; no duplicate physical Article slots sold across overlapping windows.
+- Added read-only synthetic E1/E2/E5 tests: 1000 forecasted fixture units → 600 + 400 reserved; +100/+1 rejected, extra campaign cannot dilute. Owned agreement change, expired/suspended, AAL1/no Owner and direct SQL denied; emergency Hide retains commercial commitment history.
+- RCA: intermediate Candidate CI inventory fixture failed with ambiguous PL/pgSQL variable `id` instead of `w.id` (workflow 38056591494), corrected test variable qualification (commit `a0d475273cdc7f84c5700ee763f436377c314f59`) without suppressing a checker. Subsequent enhancements lock booked campaign price/scope/schedule and preserve emergency Hide.
+- Inventory/weighted SQL all REVIEW ONLY and not deployed to LIVE; actual independent forecast evidence, full LGD official catalog, sale/payment/analytics verification, Android E3 and long-run fairness still required for canonical P4-T037.
