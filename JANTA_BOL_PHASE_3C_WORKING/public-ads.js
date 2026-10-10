@@ -45,6 +45,21 @@ function placeArticleSlot(root){
  body.insertBefore(region,tail);
  return true;
 }
+/* G3/G4 rollout adapter (NOT YET WIRED): server selects from the immutable
+   published Article UUID, never client-asserted district, tehsil, GPS or IP.
+   Keep the legacy renderer intact until paired backend/frontend release
+   has passed production parity, verified LGD catalog and Android E3. */
+function scopeForVerifiedArticleId(id){
+ const value=String(id||'').trim();
+ return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value)?
+   'article:'+value.toLowerCase():'';
+}
+async function renderVerifiedArticle(id){
+ const scope=scopeForVerifiedArticleId(id);
+ if(!scope)return false;
+ await render('article',scope);
+ return true;
+}
 function cta(ad){
  if(ad.cta_type==='website'||ad.cta_type==='map')return {url:safe(ad.cta_target),label:ad.cta_type==='map'?'नक्शा देखें':'अधिक जानकारी'};
  if((ad.cta_type==='call'||ad.cta_type==='whatsapp')&&/^\+?[0-9][0-9 ()-]{5,19}$/.test(String(ad.cta_target||''))){
@@ -79,5 +94,5 @@ async function render(placement,scope='global'){
   if(current())slot.append(box);
  }catch(_){if(current())slot.replaceChildren()}
 }
-g.JBPublicAds={render,scopeForArticle,articleParagraphOffset,placeArticleSlot};
+g.JBPublicAds={render,scopeForArticle,scopeForVerifiedArticleId,renderVerifiedArticle,articleParagraphOffset,placeArticleSlot};
 })(window);
