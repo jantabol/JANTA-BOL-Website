@@ -194,3 +194,27 @@ test('ADS-025 fail closed: no timer, no repeated ad event on a held article',()=
  assert.doesNotMatch(js,/\bsetInterval\s*\(/);
  assert.doesNotMatch(js,/\.rpc\(['"]jb_ad_(?:event|record_event)['"]/);
 });
+
+
+test('ADS-001 public entrypoints: small home/article CTA and one single paid slot each',()=>{
+ const home=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/index.html','utf8');
+ const article=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/article.html','utf8');
+ assert.match(home,/href="advertise-request\.html\?origin=homepage"/);
+ assert.match(article,/id="jb-ad-contact-article"/);
+ assert.match(article,/advertise-request\.html\?origin=article&id=/);
+ assert.equal((home.match(/data-jb-ad-placement="homepage"/g)||[]).length,1);
+ assert.equal((article.match(/data-jb-ad-placement="article"/g)||[]).length,1);
+ assert.doesNotMatch(home,/id="jb-ad-scope"/,'homepage cannot ask viewer for ad geography');
+ assert.match(home,/JBPublicAds\?\.render\('homepage','global'\)/);
+});
+test('ADS-001/002 public enquiry: minimal WhatsApp form, explicit contact consent and confirmed receipt only',()=>{
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/advertise-request.html','utf8');
+ assert.match(html,/id="adWhatsApp"[^>]*type="tel"/);
+ assert.match(html,/id="adConsent"[^>]*type="checkbox" required/);
+ assert.match(html,/\.rpc\('jb_ad_public_enquiry'/);
+ assert.match(html,/p_consent:consent/);
+ assert.match(html,/REQUEST_RECEIPT_MISSING/);
+ assert.match(html,/स्थिति: Pending/);
+ assert.doesNotMatch(html,/type="file"|navigator\.geolocation|geolocation\.getCurrentPosition/);
+ assert.doesNotMatch(html,/id="adPrice"|id="adPlacement"|id="adLocation"/);
+});
