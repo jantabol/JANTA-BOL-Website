@@ -193,10 +193,14 @@ begin
  if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
  if p_failure_audit_id is null or p_failure_audit_id<=0
  then raise exception 'INVALID_NOTIFICATION_FAILURE_REFERENCE';end if;
+ -- Serialize concurrent Owner retries of ONE immutable failure record.
+ -- FOR SHARE permits two sessions to read "no success" simultaneously
+ -- and each append success audit evidence. FOR UPDATE is only a row lock:
+ -- the immutable audit row itself is never updated or deleted.
  select * into v from public.audit_logs
  where id=p_failure_audit_id and action='ad_notification_failed'
    and metadata->>'delivery'='NOT_CONFIRMED'
- for share;
+ for update;
  if not found then raise exception 'AD_NOTIFICATION_FAILURE_NOT_FOUND';end if;
  if exists(select 1 from public.audit_logs l
     where l.action='ad_notification_retry_succeeded'
