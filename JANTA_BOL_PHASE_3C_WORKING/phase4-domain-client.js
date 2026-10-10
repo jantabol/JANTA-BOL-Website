@@ -13,6 +13,17 @@ const complianceApproveMonth=(m,summary)=>rpc('jb_compliance_approve_month_inter
 const complianceTransition=(id,status,ack='')=>rpc('jb_compliance_transition_internal',{p_id:id,p_status:status,p_ack:ack||null});
 const publicAdRequest=x=>rpc('jb_ad_public_request',{p_name:x.name,p_contact:x.contact,p_package:x.package||null,p_placement:x.placement||'homepage',p_scope:x.scope||'global',p_risk:x.risk||'normal',p_kind:x.kind||'standard'});
 const publicAdPackages=()=>rpc('jb_ad_public_packages',{});
+async function adPackages(){await owner();const {data,error}=await c().from('ad_packages').select('id,name,placement,price_minor,currency,duration_days,weight,active,version').order('name',{ascending:true});if(error)throw error;return data||[]}
+async function adSavePackage(x){
+ await owner();
+ const name=String(x?.name||'').trim(),placement=String(x?.placement||'');
+ if(x?.priceMinor===''||x?.durationDays===''||x?.weight==='')throw Error('INVALID_PACKAGE');
+ const price=Number(x?.priceMinor),duration=Number(x?.durationDays),weight=Number(x?.weight);
+ if(name.length<2||name.length>200||!['homepage','article'].includes(placement)||!Number.isSafeInteger(price)||price<0||!Number.isSafeInteger(duration)||duration<1||!Number.isSafeInteger(weight)||weight<1)throw Error('INVALID_PACKAGE');
+ const id=x?.id||null;
+ if(id!==null&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))throw Error('INVALID_PACKAGE_ID');
+ return rpc('jb_ad_save_package_internal',{p_id:id,p_name:name,p_placement:placement,p_price:price,p_duration:duration,p_weight:weight});
+}
 async function adRows(){await owner();const {data,error}=await c().from('ad_campaigns').select('*,advertisers(name,verification_state,risk_level),ad_creatives(*)').order('created_at',{ascending:false});if(error)throw error;return data||[]}
 const adTransition=(id,status,note='')=>rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
 const adCreative=(id,x)=>rpc('jb_ad_save_creative_internal',{p_campaign:id,p_type:x.type,p_media:x.media||null,p_text:x.text||null,p_cta_type:x.ctaType||null,p_cta_target:x.ctaTarget||null});
@@ -34,5 +45,5 @@ async function adSchedule(id,start,end){
  if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
  return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
 }
-g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adRows,adTransition,adCreative,adConfirmPayment,adSchedule};
+g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adTransition,adCreative,adConfirmPayment,adSchedule};
 })(window);
