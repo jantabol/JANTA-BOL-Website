@@ -307,6 +307,9 @@ begin
        or not exists(select 1 from pg_trigger t
           where t.tgrelid='public.ad_inventory_windows'::regclass
             and t.tgname='b7_inventory_window_immutable' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.ad_campaigns'::regclass
+            and t.tgname='b7_inventory_campaign_contract_guard' and t.tgenabled='O')
     then v_bad_inventory_guard:=v_bad_inventory_guard+1;end if;
   end if;
 
