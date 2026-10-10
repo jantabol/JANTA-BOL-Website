@@ -23,6 +23,10 @@
 <input id="packageDays" type="number" min="1" step="1" placeholder="Duration (days)">
 <input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
 <div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
+<section class="card">
+<h2>Advertiser change requests — Owner review</h2>
+<p class="meta">Only text request is queued. Accepted for work does NOT replace a LIVE approved photo, video or targeting; Founder separately approves a new version.</p>
+<div id="changeRequestRows">Loading…</div></section>
 <div id="rows"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-manualpay"></script><script src="admin-auth.js"></script>
 <script>'use strict';
@@ -58,6 +62,31 @@ async function loadPackages(){
   box.innerHTML=packageList.map(p=>`<div class="meta"><b>${esc(p.name)}</b> · ${esc(p.placement)} · ${esc(p.price_minor)} ${esc(p.currency)} paise · ${esc(p.duration_days)} days · weight ${esc(p.weight)} · version ${esc(p.version)} · ${p.active?'active':'inactive'} <button class="btn" onclick="editPackage('${esc(p.id)}')">Edit</button></div>`).join('')||'<p class="meta">No packages configured.</p>';
   chooser.innerHTML='<option value="">Custom / no package selected</option>'+packageList.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.placement)} — ₹${esc((Number(p.price_minor)/100).toFixed(2))}</option>`).join('');
  }catch(e){box.textContent=e.message;chooser.innerHTML='<option value="">Package list unavailable</option>';}
+}
+async function loadChangeRequests(){
+ const box=document.getElementById('changeRequestRows');
+ try{
+  const rows=await JBPhase4.adChangeRequests();
+  box.innerHTML=rows.filter(x=>/^[0-9a-f-]{36}$/i.test(String(x?.id||''))).map(x=>'<div class="card">'+
+   '<b>Request '+esc(x.id)+'</b><p class="meta">Campaign '+esc(x.campaign_id)+
+   ' · '+esc(x.status)+' · '+esc(x.created_at||'')+'</p>'+
+   '<p>'+esc(x.note||'')+'</p>'+
+   (x.status==='pending'?'<div class="row"><input id="change-note-'+esc(x.id)+
+     '" placeholder="Owner reason / audit note (min 8 chars)">'+
+     '<button class="btn" onclick="decideChange(\''+esc(x.id)+'\',\'accepted_for_work\')">Accept for media review</button>'+
+     '<button class="btn" onclick="decideChange(\''+esc(x.id)+'\',\'rejected\')">Reject request</button></div>':
+     '<p class="meta">Decision: '+esc(x.decision_note||'')+' (existing creative unchanged)</p>')+
+    '</div>').join('')||'<p class="meta">No advertiser change requests.</p>';
+ }catch(e){
+  box.textContent='Change-request queue unavailable (backend deployment may be pending).';
+ }
+}
+async function decideChange(id,decision){
+ try{
+  const note=document.getElementById('change-note-'+id).value.trim();
+  await JBPhase4.adDecideChange(id,decision,note);
+  await loadChangeRequests();
+ }catch(e){alert(e.message);}
 }
 function clearPackage(){for(const id of ['packageId','packageName','packagePrice','packageDays'])document.getElementById(id).value='';document.getElementById('packagePlacement').value='homepage';document.getElementById('packageWeight').value='1';}
 function editPackage(id){const p=packageList.find(x=>x.id===id);if(!p)return;document.getElementById('packageId').value=p.id;document.getElementById('packageName').value=p.name;document.getElementById('packagePlacement').value=p.placement;document.getElementById('packagePrice').value=p.price_minor;document.getElementById('packageDays').value=p.duration_days;document.getElementById('packageWeight').value=p.weight;}
@@ -113,5 +142,5 @@ async function payment(id){
  }catch(e){alert(e.message);}
 }
 document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');const chosen=document.getElementById('requestedPackage').value;const p=packageList.find(x=>x.id===chosen);if(chosen&&(!p||!p.active||p.placement!==placementEl.value))throw Error('PACKAGE_PLACEMENT_MISMATCH');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,package:chosen||null,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
-function boot(){load();loadPackages();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
+function boot(){load();loadPackages();loadChangeRequests();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 </script></body></html>
