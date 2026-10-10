@@ -256,3 +256,91 @@ test('ADS-006 admin queue: private WhatsApp, source and consent are Owner-only',
  assert.match(html,/vstate-fixture-campaign/);
  assert.match(html,/verifyAdvertiser\('fixture-campaign','fixture-advertiser'\)/);
 });
+
+
+test('ADS-035 agreed quote: requires Owner, exact price and signed reference',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>true;
+ await window.JBPhase4.adSetApprovedQuote('campaign-fixture','50000','SIGNED-QUOTE-001');
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
+  name:'jb_ad_set_approved_quote_internal',
+  args:{p_campaign:'campaign-fixture',p_price_minor:50000,p_terms_ref:'SIGNED-QUOTE-001'}
+ });
+});
+test('ADS-035 quote: invalid price or missing terms reference never calls backend',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>true;
+ for(const [amount,ref] of [['','SIGNED-QUOTE-001'],['-1','SIGNED-QUOTE-001'],['50000',''],['50000','a'],['0','SIGNED-QUOTE-001']]){
+  await assert.rejects(
+    ()=>window.JBPhase4.adSetApprovedQuote('campaign-fixture',amount,ref),
+    /INVALID_QUOTE_TERMS/
+  );
+ }
+ assert.equal(calls.length,0);
+});
+test('ADS-037 manual payment: explicit Owner evidence and typed CONFIRM are mandatory',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>true;
+ const fixture={
+  reference:'UTR-00000001',amountMinor:'50000',method:'upi',
+  receiptAt:'2026-10-10T10:30',evidenceRef:'BANK-LEDGER-001',
+  acceptanceRef:'SIGNED-ACCEPT-001',acceptedAt:'2026-10-10T10:00',
+  verificationNote:'Owner matched bank ledger receipt',confirm:'CONFIRM'
+ };
+ for(const patch of [{confirm:'confirm'},{amountMinor:'0'},{reference:'short'},
+                       {evidenceRef:''},{acceptanceRef:''},{verificationNote:'short'},
+                       {method:'card'},{receiptAt:'not-a-time'},
+                       {acceptedAt:'2026-10-10T11:00'}]){
+  await assert.rejects(
+    ()=>window.JBPhase4.adConfirmManualPayment('campaign-fixture',{...fixture,...patch}),
+    /MANUAL_PAYMENT_EVIDENCE_REQUIRED|INVALID_PAYMENT_TIMESTAMP/
+  );
+ }
+ assert.equal(calls.length,0);
+ await window.JBPhase4.adConfirmManualPayment('campaign-fixture',fixture);
+ assert.equal(calls.length,1);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
+  name:'jb_ad_confirm_manual_payment_internal',
+  args:{
+   p_campaign:'campaign-fixture',p_reference:'UTR-00000001',
+   p_amount_minor:50000,p_method:'upi',
+   p_receipt_at:'2026-10-10T05:00:00.000Z',
+   p_evidence_ref:'BANK-LEDGER-001',p_acceptance_ref:'SIGNED-ACCEPT-001',
+   p_terms_accepted_at:'2026-10-10T04:30:00.000Z',
+   p_verification_note:'Owner matched bank ledger receipt',
+   p_confirm:'CONFIRM'
+  }
+ });
+});
+test('ADS-038 Owner is checked before payment RPC',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(
+  ()=>window.JBPhase4.adConfirmManualPayment('campaign-fixture',{confirm:'CONFIRM'}),
+  /OWNER_AAL2_REQUIRED/
+ );
+ assert.equal(calls.length,0);
+});
+test('ADS-037 Admin UI: no legacy one-click confirmation path',async()=>{
+ const {context,elements,calls,window}=adminClient();
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/Owner manual payment/);
+ assert.match(html,/id="pconfirm-/);
+ assert.match(html,/id="paccept-/);
+ assert.match(html,/id="qterms-/);
+ assert.doesNotMatch(html,/onclick="payment\('[^']+'\)">Record confirmed payment/);
+ window.JBBackend.requireOwner=async()=>true;
+ await vm.runInContext('load()',context);
+ for(const [name,val] of Object.entries({
+  pr:'UTR-00000001',pa:'50000',pmethod:'upi',
+  preceived:'2026-10-10T10:30',pevidence:'BANK-LEDGER-001',
+  paccept:'SIGNED-ACCEPT-001',pacceptedat:'2026-10-10T10:00',
+  pnote:'Owner matched bank ledger receipt',pconfirm:'CONFIRM'
+ })){
+  elements.get(name+'-fixture-campaign')?.value===undefined&&elements.set(name+'-fixture-campaign',{value:''});
+  elements.get(name+'-fixture-campaign').value=val;
+ }
+ await vm.runInContext("payment('fixture-campaign')",context);
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].name,'jb_ad_confirm_manual_payment_internal');
+});
