@@ -24,7 +24,7 @@
 <input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
 <div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
 <div id="rows"></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-verify"></script><script src="admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-manualpay"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
@@ -73,7 +73,26 @@ async function verifyAdvertiser(campaignId,advertiserId){
 async function move(id){try{await JBPhase4.adTransition(id,document.getElementById('s-'+id).value,document.getElementById('n-'+id).value);load();}catch(e){alert(e.message);}}
 async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});load();}catch(e){alert(e.message);}}
 async function scheduleAd(id){try{await JBPhase4.adSchedule(id,document.getElementById('st-'+id).value,document.getElementById('en-'+id).value);load();}catch(e){alert(e.message);}}
-async function payment(id){alert('MANUAL_PAYMENT_EVIDENCE_REQUIRED: verified receipt, written consent, and Owner CONFIRM form is mandatory. This old shortcut cannot record payment.');}
+async function saveQuote(id){
+ try{
+  await JBPhase4.adSetApprovedQuote(id,
+   document.getElementById('qprice-'+id).value,
+   document.getElementById('qterms-'+id).value);
+  await load();
+ }catch(e){alert(e.message);}
+}
+async function payment(id){
+ try{
+  const val=key=>document.getElementById(key+'-'+id).value;
+  await JBPhase4.adConfirmManualPayment(id,{
+   reference:val('pr'),amountMinor:val('pa'),method:val('pmethod'),
+   receiptAt:val('preceived'),evidenceRef:val('pevidence'),
+   acceptanceRef:val('paccept'),acceptedAt:val('pacceptedat'),
+   verificationNote:val('pnote'),confirm:val('pconfirm')
+  });
+  await load();
+ }catch(e){alert(e.message);}
+}
 document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');const chosen=document.getElementById('requestedPackage').value;const p=packageList.find(x=>x.id===chosen);if(chosen&&(!p||!p.active||p.placement!==placementEl.value))throw Error('PACKAGE_PLACEMENT_MISMATCH');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,package:chosen||null,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
 function boot(){load();loadPackages();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 </script></body></html>
