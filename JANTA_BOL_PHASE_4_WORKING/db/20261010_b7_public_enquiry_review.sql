@@ -157,4 +157,42 @@ revoke all on function public.jb_ad_public_request(text,text,uuid,text,text,text
 grant execute on function public.jb_ad_public_request(text,text,text,text,text) to authenticated,service_role;
 grant execute on function public.jb_ad_public_request(text,text,uuid,text,text,text) to authenticated,service_role;
 grant execute on function public.jb_ad_public_request(text,text,uuid,text,text,text,text) to authenticated,service_role;
+
+-- G1/ADS-007/008: authoritative Founder verification, not a public self-claim.
+-- High risk requires explicit evidence reference. Shared ad_history and audit_logs
+-- are reused rather than adding a parallel audit system.
+create or replace function public.jb_ad_verify_advertiser_internal(
+ p_advertiser uuid,p_state text,p_note text,p_evidence_ref text default null
+) returns void
+language plpgsql security definer
+set search_path to 'pg_catalog','public','private'
+as $verify$
+declare v public.advertisers;v_note text;v_ref text;
+begin
+ if not private.p4_owner_allowed() then
+   raise exception 'OWNER_AAL2_REQUIRED';end if;
+ v_note:=btrim(coalesce(p_note,''));
+ v_ref:=btrim(coalesce(p_evidence_ref,''));
+ if p_state not in ('verified','rejected','pending') or length(v_note)<8 or length(v_note)>1000
+ then raise exception 'INVALID_VERIFICATION_DECISION';end if;
+ if length(v_ref)>300 then raise exception 'INVALID_EVIDENCE_REFERENCE';end if;
+ select * into v from public.advertisers where id=p_advertiser for update;
+ if not found then raise exception 'ADVERTISER_NOT_FOUND';end if;
+ if v.risk_level='high' and p_state='verified' and length(v_ref)<8 then
+   raise exception 'ENHANCED_VERIFICATION_EVIDENCE_REQUIRED';end if;
+ update public.advertisers set verification_state=p_state,updated_at=now()
+ where id=p_advertiser;
+ insert into public.ad_history(campaign_id,event_type,note,actor_user_id)
+ select c.id,'verification_'||p_state,left(v_note||case when v_ref='' then '' else '; evidence reference='||v_ref end,1500),auth.uid()
+ from public.ad_campaigns c where c.advertiser_id=p_advertiser;
+ insert into public.audit_logs(actor_user_id,action,record_type,record_id,metadata,created_at)
+ values(auth.uid(),'ad_verification','advertiser',p_advertiser::text,
+        jsonb_build_object('state',p_state,'high_risk',v.risk_level='high',
+                           'evidence_provided',v_ref<>''),now());
+end $verify$;
+revoke all on function public.jb_ad_verify_advertiser_internal(uuid,text,text,text)
+ from public,anon;
+grant execute on function public.jb_ad_verify_advertiser_internal(uuid,text,text,text)
+ to authenticated,service_role;
+
 commit;
