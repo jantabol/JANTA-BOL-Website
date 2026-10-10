@@ -180,6 +180,51 @@ begin
  raise notice 'PASS [ADS-033] no post-booking rewrite/delete of guarantee or forecast';
 end $terms_and_immutable$;
 
+do $booked_contract$
+declare msg text;v_id uuid:='30000000-0000-0000-0000-000000000001'::uuid;
+begin
+ begin
+  update public.ad_campaigns set scope='district:guna' where id=v_id;
+  raise exception 'SOLD_AREA_REWRITTEN';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'SOLD_INVENTORY_TERMS_IMMUTABLE'
+  then raise exception 'SOLD_AREA_GUARD_WRONG: %',msg;end if;
+ end;
+ begin
+  update public.ad_campaigns set ends_at=now()+interval '1 hour' where id=v_id;
+  raise exception 'SOLD_PERIOD_SHORTENED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'SOLD_INVENTORY_TERMS_IMMUTABLE'
+  then raise exception 'SOLD_WINDOW_GUARD_WRONG: %',msg;end if;
+ end;
+ begin
+  update public.ad_campaigns set agreed_price_minor=1 where id=v_id;
+  raise exception 'SOLD_PRICE_CHANGED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'SOLD_INVENTORY_TERMS_IMMUTABLE'
+  then raise exception 'SOLD_PRICE_GUARD_WRONG: %',msg;end if;
+ end;
+ begin
+  update public.ad_campaigns set package_snapshot='{"price_minor":1}'::jsonb
+  where id=v_id;
+  raise exception 'SOLD_PACKAGE_CHANGED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'SOLD_INVENTORY_TERMS_IMMUTABLE'
+  then raise exception 'SOLD_PACKAGE_GUARD_WRONG: %',msg;end if;
+ end;
+ -- Emergency safety remains higher priority than uninterrupted paid exposure.
+ update public.ad_campaigns set status='hidden',hidden_at=now() where id=v_id;
+ if (select count(*) from public.ad_inventory_reservations where campaign_id=v_id)<>1
+ then raise exception 'HIDE_DELETED_COMMERCIAL_COMMITMENT';end if;
+ if (select status from public.ad_campaigns where id=v_id)<>'hidden'
+ then raise exception 'SAFETY_HIDE_BLOCKED';end if;
+ raise notice 'PASS [ADS-019/020/033] booked area/price/period immutable, emergency Hide allowed with retained contract';
+end $booked_contract$;
+
 do $direct_guard$
 declare msg text;cap uuid;
 begin
