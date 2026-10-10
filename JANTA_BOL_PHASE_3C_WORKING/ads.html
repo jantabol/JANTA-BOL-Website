@@ -11,11 +11,24 @@
 <select id="scope"><option value="global">Global</option><option value="local">Local</option><option value="district:shivpuri">Shivpuri District</option><option value="district:guna">Guna District</option><option value="district:ashoknagar">Ashoknagar District</option></select>
 <select id="risk"><option value="normal">Normal verification</option><option value="high">Higher-risk verification</option></select>
 <select id="requestKind"><option value="standard">Standard request</option><option value="custom">Custom request</option></select></div>
-<button class="btn primary" id="create">Send to Admin Queue</button></div><div id="rows"></div></main>
+<label>Package (optional) <select id="requestedPackage"><option value="">Custom / no package selected</option></select></label>
+<button class="btn primary" id="create">Send to Admin Queue</button></div>
+<section class="card"><h2>Advertisement packages — Owner / AAL2</h2>
+<p class="meta">Prices are in paise. Editing a package creates a new version; previous campaign terms must remain unchanged.</p>
+<div id="packageRows">Loading packages…</div>
+<input type="hidden" id="packageId"><div class="row">
+<input id="packageName" placeholder="Package name">
+<select id="packagePlacement"><option value="homepage">Homepage</option><option value="article">Article</option></select>
+<input id="packagePrice" type="number" min="0" step="1" placeholder="Price (paise)">
+<input id="packageDays" type="number" min="1" step="1" placeholder="Duration (days)">
+<input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
+<div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
+<div id="rows"></div></main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-schedule"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
+let packageList=[];
 async function load(){try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
 <div class="row"><select id="s-${x.id}"><option>${esc(x.status)}</option><option>review</option><option>approved</option><option>payment_pending</option><option>live</option><option>paused</option><option>hidden</option><option>expired</option><option>rejected</option><option>cancelled</option></select><input id="n-${x.id}" placeholder="Audit note"><button class="btn primary" onclick="move('${x.id}')">Apply</button></div>
@@ -23,10 +36,25 @@ async function load(){try{const a=await JBPhase4.adRows();document.getElementByI
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
 <div class="row"><label>शुरू<input id="st-${x.id}" type="datetime-local" value="${localScheduleValue(x.starts_at)}"></label><label>समाप्त<input id="en-${x.id}" type="datetime-local" value="${localScheduleValue(x.ends_at)}"></label><button class="btn" onclick="scheduleAd('${x.id}')">Schedule</button></div>
 <div class="row"><input id="pr-${x.id}" placeholder="Payment reference"><input id="pa-${x.id}" type="number" min="0" placeholder="Amount paise"><button class="btn" onclick="payment('${x.id}')">Record confirmed payment</button></div></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){document.getElementById('rows').textContent=e.message;}}
+async function loadPackages(){
+ const box=document.getElementById('packageRows'),chooser=document.getElementById('requestedPackage');
+ try{
+  packageList=await JBPhase4.adPackages();
+  box.innerHTML=packageList.map(p=>`<div class="meta"><b>${esc(p.name)}</b> · ${esc(p.placement)} · ${esc(p.price_minor)} ${esc(p.currency)} paise · ${esc(p.duration_days)} days · weight ${esc(p.weight)} · version ${esc(p.version)} · ${p.active?'active':'inactive'} <button class="btn" onclick="editPackage('${esc(p.id)}')">Edit</button></div>`).join('')||'<p class="meta">No packages configured.</p>';
+  chooser.innerHTML='<option value="">Custom / no package selected</option>'+packageList.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.placement)} — ₹${esc((Number(p.price_minor)/100).toFixed(2))}</option>`).join('');
+ }catch(e){box.textContent=e.message;chooser.innerHTML='<option value="">Package list unavailable</option>';}
+}
+function clearPackage(){for(const id of ['packageId','packageName','packagePrice','packageDays'])document.getElementById(id).value='';document.getElementById('packagePlacement').value='homepage';document.getElementById('packageWeight').value='1';}
+function editPackage(id){const p=packageList.find(x=>x.id===id);if(!p)return;document.getElementById('packageId').value=p.id;document.getElementById('packageName').value=p.name;document.getElementById('packagePlacement').value=p.placement;document.getElementById('packagePrice').value=p.price_minor;document.getElementById('packageDays').value=p.duration_days;document.getElementById('packageWeight').value=p.weight;}
+document.getElementById('newPackage').onclick=clearPackage;
+document.getElementById('savePackage').onclick=async()=>{
+ try{await JBPhase4.adSavePackage({id:document.getElementById('packageId').value||null,name:document.getElementById('packageName').value,placement:document.getElementById('packagePlacement').value,priceMinor:document.getElementById('packagePrice').value,durationDays:document.getElementById('packageDays').value,weight:document.getElementById('packageWeight').value});clearPackage();await loadPackages();}catch(e){alert(e.message);}
+};
+document.getElementById('requestedPackage').onchange=()=>{const p=packageList.find(x=>x.id===document.getElementById('requestedPackage').value);if(p)document.getElementById('placement').value=p.placement;};
 async function move(id){try{await JBPhase4.adTransition(id,document.getElementById('s-'+id).value,document.getElementById('n-'+id).value);load();}catch(e){alert(e.message);}}
 async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});load();}catch(e){alert(e.message);}}
 async function scheduleAd(id){try{await JBPhase4.adSchedule(id,document.getElementById('st-'+id).value,document.getElementById('en-'+id).value);load();}catch(e){alert(e.message);}}
 async function payment(id){try{await JBPhase4.adConfirmPayment(id,document.getElementById('pr-'+id).value,document.getElementById('pa-'+id).value);load();}catch(e){alert(e.message);}}
-document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
-if(document.documentElement.dataset.jbAuth==='ready')load();else addEventListener('jb-auth-ready',load,{once:true});
+document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');const chosen=document.getElementById('requestedPackage').value;const p=packageList.find(x=>x.id===chosen);if(chosen&&(!p||!p.active||p.placement!==placementEl.value))throw Error('PACKAGE_PLACEMENT_MISMATCH');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,package:chosen||null,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
+function boot(){load();loadPackages();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 </script></body></html>
