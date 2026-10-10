@@ -60,6 +60,30 @@ begin
   if msg<>'MANUAL_PAYMENT_EVIDENCE_REQUIRED' then raise exception 'LEGACY_GUARD_WRONG: %',msg;end if;
  end;
  begin
+  insert into public.ad_payments(
+   campaign_id,provider_ref,status,amount_minor,currency,
+   method,receipt_at,evidence_ref,acceptance_ref,terms_accepted_at,
+   verified_by,verified_at,verification_note
+  ) values(
+   c,'NULL-METHOD-00001','confirmed',50000,'INR',
+   null,now(),'BANK-REF-001','WHATSAPP-ACCEPTED-001',now(),
+   auth.uid(),now(),'Checked independent bank settlement'
+  );
+  raise exception 'NULL_METHOD_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'MANUAL_PAYMENT_EVIDENCE_REQUIRED' then raise exception 'NULL_METHOD_GUARD_FAILED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_confirm_manual_payment_internal(
+   c,'UTR-OLD-ACCEPT',50000,'upi',now(),'BANK-REF-001',
+   'EARLY-ACCEPT-001',now()-interval '1 day','Checked independent bank settlement','CONFIRM');
+  raise exception 'PRE_QUOTE_ACCEPTANCE_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'TERMS_ACCEPTANCE_CHRONOLOGY_INVALID' then raise exception 'CONSENT_CHRONOLOGY_GUARD_FAILED: %',msg;end if;
+ end;
+ begin
   perform public.jb_ad_confirm_manual_payment_internal(
    c,'UTR-00000001',50000,'upi',now(),'BANK-REF-001',
    '',now(),'Checked independent bank settlement','CONFIRM');
