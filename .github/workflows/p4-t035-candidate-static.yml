@@ -86,3 +86,35 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/p4_t035_public_ads_review.sql
       - name: Run transaction rollback regression
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/p4-t035-postgres-regression.sql
+
+  b7-enquiry-postgres:
+    name: B7 public enquiry consent/Owner regression (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_enquiry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_enquiry"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_enquiry
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable enquiry schema
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-fixture.sql
+      - name: Apply review-only migration to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
+      - name: Verify anonymous input, consent, scope, cooldown, legacy denial
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
