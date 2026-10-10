@@ -9,6 +9,13 @@ create table public.user_roles(
 insert into public.user_roles(user_id,role) values
  ('11111111-1111-1111-1111-111111111111','owner'),
  ('22222222-2222-2222-2222-222222222222','reporter');
+-- Actual B3 emitter additionally refuses suspended or departed recipients.
+create table public.team_accounts(
+ user_id uuid primary key,status text not null default 'active'
+);
+insert into public.team_accounts(user_id,status) values
+ ('11111111-1111-1111-1111-111111111111','active'),
+ ('22222222-2222-2222-2222-222222222222','active');
 
 create table public.live_notifications(
  id bigint generated always as identity primary key,
@@ -47,6 +54,9 @@ begin
  if not exists(select 1 from public.user_roles
    where user_id=p_recipient_user_id and role='owner'::public.app_role)
  then raise exception 'B3_REVOKED_OR_NONOWNER_RECIPIENT';end if;
+ if exists(select 1 from public.team_accounts
+   where user_id=p_recipient_user_id and status<>'active')
+ then raise exception 'B3_RECIPIENT_SUSPENDED';end if;
  insert into public.live_notifications(
    recipient_user_id,domain,notification_type,priority,title,
    safe_message,record_type,record_id,action_required,action_path,
