@@ -125,3 +125,11 @@ The old T123 checker was NOT weakened, deleted, bypassed or broadly whitelisted.
 
 ### Status
 FIXED / EXACT OLD TEST GREEN
+
+
+## B7-G3 / 2026-10-10 — Source→Authority→Negative Regression Map
+- FIRST DIVERGENCE: Old `JBPublicAds.scopeForArticle()` and `jb_ad_public_feed(text,text)` accept a client-derived free-text scope and only the pilot districts, while the founder's locked geo contract requires verified published Article identity, full MP-55+tehsils and exact reviewed multi-area purchase. Do not silently broaden `global` or infer from viewer GPS/article body.
+- ROOT: canonical `articles` lacks trusted structured verified tehsil/district codes and ad bookings have single legacy free-text `scope`. No LGD directory/area grant model exists in LIVE Supabase (read-only schema audit 10 Oct).
+- MINIMUM-SAFE CANDIDATE: `db/20261010_b7_geo_targeting_REVIEW_ONLY.sql`: optional fields on canonical Article, authenticated reviewed MP LGD directory placeholders, exact Owner grants, immutable paid terms and private `b7_geo_matches_article()`. Zero application to Production; current public feed remains exactly as before until all downstream guards, data imports and tests are approved.
+- NEGATIVE PROOF: `ci/phase4/b7-geo-regression.sql` checks Gwalior ≠ Pichhore, district-only ≠ tehsil, mismatched/unverified parent, unpublished Article, legacy district text mismatch, unverified-only reject, paid campaign grant refusal, unauthorized Owner/AAL1/direct SQL, and private data access; synthetic only.
+- REMAINING STOP-GATES: official verified LGD complete import and cross-check, secure Article metadata Owner UI, sanitized one-public-feed Article-ID binding, original public RPC compatibility hardening, package versions/rotation/inventory, actual Android E3 and audit E5, protected full CI on final SHA.
