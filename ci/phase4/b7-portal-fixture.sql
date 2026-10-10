@@ -38,6 +38,14 @@ create table public.ad_portal_sessions(
  expires_at timestamptz not null,
  revoked_at timestamptz,created_at timestamptz not null default now()
 );
+create table public.ad_renewal_requests(
+ id uuid primary key default gen_random_uuid(),
+ campaign_id uuid not null references public.ad_campaigns(id) on delete cascade,
+ requested_by uuid not null,requested_end_at timestamptz not null,
+ status text not null default 'pending' check(status in('pending','approved','rejected')),
+ created_at timestamptz not null default now(),
+ decided_at timestamptz
+);
 create table public.ad_history(
  id bigint generated always as identity,
  campaign_id uuid, event_type text not null,
@@ -70,3 +78,12 @@ values
  ('aaaaaaaa-0000-0000-0000-000000000001',encode(extensions.digest(repeat('a',48),'sha256'),'hex'),now()+interval '2 hours',null),
  ('bbbbbbbb-0000-0000-0000-000000000002',encode(extensions.digest(repeat('b',48),'sha256'),'hex'),now()+interval '2 hours',null),
  ('cccccccc-0000-0000-0000-000000000003',encode(extensions.digest(repeat('c',48),'sha256'),'hex'),now()-interval '1 hour',null);
+
+-- Historical JWT-backed renewal must remain valid after adding portal support.
+insert into public.ad_renewal_requests(
+ campaign_id,requested_by,requested_end_at,status
+) values(
+ 'bbbbbbbb-0000-0000-0000-000000000002',
+ '11111111-1111-1111-1111-111111111111',
+ now()+interval '10 days','approved'
+);
