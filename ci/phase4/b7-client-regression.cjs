@@ -606,6 +606,17 @@ test('ADS-048 safe CTA: approved schemes and targets work; javascript/data/file/
   ['map','file:///etc/passwd',null],
   ['map','http://example.test/insecure',null],
   ['website','https://user:pass@example.test/creds',null],
+  // ADS-056: do not send readers to local/private network or literal IP.
+  ['website','https://localhost/admin',null],
+  ['map','https://api.local/secret',null],
+  ['website','https://localhost.example.localhost/x',null],
+  ['website','https://gateway.internal/credentials',null],
+  ['website','https://127.0.0.1:8443/',null],
+  ['website','https://10.0.0.7/',null],
+  ['website','https://192.168.1.1/panel',null],
+  ['website','https://[::1]/',null],
+  ['website','https://singlehost/path',null],
+  ['website','https://valid.example.test/deal','https://valid.example.test/deal'],
   ['whatsapp','javascript:alert(1)',null],
   ['call','abc9876543210',null],
   ['website','',null]
