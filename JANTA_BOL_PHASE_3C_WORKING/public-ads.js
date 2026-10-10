@@ -1,6 +1,7 @@
 /* P4-T035: canonical public projection, no device location, independent failure path. */
 (function(g){'use strict';
 const requests=new WeakMap();
+const pinnedArticleSlots=new WeakSet(); // ADS-025: one article opening -> one selection, never rotate in-place.
 function safe(value){try{const u=new URL(String(value||''));return u.protocol==='https:'&&!u.username&&!u.password?u.href:''}catch(_){return ''}}
 function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
 function scopeForArticle(item){
@@ -54,6 +55,9 @@ function cta(ad){
 }
 async function render(placement,scope='global'){
  const slot=[...document.querySelectorAll('[data-jb-ad-placement]')].find(e=>e.dataset.jbAdPlacement===placement);if(!slot)return;
+ // Pin before the network request to prevent concurrent/delayed re-selection.
+ // Failure or zero eligible ads remains empty for this article view.
+ if(placement==='article'){if(pinnedArticleSlots.has(slot))return;pinnedArticleSlots.add(slot);}
  const request={};requests.set(slot,request);slot.replaceChildren();
  const current=()=>requests.get(slot)===request;
  try{
