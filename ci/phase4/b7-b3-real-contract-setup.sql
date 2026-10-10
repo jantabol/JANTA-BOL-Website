@@ -9,7 +9,9 @@ alter table public.live_notifications
  add column if not exists resolved_at timestamptz,
  add column if not exists delivery_attempts integer not null default 0,
  add column if not exists next_retry_at timestamptz,
- add column if not exists last_delivery_error_code text;
+ add column if not exists last_delivery_error_code text,
+ add column if not exists due_at timestamptz,
+ add column if not exists last_reminded_at timestamptz;
 
 alter table public.record_retention_policies
  add column if not exists notes text,
