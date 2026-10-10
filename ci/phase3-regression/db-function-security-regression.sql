@@ -16,6 +16,7 @@ declare
   v_bad_ad_guard bigint;
   v_bad_public_ad_guard bigint;
   v_bad_public_enquiry_guard bigint;
+  v_bad_portal_change_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -71,6 +72,7 @@ begin
       'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
+      'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
       'jb_compliance_transition_internal','jb_compliance_task_prepare_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
       'jb_grievance_link_duplicate_internal','jb_grievance_reopen_internal','jb_grievance_reporter_clarify_internal',
@@ -127,7 +129,8 @@ begin
   from pg_proc p
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
-    and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal')
+    and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
+       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
 
@@ -177,6 +180,34 @@ begin
      )
   then v_bad_public_enquiry_guard:=v_bad_public_enquiry_guard+1;end if;
 
+  -- B7/ADS-045/046: temporary migration can be absent in old LIVE database.
+  -- Once the change table exists, the old advertiser RPC MUST NOT write a
+  -- creative. Preserve the reviewed exact function signature and RLS.
+  v_bad_portal_change_guard:=0;
+  if to_regclass('public.ad_change_requests') is not null then
+    select count(*) into v_bad_portal_change_guard
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname='jb_ad_portal_submit_creative'
+      and (p.oid <> to_regprocedure(
+            'public.jb_ad_portal_submit_creative(text,text,text,text,text,text)')
+           or not p.prosecdef
+           or not has_function_privilege('anon',p.oid,'EXECUTE')
+           or p.prosrc not ilike '%public.ad_change_requests%'
+           or p.prosrc not ilike '%TEXT_CHANGE_REQUEST_ONLY%'
+           or p.prosrc ilike '%insert into public.ad_creatives%');
+    if v_bad_portal_change_guard<>0
+      or not exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace
+         where n.nspname='public' and t.relname='ad_change_requests' and t.relrowsecurity)
+      or has_table_privilege('anon','public.ad_change_requests','SELECT')
+      or has_table_privilege('authenticated','public.ad_change_requests','INSERT')
+    then v_bad_portal_change_guard:=v_bad_portal_change_guard+1;end if;
+    if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname='jb_ad_portal_campaign'
+        and p.prosrc ilike '%cr.approved=true%')
+    then v_bad_portal_change_guard:=v_bad_portal_change_guard+1;end if;
+  end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
@@ -184,7 +215,8 @@ begin
     and v_bad_owner_guard=0
     and v_bad_ad_guard=0
     and v_bad_public_ad_guard=0
-    and v_bad_public_enquiry_guard=0,
+    and v_bad_public_enquiry_guard=0
+    and v_bad_portal_change_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
