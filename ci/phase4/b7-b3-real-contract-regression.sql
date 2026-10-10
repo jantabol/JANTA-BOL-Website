@@ -155,4 +155,78 @@ begin
  raise notice 'PASS [ADS-054] real B3 emitter denies token/password leakage, no phantom receipt';
 end $secret_guard$;
 
+
+-- Owner should not see yesterday's failed "LIVE" as a fresh LIVE
+-- notification after the campaign has already been HIDDEN. Normal
+-- News/Ad state is still authoritative; audit must retain original.
+update public.team_accounts set status='suspended'
+ where user_id='11111111-1111-1111-1111-111111111111';
+update public.ad_campaigns set status='live',updated_at=clock_timestamp()
+ where id='30000000-0000-0000-0000-000000000005';
+update public.ad_campaigns set status='hidden',updated_at=clock_timestamp()
+ where id='30000000-0000-0000-0000-000000000005';
+update public.team_accounts set status='active'
+ where user_id='11111111-1111-1111-1111-111111111111';
+do $stale_replay$
+declare v_failed bigint;v_id bigint;v_out jsonb;
+begin
+ select l.id into v_failed from public.audit_logs l
+ where l.action='ad_notification_failed'
+   and l.record_id='30000000-0000-0000-0000-000000000005'
+   and l.metadata->>'event'='ad_live'
+ order by l.id desc limit 1;
+ if v_failed is null then raise exception 'MISSING_OLD_FAILED_AD_LIVE';end if;
+ if not public.jb_ad_notification_retry_internal(v_failed)
+ then raise exception 'STALE_AD_LIVE_RETRY_FAILED_SAFE_REVIEW';end if;
+ if exists(select 1 from public.live_notifications
+  where record_id='30000000-0000-0000-0000-000000000005'
+    and notification_type='ad_live')
+ then raise exception 'STALE_LIVE_WRONGFULLY_DELIVERED_AFTER_HIDE';end if;
+ select id into v_id from public.live_notifications
+ where record_id='30000000-0000-0000-0000-000000000005'
+   and notification_type='ad_workflow_updated';
+ if v_id is null or not exists(select 1 from public.live_notifications
+  where id=v_id and title='Advertisement workflow updated'
+    and lifecycle_state='ACTION_REQUIRED' and priority='HIGH')
+ then raise exception 'STALE_LIVE_NOT_CONVERTED_TO_GENERIC_OWNER_REVIEW';end if;
+ select l.metadata into v_out from public.audit_logs l
+ where l.action='ad_notification_retry_succeeded'
+   and l.metadata->>'original_failure_id'=v_failed::text;
+ if v_out->>'source_event'<>'ad_live'
+   or v_out->>'delivered_event'<>'ad_workflow_updated'
+   or v_out->>'stale_state_sanitized'<>'true'
+ then raise exception 'STALE_RETRY_AUDIT_LIED: %',v_out;end if;
+ if (select count(*) from public.audit_logs
+    where id=v_failed and metadata->>'event'='ad_live')<>1
+ then raise exception 'IMMUTABLE_ORIGINAL_FAILURE_CHANGED';end if;
+ if not exists(select 1 from public.notification_delivery_history
+    where notification_id=v_id and channel='IN_APP' and event='EMITTED')
+ then raise exception 'STALE_OWNER_REVIEW_NOT_IN_REAL_B3_HISTORY';end if;
+ raise notice 'PASS [ADS-055] stale LIVE failure after HIDE sends generic Owner review, never false LIVE; original audit preserved';
+end $stale_replay$;
+
+-- Malformed audit references must never turn into a record lookup or
+-- cause a privileged retry using a fake/corrupt campaign UUID.
+insert into public.audit_logs(
+ actor_user_id,action,record_type,record_id,metadata,created_at
+) values(
+ null,'ad_notification_failed','ad_campaign',
+ '------------------------------------',
+ '{"event":"ad_live","delivery":"NOT_CONFIRMED"}',clock_timestamp());
+do $malformed$
+declare v_failure bigint;v_text text;
+begin
+ select id into v_failure from public.audit_logs
+ where record_id='------------------------------------' and action='ad_notification_failed';
+ begin
+  perform public.jb_ad_notification_retry_internal(v_failure);
+  raise exception 'MALFORMED_RECORD_ID_RETRIED';
+ exception when others then
+  get stacked diagnostics v_text=message_text;
+  if v_text<>'INVALID_NOTIFICATION_FAILURE_REFERENCE'
+  then raise exception 'MALFORMED_AUDIT_CONTRACT_NOT_REJECTED: %',v_text;end if;
+ end;
+ raise notice 'PASS [ADS-054] corrupt audit record UUID denied before any B3 Owner notification';
+end $malformed$;
+
 rollback;
