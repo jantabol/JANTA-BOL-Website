@@ -179,6 +179,85 @@ begin
  end if;
 end $portal$;
 
+-- Owner-only recovery reads the IMMUTABLE audit failure record and retries
+-- the SAME existing B3 in-app engine. It never changes the original failure,
+-- never enqueues WhatsApp, never marks external provider "sent".
+create or replace function public.jb_ad_notification_retry_internal(
+ p_failure_audit_id bigint
+) returns boolean language plpgsql security definer
+set search_path to 'pg_catalog','public','private'
+as $retry$
+declare v public.audit_logs;v_event text;v_priority text;v_required boolean;
+        v_count integer;
+begin
+ if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
+ if p_failure_audit_id is null or p_failure_audit_id<=0
+ then raise exception 'INVALID_NOTIFICATION_FAILURE_REFERENCE';end if;
+ select * into v from public.audit_logs
+ where id=p_failure_audit_id and action='ad_notification_failed'
+   and metadata->>'delivery'='NOT_CONFIRMED'
+ for share;
+ if not found then raise exception 'AD_NOTIFICATION_FAILURE_NOT_FOUND';end if;
+ if exists(select 1 from public.audit_logs l
+    where l.action='ad_notification_retry_succeeded'
+      and l.metadata->>'original_failure_id'=v.id::text)
+ then return true;end if;
+ v_event:=v.metadata->>'event';
+ if v.record_type not in('ad_campaign','advertiser','ad_payment',
+   'ad_creative','ad_renewal','ad_change')
+   or v_event is null or v_event !~ '^ad_[a-z_]{2,48}$'
+   or v.record_id !~ '^[0-9a-f-]{36}$'
+ then raise exception 'INVALID_NOTIFICATION_FAILURE_REFERENCE';end if;
+ v_required:=v_event in('ad_requested','ad_payment_pending','ad_hidden',
+                      'ad_expired','ad_renewal_requested','ad_change_requested');
+ v_priority:=case when v_required or v_event='ad_verified' then 'HIGH'
+                  else 'NORMAL' end;
+ v_count:=private.b7_ad_emit_inapp_owner(
+  v.record_type,v.record_id,v_event,v_priority,v_required,
+  'ads:retry:'||v.id::text);
+ if v_count<1 then raise exception 'AD_NOTIFICATION_NO_RETRY_RECEIPT';end if;
+ insert into public.audit_logs(actor_user_id,action,record_type,record_id,
+                               metadata,created_at)
+ values(auth.uid(),'ad_notification_retry_succeeded',v.record_type,v.record_id,
+        jsonb_build_object('original_failure_id',v.id::text,
+                           'delivery','IN_APP_READY_ONLY',
+                           'external_provider_sent',false),clock_timestamp());
+ return true;
+end $retry$;
+revoke all on function public.jb_ad_notification_retry_internal(bigint)
+ from public,anon;
+grant execute on function public.jb_ad_notification_retry_internal(bigint)
+ to authenticated,service_role;
+
+create or replace function public.jb_ad_notification_failures_internal()
+returns jsonb language plpgsql stable security definer
+set search_path to 'pg_catalog','public','private'
+as $failed$
+declare v jsonb;
+begin
+ if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
+ select coalesce(jsonb_agg(jsonb_build_object(
+  'audit_id',x.id,'record_type',x.record_type,'record_id',x.record_id,
+  'event',x.metadata->>'event','created_at',x.created_at)
+  order by x.created_at desc,x.id desc),'[]'::jsonb)
+ into v from (
+  select l.id,l.record_type,l.record_id,l.metadata,l.created_at
+  from public.audit_logs l where l.action='ad_notification_failed'
+    and l.metadata->>'delivery'='NOT_CONFIRMED'
+    and l.record_type in('ad_campaign','advertiser','ad_payment',
+       'ad_creative','ad_renewal','ad_change')
+    and not exists(select 1 from public.audit_logs s
+      where s.action='ad_notification_retry_succeeded'
+        and s.metadata->>'original_failure_id'=l.id::text)
+  order by l.created_at desc,l.id desc limit 100
+ ) x;
+ return v;
+end $failed$;
+revoke all on function public.jb_ad_notification_failures_internal()
+ from public,anon;
+grant execute on function public.jb_ad_notification_failures_internal()
+ to authenticated,service_role;
+
 -- Existing notification_delivery_outbox / history is the ONLY source of
 -- externally delivered status. No automatic WhatsApp/Email action here.
 commit;
