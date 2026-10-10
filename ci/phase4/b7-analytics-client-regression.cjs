@@ -93,3 +93,70 @@ test('ADS-050: never call unsafe raw event API or leak ticket to durable storage
  assert.doesNotMatch(articleHtml,/ad-analytics-client\.js|ad-viewability\.js/);
  assert.doesNotMatch(home,/ad-analytics-client\.js|ad-viewability\.js/);
 });
+
+
+test('ADS-048: trusted anchor click uses one issued token, no navigation interception',async()=>{
+ const {window,args,calls,element}=client();
+ const listeners=[];
+ const anchor={tagName:'A',isConnected:true,href:'https://advertiser.example.test/',
+   addEventListener(name,callback,options){listeners.push({name,callback,options})}};
+ element.contains=child=>child===anchor;
+ const prepared=await window.JBAdAnalytics.prepare({...args,ctaElement:anchor});
+ assert.equal(prepared,true);
+ assert.equal(listeners.length,1);
+ assert.equal(listeners[0].name,'click');
+ assert.equal(listeners[0].options.passive,true);
+ let prevented=0;
+ const event={isTrusted:true,defaultPrevented:false,
+   preventDefault(){prevented++}};
+ listeners[0].callback({isTrusted:false,defaultPrevented:false});
+ assert.equal(calls.length,1,'synthetic click must not count');
+ listeners[0].callback(event);
+ listeners[0].callback(event);
+ await Promise.resolve();
+ assert.equal(prevented,0,'CTA must navigate independently of analytics');
+ assert.equal(calls.filter(c=>c.name==='jb_ad_record_ticket_click').length,1);
+ const click=calls.find(c=>c.name==='jb_ad_record_ticket_click');
+ assert.deepEqual(JSON.parse(JSON.stringify(click.args)),{p_token:validToken});
+});
+test('ADS-048: hidden-tab, canceled and removed ad cannot send click claim',async()=>{
+ for(const mode of ['hidden','cancelled','removed','detachedLink']){
+  const {window,args,calls,element}=client();
+  let callback;
+  const link={tagName:'A',isConnected:true,
+   addEventListener(_name,cb){callback=cb}};
+  element.contains=child=>child===link;
+  window.document={visibilityState:'visible'};
+  assert.equal(await window.JBAdAnalytics.prepare({...args,ctaElement:link}),true);
+  if(mode==='hidden')window.document.visibilityState='hidden';
+  if(mode==='removed')element.isConnected=false;
+  if(mode==='detachedLink')link.isConnected=false;
+  callback({isTrusted:true,defaultPrevented:mode==='cancelled'});
+  assert.equal(calls.filter(x=>x.name==='jb_ad_record_ticket_click').length,0,mode);
+ }
+});
+test('ADS-048: no CTA or untrusted foreign CTA never attaches click reporter',async()=>{
+ for(const type of ['missing','notAnchor','foreign']){
+  const {window,args,element,calls}=client();
+  const link={tagName:type==='notAnchor'?'DIV':'A',isConnected:true,
+   addEventListener(){throw Error('INVALID_CTA_ATTACHED')}};
+  element.contains=child=>type!=='foreign'&&child===link;
+  assert.equal(await window.JBAdAnalytics.prepare({
+    ...args,ctaElement:type==='missing'?null:link
+  }),true);
+  assert.equal(calls.length,1);
+ }
+});
+test('ADS-048: statistics backend click failure must not break user-initiated link',async()=>{
+ const {window,args,element}=client();
+ let callback;
+ const anchor={tagName:'A',isConnected:true,
+  addEventListener(_name,handler){callback=handler}};
+ element.contains=child=>child===anchor;
+ const original=window.JBBackend.client.rpc;
+ window.JBBackend.client.rpc=(name,x)=>
+   name==='jb_ad_record_ticket_click'?Promise.reject(new Error('BACKEND_OFFLINE')):original(name,x);
+ assert.equal(await window.JBAdAnalytics.prepare({...args,ctaElement:anchor}),true);
+ assert.doesNotThrow(()=>callback({isTrusted:true,defaultPrevented:false}));
+ await Promise.resolve();
+});
