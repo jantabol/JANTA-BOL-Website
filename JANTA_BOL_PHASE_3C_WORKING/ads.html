@@ -24,13 +24,15 @@
 <input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
 <div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
 <div id="rows"></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-schedule"></script><script src="admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-verify"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 let packageList=[];
 async function load(){try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
+<p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Source: ${esc(x.enquiry_origin||'legacy/manual')} · Article context: ${esc(x.enquiry_article_id||'—')} · Submitted: ${esc(x.created_at||'')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
+<div class="row"><select id="vstate-${x.id}"><option value="">Verification decision</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="pending">Pending / recheck</option></select><input id="vnote-${x.id}" maxlength="1000" placeholder="Verification note (min 8 characters)"><input id="vref-${x.id}" maxlength="300" placeholder="High-risk: independent evidence reference"><button class="btn" onclick="verifyAdvertiser('${x.id}','${x.advertiser_id}')">Record verification (Owner/AAL2)</button></div>
 <div class="row"><select id="s-${x.id}"><option>${esc(x.status)}</option><option>review</option><option>approved</option><option>payment_pending</option><option>live</option><option>paused</option><option>hidden</option><option>expired</option><option>rejected</option><option>cancelled</option></select><input id="n-${x.id}" placeholder="Audit note"><button class="btn primary" onclick="move('${x.id}')">Apply</button></div>
 <details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL"><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save and approve creative (Founder)</button>
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
@@ -51,6 +53,16 @@ document.getElementById('savePackage').onclick=async()=>{
  try{await JBPhase4.adSavePackage({id:document.getElementById('packageId').value||null,name:document.getElementById('packageName').value,placement:document.getElementById('packagePlacement').value,priceMinor:document.getElementById('packagePrice').value,durationDays:document.getElementById('packageDays').value,weight:document.getElementById('packageWeight').value});clearPackage();await loadPackages();}catch(e){alert(e.message);}
 };
 document.getElementById('requestedPackage').onchange=()=>{const p=packageList.find(x=>x.id===document.getElementById('requestedPackage').value);if(p)document.getElementById('placement').value=p.placement;};
+async function verifyAdvertiser(campaignId,advertiserId){
+ try{
+  const state=document.getElementById('vstate-'+campaignId).value;
+  const note=document.getElementById('vnote-'+campaignId).value.trim();
+  const evidence=document.getElementById('vref-'+campaignId).value.trim();
+  if(!state||note.length<8)throw Error('Verification decision aur audit note zaroori hai');
+  await JBPhase4.adVerifyAdvertiser(advertiserId,state,note,evidence);
+  await load();
+ }catch(e){alert(e.message);}
+}
 async function move(id){try{await JBPhase4.adTransition(id,document.getElementById('s-'+id).value,document.getElementById('n-'+id).value);load();}catch(e){alert(e.message);}}
 async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});load();}catch(e){alert(e.message);}}
 async function scheduleAd(id){try{await JBPhase4.adSchedule(id,document.getElementById('st-'+id).value,document.getElementById('en-'+id).value);load();}catch(e){alert(e.message);}}
