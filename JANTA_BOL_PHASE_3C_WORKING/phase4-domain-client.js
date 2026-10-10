@@ -57,6 +57,12 @@ async function adIssuePortal(id){
  await owner();
  if(!id||!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id)))
   throw Error('INVALID_CAMPAIGN_ID');
+ // Rollout fail-closed: old production B7 still lets an advertiser submit
+ // photo/video through the legacy RPC. NEVER issue credentials against it.
+ // This Owner-only staging readiness RPC ships atomically with the new
+ // backend text-request-only policy, and does not write data.
+ const ready=await rpc('jb_ad_owner_change_requests_internal',{});
+ if(!Array.isArray(ready))throw Error('B7_SAFE_PORTAL_BACKEND_REQUIRED');
  return rpc('jb_ad_issue_portal_internal',{p_campaign:id});
 }
 const adTransition=(id,status,note='')=>rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
