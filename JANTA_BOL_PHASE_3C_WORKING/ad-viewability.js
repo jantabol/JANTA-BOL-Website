@@ -1,7 +1,7 @@
 /* B7 / ADS-049 — 50% of ad on screen for 1000ms, continuously.
  * STAGING MODULE, NOT YET ENABLED ON PUBLIC PAGE. A browser observer
  * supplies only a client-side eligibility signal: it is NOT server proof
- * of a human view and MUST NOT directly increment ad_events or billing.
+ * of a human view and MUST NOT directly increment the event ledger or billing.
  * Pending protected view-token backend and paired rollout; fail closed.
  */
 (function(g){'use strict';
