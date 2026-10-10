@@ -174,3 +174,23 @@ test('ADS-013 main article retains permanent URL/share and a single ad placement
  assert.match(html,/shareUrl\(\)/);
  assert.match(html,/Permanent Article ID/);
 });
+
+
+test('ADS-025 pinned: a second article render cannot change ad selection',async()=>{
+ const {window,context,calls}=client();
+ const slot={dataset:{jbAdPlacement:'article'},replaceChildren(){throw Error('NO_REPLACE_FOR_PINNED');}};
+ // The first request has no eligible ads: it must still pin this article opening.
+ let clears=0;slot.replaceChildren=()=>{clears++};
+ context.document={querySelectorAll:()=>[slot]};
+ await Promise.all([window.JBPublicAds.render('article','global'),window.JBPublicAds.render('article','global')]);
+ assert.equal(calls.length,1);
+ assert.equal(clears,1);
+ await window.JBPublicAds.render('article','district:guna');
+ assert.equal(calls.length,1,'article selection must not change with new scope');
+});
+test('ADS-025 fail closed: no timer, no repeated ad event on a held article',()=>{
+ const js=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/public-ads.js','utf8');
+ assert.match(js,/pinnedArticleSlots\.has\(slot\)/);
+ assert.doesNotMatch(js,/\bsetInterval\s*\(/);
+ assert.doesNotMatch(js,/\.rpc\(['"]jb_ad_(?:event|record_event)['"]/);
+});
