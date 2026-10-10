@@ -15,6 +15,7 @@ declare
   v_bad_owner_guard bigint;
   v_bad_ad_guard bigint;
   v_bad_public_ad_guard bigint;
+  v_bad_public_enquiry_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -43,7 +44,7 @@ begin
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
     and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
-    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
+    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
@@ -149,13 +150,41 @@ begin
       where n.nspname='public' and p.proname in('jb_ad_public_feed','jb_public_active_ads'))<>2
   then v_bad_public_ad_guard:=v_bad_public_ad_guard+1; end if;
 
+  -- ADS-002: conditional until migration is deployed. Once present, this exact
+  -- anon API is reviewed for explicit consent and no other legacy public intake.
+  -- Keep prior T123 checks, never whitelist unknown jb_* signatures.
+  select count(*) into v_bad_public_enquiry_guard
+  from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+  join pg_language l on l.oid=p.prolang
+  where n.nspname='public' and p.proname='jb_ad_public_enquiry'
+    and (
+      p.oid <> to_regprocedure('public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)')
+      or not p.prosecdef or l.lanname<>'plpgsql'
+      or not has_function_privilege('anon',p.oid,'EXECUTE')
+      or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+      or p.prosrc not ilike '%p_consent is distinct from true%'
+      or p.prosrc not ilike '%ENQUIRY_COOLDOWN%'
+      or p.prosrc not ilike '%INVALID_WHATSAPP_NUMBER%'
+      or p.prosrc not ilike '%insert into public.ad_campaigns%'
+      or p.prosrc not ilike '%status%requested%'
+    );
+  if to_regprocedure('public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)') is not null
+     and exists(
+       select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+       where n.nspname='public' and p.proname='jb_ad_public_request'
+         and (has_function_privilege('anon',p.oid,'EXECUTE')
+           or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%')
+     )
+  then v_bad_public_enquiry_guard:=v_bad_public_enquiry_guard+1;end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
     and v_unknown_authenticated=0
     and v_bad_owner_guard=0
     and v_bad_ad_guard=0
-    and v_bad_public_ad_guard=0,
+    and v_bad_public_ad_guard=0
+    and v_bad_public_enquiry_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
