@@ -259,4 +259,110 @@ begin
 end $relogin$;
 reset role;
 
+
+-- ADS-047 portal renewal: must use canonical ad_renewal_requests and remain
+-- pending; NEVER extend or pay a campaign from the anonymous portal.
+select set_config('b7.test_owner','',true);
+set local role anon;
+do $renewal_negative$
+declare msg text;
+begin
+ begin
+  perform public.jb_ad_portal_request_renewal(repeat('a',48),now()+interval '1 day');
+  raise exception 'SHORT_RENEWAL_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_RENEWAL_END' then raise exception 'RENEWAL_DATE_GUARD_FAILED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_portal_request_renewal(repeat('b',48),now()+interval '14 days');
+  raise exception 'REVOKED_RENEWAL_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'ADVERTISER_SESSION_REQUIRED' then raise exception 'REVOKED_RENEWAL_GUARD_FAILED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_portal_request_renewal(repeat('c',48),now()+interval '14 days');
+  raise exception 'EXPIRED_RENEWAL_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'ADVERTISER_SESSION_REQUIRED' then raise exception 'EXPIRED_RENEWAL_GUARD_FAILED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-047] invalid date, revoked and expired portal renewals denied';
+end $renewal_negative$;
+
+select public.jb_ad_portal_request_renewal(repeat('a',48),now()+interval '14 days')
+ as pending_portal_renewal_id;
+do $renewal_repeat$
+declare msg text;
+begin
+ begin
+  perform public.jb_ad_portal_request_renewal(repeat('a',48),now()+interval '21 days');
+  raise exception 'SILENT_SECOND_RENEWAL_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'RENEWAL_ALREADY_PENDING' then raise exception 'RENEWAL_DEDUP_FAILED: %',msg;end if;
+ end;
+ begin
+  perform 1 from public.ad_renewal_requests;
+  raise exception 'ANON_DIRECT_RENEWAL_TABLE_READ';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg not like '%permission denied%' then raise exception 'RENEWAL_RLS_FAILED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-047] one portal renewal per campaign and no anon direct renewal data';
+end $renewal_repeat$;
+reset role;
+
+do $renewal_state$
+begin
+ if (select count(*) from public.ad_renewal_requests)<>2
+ then raise exception 'RENEWAL_COUNT_WRONG';end if;
+ if not exists(
+  select 1 from public.ad_renewal_requests
+  where campaign_id='aaaaaaaa-0000-0000-0000-000000000001'
+    and status='pending' and request_channel='portal'
+    and requested_by is null and source_portal_session is not null
+ ) then raise exception 'PORTAL_RENEWAL_SOURCE_MISSING';end if;
+ if not exists(
+  select 1 from public.ad_renewal_requests
+  where campaign_id='bbbbbbbb-0000-0000-0000-000000000002'
+    and request_channel='account'
+    and requested_by='11111111-1111-1111-1111-111111111111'::uuid
+    and status='approved'
+ ) then raise exception 'OLD_JWT_RENEWAL_CORRUPTED';end if;
+ if not exists(
+  select 1 from public.ad_campaigns
+  where id='aaaaaaaa-0000-0000-0000-000000000001'
+    and status='live' and ends_at<now()+interval '8 days'
+ ) then raise exception 'PORTAL_SILENTLY_EXTENDED_LIVE_AD';end if;
+ if (select count(*) from public.ad_history where event_type='renewal_requested')<>1
+ then raise exception 'RENEWAL_HISTORY_MISSING';end if;
+ raise notice 'PASS [ADS-047] old JWT renewal survives, portal pending only, LIVE expiry unchanged';
+end $renewal_state$;
+
+set local role authenticated;
+do $renewal_notowner$
+declare msg text;
+begin
+ begin
+  perform public.jb_ad_owner_renewals_internal();
+  raise exception 'NONOWNER_RENEWAL_QUEUE_ALLOWED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED'
+  then raise exception 'RENEWAL_OWNER_GUARD_FAILED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-047] authenticated nonowner cannot see all advertiser renewal requests';
+end $renewal_notowner$;
+reset role;
+
+do $renewal_owner$
+begin
+ perform set_config('b7.test_owner','enabled',true);
+ if jsonb_array_length(public.jb_ad_owner_renewals_internal())<>2
+ then raise exception 'OWNER_RENEWAL_QUEUE_WRONG';end if;
+ raise notice 'PASS [ADS-047] Owner sees existing and portal renewal in ONE canonical queue';
+end $renewal_owner$;
+
 rollback;
