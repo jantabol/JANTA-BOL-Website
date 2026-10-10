@@ -15,7 +15,7 @@ function watch(element,onQualified){
   return noop;
  const prev=active.get(element);
  if(prev)return prev.dispose;
- let fraction=0,timer=null,started=0,stopped=false,qualified=false;
+ let fraction=0,timer=null,started=0,stopped=false,qualified=false,wasVisible=false;
  function now(){return g.performance?.now?.() ?? Date.now();}
  function visible(){
   return g.document.visibilityState==='visible'&&
@@ -31,7 +31,8 @@ function watch(element,onQualified){
  }
  function finish(){
   timer=null;
-  if(stopped||qualified||!visible())return;
+  if(stopped||qualified)return;
+  if(!visible()){wasVisible=false;return;}
   const elapsed=now()-started;
   if(elapsed<1000){
    // A throttled/early timer must never qualify before full 1000ms.
@@ -47,8 +48,12 @@ function watch(element,onQualified){
   }catch(_){}
  }
  function refresh(){
-  cancel();
-  if(stopped||qualified||!visible())return;
+  if(stopped||qualified)return;
+  if(!visible()){wasVisible=false;cancel();return;}
+  // Remaining >=50% is a continuous interval even if IntersectionObserver
+  // emits more ratio updates (scrolling from 60% to 80%). Do NOT restart it.
+  if(wasVisible)return;
+  wasVisible=true;
   started=now();
   timer=g.setTimeout(finish,1000);
  }
