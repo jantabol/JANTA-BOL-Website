@@ -36,3 +36,24 @@ insert into public.record_retention_policies(
  policy_key,domain,record_type,default_retention_days,
  automatic_disposition,active
 ) values('ads_history_v1','ads','ad_history',2555,false,true);
+
+
+-- Two history events predate B7 retention integration:
+-- one requires backfill and one has a pre-existing Founder legal hold.
+insert into public.ad_history(
+ campaign_id,event_type,note,actor_user_id,created_at
+) values
+ ('30000000-0000-0000-0000-000000000004',
+  'legacy_missing_registry','Old but still binding evidence',
+  null,now()-interval '60 days'),
+ ('30000000-0000-0000-0000-000000000004',
+  'legacy_held_record','Historical legal hold evidence',
+  null,now()-interval '30 days');
+
+insert into public.record_retention_state(
+ domain,record_type,record_id,policy_key,lifecycle_state,
+ retention_due_at,hold_active,hold_reason,updated_at
+)
+select 'ads','ad_history',h.id::text,'ads_history_v1','hold',
+       now()+interval '100 days',true,'PREEXISTING_TEST_LEGAL_HOLD',now()
+from public.ad_history h where h.event_type='legacy_held_record';
