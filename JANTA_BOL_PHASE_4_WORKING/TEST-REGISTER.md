@@ -362,3 +362,14 @@ Execution branch: `codex/b7-blueprint-20261010`, directly based on `777341a37e73
 - **No canonical B7 test is claimed PASS/LOCK.** T034 IN PROGRESS, T035/T036/T037 IN PROGRESS; T038 external E6 DUE, other T039..T042 NOT RUN. Exact final evidence requires staging integration, actual full protected CI on final source SHA, real E2/E3/E5, then Android proof.
 - **Production untouched** by this change set: zero applied DDL/DML, no paid/LIVE data, no PR merge, no Vercel production deploy. Current backend behavior continues from pre-existing source. Do not silently run review SQL on LIVE project.
 
+
+## B7-G5 / T038 MANUAL PAYMENT CANDIDATE — 10 OCT 2026 (NOT PASS)
+
+- Branch `codex/b7-blueprint-20261010` builds on earlier reconciled B7 code and G1/one-inline-ad changes. Review-only migration: `db/20261010_b7_manual_payment_REVIEW_ONLY.sql`, **not deployed** and no production data altered.
+- Canonical old payment records retained. Candidate Owner/AAL2 quote RPC `jb_ad_set_approved_quote_internal` stores an agreed paise price + evidence reference; quote immutable after confirmed receipt.
+- New Owner/AAL2 `jb_ad_confirm_manual_payment_internal` requires literal typed `CONFIRM`, unique UTR/cash ledger receipt, method, timestamp, independent receipt evidence reference, advertiser consent evidence reference and timestamp, Owner note and approved price.
+- BEFORE trigger on `ad_payments` enforces the SAME evidence for legacy RPC inserts, blocks zero/negative/mismatched price, unverified/high-risk campaigns, missing creative, duplicate confirmed UTR and mutation/deletion of confirmed receipt. Campaign LIVE trigger blocks premature/expired/unpaid campaigns regardless of legacy status RPC.
+- Existing Owner `ads.html` manual payment section now calls new evidence RPC, never legacy 3-argument payment shortcut. Separate protected `ci/phase4/b7-client-regression.cjs` tests positive/negative Owner frontend behavior.
+- `ci/phase4/b7-payment-fixture.sql` and `b7-payment-regression.sql` execute the candidate on GitHub isolated disposable PostgreSQL with rollback, including Owner rejection, consent missing, duplicate UTR, immutable payment, high-risk pending denial and future schedule. These are **synthetic E2**, never real bank settlement/E5 or E6.
+- All P4-T034–T042 canonical PASS/LOCK still **NOT CLAIMED**. P4-T038 row deliberately remains `NOT RUN — EXTERNAL` under B0 source governance, because E5 real Owner and E6 external evidence are not available. Isolated code/test success is a PARTIAL checkpoint, not launch readiness.
+- Existing full Phase3+4 Protected CI and candidate CI need both be GREEN on every eventual merge/build SHA. No backend SQL applied to production. Full B7 still requires G2 geography/media, G3 inventory+rotation, G5 advertiser portal, G6 analytics/audit and G7 Android E3 and final closure.
