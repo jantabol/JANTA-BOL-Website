@@ -193,4 +193,37 @@ revoke all on function public.jb_ad_reserve_inventory_internal(uuid,uuid,bigint,
  from public,anon;
 grant execute on function public.jb_ad_reserve_inventory_internal(uuid,uuid,bigint,text)
  to authenticated,service_role;
+
+-- A sold qualified-view promise must not be made impossible by silently
+-- editing existing campaign price, area, package or schedule after reservation.
+-- Emergency HIDE/PAUSE is intentionally NOT blocked; retains evidence for
+-- Founder exception handling, but no guarantee is secretly deleted.
+create or replace function private.b7_inventory_campaign_contract_guard()
+returns trigger language plpgsql security definer
+set search_path to 'pg_catalog','public'
+as $contract$
+begin
+ if exists(select 1 from public.ad_inventory_reservations r
+    where r.campaign_id=old.id) and
+   row(new.placement,new.scope,new.starts_at,new.ends_at,
+       new.agreed_price_minor,new.agreed_terms_ref,
+       new.package_id,new.package_snapshot)
+   is distinct from
+   row(old.placement,old.scope,old.starts_at,old.ends_at,
+       old.agreed_price_minor,old.agreed_terms_ref,
+       old.package_id,old.package_snapshot)
+ then raise exception 'SOLD_INVENTORY_TERMS_IMMUTABLE';end if;
+ return new;
+end $contract$;
+drop trigger if exists b7_inventory_campaign_contract_guard
+ on public.ad_campaigns;
+create trigger b7_inventory_campaign_contract_guard
+before update of placement,scope,starts_at,ends_at,
+ agreed_price_minor,agreed_terms_ref,package_id,package_snapshot
+on public.ad_campaigns
+for each row execute function private.b7_inventory_campaign_contract_guard();
+revoke all on function private.b7_inventory_campaign_contract_guard()
+ from public,anon,authenticated;
+
+
 commit;
