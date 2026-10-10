@@ -4,11 +4,16 @@
 -- CODEX_CURRENT_SUPABASE/migrations/. Do not reproduce/reimplement
 -- jb_notification_emit_internal here. No LIVE Supabase writes.
 alter table public.live_notifications
+ add column if not exists read_at timestamptz,
  add column if not exists lifecycle_state text not null default 'UNREAD',
  add column if not exists resolved_at timestamptz,
  add column if not exists delivery_attempts integer not null default 0,
  add column if not exists next_retry_at timestamptz,
  add column if not exists last_delivery_error_code text;
+
+alter table public.record_retention_policies
+ add column if not exists notes text,
+ add column if not exists updated_at timestamptz not null default now();
 
 -- The B3 migration adds consequence. Historical schema has action-required
 -- but this synthetic table was intentionally smaller. Complete ONLY the
