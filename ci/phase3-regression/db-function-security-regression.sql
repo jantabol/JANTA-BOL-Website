@@ -49,7 +49,7 @@ begin
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
     and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
-    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
+    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
@@ -73,7 +73,7 @@ begin
       'jb_verify_owner_recovery_key',
       'jb_ad_analytics_internal','jb_ad_qualified_analytics_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
-      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
+      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
       'jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
@@ -344,18 +344,19 @@ begin
   if to_regclass('public.ad_view_tickets') is not null
      or exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
       where n.nspname='public' and p.proname in (
-       'jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket',
+       'jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click',
        'jb_ad_qualified_analytics_internal')) then
     select count(*) into v_bad_qualified_view_guard
     from pg_proc p join pg_namespace n on n.oid=p.pronamespace
     where n.nspname='public'
-       and p.proname in('jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket')
+       and p.proname in('jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click')
        and (not p.prosecdef or not has_function_privilege('anon',p.oid,'EXECUTE')
             or not has_function_privilege('authenticated',p.oid,'EXECUTE'));
     if v_bad_qualified_view_guard<>0
        or to_regclass('public.ad_view_tickets') is null
        or to_regprocedure('public.jb_ad_issue_view_ticket(uuid,uuid,uuid,text)') is null
        or to_regprocedure('public.jb_ad_qualify_view_ticket(text)') is null
+       or to_regprocedure('public.jb_ad_record_ticket_click(text)') is null
        or to_regprocedure('public.jb_ad_qualified_analytics_internal(uuid)') is null
        or to_regprocedure('private.b7_eligible_article_creatives(uuid)') is null
        or not exists(select 1 from pg_class t where t.oid='public.ad_view_tickets'::regclass
@@ -367,6 +368,19 @@ begin
        or has_function_privilege('anon','public.jb_ad_event(uuid,text)','EXECUTE')
        or has_function_privilege('anon','public.jb_ad_record_event(uuid,text)','EXECUTE')
        or has_function_privilege('anon','public.jb_ad_qualified_analytics_internal(uuid)','EXECUTE')
+       or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+           where n.nspname='public' and p.proname='jb_ad_record_ticket_click'
+             and p.prosecdef=true
+             and has_function_privilege('anon',p.oid,'EXECUTE')
+             and p.prosrc ilike '%for update%'
+             and p.prosrc ilike '%cr.approved=true%'
+             and p.prosrc ilike '%client_reported_cta_click%')
+       or not exists(select 1 from pg_indexes x
+           where x.schemaname='public' and x.tablename='ad_events'
+             and x.indexname='b7_ad_event_one_ticket_event'
+             and x.indexdef ilike '%unique%'
+             and x.indexdef ilike '%view_ticket_hash%'
+             and x.indexdef ilike '%event_type%')
        or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
            where n.nspname='public' and p.proname='jb_ad_issue_view_ticket'
             and p.prosrc ilike '%private.b7_eligible_article_creatives%'
