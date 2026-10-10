@@ -519,3 +519,70 @@ test('ADS-014 cutover remains unlinked until signed-off LGD/E3 and backend pairi
  assert.match(article,/shareUrl\(\)/);
  assert.doesNotMatch(source,/navigator\.geolocation|getCurrentPosition/);
 });
+
+
+function adRenderFixture(){
+ const {window,context}=client(),placed=[],slots=[];
+ const doc={
+  querySelectorAll:()=>slots,
+  createElement(tag){return {
+   tagName:tag.toUpperCase(),className:'',textContent:'',isConnected:false,
+   attrs:{},children:[],setAttribute(k,v){this.attrs[k]=v},
+   append(item){this.children.push(item)},
+   addEventListener(){}
+  }}
+ };
+ context.document=doc;
+ const slot={dataset:{jbAdPlacement:'article'},
+  replaceChildren(){placed.length=0},
+  append(node){node.isConnected=true;placed.push(node)}
+ };
+ slots.push(slot);
+ const rpc=[];
+ window.JBBackend.client.rpc=async(name,args)=>{
+  rpc.push({name,args});
+  return {error:null,data:[{
+   campaign_id:'30000000-0000-0000-0000-000000000005',
+   creative_id:'40000000-0000-0000-0000-000000000005',
+   creative_type:'text',text_body:'Valid OWNER-approved test AD',
+   label:'विज्ञापन',cta_type:null
+  }]};
+ };
+ return {window,context,doc,slot,slots,placed,rpc};
+}
+test('ADS-049 staged renderer: exact Article ID triggers optional safe analytics AFTER ad insertion',async()=>{
+ const f=adRenderFixture();let handshakes=0,inputs=null;
+ f.window.JBAdAnalytics={prepare(args){
+  handshakes++;inputs=args;
+  assert.equal(f.placed.length,1,'server ad must be visibly inserted before handshake');
+  return Promise.resolve(true);
+ }};
+ await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+ assert.equal(f.rpc.length,1);assert.equal(handshakes,1);
+ assert.equal(inputs.element,f.placed[0]);
+ assert.equal(inputs.articleId,'10000000-0000-0000-0000-000000000001');
+ assert.equal(inputs.campaignId,'30000000-0000-0000-0000-000000000005');
+ assert.equal(inputs.creativeId,'40000000-0000-0000-0000-000000000005');
+ assert.equal(f.placed[0].children[0].textContent,'विज्ञापन');
+ await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+ assert.equal(handshakes,1);assert.equal(f.rpc.length,1);
+});
+test('ADS-049 staged renderer: legacy caller geographic claims cannot request view ticket',async()=>{
+ for(const bad of ['local','district:guna','global','article:bad']){
+  const f=adRenderFixture();let count=0;
+  f.window.JBAdAnalytics={prepare(){count++;return true}};
+  await f.window.JBPublicAds.render('article',bad);
+  assert.equal(count,0,'legacy/forged Article scope: '+bad);
+  assert.equal(f.placed.length,1,'ordinary ad card must not disappear');
+ }
+});
+test('ADS-049 staged renderer: analytics rejection cannot erase pinned ad or repeat selection',async()=>{
+ const f=adRenderFixture();let count=0;
+ f.window.JBAdAnalytics={prepare(){
+  count++;return Promise.reject(Error('STATS_API_UNAVAILABLE'));
+ }};
+ await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+ await Promise.resolve(); // observe swallowed stats promise rejection
+ assert.equal(count,1);assert.equal(f.placed.length,1);
+ assert.equal(f.rpc.length,1);
+});
