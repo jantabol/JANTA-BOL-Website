@@ -136,7 +136,13 @@ do $privileges$
 declare msg text;
 begin
  if not has_function_privilege('anon','public.jb_ad_public_feed(text,text)','EXECUTE')
- or has_function_privilege('anon','private.b7_weighted_article_candidate(uuid)','EXECUTE')
+ or coalesce((
+   select has_function_privilege('anon',p.oid,'EXECUTE')
+   from pg_catalog.pg_proc p
+   join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+   where n.nspname='private' and p.proname='b7_weighted_article_candidate'
+     and pg_get_function_identity_arguments(p.oid)='p_article uuid'
+ ),true)
  then raise exception 'PUBLIC_OR_PRIVATE_FUNC_GRANT_BROKEN';end if;
  begin
   perform 1 from public.ad_campaign_area_grants;
