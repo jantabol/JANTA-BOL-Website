@@ -150,3 +150,35 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
       - name: Assert Owner and evidence gates, duplicate UTR, LIVE schedule and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-regression.sql
+
+  b7-portal-postgres:
+    name: B7 advertiser text-only portal A/B isolation (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_portal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_portal"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_portal
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable advertisers/creative/session fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-fixture.sql
+      - name: Apply text-only change-request migration ONLY to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
+      - name: Assert cross-advertiser isolation, no media edit, Owner queue and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-regression.sql
