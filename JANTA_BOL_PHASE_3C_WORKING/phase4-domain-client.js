@@ -33,6 +33,15 @@ async function adVerifyAdvertiser(id,state,note,evidence){
    p_advertiser:id,p_state:state,p_note:String(note).trim(),p_evidence_ref:String(evidence||'').trim()||null
  });
 }
+async function adQualifiedAnalytics(id){
+ await owner();
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))
+  throw Error('INVALID_CAMPAIGN_ID');
+ const data=await rpc('jb_ad_qualified_analytics_internal',{p_campaign:id});
+ if(!data||typeof data!=='object'||data.reach_type!=='client_reported_estimate_not_unique_people')
+  throw Error('QUALIFIED_ANALYTICS_NOT_AVAILABLE');
+ return data;
+}
 async function adRenewalRequests(){
  await owner();
  const rows=await rpc('jb_ad_owner_renewals_internal',{});
@@ -116,5 +125,5 @@ async function adSchedule(id,start,end){
  if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
  return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
 }
-g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
+g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adQualifiedAnalytics,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
 })(window);
