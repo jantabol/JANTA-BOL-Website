@@ -7,6 +7,15 @@
 create or replace function auth.uid() returns uuid language sql stable
 as $uid$ select nullif(current_setting('b7.test_actor_uid',true),'')::uuid $uid$;
 
+-- Owner version immutability is tested here only. The shared payment fixture
+-- is left byte-for-byte unchanged so weighted/geo/portal/legacy jobs survive.
+alter table public.ad_creatives
+ add column version integer not null default 1,
+ add column media_url text,
+ add column cta_type text,
+ add column cta_target text,
+ add column created_at timestamptz not null default now();
+
 create table public.record_retention_policies(
  policy_key text primary key,domain text not null,record_type text not null,
  default_retention_days integer,
