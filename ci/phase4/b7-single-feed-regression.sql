@@ -118,7 +118,7 @@ end $cutover$;
 do $home$
 declare n int;id uuid;
 begin
- select count(*),max(campaign_id) into n,id
+ select count(*),max(campaign_id::text)::uuid into n,id
  from public.jb_ad_public_feed('homepage','global');
  if n<>1 or id<>'30000000-0000-0000-0000-000000000007'::uuid
  then raise exception 'HOMEPAGE_MP_AD_NOT_SELECTED';end if;
