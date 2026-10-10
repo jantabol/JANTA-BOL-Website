@@ -214,3 +214,12 @@ For every block:
 - Protected `ci/phase3-regression/db-function-security-regression.sql`: conditional T123 checks `FOR UPDATE;` in the single reviewed Owner retry RPC. Still requires Owner/AAL2, existing B3 source and exact role grants; no previous test skips.
 - **Not deployed or connected to Article until paired official geography/backend release.** No Public News or canonical master URL change. ADS-054/055 synthetic E2 only, P4-T041 remains IN PROGRESS.
 
+
+
+## B7 P4-T041 — original B3 source compatibility and stale-state guard (10 Oct 2026)
+- `ci/phase4/b7-b3-real-contract-setup.sql` prepares a disposable baseline for exact preexisting **original B3** migrations, no fake duplicate B3 emitter.
+- New Candidate job `b7-original-b3-contract-postgres` runs unchanged `CODEX_CURRENT_SUPABASE/migrations/20261003000100_phase4_b3_unified_notifications_foundation.sql`, `20261003000200_phase4_b3_notification_delivery_and_adapters.sql`, `20261003000500_phase4_b3_notification_privacy_priority_reminders.sql`, then `db/20261010_b7_unified_notifications_REVIEW_ONLY.sql` and `ci/phase4/b7-b3-real-contract-regression.sql` in an isolated PostgreSQL 17 transaction. Tests B3 real lifecycle/priority, history IN_APP/EMITTED, existing notification_history_v1 policy, Owner revoke, retry and B3 password/token rejection.
+- Backend retry `public.jb_ad_notification_retry_internal(bigint)` now checks current canonical campaign status before showing a retried `ad_live`/HIDE/REQUEST to Owner. Stale campaign/advertiser verification/payment events are converted into sanitized `ad_workflow_updated` Owner review, NOT a false current status. Original immutable failure remains; appended success audit distinguishes `source_event` vs `delivered_event`. Strict lowercase canonical UUID audit references required. Does not add new notification store or external channel.
+- `ci/phase4/b7-notification-concurrency-setup.sql` and `...verify.sql`: revised synthetic event is `ad_approved` because its campaign's backend state really IS approved; the stale-event regression is separately covered in the original B3 source fixture. Two-session FOR UPDATE race still expects one IN_APP plus one success audit.
+- Production frontend and Supabase database remain unchanged; both pre-existing Phase3/4 regression and B7 candidate jobs preserved. Real E5, external providers and Android E3 remain due; P4-T041 not LOCKED.
+
