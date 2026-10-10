@@ -437,7 +437,8 @@ begin
           where n.nspname='public' and p.proname='jb_ad_notification_retry_internal'
             and p.prosrc ilike '%ad_notification_failed%'
             and p.prosrc ilike '%ad_notification_retry_succeeded%'
-            and p.prosrc ilike '%private.b7_ad_emit_inapp_owner%')
+            and p.prosrc ilike '%private.b7_ad_emit_inapp_owner%'
+            and p.prosrc ilike '%for update%')
     then v_bad_ad_notification_guard:=v_bad_ad_notification_guard+1;end if;
   end if;
   if exists(select 1 from pg_trigger t
