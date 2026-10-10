@@ -367,6 +367,11 @@ test('ADS-041 Owner portal credentials: require Owner and reject malformed campa
  assert.equal(calls.length,0);
  window.JBBackend.requireOwner=async()=>true;
  await assert.rejects(()=>window.JBPhase4.adIssuePortal('malformed-id'),/INVALID_CAMPAIGN_ID/);
+ // A healthy backend readiness RPC returns JSON [] (NOT boolean true).
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});
+  return {data:name==='jb_ad_owner_change_requests_internal'?[]:true,error:null};
+ };
  await window.JBPhase4.adIssuePortal('aaaaaaaa-0000-0000-0000-000000000001');
  assert.equal(calls.length,2);
  assert.deepEqual(JSON.parse(JSON.stringify(calls)),[
