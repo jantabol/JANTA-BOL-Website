@@ -50,8 +50,15 @@ begin
    v_phone:='+91'||v_raw;
  elsif v_raw ~ '^91[6-9][0-9]{9}$' then
    v_phone:='+'||v_raw;
- elsif v_raw ~ '^\+91[6-9][0-9]{9}
- else raise exception 'INVALID_WHATSAPP_NUMBER'; end if;
+ elsif v_raw ~ '^\+91[6-9][0-9]{9}$' then
+   v_phone:=v_raw;
+ elsif v_raw ~ '^\+91' then
+   raise exception 'INVALID_WHATSAPP_NUMBER';
+ elsif v_raw ~ '^\+[1-9][0-9]{7,14}$' then
+   v_phone:=v_raw;
+ else
+   raise exception 'INVALID_WHATSAPP_NUMBER';
+ end if;
 
  -- One request per normalized phone in 10 minutes, including simultaneous
  -- submissions on this connection. No exposure of existing private details.
