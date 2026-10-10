@@ -91,4 +91,70 @@ begin
  end;
  raise notice 'PASS [ADS-003/004/005] anon writes pending only; article context, consent, cooldown and legacy denial';
 end $test$;
+
+do $verify_test$
+declare v_normal uuid;v_high uuid;msg text;
+begin
+ select a.id into v_normal from public.advertisers a where a.contact='+919876543210';
+ if v_normal is null then raise exception 'NORMAL_FIXTURE_MISSING';end if;
+ -- No fake Owner privilege: the default fixture mode denies changes.
+ begin
+  perform public.jb_ad_verify_advertiser_internal(v_normal,'verified','Contact verified normally',null);
+  raise exception 'NONOWNER_BYPASS';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED' then raise exception 'OWNER_DENIAL_FAILED: %',msg;end if;
+ end;
+ if (select verification_state from public.advertisers where id=v_normal)<>'pending'
+ then raise exception 'UNAUTHORIZED_VERIFICATION_MUTATION';end if;
+ -- Controlled isolated Owner-AAL2 fixture, NOT real Supabase authentication.
+ perform set_config('b7.test_owner','enabled',true);
+ perform public.jb_ad_verify_advertiser_internal(
+  v_normal,'verified','Owner completed normal business contact verification',null);
+ if (select verification_state from public.advertisers where id=v_normal)<>'verified'
+ then raise exception 'VERIFICATION_WRITE_FAILED';end if;
+ insert into public.advertisers(name,contact,risk_level,verification_state)
+ values('High Risk Test','+919876543219','high','pending') returning id into v_high;
+ begin
+  perform public.jb_ad_verify_advertiser_internal(
+   v_high,'verified','Enhanced business verification reviewed',null);
+  raise exception 'HIGH_RISK_MISSING_EVIDENCE_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'ENHANCED_VERIFICATION_EVIDENCE_REQUIRED'
+  then raise exception 'HIGH_RISK_GUARD_FAILED: %',msg;end if;
+ end;
+ if (select verification_state from public.advertisers where id=v_high)<>'pending'
+ then raise exception 'HIGH_RISK_BAD_STATE';end if;
+ perform public.jb_ad_verify_advertiser_internal(
+  v_high,'verified','Independently reviewed enhanced checks','OFFLINE-TEST-REFERENCE-001');
+ if (select verification_state from public.advertisers where id=v_high)<>'verified'
+ then raise exception 'HIGH_RISK_VERIFICATION_WRITE_FAILED';end if;
+ if (select count(*) from public.audit_logs where action='ad_verification')<>2
+ then raise exception 'SHARED_AUDIT_MISSING';end if;
+ if not exists (
+  select 1 from public.ad_history h join public.ad_campaigns c on h.campaign_id=c.id
+  where c.advertiser_id=v_normal and h.event_type='verification_verified'
+ ) then raise exception 'CAMPAIGN_VERIFICATION_HISTORY_MISSING';end if;
+ perform set_config('b7.test_owner','',true);
+ raise notice 'PASS [ADS-007/008/009] Owner-only verification, high-risk evidence, unchanged rejected state and shared audit';
+end $verify_test$;
+
+set local role anon;
+do $verify_anon$
+declare msg text;
+begin
+ begin
+  perform public.jb_ad_verify_advertiser_internal(
+   '00000000-0000-0000-0000-000000000001','verified','forged caller',null);
+  raise exception 'PUBLIC_VERIFICATION_BYPASS';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg not like '%permission denied%' then
+   raise exception 'PUBLIC_VERIFICATION_GUARD_FAILED: %',msg;
+  end if;
+ end;
+end $verify_anon$;
+reset role;
+
 rollback;
