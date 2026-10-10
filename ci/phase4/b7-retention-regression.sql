@@ -62,9 +62,11 @@ begin
 end $history_immutability$;
 
 -- A correction never replaces the original; it is a fresh retained event.
+select set_config('b7.test_actor_uid','11111111-1111-1111-1111-111111111111',true);
 insert into public.ad_history(campaign_id,event_type,note,actor_user_id)
 values('30000000-0000-0000-0000-000000000004','ad_request_clarified',
        'Additional safe context supplied',auth.uid());
+select set_config('b7.test_actor_uid','',true);
 do $append_only$
 begin
  if (select count(*) from public.ad_history)<>2
