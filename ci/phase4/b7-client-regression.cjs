@@ -736,3 +736,60 @@ test('ADS-049 broken media never reports a view and never blanks News article',a
  media.complete=true;media.naturalWidth=120;media.handlers.load();
  assert.equal(count,0,'removed ad must not receive ticket after late load');
 });
+
+
+test('ADS-055 Owner failed-notification retry: AAL2 and positive audit ID before any RPC',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adNotificationFailures(),/OWNER_AAL2_REQUIRED/);
+ await assert.rejects(()=>window.JBPhase4.adRetryNotification(27),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ for(const bad of [0,-3,'x','3.14','2e25',Number.MAX_SAFE_INTEGER+1]){
+  await assert.rejects(()=>window.JBPhase4.adRetryNotification(bad),/INVALID_NOTIFICATION_FAILURE_REFERENCE/);
+ }
+ assert.equal(calls.length,0);
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});
+  return {data:name==='jb_ad_notification_failures_internal'?[]:true,error:null};
+ };
+ assert.deepEqual(await window.JBPhase4.adNotificationFailures(),[]);
+ assert.equal(await window.JBPhase4.adRetryNotification(27),true);
+ assert.deepEqual(JSON.parse(JSON.stringify(calls)),[
+  {name:'jb_ad_notification_failures_internal',args:{}},
+  {name:'jb_ad_notification_retry_internal',args:{p_failure_audit_id:27}}
+ ]);
+});
+test('ADS-055 Owner UI escapes notification failure details; retry does not promise WhatsApp',async()=>{
+ const {context,window,elements}=adminClient();
+ window.JBPhase4.adNotificationFailures=async()=>[{
+  audit_id:27,record_type:'ad_campaign',
+  record_id:'30000000-0000-0000-0000-000000000005',
+  event:'<img src=x onerror=alert(1)>',
+  created_at:'2026-10-10T00:00:00Z'
+ }];
+ await vm.runInContext('loadAdNotificationIssues()',context);
+ const output=elements.get('adNotificationIssues').innerHTML;
+ assert.match(output,/Failure audit #27/);
+ assert.match(output,/&lt;img/);
+ assert.doesNotMatch(output,/<img src=x/);
+ assert.match(output,/Retry in-app only/);
+ let tries=0;
+ window.JBPhase4.adRetryNotification=async id=>{tries++;assert.equal(id,27);return true};
+ window.JBPhase4.adNotificationFailures=async()=>[];
+ await vm.runInContext('retryAdNotification(27)',context);
+ assert.equal(tries,1);
+ assert.match(elements.get('adNotificationIssues').innerHTML,/No pending ad in-app/);
+ assert.doesNotMatch(elements.get('adNotificationIssues').textContent||'',/WhatsApp SENT/);
+});
+test('ADS-055 Owner UI refuses to mark undelivered retry as sent',async()=>{
+ const {context,window,elements}=adminClient();
+ window.JBPhase4.adRetryNotification=async()=>{throw Error('PGRST202: no B3 RPC')};
+ await vm.runInContext('retryAdNotification(27)',context);
+ const output=elements.get('adNotificationIssues').textContent;
+ assert.match(output,/not confirmed/);
+ assert.match(output,/no external message sent claim/);
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/notification delivery issues \(Owner only\)/i);
+ assert.match(html,/onclick="loadAdNotificationIssues/);
+});
