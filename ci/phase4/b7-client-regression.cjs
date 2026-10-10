@@ -218,3 +218,41 @@ test('ADS-001/002 public enquiry: minimal WhatsApp form, explicit contact consen
  assert.doesNotMatch(html,/type="file"|navigator\.geolocation|geolocation\.getCurrentPosition/);
  assert.doesNotMatch(html,/id="adPrice"|id="adPlacement"|id="adLocation"/);
 });
+
+
+test('ADS-007 verification: caller has Owner authority and uses exact backend RPC',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>true;
+ await window.JBPhase4.adVerifyAdvertiser('adv-fixture','verified','Verified independent business check','OFFLINE-REF');
+ assert.deepEqual(JSON.parse(JSON.stringify(calls)),[{
+  name:'jb_ad_verify_advertiser_internal',
+  args:{p_advertiser:'adv-fixture',p_state:'verified',
+        p_note:'Verified independent business check',p_evidence_ref:'OFFLINE-REF'}
+ }]);
+});
+test('ADS-007 verification: rejects missing Owner or incomplete note before write',async()=>{
+ const {window,calls}=client();
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adVerifyAdvertiser('adv','verified','Verified sample','X'),/OWNER_AAL2_REQUIRED/);
+ assert.equal(calls.length,0);
+ window.JBBackend.requireOwner=async()=>true;
+ await assert.rejects(()=>window.JBPhase4.adVerifyAdvertiser('adv','verified','short','X'),/INVALID_VERIFICATION_DECISION/);
+ assert.equal(calls.length,0);
+});
+test('ADS-006 admin queue: private WhatsApp, source and consent are Owner-only',async()=>{
+ const {context,elements,window}=adminClient();
+ window.JBPhase4.adRows=async()=>[{
+  id:'fixture-campaign',advertiser_id:'fixture-advertiser',
+  status:'requested',placement:'homepage',scope:'global',
+  advertisers:{name:'Fixture',contact:'+919876543210',verification_state:'pending',risk_level:'normal'},
+  created_at:'2026-10-10T10:00:00Z',enquiry_origin:'homepage',whatsapp_consent_at:'2026-10-10T10:00:00Z'
+ }];
+ await vm.runInContext('load()',context);
+ const html=elements.get('rows').innerHTML;
+ assert.match(html,/\+919876543210/);
+ assert.match(html,/Owner queue/);
+ assert.match(html,/Source: homepage/);
+ assert.match(html,/WhatsApp consent: recorded/);
+ assert.match(html,/vstate-fixture-campaign/);
+ assert.match(html,/verifyAdvertiser\('fixture-campaign','fixture-advertiser'\)/);
+});
