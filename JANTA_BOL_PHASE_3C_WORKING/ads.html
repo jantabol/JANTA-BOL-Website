@@ -23,19 +23,51 @@
 <input id="packageDays" type="number" min="1" step="1" placeholder="Duration (days)">
 <input id="packageWeight" type="number" min="1" step="1" value="1" placeholder="Weight"></div>
 <div class="row"><button class="btn primary" id="savePackage">Save package</button><button class="btn" id="newPackage">Clear / new package</button></div></section>
+<section class="card">
+<h2>Advertiser Renewal Requests — Owner review</h2>
+<p class="meta">Pending renewal NEVER changes LIVE/end date. New quote, actual payment proof, inventory and schedule require Owner's separate approval.</p>
+<div id="renewalRows">Loading…</div></section>
+<section class="card">
+<h2>Advertiser change requests — Owner review</h2>
+<p class="meta">Only text request is queued. Accepted for work does NOT replace a LIVE approved photo, video or targeting; Founder separately approves a new version.</p>
+<div id="changeRequestRows">Loading…</div></section>
+<section class="card">
+<details><summary>Advertisement notification delivery issues (Owner only)</summary>
+<p class="meta">Only existing in-app notifications can be retried. WhatsApp, email or push is NEVER marked sent here. Original immutable failure audit is preserved.</p>
+<button class="btn" type="button" onclick="loadAdNotificationIssues()">Load pending notification issues</button>
+<div id="adNotificationIssues" role="status" aria-live="polite"></div>
+</details></section>
 <div id="rows"></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-schedule"></script><script src="admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-manualpay"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 let packageList=[];
 async function load(){try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
+<p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Source: ${esc(x.enquiry_origin||'legacy/manual')} · Article context: ${esc(x.enquiry_article_id||'—')} · Submitted: ${esc(x.created_at||'')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
+<div class="row"><select id="vstate-${x.id}"><option value="">Verification decision</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="pending">Pending / recheck</option></select><input id="vnote-${x.id}" maxlength="1000" placeholder="Verification note (min 8 characters)"><input id="vref-${x.id}" maxlength="300" placeholder="High-risk: independent evidence reference"><button class="btn" onclick="verifyAdvertiser('${x.id}','${x.advertiser_id}')">Record verification (Owner/AAL2)</button></div>
 <div class="row"><select id="s-${x.id}"><option>${esc(x.status)}</option><option>review</option><option>approved</option><option>payment_pending</option><option>live</option><option>paused</option><option>hidden</option><option>expired</option><option>rejected</option><option>cancelled</option></select><input id="n-${x.id}" placeholder="Audit note"><button class="btn primary" onclick="move('${x.id}')">Apply</button></div>
+<div class="row">
+<button class="btn" type="button" onclick="issuePortal('${x.id}')">Issue one-time advertiser login (Owner/AAL2)</button>
+<a href="advertiser-portal.html" target="_blank" rel="noopener noreferrer">Advertiser portal page</a>
+</div>
+<div id="portal-login-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
+<p class="meta">Temporary login is shown here ONLY once. Owner manually delivers it after verification; no WhatsApp delivery is assumed. Regenerating revokes older sessions.</p>
+<div class="row"><button class="btn" type="button" onclick="qualifiedStats('${x.id}')">View estimated ad analytics (Owner)</button></div>
+<div id="qualified-stats-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
+<p class="meta">Paid views and CTA clicks are client-reported estimates; NOT unique people or independently verified bot-free reach. Historical raw events remain separate.</p>
 <details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL"><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save and approve creative (Founder)</button>
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
 <div class="row"><label>शुरू<input id="st-${x.id}" type="datetime-local" value="${localScheduleValue(x.starts_at)}"></label><label>समाप्त<input id="en-${x.id}" type="datetime-local" value="${localScheduleValue(x.ends_at)}"></label><button class="btn" onclick="scheduleAd('${x.id}')">Schedule</button></div>
-<div class="row"><input id="pr-${x.id}" placeholder="Payment reference"><input id="pa-${x.id}" type="number" min="0" placeholder="Amount paise"><button class="btn" onclick="payment('${x.id}')">Record confirmed payment</button></div></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){document.getElementById('rows').textContent=e.message;}}
+<details><summary>Owner manual payment — verified receipt and written consent required</summary>
+<div class="row"><input id="qprice-${x.id}" type="number" min="1" placeholder="Agreed price (paise)"><input id="qterms-${x.id}" placeholder="Agreed quotation reference"><button class="btn" onclick="saveQuote('${x.id}')">Save quotation</button></div>
+<div class="row"><input id="pr-${x.id}" placeholder="Unique UTR / receipt number"><input id="pa-${x.id}" type="number" min="1" placeholder="Actual received paise"><select id="pmethod-${x.id}"><option value="upi">UPI</option><option value="bank">Bank transfer</option><option value="cash">Cash</option></select></div>
+<div class="row"><label>Received timestamp<input id="preceived-${x.id}" type="datetime-local"></label><input id="pevidence-${x.id}" placeholder="Verified receipt evidence reference"></div>
+<div class="row"><input id="paccept-${x.id}" placeholder="Advertiser acceptance evidence reference"><label>Acceptance timestamp<input id="pacceptedat-${x.id}" type="datetime-local"></label></div>
+<div class="row"><input id="pnote-${x.id}" placeholder="Owner receipt verification note"><input id="pconfirm-${x.id}" placeholder="Type CONFIRM"></div>
+<button class="btn" onclick="payment('${x.id}')">Record verified manual payment</button>
+<p class="meta">No confirmed payment without actual receipt, terms acceptance and Owner AAL2. Payment does not activate ads.</p></details></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){document.getElementById('rows').textContent=e.message;}}
 async function loadPackages(){
  const box=document.getElementById('packageRows'),chooser=document.getElementById('requestedPackage');
  try{
@@ -44,6 +76,75 @@ async function loadPackages(){
   chooser.innerHTML='<option value="">Custom / no package selected</option>'+packageList.filter(p=>p.active).map(p=>`<option value="${esc(p.id)}">${esc(p.name)} — ${esc(p.placement)} — ₹${esc((Number(p.price_minor)/100).toFixed(2))}</option>`).join('');
  }catch(e){box.textContent=e.message;chooser.innerHTML='<option value="">Package list unavailable</option>';}
 }
+async function loadAdNotificationIssues(){
+ const box=document.getElementById('adNotificationIssues');
+ if(!box)return;
+ box.textContent='Checking Owner-only delivery failures…';
+ try{
+  const rows=await JBPhase4.adNotificationFailures();
+  box.innerHTML=rows.filter(x=>
+    Number.isSafeInteger(Number(x?.audit_id))&&Number(x.audit_id)>0
+  ).map(x=>{
+    const id=Number(x.audit_id);
+    return '<div class="card"><b>Failure audit #'+id+'</b>'+
+     '<p class="meta">'+esc(x.event)+' · '+esc(x.record_type)+
+     ' · '+esc(x.record_id)+' · '+esc(x.created_at)+'</p>'+
+     '<button class="btn" type="button" onclick="retryAdNotification('+id+
+     ')">Retry in-app only (Owner/AAL2)</button></div>';
+  }).join('')||'<p class="meta">No pending ad in-app notification failures.</p>';
+ }catch(_){
+  box.textContent='Notification issue queue unavailable until safe backend rollout.';
+ }
+}
+async function retryAdNotification(id){
+ const box=document.getElementById('adNotificationIssues');
+ if(box)box.textContent='Retrying B3 in-app notification only…';
+ try{
+  if(await JBPhase4.adRetryNotification(id)!==true)
+   throw Error('B3_IN_APP_NOT_CONFIRMED');
+  await loadAdNotificationIssues();
+ }catch(_){
+  if(box)box.textContent='In-app retry not confirmed. Original failure audit remains pending; no external message sent claim.';
+ }
+}
+async function loadRenewalRequests(){
+ const box=document.getElementById('renewalRows');
+ try{
+  const rows=await JBPhase4.adRenewalRequests();
+  box.innerHTML=rows.filter(x=>/^[0-9a-f-]{36}$/i.test(String(x?.id||''))).map(x=>
+   '<div class="card"><b>Renewal '+esc(x.id)+'</b>'+
+   '<p class="meta">Campaign '+esc(x.campaign_id)+' · '+esc(x.status)+
+   ' · Source '+esc(x.request_channel||'account')+'</p>'+
+   '<p>Requested end: '+esc(x.requested_end_at||'')+'</p>'+
+   '<p class="meta">No automatic payment or campaign extension. Founder must review new terms.</p></div>'
+  ).join('')||'<p class="meta">No renewal requests.</p>';
+ }catch(_){box.textContent='Renewal queue unavailable (backend deployment may be pending).';}
+}
+async function loadChangeRequests(){
+ const box=document.getElementById('changeRequestRows');
+ try{
+  const rows=await JBPhase4.adChangeRequests();
+  box.innerHTML=rows.filter(x=>/^[0-9a-f-]{36}$/i.test(String(x?.id||''))).map(x=>'<div class="card">'+
+   '<b>Request '+esc(x.id)+'</b><p class="meta">Campaign '+esc(x.campaign_id)+
+   ' · '+esc(x.status)+' · '+esc(x.created_at||'')+'</p>'+
+   '<p>'+esc(x.note||'')+'</p>'+
+   (x.status==='pending'?'<div class="row"><input id="change-note-'+esc(x.id)+
+     '" placeholder="Owner reason / audit note (min 8 chars)">'+
+     '<button class="btn" onclick="decideChange(\''+esc(x.id)+'\',\'accepted_for_work\')">Accept for media review</button>'+
+     '<button class="btn" onclick="decideChange(\''+esc(x.id)+'\',\'rejected\')">Reject request</button></div>':
+     '<p class="meta">Decision: '+esc(x.decision_note||'')+' (existing creative unchanged)</p>')+
+    '</div>').join('')||'<p class="meta">No advertiser change requests.</p>';
+ }catch(e){
+  box.textContent='Change-request queue unavailable (backend deployment may be pending).';
+ }
+}
+async function decideChange(id,decision){
+ try{
+  const note=document.getElementById('change-note-'+id).value.trim();
+  await JBPhase4.adDecideChange(id,decision,note);
+  await loadChangeRequests();
+ }catch(e){alert(e.message);}
+}
 function clearPackage(){for(const id of ['packageId','packageName','packagePrice','packageDays'])document.getElementById(id).value='';document.getElementById('packagePlacement').value='homepage';document.getElementById('packageWeight').value='1';}
 function editPackage(id){const p=packageList.find(x=>x.id===id);if(!p)return;document.getElementById('packageId').value=p.id;document.getElementById('packageName').value=p.name;document.getElementById('packagePlacement').value=p.placement;document.getElementById('packagePrice').value=p.price_minor;document.getElementById('packageDays').value=p.duration_days;document.getElementById('packageWeight').value=p.weight;}
 document.getElementById('newPackage').onclick=clearPackage;
@@ -51,10 +152,74 @@ document.getElementById('savePackage').onclick=async()=>{
  try{await JBPhase4.adSavePackage({id:document.getElementById('packageId').value||null,name:document.getElementById('packageName').value,placement:document.getElementById('packagePlacement').value,priceMinor:document.getElementById('packagePrice').value,durationDays:document.getElementById('packageDays').value,weight:document.getElementById('packageWeight').value});clearPackage();await loadPackages();}catch(e){alert(e.message);}
 };
 document.getElementById('requestedPackage').onchange=()=>{const p=packageList.find(x=>x.id===document.getElementById('requestedPackage').value);if(p)document.getElementById('placement').value=p.placement;};
+async function verifyAdvertiser(campaignId,advertiserId){
+ try{
+  const state=document.getElementById('vstate-'+campaignId).value;
+  const note=document.getElementById('vnote-'+campaignId).value.trim();
+  const evidence=document.getElementById('vref-'+campaignId).value.trim();
+  if(!state||note.length<8)throw Error('Verification decision aur audit note zaroori hai');
+  await JBPhase4.adVerifyAdvertiser(advertiserId,state,note,evidence);
+  await load();
+ }catch(e){alert(e.message);}
+}
 async function move(id){try{await JBPhase4.adTransition(id,document.getElementById('s-'+id).value,document.getElementById('n-'+id).value);load();}catch(e){alert(e.message);}}
+async function issuePortal(id){
+ const receipt=document.getElementById('portal-login-'+id);
+ if(!receipt)return;
+ receipt.hidden=false;receipt.textContent='जारी किया जा रहा है…';
+ try{
+  const result=await JBPhase4.adIssuePortal(id);
+  const item=Array.isArray(result)?result[0]:result;
+  if(!item||!item.login_id||!item.temporary_secret)throw Error('PORTAL_ISSUE_RECEIPT_MISSING');
+  receipt.textContent='One-time login ID: '+item.login_id+
+   '\nTemporary password (show once): '+item.temporary_secret+
+   '\nManually deliver to verified advertiser. Do not save in public logs.';
+ }catch(e){receipt.textContent='Login issue failed: '+e.message;}
+}
+async function qualifiedStats(id){
+ const box=document.getElementById('qualified-stats-'+id);
+ if(!box)return;
+ box.hidden=false;
+ box.textContent='Loading Owner-only analytics…';
+ try{
+  const data=await JBPhase4.adQualifiedAnalytics(id);
+  const count=n=>Number.isSafeInteger(Number(n))&&Number(n)>=0?String(Number(n)):'Not available';
+  box.textContent='CLIENT-REPORTED AD ACTIVITY (not verified humans)'
+   +'\nToday qualified-claim views: '+count(data.today)
+   +'\nLast 7 days: '+count(data.d7)
+   +'\nLast 30 days: '+count(data.d30)
+   +'\nTotal qualified-claim views: '+count(data.total)
+   +'\nReported CTA clicks: '+count(data.clicks_reported)
+   +'\nOld unverified raw events (separate): '+count(data.unverified_legacy)
+   +'\nUnique-human/bot-free reach: NOT VERIFIED'
+   +'\nNews Article views: independent / not included';
+ }catch(_){
+  // No fallback to raw ad events: that would present fake impression counts.
+  box.textContent='Qualified analytics unavailable until secure backend deployment and Owner verification.';
+ }
+}
 async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});load();}catch(e){alert(e.message);}}
 async function scheduleAd(id){try{await JBPhase4.adSchedule(id,document.getElementById('st-'+id).value,document.getElementById('en-'+id).value);load();}catch(e){alert(e.message);}}
-async function payment(id){try{await JBPhase4.adConfirmPayment(id,document.getElementById('pr-'+id).value,document.getElementById('pa-'+id).value);load();}catch(e){alert(e.message);}}
+async function saveQuote(id){
+ try{
+  await JBPhase4.adSetApprovedQuote(id,
+   document.getElementById('qprice-'+id).value,
+   document.getElementById('qterms-'+id).value);
+  await load();
+ }catch(e){alert(e.message);}
+}
+async function payment(id){
+ try{
+  const val=key=>document.getElementById(key+'-'+id).value;
+  await JBPhase4.adConfirmManualPayment(id,{
+   reference:val('pr'),amountMinor:val('pa'),method:val('pmethod'),
+   receiptAt:val('preceived'),evidenceRef:val('pevidence'),
+   acceptanceRef:val('paccept'),acceptedAt:val('pacceptedat'),
+   verificationNote:val('pnote'),confirm:val('pconfirm')
+  });
+  await load();
+ }catch(e){alert(e.message);}
+}
 document.getElementById('create').onclick=async()=>{try{const nameEl=document.getElementById('name'),contactEl=document.getElementById('contact'),placementEl=document.getElementById('placement'),scopeEl=document.getElementById('scope'),riskEl=document.getElementById('risk'),requestKindEl=document.getElementById('requestKind');const advertiserName=nameEl.value.trim(),advertiserContact=contactEl.value.trim();if(!advertiserName||!advertiserContact)throw Error('Name aur contact required');const chosen=document.getElementById('requestedPackage').value;const p=packageList.find(x=>x.id===chosen);if(chosen&&(!p||!p.active||p.placement!==placementEl.value))throw Error('PACKAGE_PLACEMENT_MISMATCH');await JBPhase4.publicAdRequest({name:advertiserName,contact:advertiserContact,package:chosen||null,placement:placementEl.value,scope:scopeEl.value,risk:riskEl.value,kind:requestKindEl.value});nameEl.value='';contactEl.value='';load();}catch(e){alert(e.message);}};
-function boot(){load();loadPackages();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
+function boot(){load();loadPackages();loadChangeRequests();loadRenewalRequests();}if(document.documentElement.dataset.jbAuth==='ready')boot();else addEventListener('jb-auth-ready',boot,{once:true});
 </script></body></html>

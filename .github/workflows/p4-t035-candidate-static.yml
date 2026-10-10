@@ -4,6 +4,7 @@ on:
     branches:
       - codex/p4-t035-reviewed-fixes-20261009
       - codex/b7-reconcile-20261009
+      - codex/b7-blueprint-20261010
   workflow_dispatch:
 permissions:
   contents: read
@@ -40,6 +41,20 @@ jobs:
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
       - name: B7 article scope and schedule behavior
         run: node --test ci/phase4/b7-client-regression.cjs
+      - name: B7 ADS-056 client privileged-secret exposure E1 scan — secrets never printed
+        run: |
+          node ci/phase4/b7-public-secret-scan.cjs
+          node --test ci/phase4/b7-public-secret-scan-regression.cjs
+      - name: B7 ADS-001..060 final ZIP coverage preflight — DUE is NOT PASS
+        run: |
+          node ci/phase4/b7-closure-gate.cjs --audit
+          node --test ci/phase4/b7-closure-regression.cjs
+      - name: B7 qualified ad viewability isolated signal — never count fake impressions
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-viewability.js
+          node --test ci/phase4/b7-viewability-regression.cjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-analytics-client.js
+          node --test ci/phase4/b7-analytics-client-regression.cjs
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
@@ -85,3 +100,451 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/p4_t035_public_ads_review.sql
       - name: Run transaction rollback regression
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/p4-t035-postgres-regression.sql
+
+  b7-enquiry-postgres:
+    name: B7 public enquiry consent/Owner regression (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_enquiry
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_enquiry"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_enquiry
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable enquiry schema
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-fixture.sql
+      - name: Apply review-only migration to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
+      - name: Verify anonymous input, consent, scope, cooldown, legacy denial
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
+
+  b7-payment-postgres:
+    name: B7 owner payment/consent/anti-fraud (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_manual
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_manual"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_manual
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable manual-payment schema
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+      - name: Apply review-only evidence/anti-bypass migration to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+      - name: Assert Owner and evidence gates, duplicate UTR, LIVE schedule and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-regression.sql
+
+  b7-portal-postgres:
+    name: B7 advertiser text-only portal A/B isolation (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_portal
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_portal"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_portal
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap disposable advertisers/creative/session fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-fixture.sql
+      - name: Apply text-only change-request migration ONLY to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
+      - name: Assert cross-advertiser isolation, no media edit, Owner queue and audit
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-regression.sql
+
+  b7-geo-postgres:
+    name: B7 verified Article LGD geo + Owner area grant isolation (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_geo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_geo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_geo
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic Article/campaign fixtures (no production data)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-fixture.sql
+      - name: Apply G3 review-only schema and Owner-authorized exact-area matcher
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+      - name: Assert published Article identity, Gwalior/Pichhore mismatch, unknown fallback, AAL2 and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-regression.sql
+
+  b7-weighted-postgres:
+    name: B7 private server weighted Article selection, geo and payment (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_weighted
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_weighted"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_weighted
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap existing payment fixture and synthetic weighted Article data
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+      - name: Apply independent manual receipt/Owner, exact Article geo and private weight candidates
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+      - name: 3200 weighted Article selections / geo privacy / payment proof / negative and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-regression.sql
+
+  b7-inventory-postgres:
+    name: B7 Owner inventory quota and immutable guarantees (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_inventory
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_inventory"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_inventory
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap isolated paid-campaign and new-ad synthetic fixtures
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-inventory-fixture.sql
+      - name: Apply review-only Owner payment and inventory capacity protection
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_inventory_guard_REVIEW_ONLY.sql
+      - name: Prove 600+400 booking, overbook rejection, immutability and shared audit
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-inventory-regression.sql
+
+  b7-single-feed-postgres:
+    name: B7 single canonical anonymous Article-ID feed and homepage (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_canonical_feed
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_canonical_feed"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_canonical_feed
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap existing paid/weight/Article fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+      - name: Apply review-only payment, verified geography, weighted private helper and canonical cutover
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql
+      - name: Anonymous Article ID cannot forge location; legacy homepage retained; no second selection authority
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-single-feed-regression.sql
+
+  b7-view-ticket-postgres:
+    name: B7 one-use qualified Article view tickets & raw event isolation (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_qualified_views
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_qualified_views"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_qualified_views
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build synthetic campaign, Article and legacy raw-event fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-fixture.sql
+      - name: Apply review-only payment/geo/shared eligibility and single-use view-ticket schema
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_cta_click_REVIEW_ONLY.sql
+      - name: Real server one-second token guard, duplicate/forgery/expiry, Owner-only qualified counts and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-regression.sql
+
+
+  b7-retention-postgres:
+    name: B7 immutable commercial history and existing B3 retention policy (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_retention
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_retention"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_retention
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic ads plus existing B3 retention schemas
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+      - name: Apply staged append-only, hold-safe commercial audit and retention guards
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_retention_audit_REVIEW_ONLY.sql
+      - name: Reject history/media rewrite, cascade deletion, legal hold bypass and stale policy
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-regression.sql
+
+
+  b7-notification-postgres:
+    name: B7 notifications reuse B3 Owner domain with payment, portal and outage fallback (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_notifications
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_notifications"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_notifications
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic ads and real-contract B3 notification shim
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+      - name: Apply staged Owner manual payment and B3-only notification adapter
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Exercise Owner-only request, verification, paid, LIVE, hide, renewal and change through B3 with outage
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-regression.sql
+      - name: Concurrent Owner retries (real two-session PostgreSQL)
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-setup.sql
+          AUDIT_ID=$(psql -X -At -v ON_ERROR_STOP=1 -c "select id from public.audit_logs where action='ad_notification_failed' limit 1")
+          if [[ ! "$AUDIT_ID" =~ ^[0-9]+$ ]]; then
+            echo "FAIL: audit ID not available"; exit 1
+          fi
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-a.log 2>&1 &
+          P1=$!
+          sleep 0.10
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-b.log 2>&1 &
+          P2=$!
+          wait "$P1" || { cat /tmp/b7-retry-a.log; exit 1; }
+          wait "$P2" || { cat /tmp/b7-retry-b.log; exit 1; }
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-verify.sql
+
+
+
+  b7-original-b3-contract-postgres:
+    name: B7 ads notifications with actual preexisting B3 migrations, real delivery history and retention (isolated PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_original_b3
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_original_b3"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_original_b3
+    steps:
+      - uses: actions/checkout@v4
+      - name: Prepare canonical B3 source-table compatibility, ads and retention fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-setup.sql
+      - name: Apply existing B3 migration files verbatim (not a reimplemented emitter)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000100_phase4_b3_unified_notifications_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000200_phase4_b3_notification_delivery_and_adapters.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000500_phase4_b3_notification_privacy_priority_reminders.sql
+      - name: Integrate existing B3 emitter through B7 in-app adapter, never production
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Real B3 in-app EMITTED receipt, original retention, Owner revoked/retry and secret-denial regression
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-regression.sql
+
+
+  b7-storage-rls-critical-postgres:
+    name: B7 critical storage policy OR-bypass RCA and Owner-preserving fix (disposable PostgreSQL only)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_storage_policy
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_storage_policy"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_storage_policy
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baseline old roles and exact observed Storage bucket/policy shape
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-fixture.sql
+      - name: Reproduce original B5 broad permissive OR policy in disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-before-regression.sql
+      - name: Apply review-only minimum-safe-change (NEVER Production)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql
+      - name: Private editorial/grievance anon and AAL1 denial, public read and Owner AAL2 upload positive
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-after-regression.sql

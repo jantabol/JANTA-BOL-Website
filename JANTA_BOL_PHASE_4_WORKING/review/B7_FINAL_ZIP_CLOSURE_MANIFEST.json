@@ -1,0 +1,585 @@
+{
+  "schema": "janta-bol-b7-canonical-closure-v1",
+  "authority": "JANTA_BOL_B7_FINAL_MASTER_BLUEPRINT_WITH_TESTS.pdf, TEST CONTROL 01 and ADS-001..ADS-060; Phase 4 Master Pack",
+  "meaning": "FINAL evidence register; synthetic candidate CI is engineering evidence, NEVER substitute for required E3/E5 or deployed state",
+  "final_zip_status": "BLOCKED",
+  "canonical_tests": [
+    {
+      "id": "P4-T034",
+      "range": [
+        1,
+        9
+      ],
+      "required_evidence": [
+        "E2",
+        "E3",
+        "E5"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T035",
+      "range": [
+        10,
+        15
+      ],
+      "required_evidence": [
+        "E2",
+        "E3"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T036",
+      "range": [
+        16,
+        23
+      ],
+      "required_evidence": [
+        "E2",
+        "E5"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T037",
+      "range": [
+        24,
+        34
+      ],
+      "required_evidence": [
+        "E2",
+        "E3",
+        "E5"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T038",
+      "range": [
+        35,
+        40
+      ],
+      "required_evidence": [
+        "E2",
+        "E5",
+        "E6"
+      ],
+      "test_register_last_seen": "NOT RUN — EXTERNAL",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T039",
+      "range": [
+        41,
+        47
+      ],
+      "required_evidence": [
+        "E2",
+        "E3",
+        "E5"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T040",
+      "range": [
+        48,
+        50
+      ],
+      "required_evidence": [
+        "E1",
+        "E2",
+        "E3"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T041",
+      "range": [
+        51,
+        56
+      ],
+      "required_evidence": [
+        "E1",
+        "E2",
+        "E5"
+      ],
+      "test_register_last_seen": "IN PROGRESS",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    },
+    {
+      "id": "P4-T042",
+      "range": [
+        57,
+        60
+      ],
+      "required_evidence": [
+        "E1",
+        "E3",
+        "E7"
+      ],
+      "test_register_last_seen": "IN PROGRESS — E1 preflight only; real E3/E7 DUE",
+      "final_status": "DUE",
+      "evidence": [],
+      "owner_signoff": null
+    }
+  ],
+  "ads": [
+    {
+      "id": "ADS-001",
+      "title": "Public CTA visibility",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-002",
+      "title": "WhatsApp mandatory server side",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-003",
+      "title": "No media/area public edit",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-004",
+      "title": "Confirmed pending receipt",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-005",
+      "title": "Spam/duplicate and idempotency",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-006",
+      "title": "Admin queue accuracy",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-007",
+      "title": "Normal business verification",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-008",
+      "title": "High-risk legacy and new guard",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-009",
+      "title": "Unauthorized approval rejected",
+      "canonical_test": "P4-T034",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-010",
+      "title": "Photo ratios + orientation",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-011",
+      "title": "Video controls and poster",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-012",
+      "title": "Text ad + mandatory label",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-013",
+      "title": "Article paragraph insertion",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-014",
+      "title": "Article geo vs viewer geo",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-015",
+      "title": "Owner media upload security",
+      "canonical_test": "P4-T035",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-016",
+      "title": "Future start is denied",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-017",
+      "title": "End time enforcement",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-018",
+      "title": "Pause and resume",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-019",
+      "title": "Emergency hide while open",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-020",
+      "title": "History remains after hide",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-021",
+      "title": "Permanent delete authority",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-022",
+      "title": "Schedule invalid and wrong clock",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-023",
+      "title": "Failure isolation and replay",
+      "canonical_test": "P4-T036",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-024",
+      "title": "Founder package price form",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-025",
+      "title": "Public info not forced request",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-026",
+      "title": "Custom quote version",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-027",
+      "title": "Old package stays immutable",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-028",
+      "title": "Geo candidate eligibility pool",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-029",
+      "title": "Pinned rotation per article view",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-030",
+      "title": "Statistical weighted fairness",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-031",
+      "title": "Exactly one paid ad",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-032",
+      "title": "Inventory guard",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-033",
+      "title": "Purchased visibility preservation",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-034",
+      "title": "Rotation exclusion audit",
+      "canonical_test": "P4-T037",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-035",
+      "title": "Owner approval precedes payment",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-036",
+      "title": "Explicit non-refund disclosure",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-037",
+      "title": "Owner CONFIRM evidence gate",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-038",
+      "title": "High-risk all routes blocked",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-039",
+      "title": "Duplicate/fraud/non-received guard",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-040",
+      "title": "Scheduled LIVE + provider DUE",
+      "canonical_test": "P4-T038",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-041",
+      "title": "Secure account setup",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-042",
+      "title": "Two-advertiser isolation",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-043",
+      "title": "Newsroom privilege blocked",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-044",
+      "title": "Accurate own dashboard",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-045",
+      "title": "Text change request only",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-046",
+      "title": "Approved creative version remains",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-047",
+      "title": "Renewal manual approval",
+      "canonical_test": "P4-T039",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-048",
+      "title": "Safe CTA semantics",
+      "canonical_test": "P4-T040",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-049",
+      "title": "Qualified counting/reporting",
+      "canonical_test": "P4-T040",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-050",
+      "title": "Abuse/privacy/failure",
+      "canonical_test": "P4-T040",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-051",
+      "title": "Unified domain notifications",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-052",
+      "title": "Immutable audit history",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-053",
+      "title": "Retention and deletion",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-054",
+      "title": "Protected backend and RLS",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-055",
+      "title": "Provider/notification/media failure",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-056",
+      "title": "Security incident and keys",
+      "canonical_test": "P4-T041",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-057",
+      "title": "Android routine usability",
+      "canonical_test": "P4-T042",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-058",
+      "title": "Exact source + one authority",
+      "canonical_test": "P4-T042",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-059",
+      "title": "Protected regression",
+      "canonical_test": "P4-T042",
+      "final_status": "DUE",
+      "evidence": []
+    },
+    {
+      "id": "ADS-060",
+      "title": "Full evidence + due declaration",
+      "canonical_test": "P4-T042",
+      "final_status": "DUE",
+      "evidence": []
+    }
+  ],
+  "release_gates": {
+    "approved_production_source_commit": null,
+    "b6_immutable_source_hash": null,
+    "final_protected_ci_run": null,
+    "final_candidate_ci_run": null,
+    "real_android_e3": null,
+    "real_owner_aal2_e5": null,
+    "exact_deployed_site_url": null,
+    "production_migration_proof": null,
+    "founder_final_signoff": null,
+    "outstanding_provider_e6": "RUN-14 EXTERNAL DUE; must remain explicitly DUE until actual provider integration proof",
+    "approved_to_release": false
+  }
+}
