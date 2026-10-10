@@ -54,7 +54,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T031 | Social | Social Credentials + Authority + Common Audit/Notification | B4 | NOT RUN |
 | P4-T032 | Social | Social Android + Low-Noise + Founder-Time | B4 | NOT RUN |
 | P4-T033 | Social | Social Implementation + Coverage + Security + Regression Lock | B4 | NOT RUN |
-| P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | NOT RUN |
+| P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | IN PROGRESS — code + isolated E2 fixtures only; E3/E5 and production compatibility pending |
 | P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | IN PROGRESS |
 | P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | IN PROGRESS |
 | P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | IN PROGRESS |
@@ -347,4 +347,18 @@ Fresh remote evidence verified for code commit `d64c83dc6c2d16bf0c09a5e16d16935b
 ## B7 T037 partial checkpoint — 10 Oct 2026 (NOT PASS)
 
 Canonical `codex/b7-reconcile-20261009` package UI commit `fc4e6fa0d16770b3cdbe1f6806bb7ef5f7c1b334` modifies `JANTA_BOL_PHASE_3C_WORKING/ads.html`, `phase4-domain-client.js`, and extends `ci/phase4/b7-client-regression.cjs`. Owner/AAL2 existing package RPC, active-only booking dropdown, price minor/version/weight display and client validation were wired to the existing B7 backend, with no new authority home. Exact GitHub source passed 16 isolated V8 assertions; this is not final Node CI or real E3. Read-only live Supabase audit: 0 packages, 0 package versions, 5 campaigns, 0 LIVE, plus confirmed Owner package RPC and RLS/grants. A proposed weighted public-feed query planned successfully under EXPLAIN and a 4000-draw fixture returned 997/3003 selections (approximately 1:3), but this is NOT actual live rotation proof. REVIEW-ONLY SQL candidate commit `57d5d460d93d7a1393d08de3b3c9d255334638b5` is stored at `JANTA_BOL_PHASE_4_WORKING/review/b7_t037_weighted_feed_REVIEW_ONLY.sql`; NOT deployed or applied. Vercel READY preview target=null for client SHA, not production or Android evidence. Inventory/visibility caps, authenticated package-create/price-snapshot tests, staged weighted rotation, full protected CI, E2+E3+E5 remain due. No Production DB data/permission/DDL change; no B8 changes. **P4-T037 IN PROGRESS — NOT PASS / NOT LOCKED.**
+
+
+## B7 NEW BLUEPRINT / G1 + ONE ARTICLE ONE AD — 10 October 2026
+
+Execution branch: `codex/b7-blueprint-20261010`, directly based on `777341a37e73a1ec469d1f3180db131c74d5e838`. Draft PR #5 targets original reconciled B7 branch; DO NOT merge/deploy as completion.
+
+- F01/F02/ADS-013 source: the *existing single* paid article ad region is moved after the third **semantic** article paragraph (second when exactly three); 0–2 paragraphs fall back to article end; original text, Article ID/PURL, 1-second article preview and news-sharing homes unchanged. One selection pinned for the life of the article page; never refreshes in place. Node VM regression covers 0/1/2/3/10 paragraphs and exact content preservation. No real Android proof.
+- F05: removed homepage viewer-facing advertisement geo selector; single static homepage slot remains, state/national rotation backend still DUE.
+- ADS-001: separate unobtrusive home/article "विज्ञापन के लिए संपर्क करें" CTA; new mobile-first `advertise-request.html` collects only name, WhatsApp, consent, optional note. UI displays Pending only on a real UUID receipt. No GPS/forced ad placement/media choice. Real browser/Android E3 DUE.
+- ADS-002..005: `db/20261010_b7_public_enquiry_review.sql` STAGING/REVIEW ONLY, NOT APPLIED TO PRODUCTION. Candidate introduces normalized WhatsApp + affirmative server consent, immutable pending request ID, origin/verified Article ID, phone-keyed cooldown with advisory lock, Owner-only legacy RPC overloads; does not auto approve or go LIVE.
+- ADS-006..009: candidate Owner verification RPC with normal/high-risk evidence rules, shared ad_history+audit_logs (no parallel home); admin queue shows private contact/source/consent and explicit Owner decision with note. This SQL is NOT deployed; do not claim live Owner/AAL2 pass.
+- Independent disposable PostgreSQL `ci/phase4/b7-enquiry-fixture.sql` + `b7-enquiry-regression.sql`, added to candidate workflow; all prior protected checks preserved. Security T123 inventory extended to explicitly recognize new reviewed public and Owner-only signatures without weakening existing assertions.
+- **No canonical B7 test is claimed PASS/LOCK.** T034 IN PROGRESS, T035/T036/T037 IN PROGRESS; T038 external E6 DUE, other T039..T042 NOT RUN. Exact final evidence requires staging integration, actual full protected CI on final source SHA, real E2/E3/E5, then Android proof.
+- **Production untouched** by this change set: zero applied DDL/DML, no paid/LIVE data, no PR merge, no Vercel production deploy. Current backend behavior continues from pre-existing source. Do not silently run review SQL on LIVE project.
 
