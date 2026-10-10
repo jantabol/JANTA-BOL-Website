@@ -227,4 +227,43 @@ begin
  raise notice 'PASS [ADS-055] payment, campaign status, prior News/P3 source and in-app-only labels preserved';
 end $preservation$;
 
+-- A previous Owner role entry is NOT sufficient to receive data if its
+-- underlying B3 team account is now suspended. Notification failure must
+-- be safely audited, News/ad request must survive and Owner can recover
+-- after the account is made active again (fixture-only).
+update public.team_accounts set status='suspended'
+ where user_id='11111111-1111-1111-1111-111111111111';
+insert into public.ad_campaigns(
+ id,advertiser_id,status,placement,scope
+) values('30000000-0000-0000-0000-000000000007',
+ '00000000-0000-0000-0000-000000000001','requested','article','global');
+
+do $revoked_recipient$
+declare v_audit_id bigint;v_before int;
+begin
+ if (select count(*) from public.live_notifications where domain='ads')<>13
+ then raise exception 'SUSPENDED_OWNER_RECEIVED_AD_NOTIFICATION';end if;
+ if not exists(select 1 from public.ad_campaigns
+    where id='30000000-0000-0000-0000-000000000007'
+      and status='requested') then
+  raise exception 'SUSPENDED_OWNER_ABORTED_PUBLIC_AD_ENQUIRY';end if;
+ select id into v_audit_id from public.audit_logs
+ where action='ad_notification_failed' and record_type='ad_campaign'
+   and record_id='30000000-0000-0000-0000-000000000007'
+   and metadata->>'delivery'='NOT_CONFIRMED';
+ if v_audit_id is null then raise exception 'REVOKED_RECIPIENT_FAILURE_NOT_AUDITED';end if;
+ raise notice 'PASS [ADS-054] suspended Owner receives NO in-app message; original enquiry and immutable failure preserved';
+ update public.team_accounts set status='active'
+ where user_id='11111111-1111-1111-1111-111111111111';
+ if not public.jb_ad_notification_retry_internal(v_audit_id)
+ then raise exception 'RESTORED_OWNER_CANNOT_RETRY';end if;
+ if (select count(*) from public.live_notifications where domain='ads')<>14
+ then raise exception 'RECOVERED_OWNER_B3_RECEIPT_MISSING';end if;
+ if (select count(*) from public.audit_logs
+  where action='ad_notification_retry_succeeded'
+    and metadata->>'original_failure_id'=v_audit_id::text)<>1
+ then raise exception 'REVOKED_ROLE_RECOVERY_AUDIT_MISSING';end if;
+ raise notice 'PASS [ADS-054/055] reactivated recipient can recover ONE B3 in-app notice without fake external delivery';
+end $revoked_recipient$;
+
 rollback;
