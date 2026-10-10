@@ -368,5 +368,6 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_cta_click_REVIEW_ONLY.sql
       - name: Real server one-second token guard, duplicate/forgery/expiry, Owner-only qualified counts and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-regression.sql
