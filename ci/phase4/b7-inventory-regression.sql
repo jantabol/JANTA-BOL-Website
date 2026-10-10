@@ -81,8 +81,8 @@ select public.jb_ad_create_inventory_window_internal(
 do $booking$
 declare cap uuid;msg text;id uuid;
 begin
- select id into cap from public.ad_inventory_windows
- where max_guaranteed_impressions=1000;
+ select w.id into cap from public.ad_inventory_windows w
+ where w.max_guaranteed_impressions=1000;
 
  id:=public.jb_ad_reserve_inventory_internal(
   '30000000-0000-0000-0000-000000000001',
