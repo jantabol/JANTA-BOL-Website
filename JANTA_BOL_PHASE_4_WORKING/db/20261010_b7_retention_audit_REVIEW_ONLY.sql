@@ -62,6 +62,41 @@ create trigger b7_register_ad_history_retention
 revoke all on function private.b7_register_ad_history_retention()
  from public,anon,authenticated;
 
+-- B7 legacy history backfill: the existing B7 project had historical
+-- commercial events BEFORE this migration. They need B3 policy records too.
+-- Preserve any pre-existing HOLD/EXTEND/archive states (ON CONFLICT NOTHING).
+-- Due date derives from ORIGINAL event creation time, not time of migration.
+-- No automatic purge even when already due; this is registration ONLY.
+with retention_policy as (
+ select default_retention_days days
+ from public.record_retention_policies
+ where policy_key='ads_history_v1' and domain='ads'
+   and record_type='ad_history' and active=true
+   and automatic_disposition=false
+), inserted as (
+ insert into public.record_retention_state(
+  domain,record_type,record_id,policy_key,lifecycle_state,retention_due_at,
+  updated_by,updated_at
+ )
+ select 'ads','ad_history',h.id::text,'ads_history_v1',
+        case when h.created_at+make_interval(days=>p.days)<=clock_timestamp()
+          then 'due' else 'active' end,
+        h.created_at+make_interval(days=>p.days),null,clock_timestamp()
+ from public.ad_history h cross join retention_policy p
+ on conflict(domain,record_type,record_id) do nothing
+ returning *
+)
+insert into public.record_retention_history(
+ domain,record_type,record_id,action,old_state,new_state,
+ actor_user_id,metadata,created_at
+)
+select s.domain,s.record_type,s.record_id,'retention_registered',
+       '{}'::jsonb,to_jsonb(s),null,
+       jsonb_build_object('source','b7_legacy_history_backfill',
+                          'automatic_disposition',false),
+       clock_timestamp()
+from inserted s;
+
 -- Physical changes to the commercial history are NEVER "corrections".
 -- Editorial/owner changes append a NEW ad_history event; the historic
 -- origin and retention record remain inspectable.
