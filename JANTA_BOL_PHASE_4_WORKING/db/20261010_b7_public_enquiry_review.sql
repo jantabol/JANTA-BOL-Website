@@ -179,7 +179,7 @@ begin
    raise exception 'OWNER_AAL2_REQUIRED';end if;
  v_note:=btrim(coalesce(p_note,''));
  v_ref:=btrim(coalesce(p_evidence_ref,''));
- if p_state not in ('verified','rejected','pending') or length(v_note)<8 or length(v_note)>1000
+ if p_state is null or p_state not in ('verified','rejected','pending') or length(v_note)<8 or length(v_note)>1000
  then raise exception 'INVALID_VERIFICATION_DECISION';end if;
  if length(v_ref)>300 then raise exception 'INVALID_EVIDENCE_REFERENCE';end if;
  select * into v from public.advertisers where id=p_advertiser for update;
