@@ -91,7 +91,24 @@ async function render(placement,scope='global'){
   }else return;
   const link=cta(ad);
   if(link?.url){const a=node('a','jb-public-ad-cta',link.label);a.href=link.url;if(!link.url.startsWith('tel:'))a.target='_blank';a.rel='noopener noreferrer sponsored';box.append(a)}
-  if(current())slot.append(box);
+  if(current()){
+   slot.append(box);
+   // Staged/optional: only a server-bound Article UUID is eligible for a
+   // protected view-ticket handshake. Current legacy articles still send
+   // free-text scope and NO analytics JS is loaded: ZERO production change.
+   // Deliberately not awaited: stats never block, remove or rotate News.
+   const articleId=String(scope).startsWith('article:')?String(scope).slice(8):'';
+   if(placement==='article'&&
+      scopeForVerifiedArticleId(articleId)===scope&&
+      typeof g.JBAdAnalytics?.prepare==='function'){
+    try{
+     const reporting=g.JBAdAnalytics.prepare({
+      element:box,articleId,campaignId:ad.campaign_id,creativeId:ad.creative_id
+     });
+     if(reporting&&typeof reporting.catch==='function')reporting.catch(()=>{});
+    }catch(_){}
+   }
+  }
  }catch(_){if(current())slot.replaceChildren()}
 }
 g.JBPublicAds={render,scopeForArticle,scopeForVerifiedArticleId,renderVerifiedArticle,articleParagraphOffset,placeArticleSlot};
