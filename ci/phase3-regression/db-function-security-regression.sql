@@ -457,6 +457,18 @@ begin
         where policy_key='ads_history_v1' and domain='ads'
           and record_type='ad_history' and active and automatic_disposition=false
           and default_retention_days>=2555)
+       or not exists(select 1 from information_schema.columns
+        where table_schema='public' and table_name='ad_creatives'
+          and column_name='approved_once' and data_type='boolean')
+       or not exists(select 1 from pg_proc p
+        join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='private'
+          and p.proname='b7_approved_creative_immutable'
+          and p.prosecdef=true
+          and p.prosrc ilike '%approved_once%'
+          and p.prosrc ilike '%p4_owner_allowed%'
+          and p.prosrc ilike '%to_jsonb(new)%'
+          and p.prosrc ilike '%B7_APPROVED_CREATIVE_VERSION_IMMUTABLE%')
     then v_bad_ad_notification_guard:=v_bad_ad_notification_guard+1;end if;
   end if;
 
