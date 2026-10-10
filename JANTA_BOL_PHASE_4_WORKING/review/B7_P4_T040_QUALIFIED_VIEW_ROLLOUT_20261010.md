@@ -30,3 +30,7 @@ A qualified impression requires **>=50% of a visible Advertisement box for >=100
 - Attempt to split the weighted SQL into shared eligibility used JavaScript `String.replace` with raw SQL replacement text containing `$'`, which expanded file suffixes. The corruption was detected by source inventory/CI; source was rebuilt from the exact previously GREEN blob and replaced with callback-safe logic in commit `98f168cc`. CI retested the original 3,200-draw weighted job GREEN; no LIVE alteration.
 
 **Final test status:** P4-T040 = **IN PROGRESS**, not PASS or LOCK. ADS-048 click scheme and ADS-049/050 Android/server anti-bot proofs remain incomplete. No B8.
+
+
+## Optional renderer hook (staging only; added after first report)
+`public-ads.js` now invokes `JBAdAnalytics.prepare` only if the element is already rendered, `p_scope` contains a valid verified Article UUID and the optional analytics module is actually present. Legacy Article scopes are explicitly denied a ticket. The current article page has not switched from `JBPublicAds.scopeForArticle`, and analytics scripts are still unloaded; hence no new Production impressions or anonymous ticket endpoint requests are made. Three deterministic source/DOM regression tests defend this claim. The hook never awaits analytics, so network failure cannot blank News or change the pinned ad. This is NOT Android E3; final paired release gate stays OPEN.
