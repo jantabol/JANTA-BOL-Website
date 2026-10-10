@@ -26,6 +26,11 @@ select public.jb_ad_confirm_manual_payment_internal(
 update public.ad_campaigns set status='live'
 where id='30000000-0000-0000-0000-000000000005';
 
+-- Owner-approved CTA fixture: browser renders only a validated safe destination.
+update public.ad_creatives
+set cta_type='website',cta_target='https://advertiser.example.test/promo'
+where id='40000000-0000-0000-0000-000000000005';
+
 -- Preserve historic raw telemetry physically but never confuse it with a
 -- client-reported qualified impression or user count.
 insert into public.ad_events(campaign_id,event_type)
@@ -150,6 +155,52 @@ begin
 end $qualify$;
 reset role;
 
+-- ADS-048: the same ticket can yield ONE impression and ONE
+-- client-reported user CTA click (two event types, one token).
+set local role anon;
+do $click_once$
+declare t text;
+begin
+ t:=current_setting('b7.fixture_view_token',true);
+ if t is null or not public.jb_ad_record_ticket_click(t)
+ then raise exception 'APPROVED_CTA_CLICK_NOT_RECORDED';end if;
+ if public.jb_ad_record_ticket_click(t)
+ then raise exception 'DUPLICATE_CTA_CLICK_ACCEPTED';end if;
+ if public.jb_ad_record_ticket_click(repeat('f',48))
+ then raise exception 'FORGED_CLICK_TOKEN_ACCEPTED';end if;
+ raise notice 'PASS [ADS-048] approved CTA click tracked once, replay/forgery rejected, original impression retained';
+end $click_once$;
+reset role;
+
+-- Issue a second genuine eligible open, then corrupt its stored CTA
+-- as an adversarial fixture. Never trust a browser-supplied URL/scheme.
+set local role anon;
+do $fresh_click$
+declare t text;
+begin
+ t:=public.jb_ad_issue_view_ticket(
+  '10000000-0000-0000-0000-000000000001',
+  '30000000-0000-0000-0000-000000000005',
+  '40000000-0000-0000-0000-000000000005',repeat('d',32));
+ perform set_config('b7.fixture_unsafe_cta_token',t,true);
+end $fresh_click$;
+reset role;
+update public.ad_creatives
+set cta_target='javascript:alert(1)'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $unsafe_cta$
+begin
+ if public.jb_ad_record_ticket_click(
+   current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'JAVASCRIPT_CTA_COUNTED';end if;
+ raise notice 'PASS [ADS-048/050] forged javascript CTA target never qualifies as paid click';
+end $unsafe_cta$;
+reset role;
+update public.ad_creatives
+set cta_target='https://advertiser.example.test/promo'
+where id='40000000-0000-0000-0000-000000000005';
+
 do $ledger$
 declare report jsonb; t text;cnt int;
 begin
@@ -165,6 +216,7 @@ begin
   '30000000-0000-0000-0000-000000000005');
  if (report->>'total')::int<>1 or (report->>'unverified_legacy')::int<>1
    or (report->>'today')::int<>1 or (report->>'clicks_verified')::int<>0
+   or (report->>'clicks_reported')::int<>1
    or report->>'anti_bot_verified'<>'false'
  then raise exception 'OWNER_STATS_MIXED_RAW_WITH_QUALIFIED: %',report;end if;
  if exists(select 1 from information_schema.columns
@@ -245,9 +297,10 @@ reset role;
 
 do $final$
 begin
- if (select count(*) from public.ad_view_tickets)<>2
+ if (select count(*) from public.ad_view_tickets)<>3
  then raise exception 'TICKET_ISSUE_COUNT_WRONG';end if;
- if (select count(*) from public.ad_events where qualified=true)<>1
+ if (select count(*) from public.ad_events where qualified=true)<>2
+   or (select count(*) from public.ad_events where event_type='click' and qualified=true)<>1
  then raise exception 'QUALIFIED_COUNT_DUPLICATED';end if;
  if (select count(*) from public.articles where id='10000000-0000-0000-0000-000000000001')<>1
  then raise exception 'CANONICAL_ARTICLE_ID_CHANGED';end if;
