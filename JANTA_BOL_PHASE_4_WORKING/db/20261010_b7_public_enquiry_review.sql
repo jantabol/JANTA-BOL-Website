@@ -31,7 +31,7 @@ begin
  if length(v_name)<2 or length(v_name)>160 or length(v_raw)<10 or length(v_raw)>40
     or length(v_note)>500 or p_consent is distinct from true
  then raise exception 'INVALID_ENQUIRY_OR_CONSENT'; end if;
- if p_origin not in ('homepage','article') then
+ if p_origin is null or p_origin not in ('homepage','article') then
    raise exception 'INVALID_ENQUIRY_ORIGIN'; end if;
  if p_origin='homepage' and p_article is not null then
    raise exception 'INVALID_ARTICLE_CONTEXT'; end if;
