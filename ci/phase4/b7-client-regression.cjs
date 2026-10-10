@@ -586,3 +586,46 @@ test('ADS-049 staged renderer: analytics rejection cannot erase pinned ad or rep
  assert.equal(count,1);assert.equal(f.placed.length,1);
  assert.equal(f.rpc.length,1);
 });
+
+
+test('ADS-048 safe CTA: approved schemes and targets work; javascript/data/file/http and credentials are rejected',async()=>{
+ const base={
+  campaign_id:'30000000-0000-0000-0000-000000000005',
+  creative_id:'40000000-0000-0000-0000-000000000005',
+  creative_type:'text',text_body:'Approved secure advertisement',
+  label:'विज्ञापन'
+ };
+ const cases=[
+  ['website','https://advertiser.example.test/deal','https://advertiser.example.test/deal'],
+  ['map','https://maps.example.test/location','https://maps.example.test/location'],
+  ['call','+91 98765 43210','tel:+919876543210'],
+  ['whatsapp','+91 98765 43210','https://wa.me/919876543210'],
+  ['website','javascript:alert(1)',null],
+  ['website','data:text/html,<script>alert(1)</script>',null],
+  ['map','file:///etc/passwd',null],
+  ['map','http://example.test/insecure',null],
+  ['website','https://user:pass@example.test/creds',null],
+  ['whatsapp','javascript:alert(1)',null],
+  ['call','abc9876543210',null],
+  ['website','',null]
+ ];
+ for(const [type,target,want] of cases){
+  const f=adRenderFixture();
+  f.window.JBBackend.client.rpc=async()=>({
+   data:[{...base,cta_type:type,cta_target:target}],error:null
+  });
+  let hook;
+  f.window.JBAdAnalytics={prepare(opts){hook=opts}};
+  await f.window.JBPublicAds.render('article','article:10000000-0000-0000-0000-000000000001');
+  assert.equal(f.placed.length,1,'invalid CTA must not erase safe News/ad label');
+  const box=f.placed[0];
+  const links=box.children.filter(x=>x.tagName==='A'&&x.className==='jb-public-ad-cta');
+  assert.equal(links.length,want?1:0,'incorrect CTA presence for '+type+' '+target);
+  if(want){
+   assert.equal(links[0].href,want);
+   assert.match(links[0].rel,/\bsponsored\b/);
+   assert.equal(hook.ctaElement,links[0]);
+   if(!want.startsWith('tel:'))assert.equal(links[0].target,'_blank');
+  }else assert.equal(hook.ctaElement,null);
+ }
+});
