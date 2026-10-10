@@ -38,6 +38,10 @@ declare v bigint;
 begin
  if coalesce(current_setting('b7.test_notify_down',true),'')='yes'
  then raise exception 'SIMULATED_B3_NOTIFICATION_DOWN';end if;
+ -- Deterministic concurrency fixture only. Delay happens AFTER the Owner
+ -- retry has checked for a prior success, exposing any FOR SHARE race.
+ if coalesce(current_setting('b7.test_notify_delay',true),'')='yes'
+ then perform pg_catalog.pg_sleep(1.0);end if;
  if p_domain<>'ads' or p_priority not in('NORMAL','HIGH','CRITICAL')
  then raise exception 'B3_DOMAIN_OR_PRIORITY_NOT_ALLOWED';end if;
  if not exists(select 1 from public.user_roles
