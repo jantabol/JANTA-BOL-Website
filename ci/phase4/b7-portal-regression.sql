@@ -202,4 +202,61 @@ begin
  ) then raise exception 'OWNER_HISTORY_MISSING';end if;
  raise notice 'PASS [ADS-045/046] Owner decision audited, approved creative unchanged until separate review';
 end $owner_test$;
+
+-- ADS-041: one-time password consumed atomically, returned token bounded.
+set local role anon;
+do $one_time$
+declare t text;msg text;
+begin
+ t:=public.jb_ad_portal_login('JB-A','test-secret-A');
+ if t !~ '^[0-9a-f]{48}$' then raise exception 'WEAK_SESSION_TOKEN';end if;
+ if (select count(*) from public.jb_ad_portal_campaign(t))<>1
+ then raise exception 'ONE_TIME_LOGIN_DID_NOT_CREATE_VALID_SESSION';end if;
+ begin
+  perform public.jb_ad_portal_login('JB-A','test-secret-A');
+  raise exception 'TEMP_SECRET_REPLAY_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_ADVERTISER_LOGIN' then raise exception 'SINGLE_USE_FAILED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_portal_login('JB-B','incorrect-password');
+  raise exception 'WRONG_SECRET_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_ADVERTISER_LOGIN' then raise exception 'PASSWORD_GUARD_FAILED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-041] one-use secret, no replay, wrong secret rejected, valid bounded session issued';
+end $one_time$;
+reset role;
+
+-- Owner reissues through its EXISTING credential secret_hash update: trigger
+-- clears consumed_at for new secret but explicit session revocations stay intact.
+update public.ad_portal_credentials
+set secret_hash=extensions.crypt('test-secret-A-new',extensions.gen_salt('bf',10)),
+    issued_at=now(),revoked_at=null
+where login_id='JB-A';
+do $reissue$
+begin
+ if (select consumed_at from public.ad_portal_credentials where login_id='JB-A') is not null
+ then raise exception 'REISSUE_NOT_RESET_CONSUMED';end if;
+ raise notice 'PASS [ADS-041] credential reissue resets only the consumed marker';
+end $reissue$;
+set local role anon;
+do $relogin$
+declare t text;msg text;
+begin
+ t:=public.jb_ad_portal_login('JB-A','test-secret-A-new');
+ if length(t)<>48 then raise exception 'REISSUED_LOGIN_FAILED';end if;
+ begin
+  perform public.jb_ad_portal_login('JB-A','test-secret-A');
+  raise exception 'OLD_CREDENTIAL_REPLAYED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_ADVERTISER_LOGIN' then raise exception 'OLD_SECRET_FAILED: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-041] reissued credential consumed once; older password permanently invalid';
+end $relogin$;
+reset role;
+
 rollback;
