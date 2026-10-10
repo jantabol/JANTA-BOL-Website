@@ -20,6 +20,7 @@ declare
   v_bad_portal_renewal_check bigint;
   v_bad_geo_guard bigint;
   v_bad_inventory_guard bigint;
+  v_bad_qualified_view_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -48,7 +49,7 @@ begin
     and p.proname like 'jb_%'
     and has_function_privilege('anon',p.oid,'EXECUTE')
     and p.oid <> 'public.jb_ad_public_feed(text,text)'::regprocedure
-    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
+    and p.proname not in ('jb_ad_event','jb_ad_portal_campaign','jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event','jb_compliance_public_months','jb_grievance_submit_internal','jb_grievance_submit_receipt','jb_public_active_ads');
 
   select count(*) into v_unknown_authenticated
   from pg_proc p
@@ -70,12 +71,12 @@ begin
       'jb_owner_revoke_session',
       'jb_set_owner_recovery_key',
       'jb_verify_owner_recovery_key',
-      'jb_ad_analytics_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
+      'jb_ad_analytics_internal','jb_ad_qualified_analytics_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
-      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
+      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
-      'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
+      'jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
        'jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
        'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
@@ -335,6 +336,51 @@ begin
     then v_bad_inventory_guard:=v_bad_inventory_guard+1;end if;
   end if;
 
+  -- B7/ADS-049/050: only two exact public ticket endpoints may be anon.
+  -- If one is installed, the complete one-use mechanism MUST be present,
+  -- unqualified legacy impression writers MUST be denied, and metadata is
+  -- stored in the existing ad_events ledger (never a second ad count home).
+  v_bad_qualified_view_guard:=0;
+  if to_regclass('public.ad_view_tickets') is not null
+     or exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public' and p.proname in (
+       'jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket',
+       'jb_ad_qualified_analytics_internal')) then
+    select count(*) into v_bad_qualified_view_guard
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+       and p.proname in('jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket')
+       and (not p.prosecdef or not has_function_privilege('anon',p.oid,'EXECUTE')
+            or not has_function_privilege('authenticated',p.oid,'EXECUTE'));
+    if v_bad_qualified_view_guard<>0
+       or to_regclass('public.ad_view_tickets') is null
+       or to_regprocedure('public.jb_ad_issue_view_ticket(uuid,uuid,uuid,text)') is null
+       or to_regprocedure('public.jb_ad_qualify_view_ticket(text)') is null
+       or to_regprocedure('public.jb_ad_qualified_analytics_internal(uuid)') is null
+       or to_regprocedure('private.b7_eligible_article_creatives(uuid)') is null
+       or not exists(select 1 from pg_class t where t.oid='public.ad_view_tickets'::regclass
+           and t.relrowsecurity)
+       or not exists(select 1 from pg_class t where t.oid='public.ad_events'::regclass
+           and t.relrowsecurity)
+       or has_table_privilege('anon','public.ad_view_tickets','SELECT')
+       or has_table_privilege('anon','public.ad_events','INSERT')
+       or has_function_privilege('anon','public.jb_ad_event(uuid,text)','EXECUTE')
+       or has_function_privilege('anon','public.jb_ad_record_event(uuid,text)','EXECUTE')
+       or has_function_privilege('anon','public.jb_ad_qualified_analytics_internal(uuid)','EXECUTE')
+       or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+           where n.nspname='public' and p.proname='jb_ad_issue_view_ticket'
+            and p.prosrc ilike '%private.b7_eligible_article_creatives%'
+            and p.prosrc ilike '%p_open_nonce%'
+            and p.prosrc ilike '%ARTICLE_VIEW_ALREADY_TICKETED%')
+       or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+           where n.nspname='public' and p.proname='jb_ad_qualify_view_ticket'
+            and p.prosrc ilike '%for update%'
+            and p.prosrc ilike '%v.issued_at%'
+            and p.prosrc ilike '%public.ad_events%'
+            and p.prosrc ilike '%impression_at%')
+    then v_bad_qualified_view_guard:=v_bad_qualified_view_guard+1;end if;
+  end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
@@ -345,7 +391,8 @@ begin
     and v_bad_public_enquiry_guard=0
     and v_bad_portal_change_guard=0
     and v_bad_geo_guard=0
-    and v_bad_inventory_guard=0,
+    and v_bad_inventory_guard=0
+    and v_bad_qualified_view_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
