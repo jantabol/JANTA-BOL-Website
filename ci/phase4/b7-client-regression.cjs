@@ -119,3 +119,58 @@ test('T037 admin UI: package versions and only active bookable options',async()=
  assert.match(elements.get('requestedPackage').innerHTML,/New A/);
  assert.doesNotMatch(elements.get('requestedPackage').innerHTML,/Old B/);
 });
+
+
+// ADS-013: zero, short and long editorial articles; one ad maximum.
+// These are deterministic source/DOM behaviors, NOT Android E3 evidence.
+function articleFixture(count){
+ return Array.from({length:count},(_,i)=>
+  'यह खबर का वास्तविक पैराग्राफ '+(i+1)+' है, जिसमें पाठकों के लिए पर्याप्त तथ्य और विवरण हैं।'
+ ).join('\n\n');
+}
+for(const [count,after] of [[0,null],[1,null],[2,null],[3,2],[10,3]]){
+ test('ADS-013 semantic placement: '+count+' paragraphs',()=>{
+  const text=articleFixture(count),offset=client().window.JBPublicAds.articleParagraphOffset(text);
+  const expected=after===null?null:articleFixture(after).length;
+  assert.equal(offset,expected);
+ });
+}
+test('ADS-013 ignores blank fragments, photo captions, bullets and tiny headings',()=>{
+ const p1=articleFixture(1),p2=articleFixture(1).replace('एक','दो'),p3=articleFixture(1).replace('तथ्य','जानकारी');
+ const text=[p1,'फोटो: खबर से संबंधित चित्र','• सूची का छोटा बिंदु','नया अपडेट',p2,p3].join('\n\n');
+ assert.equal(client().window.JBPublicAds.articleParagraphOffset(text),text.indexOf('\n\n'+p3));
+});
+test('ADS-013 preserves exact article text and moves the same one-slot region only once',()=>{
+ const {window,context}=client(),text=articleFixture(10),expected=articleFixture(3).length;
+ const region={parentNode:{tagName:'MAIN'}};
+ let tail=null,insertions=0;
+ const first={nodeType:3,textContent:text,splitText(offset){
+  assert.equal(offset,expected);
+  tail={nodeType:3,textContent:this.textContent.slice(offset)};
+  this.textContent=this.textContent.slice(0,offset);
+  return tail;
+ }};
+ const body={firstChild:first,insertBefore(node,before){assert.equal(node,region);assert.equal(before,tail);node.parentNode=this;insertions++;}};
+ const root={querySelector(selector){assert.equal(selector,'.article .body');return body;}};
+ context.document={querySelector(selector){assert.equal(selector,'.jb-ad-region');return region;}};
+ assert.equal(window.JBPublicAds.placeArticleSlot(root),true);
+ assert.equal(first.textContent+tail.textContent,text);
+ assert.equal(window.JBPublicAds.placeArticleSlot(root),false);
+ assert.equal(insertions,1);
+});
+test('ADS-013 short articles keep existing end-of-article fallback',()=>{
+ const {window,context}=client(),text=articleFixture(2);
+ const region={parentNode:{tagName:'MAIN'}};
+ const body={firstChild:{nodeType:3,textContent:text,splitText(){throw Error('NO_INLINE_ON_SHORT');}},insertBefore(){throw Error('NO_MOVE_ON_SHORT');}};
+ context.document={querySelector:()=>region};
+ assert.equal(window.JBPublicAds.placeArticleSlot({querySelector:()=>body}),false);
+ assert.notEqual(region.parentNode,body);
+});
+test('ADS-013 main article retains permanent URL/share and a single ad placement',()=>{
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/article.html','utf8');
+ assert.match(html,/JBPublicAds\?\.placeArticleSlot\(root\)/);
+ assert.match(html,/JBPublicAds\?\.render\('article',JBPublicAds\.scopeForArticle\(item\)\)/);
+ assert.equal((html.match(/data-jb-ad-placement="article"/g)||[]).length,1);
+ assert.match(html,/shareUrl\(\)/);
+ assert.match(html,/Permanent Article ID/);
+});
