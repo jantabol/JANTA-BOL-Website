@@ -41,6 +41,10 @@ jobs:
         run: node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
       - name: B7 article scope and schedule behavior
         run: node --test ci/phase4/b7-client-regression.cjs
+      - name: B7 qualified ad viewability isolated signal — never count fake impressions
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-viewability.js
+          node --test ci/phase4/b7-viewability-regression.cjs
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
