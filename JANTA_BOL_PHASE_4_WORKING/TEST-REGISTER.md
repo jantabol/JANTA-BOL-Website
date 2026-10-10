@@ -57,7 +57,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T034 | Ads | Ad Architecture + Public Request + Verification | B7 | IN PROGRESS — code + isolated E2 fixtures only; E3/E5 and production compatibility pending |
 | P4-T035 | Ads | Creative + Label + Placement + Targeting Privacy | B7 | IN PROGRESS |
 | P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | IN PROGRESS |
-| P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | IN PROGRESS |
+| P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | IN PROGRESS — G3 private geo 25-case matrix; G4 weighted 3,200 draws + inventory quota synthetic E2 only. Official LGD/E3/E5/Production gates DUE |
 | P4-T038 | Ads | Approval -> Payment -> LIVE + Non-Refund Disclosure | B7 | NOT RUN — EXTERNAL |
 | P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | IN PROGRESS — staging text-only portal + A/B isolated E2; Owner/Android E3, renewal and production integration DUE |
 | P4-T040 | Ads | CTA + Analytics + Privacy + Analytics Failure | B7 | NOT RUN |
@@ -391,3 +391,22 @@ Execution branch: `codex/b7-blueprint-20261010`, directly based on `777341a37e73
 - Owner-only `jb_ad_owner_renewals_internal` reads the canonical queue. No automatic acceptance or payment: Founder must separately review terms, payment, geo and schedule. Android portal and Owner queue show Pending only.
 - Disposable PostgreSQL `ci/phase4/b7-portal-fixture.sql` + `b7-portal-regression.sql` include old JWT renewal record, cross-token denial, duplicate rejection, direct-table access denial, Owner negative role, Owner queue and unchanged current LIVE expiry, inside rollback. `ci/phase4/b7-client-regression.cjs` adds no-auto-extend and escaped UI checks.
 - Evidence classes available only on exact GREEN CI SHA after workflow completion: E1 + synthetic E2. **Still DUE:** actual Supabase migration/role/parity and privileged integration E2/E5, real Android E3, real manual Owner renewal quote/payment/approval, public and private safety matrix. P4-T039 stays IN PROGRESS; NOT PASS/LOCK. P4-T038 original provider E6 stays DUE under launch-scope rules.
+
+
+## B7-G3/G4 Article geo, weighted selection and no-oversell checkpoint — 10 Oct 2026
+
+**Source:** `codex/b7-blueprint-20261010` (DRAFT PR #5, production unchanged); source approval: B7 Final Master Blueprint, F01-F06/F13-F14; P4-T035 ADS-014 and P4-T037 ADS-024..034. **NO CANONICAL TEST PASS OR B7 LOCK**; E2 below means disposable fixture evidence, NOT approved LIVE Supabase functionality.
+
+### G3 — ADS-014 / ADS-028 (partial E1/E2 only)
+- Additive `db/20261010_b7_geo_targeting_REVIEW_ONLY.sql`: canonical published Article verified LGD code fields, exact campaign area grants and private Article-ID matcher. No caller area/GPS; Owner/AAL2 writes, immutable paid area changes and audit; unverified district/tehsil parent blocked; national fallback only if explicitly reviewed. Existing Article ID, URL and free-text newsroom fields not rewritten.
+- `ci/phase4/b7-geo-fixture.sql` and `b7-geo-regression.sql` prove **25 synthetic** expected positive/negative Article/campaign combinations; 3 pilot synthetic district codes are **not verified official MP geography**. Gwalior excludes Pichhore-only, district-only excludes tehsil-only, unknown local denied, unpublished denied, Owner denial, direct SQL denial.
+- **Due:** official authoritative MP 55 district+verified tehsil source/version/parent import, credible Article metadata integration, old public RPC safe cutover to one Article-ID feed, deployed E2/RLS, Android E3 and cross-area negative matrix.
+
+### G4 — ADS-029..034 (synthetic E1/E2/E5 only, NOT complete)
+- `db/20261010_b7_weighted_private_REVIEW_ONLY.sql` selects **at most one private candidate** from canonical Article ID; exact Owner granted area, approved advertiser/creative, real-evidence manual payment candidate, current server schedule and paid immutable package version. No alternative public feed and no 20-minute in-Article swaps.
+- CI `b7-weighted-postgres` executed 3,200 random server selections with package weight **1:2:3**. One documented successful sample at commit `769ac23bc3cb3dd47767061f31a3d598177f43cb`: weight1=529, weight2=1033, weight3=1638 (expected ~533/~1067/1600, within published relative 20% fixture tolerance). Checked zero/one/many candidates, missing/invalid newest asset, expired/hidden/paused/unpaid, package snapshot tampering, wrong Article/unknown/draft.
+- `db/20261010_b7_inventory_guard_REVIEW_ONLY.sql` adds independent evidence-indexed conservative shared Article/Home window caps (cannot overlap), Owner/AAL2 serialized reservations and immutable sold commitments, with price/area/period/package contract guard and safety Hide exemption. `b7-inventory-postgres` fixture: capacity 1,000, first buyer guarantee 600 + second 400, attempted +500 / third new sale denied; Owner/AAL1/direct SQL/duplicate/oversized/old-period, high-risk, immutable terms, common audit/history and rollback.
+- RCA: `b7-inventory-regression.sql` originally failed from ambiguous PL/pgSQL `id` on run 38056591494. Exact fixture repaired to qualified `w.id` in commit `a0d475273cdc7f84c5700ee763f436377c314f59`; subsequent candidate suite successful on this code before later guards. Failed CI is documented, never marked PASS.
+- **Still due:** actual approved published packages/terms/quote, independent inventory forecast+historical sold-reach reconcile, official geo, one LIVE public sanitized feed, race/capacity concurrency staging, anti-starvation, served vs qualified impression counters, tokens/dedupe, Android E3, actual E2/E5/AAL2, Owner final sign-off. P4-T037 NOT PASS / NOT LOCK. No synthetic test is E6 or real traffic proof.
+
+**Preservation:** Protected Phase 3A+3B + existing Phase4 static/database CI and new G3/G4 isolated jobs run on every feature commit; do not bypass any checker. All SQL named `REVIEW_ONLY` remains unapplied to LIVE. P4-T034..T042 still have NO final PASS; external provider E6 in P4-T038 remains genuinely DUE and cannot be disguised as 9/9 PASS. After latest source commit, record exact SHA + corresponding protected/Candidate GREEN CI receipts before promoting any further checkpoint.
