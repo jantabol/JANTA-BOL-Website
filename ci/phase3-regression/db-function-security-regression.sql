@@ -19,6 +19,7 @@ declare
   v_bad_portal_change_guard bigint;
   v_bad_portal_renewal_check bigint;
   v_bad_geo_guard bigint;
+  v_bad_inventory_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -76,6 +77,7 @@ begin
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
        'jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
+       'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal',
       'jb_compliance_approve_month_internal','jb_compliance_generate_month_internal','jb_compliance_refresh_deadlines_internal',
       'jb_compliance_transition_internal','jb_compliance_task_prepare_internal','jb_compliance_public_months','jb_compliance_set_escalation_ready_internal','jb_compliance_tasks_internal','jb_case_access_internal','jb_grievance_add_issue_internal',
       'jb_grievance_link_duplicate_internal','jb_grievance_reopen_internal','jb_grievance_reporter_clarify_internal',
@@ -133,7 +135,8 @@ begin
   join pg_namespace n on n.oid=p.pronamespace
   where n.nspname='public'
     and p.proname in ('jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_record_payment_internal','jb_ad_save_creative_internal','jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
-       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal','jb_ad_set_article_geo_internal','jb_ad_grant_area_internal')
+       'jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal','jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
+        'jb_ad_create_inventory_window_internal','jb_ad_reserve_inventory_internal')
     and (not p.prosecdef or has_function_privilege('anon',p.oid,'EXECUTE') or not has_function_privilege('authenticated',p.oid,'EXECUTE') or pg_get_functiondef(p.oid) not ilike '%p4_owner_allowed%');
 
 
@@ -275,6 +278,38 @@ begin
     then v_bad_geo_guard:=v_bad_geo_guard+1;end if;
   end if;
 
+  -- G4/ADS-032..033: conditional until approved inventory schema is deployed.
+  -- Exact reviewed Owner RPCs and append-only, role-denied booking capacity.
+  v_bad_inventory_guard:=0;
+  if to_regclass('public.ad_inventory_windows') is not null then
+    select count(*) into v_bad_inventory_guard
+    from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='public'
+      and p.proname in ('jb_ad_create_inventory_window_internal',
+        'jb_ad_reserve_inventory_internal')
+      and (not p.prosecdef
+         or has_function_privilege('anon',p.oid,'EXECUTE')
+         or not has_function_privilege('authenticated',p.oid,'EXECUTE')
+         or p.prosrc not ilike '%p4_owner_allowed%');
+    if (select count(*) from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+      where n.nspname='public'
+       and p.proname in ('jb_ad_create_inventory_window_internal',
+         'jb_ad_reserve_inventory_internal'))<>2
+       or not exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace
+        where n.nspname='public' and t.relname='ad_inventory_windows' and t.relrowsecurity)
+       or not exists(select 1 from pg_class t join pg_namespace n on n.oid=t.relnamespace
+        where n.nspname='public' and t.relname='ad_inventory_reservations' and t.relrowsecurity)
+       or has_table_privilege('anon','public.ad_inventory_windows','SELECT')
+       or has_table_privilege('authenticated','public.ad_inventory_reservations','INSERT')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.ad_inventory_reservations'::regclass
+            and t.tgname='b7_inventory_reservation_before_insert' and t.tgenabled='O')
+       or not exists(select 1 from pg_trigger t
+          where t.tgrelid='public.ad_inventory_windows'::regclass
+            and t.tgname='b7_inventory_window_immutable' and t.tgenabled='O')
+    then v_bad_inventory_guard:=v_bad_inventory_guard+1;end if;
+  end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
@@ -284,7 +319,8 @@ begin
     and v_bad_public_ad_guard=0
     and v_bad_public_enquiry_guard=0
     and v_bad_portal_change_guard=0
-    and v_bad_geo_guard=0,
+    and v_bad_geo_guard=0
+    and v_bad_inventory_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
