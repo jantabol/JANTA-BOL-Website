@@ -9,3 +9,8 @@
 .jb-public-ad-cta{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;text-decoration:underline;color:inherit}
 .jb-public-ad-cta:focus-visible{outline:3px solid #ff6060;outline-offset:3px}
 [data-jb-ad-placement]:empty{display:none}
+
+/* A quiet contact link, NOT a second paid advertisement or forced modal. */
+.jb-ad-contact{font-size:13px;line-height:1.5;text-align:center;margin:12px auto;color:#ddd}
+.jb-ad-contact a{color:#ff9b9b;text-decoration:underline;min-height:36px;display:inline-flex;align-items:center}
+.jb-ad-contact[hidden]{display:none}
