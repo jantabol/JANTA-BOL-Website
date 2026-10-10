@@ -59,7 +59,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T036 | Ads | Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle | B7 | IN PROGRESS |
 | P4-T037 | Ads | Packages + Price Versioning + Rotation + Inventory | B7 | IN PROGRESS |
 | P4-T038 | Ads | Approval -> Payment -> LIVE + Non-Refund Disclosure | B7 | NOT RUN — EXTERNAL |
-| P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | NOT RUN |
+| P4-T039 | Ads | Advertiser Panel + Isolation + Creative Change + Renewal | B7 | IN PROGRESS — staging text-only portal + A/B isolated E2; Owner/Android E3, renewal and production integration DUE |
 | P4-T040 | Ads | CTA + Analytics + Privacy + Analytics Failure | B7 | NOT RUN |
 | P4-T041 | Ads | Ad Notifications + Audit + Retention + Security + Provider Failure | B7 | NOT RUN |
 | P4-T042 | Ads | Ads Mobile + Founder-Time + Implementation/Coverage/Regression Lock | B7 | NOT RUN |
@@ -373,3 +373,13 @@ Execution branch: `codex/b7-blueprint-20261010`, directly based on `777341a37e73
 - `ci/phase4/b7-payment-fixture.sql` and `b7-payment-regression.sql` execute the candidate on GitHub isolated disposable PostgreSQL with rollback, including Owner rejection, consent missing, duplicate UTR, immutable payment, high-risk pending denial and future schedule. These are **synthetic E2**, never real bank settlement/E5 or E6.
 - All P4-T034–T042 canonical PASS/LOCK still **NOT CLAIMED**. P4-T038 row deliberately remains `NOT RUN — EXTERNAL` under B0 source governance, because E5 real Owner and E6 external evidence are not available. Isolated code/test success is a PARTIAL checkpoint, not launch readiness.
 - Existing full Phase3+4 Protected CI and candidate CI need both be GREEN on every eventual merge/build SHA. No backend SQL applied to production. Full B7 still requires G2 geography/media, G3 inventory+rotation, G5 advertiser portal, G6 analytics/audit and G7 Android E3 and final closure.
+
+## B7 / P4-T039 Advertiser Portal — 10 Oct 2026 (IN PROGRESS · NOT PASS)
+- Source branch `codex/b7-blueprint-20261010`, draft PR #5. Built on the protected GREEN branch; none of the existing News/Live/Grievance source homes were replaced.
+- Owner/AAL2 *existing* `jb_ad_issue_portal_internal` reused. New Owner UI issues temporary login and displays credentials once for **manual delivery only**; no automated WhatsApp delivery claimed.
+- `advertiser-portal.html` is new Android-friendly advertiser portal. One-time issued credential is consumed by a staging override of the existing login RPC. Signed-in session remains in **tab sessionStorage only** (never permanent localStorage/URL); revoked/expired session fails closed. Own campaign + approved creative only, no cross-tenant reads.
+- REVIEW-ONLY candidate `db/20261010_b7_portal_text_change_REVIEW_ONLY.sql`: reuses canonical `ad_campaigns`, `ad_creatives`, `ad_portal_credentials`, `ad_portal_sessions`, `ad_history`, `audit_logs`. Adds **only** `ad_change_requests` as a pending text-request queue, **not** a second approved creative home. Existing `jb_ad_portal_submit_creative` signature now rejects media/CTA/direct edits and stores only a text request, preserving current approved asset.
+- Owner queue `jb_ad_owner_change_requests_internal` + Owner decision `jb_ad_decide_change_request_internal`. Accept for work **never** replaces an approved LIVE creative; Founder must separately approve any actual media/geo change. Request status, actor, time and history recorded.
+- Separate disposable PostgreSQL `ci/phase4/b7-portal-fixture.sql` and `b7-portal-regression.sql` test Advertiser A/B, forged/expired/revoked sessions, direct asset/edit attempts, single-use temporary credential, duplicate request cooldown, Owner/AAL2 negative path, audit, old creative unchanged and rollback. Added as a **new** job in the existing Candidate CI workflow; full protected CI remains untouched except additive explicit RPC security inventory.
+- ADS-041/042/043/044/045/046: **isolated E2+source proof only**. Android E3, real Supabase owner AAL2/anon permission parity, end-to-end issuance and media review, plus ADS-047 renewal still DUE. DO NOT label P4-T039 PASS/LOCK.
+- No production DDL/DML or paid/LIVE record created by this checkpoint; review migration must not be applied without complete staging parity and launch authorization. Original P4-T038 external E6 still DUE, B8 not started.
