@@ -70,3 +70,59 @@ export async function buildPrivateAdImagePreview(
   pendingGates:['OWNER_AAL2','IMMUTABLE_STORAGE_ASSET','SERVER_DERIVATIVE_PROOF','HUMAN_REVIEW']
  });
 }
+
+/** ADS-010 actual static PNG server-side responsive renditions, private only.
+ * 480/800/1200 are review-policy candidates and never cause upscaling.
+ * This function does NOT store, approve, publish or create public links.
+ */
+export async function buildPrivateAdImageRenditions(
+ source:Uint8Array,fileName:string,mime:string,
+ widths:readonly number[]=[480,800,1200]
+){
+ if(!Array.isArray(widths)||widths.length<1||widths.length>6||
+    widths.some(w=>!Number.isInteger(w)||w<160||w>1200))
+  throw Error('B7_MEDIA_WIDTH_VARIANTS_POLICY_INVALID');
+ const first=await buildPrivateAdImagePreview(source,fileName,mime);
+ const sorted=[...new Set(widths.filter(w=>w<first.width)
+  .concat(first.width))].sort((a,b)=>a-b);
+ const digest=async(bytes:Uint8Array)=>{
+  const own=new ArrayBuffer(bytes.byteLength);
+  new Uint8Array(own).set(bytes);
+  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',own)),
+   x=>x.toString(16).padStart(2,'0')).join('');
+ };
+ const result=[];
+ for(const width of sorted){
+  let bytes=first.privatePreviewPng;
+  if(width<first.width){
+   try{
+    bytes=ImageMagick.read(first.privatePreviewPng,img=>{
+     const height=Math.max(1,Math.round(first.height*width/first.width));
+     img.resize(width,height);
+     img.orientation=0 as typeof img.orientation;
+     img.strip();
+     return img.write(MagickFormat.Png,out=>Uint8Array.from(out));
+    });
+   }catch{throw Error('B7_MEDIA_RESPONSIVE_RECODE_FAILED')}
+  }
+  if(bytes.length>imageLimits.maxBytes)throw Error('B7_MEDIA_RENDITION_TOO_LARGE');
+  const actual=inspectCleanPngContainer(bytes);
+  if(actual.width>width||actual.width>first.width||
+     actual.height>first.height||
+     Math.abs(actual.width/actual.height-first.width/first.height)>0.018)
+    throw Error('B7_MEDIA_ASPECT_OR_UPSCALE_NOT_ALLOWED');
+  result.push(Object.freeze({
+   width:actual.width,height:actual.height,mime:'image/png',
+   privatePng:bytes,sha256:await digest(bytes),bytes:bytes.length,
+   approved:false,publishable:false
+  }));
+ }
+ return Object.freeze({
+  originalSha256:first.sourceSha256,
+  canonicalPreviewSha256:first.derivativeSha256,
+  sourceWidth:first.width,sourceHeight:first.height,
+  privateRenditions:Object.freeze(result),
+  status:'PRIVATE_RESPONSIVE_RENDITIONS_NOT_UPLOADED_NOT_APPROVED',
+  approved:false,publishable:false
+ });
+}

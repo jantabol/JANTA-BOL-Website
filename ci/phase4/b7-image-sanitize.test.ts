@@ -85,3 +85,30 @@ Deno.test('B7 actual Magick-WASM source and derivative are separately staged to 
  assertEquals(inspectCleanPngContainer(cleaned).containsMetadata,false);
  assertEquals(JSON.stringify(receipt).includes('publicUrl'),false);
 });
+
+Deno.test('ADS-010 REAL ImageMagick 480/800/1200 no-upscale clean PNG variants',async()=>{
+ const {buildPrivateAdImageRenditions}=await import(
+  '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts');
+ const result=await buildPrivateAdImageRenditions(image(1600,900),'wide.png','image/png');
+ assertEquals(result.status,'PRIVATE_RESPONSIVE_RENDITIONS_NOT_UPLOADED_NOT_APPROVED');
+ assertEquals(result.approved,false);assertEquals(result.publishable,false);
+ assertEquals(result.privateRenditions.map(x=>x.width),[480,800,1200]);
+ for(const r of result.privateRenditions){
+  const parsed=inspectCleanPngContainer(r.privatePng);
+  assertEquals(parsed.width,r.width);assertEquals(parsed.height,r.height);
+  assertEquals(parsed.containsMetadata,false);
+  assertEquals(r.sha256.length,64);assertEquals(r.approved,false);
+ }
+ const portrait=await buildPrivateAdImageRenditions(image(600,1000),'portrait.png','image/png');
+ assertEquals(portrait.privateRenditions.map(x=>x.width),[480,600]);
+ assertEquals(portrait.privateRenditions.at(-1)?.height,1000);
+ const low=await buildPrivateAdImageRenditions(image(320,200),'low.png','image/png');
+ assertEquals(low.privateRenditions.map(x=>x.width),[320]);
+});
+Deno.test('Width limits fail closed before creating any responsive variants',async()=>{
+ const {buildPrivateAdImageRenditions}=await import(
+  '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts');
+ await assertRejects(()=>buildPrivateAdImageRenditions(
+  image(600,400),'safe.png','image/png',[480,1400]),Error,
+  'B7_MEDIA_WIDTH_VARIANTS_POLICY_INVALID');
+});
