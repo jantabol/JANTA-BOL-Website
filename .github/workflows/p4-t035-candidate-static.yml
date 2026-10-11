@@ -98,7 +98,7 @@ jobs:
       - name: Syntax and REAL video decode-encode-poster with spoofed/invalid inputs
         run: |
           node --check CODEX_CURRENT_SUPABASE/functions/_shared/b7-video-sanitize.mjs
-          node --test ci/phase4/b7-video-sanitize.test.mjs ci/phase4/b7-video-private-stage.test.mjs
+          node --test ci/phase4/b7-video-sanitize.test.mjs ci/phase4/b7-video-private-stage.test.mjs ci/phase4/b7-video-server-adapter.test.mjs
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
