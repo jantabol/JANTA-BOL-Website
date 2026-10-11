@@ -54,4 +54,32 @@ begin
 
  raise notice 'PASS [B7 ADS-054/056 HOSTED SOURCE] B5 is RESTRICTIVE (not anonymous grant), Owner AAL2 grants intact, no anon permissive storage writes; no Production changes';
 end $actual_policy$;
+
+-- REAL hosted database negative access with no object name/content retrieval.
+-- Counts only; Storage HTTP public buckets and signed URL access are outside
+-- SQL role checks. These commands run under READ ONLY transaction.
+set local role anon;
+do $anonymous_role_negative$
+declare v_count bigint;
+begin
+ select count(*) into v_count from storage.objects;
+ if v_count<>0 then
+  raise exception 'B7_HOSTED_ANON_STORAGE_SQL_OBJECTS_VISIBLE';end if;
+ raise notice 'PASS [B7 ADS-054 LIVE ROLE] anonymous SQL count=0 under real restrictive/permissive policy combination';
+end $anonymous_role_negative$;
+reset role;
+
+set local role authenticated;
+do $aal1_role_negative$
+declare v_count bigint;
+begin
+ -- This connection has no user JWT/AAL2 claim. Requiring authentication
+ -- role alone must NOT unlock editorial or advertiser media.
+ select count(*) into v_count from storage.objects
+  where bucket_id='private-editorial';
+ if v_count<>0 then
+  raise exception 'B7_HOSTED_AAL1_PRIVATE_EDITORIAL_SQL_VISIBLE';end if;
+ raise notice 'PASS [B7 ADS-054 LIVE ROLE] authenticated without Owner AAL2 cannot see editorial Storage rows';
+end $aal1_role_negative$;
+reset role;
 rollback;
