@@ -22,6 +22,7 @@ declare
   v_bad_inventory_guard bigint;
   v_bad_qualified_view_guard bigint;
   v_bad_ad_notification_guard bigint;
+  v_bad_creative_workflow_guard bigint;
 begin
   select count(*) into v_unexpected_internal
   from pg_proc p
@@ -72,10 +73,10 @@ begin
       'jb_owner_revoke_session',
       'jb_set_owner_recovery_key',
       'jb_verify_owner_recovery_key',
-      'jb_ad_analytics_internal','jb_ad_qualified_analytics_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
+      'jb_ad_analytics_internal','jb_ad_qualified_analytics_internal','jb_ad_creative_workflow_capability_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
       'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
-      'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal',
+      'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal','jb_ad_creative_workflow_capability_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
       'jb_ad_notification_failures_internal','jb_ad_notification_retry_internal','jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
        'jb_ad_set_article_geo_internal','jb_ad_grant_area_internal',
@@ -472,6 +473,37 @@ begin
     then v_bad_ad_notification_guard:=v_bad_ad_notification_guard+1;end if;
   end if;
 
+  -- Phase-4/B7 creative replacement review gate is conditional because the
+  -- DRAFT migration is NOT installed on Production until Founder approval.
+  -- Once installed, the same existing save+approve signatures must NOT
+  -- revert to auto-approve-on-save or grant anon privileged mutation.
+  v_bad_creative_workflow_guard:=0;
+  if to_regprocedure('public.jb_ad_creative_workflow_capability_internal()') is not null then
+    if not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public'
+          and p.proname='jb_ad_creative_workflow_capability_internal'
+          and p.prosecdef=true
+          and not has_function_privilege('anon',p.oid,'EXECUTE')
+          and has_function_privilege('authenticated',p.oid,'EXECUTE')
+          and p.prosrc ilike '%p4_owner_allowed%'
+          and p.prosrc like '%B7_DRAFT_THEN_EXPLICIT_APPROVE_V1%')
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public' and p.proname='jb_ad_save_creative_internal'
+          and p.prosecdef=true
+          and p.prosrc ilike '%p4_owner_allowed%'
+          and p.prosrc like '%ver,false,false%'
+          and p.prosrc ilike '%creative_draft_saved%'
+          and p.prosrc not ilike '%update public.ad_creatives set approved=false%')
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public' and p.proname='jb_ad_approve_creative_internal'
+          and p.prosecdef=true
+          and p.prosrc ilike '%p4_owner_allowed%'
+          and p.prosrc ilike '%stale_creative_version_not_approvable%'
+          and p.prosrc ilike '%B7_MEDIA_SERVER_VERIFICATION_NOT_READY%'
+          and p.prosrc ilike '%update public.ad_creatives set approved=true%')
+    then v_bad_creative_workflow_guard:=1;end if;
+  end if;
+
   insert into ci_phase3_function_results values(
     '3A-P3-T123',
     v_anon_exposed=0
@@ -484,7 +516,8 @@ begin
     and v_bad_geo_guard=0
     and v_bad_inventory_guard=0
     and v_bad_qualified_view_guard=0
-    and v_bad_ad_notification_guard=0,
+    and v_bad_ad_notification_guard=0
+    and v_bad_creative_workflow_guard=0,
     'Phase-3A database function caller roles are explicit: only reviewed public API signatures permit anon execution, internal functions stay service-only, and only explicitly reviewed Owner/social/ad RPCs are client-executable; privileged ad internals retain SECURITY DEFINER, authenticated-only execution and p4_owner_allowed checks.'
   );
 end $$;
