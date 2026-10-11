@@ -79,13 +79,13 @@ end $auth$;
 reset role;
 set local role service_role;
 do $service$
-declare msg text;id uuid:='66666666-6666-4666-8666-666666666666';
+declare msg text;v_asset_id uuid:='66666666-6666-4666-8666-666666666666';
 begin
- if (select count(*) from private.b7_ad_media_receipts where asset_id=id)<>1
+ if (select count(*) from private.b7_ad_media_receipts where asset_id=v_asset_id)<>1
  then raise exception 'SERVICE_CANNOT_READ_EVIDENCE';end if;
  begin
   update private.b7_ad_media_receipts
-   set approval_state='private_quarantined' where asset_id=id;
+   set approval_state='private_quarantined' where asset_id=v_asset_id;
   raise exception 'SERVICE_ROLE_MUTATED_MEDIA_RECEIPT';
  exception when others then
   get stacked diagnostics msg=message_text;
@@ -93,7 +93,7 @@ begin
   then raise exception 'SERVICE_ROLE_UPDATE_PERMISSION_WEAKENED: %',msg;end if;
  end;
  begin
-  delete from private.b7_ad_media_receipts where asset_id=id;
+  delete from private.b7_ad_media_receipts where asset_id=v_asset_id;
   raise exception 'SERVICE_ROLE_DELETED_MEDIA_RECEIPT';
  exception when others then
   get stacked diagnostics msg=message_text;
@@ -101,10 +101,10 @@ begin
   then raise exception 'SERVICE_ROLE_DELETE_PERMISSION_WEAKENED: %',msg;end if;
  end;
  insert into private.b7_ad_media_orphan_events(asset_id,stored_paths,failure_code)
- values(id,'[{"bucket":"jb-ad-originals-private","path":"pending"}]'::jsonb,
+ values(v_asset_id,'[{"bucket":"jb-ad-originals-private","path":"pending"}]'::jsonb,
  'STORAGE_READBACK_FAILED');
  begin
-  delete from private.b7_ad_media_orphan_events where asset_id=id;
+  delete from private.b7_ad_media_orphan_events where asset_id=v_asset_id;
   raise exception 'SERVICE_ROLE_DELETED_ORPHAN_AUDIT';
  exception when others then
   get stacked diagnostics msg=message_text;
