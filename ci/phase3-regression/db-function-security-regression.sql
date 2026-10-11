@@ -198,7 +198,8 @@ begin
           and p.provolatile='i' and not p.prosecdef
           and p.prosrc ilike '%localhost%'
           and p.prosrc ilike '%internal%'
-          and p.prosrc ilike '%0x[0-9a-f]%')
+          and p.prosrc ilike '%0x[0-9a-f]%'
+          and p.prosrc ilike '%between 1 and 65535%')
       or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
         where n.nspname='private' and p.proname='b7_eligible_article_creatives'
           and p.prosrc ilike '%b7_safe_public_ad_https(cr.media_url)%'
