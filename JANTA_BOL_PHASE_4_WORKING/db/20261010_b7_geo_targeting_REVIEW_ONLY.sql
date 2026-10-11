@@ -314,6 +314,19 @@ select exists(
   on t.lgd_code=a.ad_geo_tehsil_lgd_code and t.verified=true
    and t.district_lgd_code=a.ad_geo_district_lgd_code
  where a.id=p_article and a.status::text='published'
+   -- Ordinary newsroom edits could change Article.district AFTER ad-geo
+   -- verification without touching any ad_geo_* UPDATE trigger. Never
+   -- serve a district/tehsil paid ad against contradictory newsroom text.
+   and (
+      a.ad_geo_level is null or a.ad_geo_level not in('district','tehsil')
+      or (
+       d.lgd_code is not null
+       and (
+        nullif(btrim(coalesce(a.district,'')),'') is null
+        or lower(btrim(a.district))=lower(btrim(d.name_en))
+       )
+      )
+   )
    and (
     (a.ad_geo_verified_at is null or a.ad_geo_evidence_ref is null)
      and g.area_level='national' and g.allow_unknown_geo=true
