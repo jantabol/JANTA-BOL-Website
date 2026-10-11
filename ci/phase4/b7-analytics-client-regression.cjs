@@ -160,3 +160,26 @@ test('ADS-048: statistics backend click failure must not break user-initiated li
  assert.doesNotThrow(()=>callback({isTrusted:true,defaultPrevented:false}));
  await Promise.resolve();
 });
+
+test('ADS-048: relocated or retargeted approved CTA does not generate a paid click claim',async()=>{
+ const {window,args,element,calls}=client();
+ let onClick;
+ const original='https://advertiser.example.test/approved';
+ const link={tagName:'A',isConnected:true,href:original,
+  addEventListener(name,callback){assert.equal(name,'click');onClick=callback}};
+ let stillChild=true;
+ element.contains=node=>stillChild&&node===link;
+ assert.equal(await window.JBAdAnalytics.prepare({...args,ctaElement:link}),true);
+ assert.equal(typeof onClick,'function');
+ const trusted={isTrusted:true,defaultPrevented:false};
+ stillChild=false;
+ onClick(trusted); // detached from THIS ad, but still on page
+ assert.equal(calls.filter(c=>c.name==='jb_ad_record_ticket_click').length,0);
+ stillChild=true;link.href='https://unapproved.example.test/changed';
+ onClick(trusted); // in ad, but destination is no longer approved
+ assert.equal(calls.filter(c=>c.name==='jb_ad_record_ticket_click').length,0);
+ link.href=original;
+ onClick(trusted);onClick(trusted); // original approved link counts once
+ await Promise.resolve();
+ assert.equal(calls.filter(c=>c.name==='jb_ad_record_ticket_click').length,1);
+});
