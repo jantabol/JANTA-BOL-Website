@@ -5,7 +5,7 @@
  * No database INSERT, no Storage write and NO ad publication.
  * Pinned magick-wasm version, no Supabase Pro image-transform dependency.
  */
-import {ImageMagick,initializeImageMagick,MagickFormat,Orientation} from 'npm:@imagemagick/magick-wasm@0.0.30';
+import {ImageMagick,initializeImageMagick,MagickFormat} from 'npm:@imagemagick/magick-wasm@0.0.30';
 import {inspectUntrustedImage,inspectCleanPngContainer,imageLimits} from './b7-media-byte-policy.mjs';
 let init:Promise<void>|null=null;
 async function initialized(){
@@ -30,7 +30,9 @@ export async function buildPrivateAdImagePreview(
    img.autoOrient();
    // ImageMagick can still write its private PNG orNT orientation chunk
    // after strip(). Canonicalized pixels must have NO separate orientation.
-   img.orientation=Orientation.Undefined;
+   // The PINNED 0.0.30 package does not re-export Orientation at root.
+   // Its ImageMagick native orientation enum value 0 means Undefined.
+   img.orientation=0 as typeof img.orientation;
    const scale=Math.min(1,1200/Math.max(img.width,img.height));
    if(scale<1){
     const w=Math.max(1,Math.round(img.width*scale));
