@@ -63,15 +63,15 @@ Deno.test('B7 actual Magick-WASM source and derivative are separately staged to 
   authorize:async()=>true,
   convert:buildPrivateAdImagePreview,
   allocateId:()=> '55555555-5555-4555-8555-555555555555',
-  onOrphan:async x=>{orphans.push(x);return true;},
+  onOrphan:async (x:unknown)=>{orphans.push(x);return true;},
   store:{
-   checkPrivate:async b=>b===RAW||b===DERIV,
-   createOnly:async (b,p,bytes)=>{
+   checkPrivate:async (b:string)=>b===RAW||b===DERIV,
+   createOnly:async (b:string,p:string,bytes:Uint8Array)=>{
     const k=b+'/'+p;uploads.push(k);
     if(objects.has(k))return false;
     objects.set(k,Uint8Array.from(bytes));return true;
    },
-   readPrivate:async (b,p)=>objects.get(b+'/'+p)
+   readPrivate:async (b:string,p:string)=>objects.get(b+'/'+p)
   }
  });
  assertEquals(receipt.verifiedReadback,true);
