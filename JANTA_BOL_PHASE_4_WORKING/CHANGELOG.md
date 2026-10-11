@@ -242,3 +242,12 @@ Protected workflow run #246 completed:
 - Introduced new 60/60 ADS + nine canonical ID evidence manifest and fail-closed final ZIP builder preflight: no mock, CI green, screenshotless or deploymentless "B7 100%"/PASS/LOCK. Full Founder E3/E5/E7 and provider E6 still DUE; final ZIP explicitly BLOCKED.
 - All files on isolated Draft PR #5, Production untouched, News FIRST / Ads SECOND, canonical permanent Article URLs preserved.
 
+
+
+## 12 October 2026 — B7 Founder approved media draft safety and local preview (NOT DEPLOYED)
+- Verified Last HEAD/PR/15-job protected and Candidate baseline. Rechecked LIVE Supabase RLS broad anonymous storage policy remains present; production fix still held for Founder/security decision.
+- Found a real source deviation while reading B7 Master: old Owner Creative SAVE RPC immediately approved pending media/text and revoked old currently LIVE ad. Reproduced old exact server code in real disposable PG, then coded a staged two-step Owner approval flow in the original two function signatures + approved_once sticky evidence trigger. Current ad survives all draft creation; new latest safe text draft goes LIVE only on Owner explicit separate approval. High-risk and external/raw media approvals intentionally fail closed until independent worker.
+- Added Owner-gated backend capability handshake so frontend-only deployment against old autoapprove RPC cannot create silently approved advertisement. Updated `ads.html` to separate Save Pending DRAFT and Review latest + Confirm APPROVE; added browser-only JPEG/PNG/WebP/MP4 local preview with magic bytes, contain and silent video controls. Does NOT upload or strip EXIF/approve; full Media Studio still DUE.
+- New isolated SQL and Node tests; additive 16th Candidate PostgreSQL job; kept all original protected tests. SQL patch interpolation RCA led to temporary RED, then intact source reconstruction (commit `3e7b91a7`) and complete Candidate 38108342059 GREEN **16/16**. Later commits require same-HEAD Candidate + protected GREEN.
+- No Production changes, no PR merge, no final zip. Current B7 ~80% previous subjective estimate may change after full dependency review. Canonical final 0/9 PASS+LOCK. NO FAKE PASS, NEWS FIRST.
+
