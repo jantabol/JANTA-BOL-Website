@@ -102,9 +102,15 @@ async function render(placement,scope='global'){
   else if(ad.creative_type==='image'&&safe(ad.media_url)){
    const img=node('img','jb-public-ad-image');mediaNode=img;img.src=safe(ad.media_url);img.alt='विज्ञापन';img.loading='lazy';img.referrerPolicy='no-referrer';
    img.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(img);
-  }else if(ad.creative_type==='video'&&safe(ad.media_url)){
-   const video=node('video','jb-public-ad-video');mediaNode=video;video.src=safe(ad.media_url);video.controls=true;video.preload='none';video.playsInline=true;
-   video.setAttribute('aria-label','वीडियो विज्ञापन');video.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(video);
+  }else if(ad.creative_type==='video'&&safe(ad.media_url)&&safe(ad.poster_url)){
+   // ADS-011: protected first-party poster MUST exist BEFORE playback;
+   // fake/dead poster = no paid video shown, news remains readable.
+   const video=node('video','jb-public-ad-video');mediaNode=video;
+   video.poster=safe(ad.poster_url);video.src=safe(ad.media_url);
+   video.controls=true;video.preload='none';video.playsInline=true;
+   video.autoplay=false;video.muted=true;
+   video.setAttribute('aria-label','वीडियो विज्ञापन');
+   video.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(video);
   }else return;
   const link=cta(ad);
   let ctaElement=null;

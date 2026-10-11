@@ -703,6 +703,7 @@ test('ADS-049 media must render real pixels before any qualified-view ticket is 
   campaign_id:'30000000-0000-0000-0000-000000000005',
   creative_id:'40000000-0000-0000-0000-000000000005',
   media_url:'https://assets.example.test/picture.jpg',
+  poster_url:'https://assets.example.test/picture-poster.png',
   label:'विज्ञापन',cta_type:null
  };
  for(const kind of ['image','video']){
@@ -722,6 +723,8 @@ test('ADS-049 media must render real pixels before any qualified-view ticket is 
    assert.equal(count,0,'synthetic load event with 0 natural width not proof');
    media.naturalWidth=120;media.complete=true;media.handlers.load();
   }else{
+   assert.equal(media.poster,fixture.poster_url,'video has server-authored poster');
+   assert.equal(media.autoplay,false);assert.equal(media.muted,true);
    assert.equal(typeof media.handlers.loadeddata,'function');
    media.handlers.loadeddata();
    assert.equal(count,0,'video without frame must not count');
@@ -887,4 +890,20 @@ test('ADS-046 Owner UI must show Draft Save and explicit user confirmed Preview 
  assert.doesNotMatch(html,/Save and approve creative/);
  const output=elements.get('rows').innerHTML;
  assert.match(output,/पुराना LIVE Advertisement/);
+});
+
+test('ADS-011: MP4 without server poster is never shown or billed; original News stays intact',async()=>{
+ const fixture=adRenderFixture();let viewed=0;
+ fixture.window.JBBackend.client.rpc=async()=>({
+  data:[{creative_type:'video',
+   media_url:'https://assets.example.test/approved.mp4',
+   poster_url:'javascript:alert(1)',
+   campaign_id:'30000000-0000-0000-0000-000000000005',
+   creative_id:'40000000-0000-0000-0000-000000000005'}],error:null
+ });
+ fixture.window.JBAdAnalytics={prepare(){viewed++}};
+ await fixture.window.JBPublicAds.render(
+  'article','article:10000000-0000-0000-0000-000000000001');
+ assert.equal(fixture.placed.length,0);
+ assert.equal(viewed,0);
 });
