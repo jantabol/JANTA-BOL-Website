@@ -96,8 +96,13 @@ begin
  then raise exception 'VIDEO_PUBLIC_POSTER_BINDING_INCORRECT';end if;
  if (select count(*) from public.jb_ad_public_feed('homepage','global'))<>1
  then raise exception 'MULTIPLE_ADS_PER_PUBLIC_HOME_SELECTION';end if;
- if has_function_privilege('anon',
-  'private.b7_verified_public_video_poster(uuid,text)','EXECUTE')
+ -- Anonymous lacks USAGE on private; resolving 'private.fn(..)' by
+ -- text itself raises 42501. Query pg_catalog OID to test EXECUTE safely.
+ if exists(select 1 from pg_catalog.pg_proc p
+    join pg_catalog.pg_namespace n on n.oid=p.pronamespace
+    where n.nspname='private'
+      and p.proname='b7_verified_public_video_poster'
+      and has_function_privilege('anon',p.oid,'EXECUTE'))
  then raise exception 'ANON_HAS_PRIVATE_POSTER_LOOKUP';end if;
  if (select count(*) from public.jb_public_active_ads('homepage'))<>1
  then raise exception 'LEGACY_SINGLE_PICKER_DID_NOT_DELEGATE';end if;
