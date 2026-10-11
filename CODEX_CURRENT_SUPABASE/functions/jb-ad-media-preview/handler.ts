@@ -4,10 +4,20 @@
  * The raw body is bounded BEFORE multipart parsing, not by Content-Length alone.
  */
 export const MAX_IMAGE_MULTIPART_BYTES=8*1024*1024+16*1024;
-const deny=(code,status)=>new Response(JSON.stringify({ok:false,error:code}),{
+type SanitizedPreview={
+ status:string;
+ canApprove:boolean;
+ canPublish:boolean;
+ privatePreviewPng:Uint8Array;
+};
+type PreviewDependencies={
+ authorize:(token:string)=>Promise<boolean>;
+ convert:(source:Uint8Array,name:string,mime:string)=>Promise<SanitizedPreview>;
+};
+const deny=(code:string,status:number)=>new Response(JSON.stringify({ok:false,error:code}),{
  status,headers:{'Content-Type':'application/json','Cache-Control':'no-store',
  'X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'}});
-function safePng(binary){
+function safePng(binary:Uint8Array){
  const own=new ArrayBuffer(binary.byteLength);
  new Uint8Array(own).set(binary);
  return new Response(own,{status:200,headers:{
@@ -18,9 +28,9 @@ function safePng(binary){
   'X-JB-Media-State':'PRIVATE_PREVIEW_NOT_STORED_NOT_APPROVED'
  }});
 }
-async function boundedPayload(req,max){
+async function boundedPayload(req:Request,max:number){
  if(!req.body)throw Error('INVALID_EMPTY_STREAM');
- const rd=req.body.getReader();const parts=[];let total=0;
+ const rd=req.body.getReader();const parts:Uint8Array[]=[];let total=0;
  try{
   while(true){
    const {done,value}=await rd.read();
@@ -36,7 +46,7 @@ async function boundedPayload(req,max){
  for(const part of parts){dest.set(part,pos);pos+=part.length;}
  return out;
 }
-export async function handlePrivateAdMediaPreview(req,{authorize,convert}){
+export async function handlePrivateAdMediaPreview(req:Request,{authorize,convert}:PreviewDependencies){
  if(req.method!=='POST')return deny('METHOD_NOT_ALLOWED',405);
  const auth=req.headers.get('authorization')||'';
  const match=/^Bearer ([A-Za-z0-9._-]{40,8000})$/.exec(auth);
