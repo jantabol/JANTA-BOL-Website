@@ -572,6 +572,13 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql
       - name: Verify no anonymous Storage SQL reads/writes and unchanged Owner media/grievance workflows
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-after-regression.sql
+      - name: Bootstrap disposable SQL bucket size/MIME metadata shape (not Production)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -c "alter table storage.buckets add column file_size_limit bigint; alter table storage.buckets add column allowed_mime_types text[];"
+      - name: Install new B7 PRIVATE original and preview buckets with RESTRICTIVE deny gate (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_private_storage_bucket_REVIEW_ONLY.sql
+      - name: B7 same B5 owner/editorial policies, no direct B7 access, broad permissive cannot bypass restrictive
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-private-storage-bucket-regression.sql
 
 
   b7-creative-two-stage-postgres:
