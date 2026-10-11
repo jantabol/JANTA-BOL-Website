@@ -15,6 +15,53 @@ insert into public.ad_geo_mp_tehsils(
  ('202','102','Gwalior Rural','https://fixture.invalid/lgd','SYNTHETIC-20261010',repeat('f',64),true,now()),
  ('203','101','Unverified fixture','https://fixture.invalid/lgd','SYNTHETIC-20261010',repeat('0',64),false,null);
 
+-- First-divergence regression: UPDATE OF trigger alone cannot protect
+-- initial INSERT. A reporter/Owner cannot stamp an Article as "verified"
+-- while creating it; authoritative review must happen after publication.
+do $insert_geo_guard$
+declare msg text; v_id uuid:='10000000-0000-0000-0000-000000000009';
+begin
+ begin
+  insert into public.articles(
+   id,status,district,title,slug,
+   ad_geo_level,ad_geo_district_lgd_code,ad_geo_tehsil_lgd_code,
+   ad_geo_verified_at,ad_geo_verified_by,ad_geo_evidence_ref
+  ) values(
+   v_id,'published','Shivpuri','Forged geotag','forged-geo',
+   'tehsil','101','201',now(),auth.uid(),'FORGED-INSERT-EVIDENCE');
+  raise exception 'B7_FORGED_INITIAL_GEO_ACCEPTED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_ARTICLE_GEO_MUST_BE_VERIFIED_AFTER_PUBLISH'
+   then raise exception 'B7_INSERT_BYPASS_OR_WRONG_DENIAL: %',msg;end if;
+ end;
+ if exists(select 1 from public.articles where id=v_id)
+ then raise exception 'B7_FORGED_ARTICLE_INSERT_LEFT_SIDE_EFFECT';end if;
+ -- Do not accidentally block normal Phase1-4 Article creation.
+ insert into public.articles(id,status,district,title,slug)
+ values(v_id,'draft','Shivpuri','Legitimate draft','safe-draft');
+ if not exists(select 1 from public.articles where id=v_id
+  and ad_geo_level is null and ad_geo_verified_at is null)
+ then raise exception 'B7_NORMAL_ARTICLE_INSERT_BLOCKED';end if;
+
+ perform set_config('b7.test_owner','enabled',true);
+ begin
+  insert into public.articles(
+   id,status,district,title,slug,ad_geo_level,ad_geo_verified_at
+  ) values(
+   '10000000-0000-0000-0000-000000000010',
+   'published','Shivpuri','Owner direct spoof','owner-spoof',
+   'mp_state',now());
+  raise exception 'B7_OWNER_INSERT_BYPASSED_REVIEW_RPC';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_ARTICLE_GEO_MUST_BE_VERIFIED_AFTER_PUBLISH'
+   then raise exception 'B7_OWNER_REVIEW_INSERT_GUARD_FAILED: %',msg;end if;
+ end;
+ perform set_config('b7.test_owner','',true);
+ raise notice 'PASS [G3/ADS-014/028] forged verified geo INSERT blocked for all roles; plain Article draft INSERT preserved';
+end $insert_geo_guard$;
+
 do $nonowner$
 declare msg text;
 begin
