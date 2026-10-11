@@ -23,7 +23,7 @@ async function original(){
   return new Uint8Array(await readFile(f));
  }finally{await rm(d,{recursive:true,force:true})}
 }
-function infra({noOwner=false,noServerRPC=false,badReadback=false}={}){
+function infra({noOwner=false,noServerRPC=false,badReadback=false,revokeAtCapability=0}={}){
  const rpc=[],objects=new Map(),events=[],receipts=new Map();
  const storage={
   async getBucket(id){return {data:{id,public:false,file_size_limit:8388608},error:null};},
@@ -73,14 +73,17 @@ function infra({noOwner=false,noServerRPC=false,badReadback=false}={}){
    throw Error('unexpected RPC: '+name);
   }
  };
- let authCalls=0;
+ let authCalls=0,capCalls=0;
  const fetcher=async raw=>{
   authCalls++;
   if(String(raw).endsWith('/auth/v1/user'))
    return new Response(JSON.stringify({id:owner}),{status:200});
-  if(String(raw).endsWith('/rest/v1/rpc/jb_ad_creative_workflow_capability_internal'))
-   return noOwner?new Response('{}',{status:403}):
+  if(String(raw).endsWith('/rest/v1/rpc/jb_ad_creative_workflow_capability_internal')){
+   capCalls++;
+   return (noOwner||(revokeAtCapability&&capCalls>=revokeAtCapability))
+    ?new Response('{}',{status:403}):
      new Response(JSON.stringify('B7_DRAFT_THEN_EXPLICIT_APPROVE_V1'),{status:200});
+  }
   throw Error('UNEXPECTED_AUTH_SERVER_CALL');
  };
  return {client,supabaseUrl:'https://vrffsnkycvjithwtiylt.supabase.co',
@@ -119,4 +122,16 @@ test('Revoked AAL2 and absent server-only RPC never yield a completed video ad',
  await assert.rejects(processB7IsolatedVideoCandidate(input(sample),forged),
  /PRIVATE_EVIDENCE_UNVERIFIED/);
  assert.equal(forged.events.length,1);
+});
+
+test('SAME canonical Owner Auth+AAL2 rejects revocation exactly AFTER private 3-object upload',async()=>{
+ const f=infra({revokeAtCapability:3});
+ await assert.rejects(processB7IsolatedVideoCandidate(input(await original()),f),
+ /PRIVATE_EVIDENCE_UNVERIFIED/);
+ assert.equal(f.objects.size,3,'private original, transcoded MP4 and poster remain quarantined');
+ assert.equal(f.receipts.size,0,'no verified video receipt after revoked AAL2');
+ assert.equal(f.events.length,1,'durable orphan reconciliation event is mandatory');
+ assert.equal(f.events[0].reason,'RECEIPT_OR_OWNER_STATE_FAILED');
+ assert(f.rpc.every(x=>x!=='jb_ad_video_record_receipt_server'),
+  'revoked Owner cannot record newly verified creative');
 });
