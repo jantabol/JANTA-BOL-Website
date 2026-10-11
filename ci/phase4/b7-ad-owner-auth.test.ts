@@ -1,5 +1,5 @@
 import {assert,assertEquals} from 'jsr:@std/assert@1.0.14';
-import {verifyAdMediaOwner} from
+import {verifyAdMediaOwner,identifyAdMediaOwner} from
  '../../CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/owner-auth.ts';
 const base='https://vrffsnkycvjithwtiylt.supabase.co';
 const token='x'.repeat(100),anonKey='PUBLIC_ANON_FIXTURE';
@@ -63,4 +63,15 @@ Deno.test('No accidental proxy, insecure domain, URL username, or bogus token ca
   }),false);
   assertEquals(requests,0);
  }
+});
+
+Deno.test('Owner identity is returned only after canonical Auth user AND AAL2 backend capability',async()=>{
+ let n=0;
+ const request=async()=>++n===1?okUser():okCap();
+ const actual=await identifyAdMediaOwner(token,{...settings,request:request as typeof fetch});
+ assertEquals(actual,id);assertEquals(n,2);
+ n=0;
+ const refused=await identifyAdMediaOwner(token,{...settings,
+  request:(async()=>++n===1?okUser():new Response('{}',{status:403})) as typeof fetch});
+ assertEquals(refused,null);assertEquals(n,2);
 });
