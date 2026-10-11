@@ -5,7 +5,7 @@ import {promisify} from 'node:util';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
-import {stageB7PrivateVideo,B7_VIDEO_BUCKET,B7_POSTER_BUCKET,b7VideoPrivateStore}
+import {stageB7PrivateVideo,B7_ORIGINAL_VIDEO_BUCKET,B7_VIDEO_BUCKET,B7_POSTER_BUCKET,b7VideoPrivateStore}
  from '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-video-private-stage.mjs';
 const run=promisify(execFile);
 const owner='11111111-1111-4111-8111-111111111111';
@@ -27,7 +27,7 @@ async function video(){
 function fixture(cfg={}){
  const objects=new Map(),events=[],receipts=new Map(),created=[];
  let authTimes=0,readTimes=0;
- const b7Buckets=new Set([B7_VIDEO_BUCKET,B7_POSTER_BUCKET]);
+ const b7Buckets=new Set([B7_ORIGINAL_VIDEO_BUCKET,B7_VIDEO_BUCKET,B7_POSTER_BUCKET]);
  const storage={
   async getBucket(bucket){
    return {data:{id:bucket,public:cfg.publicBucket===true,file_size_limit:8*1024*1024},error:null};
@@ -73,13 +73,14 @@ function fixture(cfg={}){
 }
 const req=source=>({token:'owner-session-fake',creativeId:creative,
  source,name:'ad.mp4',mime:'video/mp4',policy:quota});
-test('E2 actual ffmpeg output 2 PRIVATE videos/poster, strong hash readback, immutable draft NOT approved',async()=>{
+test('E2 actual ffmpeg output 3 PRIVATE original/video/poster, strong hash readback, immutable draft NOT approved',async()=>{
  const f=fixture();const result=await stageB7PrivateVideo(req(await video()),f.dep);
  assert.equal(result.status,'PRIVATE_VIDEO_POSTER_EVIDENCE_NOT_APPROVED');
  assert.equal(result.approved,false);assert.equal(result.publishable,false);
- assert.equal(f.objects.size,2);assert.equal(f.receipts.size,1);
+ assert.equal(f.objects.size,3);assert.equal(f.receipts.size,1);
  const evidence=[...f.receipts.values()][0];
  assert.equal(evidence.creative_id,creative);assert.equal(evidence.owner_user_id,owner);
+ assert.equal(evidence.original_bucket,B7_ORIGINAL_VIDEO_BUCKET);
  assert.equal(evidence.video_bucket,B7_VIDEO_BUCKET);
  assert.equal(evidence.poster_bucket,B7_POSTER_BUCKET);
  assert.equal(evidence.video_sha256.length,64);
@@ -88,10 +89,10 @@ test('E2 actual ffmpeg output 2 PRIVATE videos/poster, strong hash readback, imm
  assert(!JSON.stringify(result).includes('publicUrl'));
  assert.equal(f.events.length,0);
 });
-test('Owner session revoked after transcoding/upload keeps 2 private objects but no verified receipt',async()=>{
+test('Owner session revoked after transcoding/upload keeps 3 private objects but no verified receipt',async()=>{
  const f=fixture({revokeAfterUpload:true});
  await assert.rejects(stageB7PrivateVideo(req(await video()),f.dep),/PRIVATE_EVIDENCE_UNVERIFIED/);
- assert.equal(f.objects.size,2);assert.equal(f.receipts.size,0);
+ assert.equal(f.objects.size,3);assert.equal(f.receipts.size,0);
  assert.equal(f.events.length,1);assert.equal(f.events[0].reason,'RECEIPT_OR_OWNER_STATE_FAILED');
 });
 test('Latest Creative version changed / DB record missing => durable orphan and deny',async()=>{

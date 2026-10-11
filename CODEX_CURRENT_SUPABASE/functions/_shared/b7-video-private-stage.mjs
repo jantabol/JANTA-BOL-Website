@@ -10,6 +10,7 @@
 import {randomUUID,createHash} from 'node:crypto';
 import {sanitizeB7PrivateVideo} from './b7-video-sanitize.mjs';
 
+export const B7_ORIGINAL_VIDEO_BUCKET='jb-ad-video-originals-private';
 export const B7_VIDEO_BUCKET='jb-ad-videos-private';
 export const B7_POSTER_BUCKET='jb-ad-video-posters-private';
 const fail=s=>{throw Error('B7_VIDEO_STAGE_'+s)};
@@ -47,7 +48,7 @@ export async function stageB7PrivateVideo(input,dep){
  let owner=null;try{owner=await dep.authorize(token)}catch{}
  if(!uuid(owner))fail('OWNER_AAL2_REQUIRED');
  const before=draft(await dep.getDraft(creativeId),creativeId);
- for(const bucket of [B7_VIDEO_BUCKET,B7_POSTER_BUCKET])
+ for(const bucket of [B7_ORIGINAL_VIDEO_BUCKET,B7_VIDEO_BUCKET,B7_POSTER_BUCKET])
   if(await dep.store.checkPrivate(bucket)!==true)fail('PRIVATE_BUCKET_UNAVAILABLE');
  const sanitized=await sanitizeB7PrivateVideo({source,name,mime,policy});
  if(!sanitized||sanitized.canApprove!==false||sanitized.canPublish!==false||
@@ -60,6 +61,8 @@ export async function stageB7PrivateVideo(input,dep){
   fail('SERVER_CODEC_EVIDENCE_MISMATCH');
  // No approved public bucket or URL exists at this stage.
  const paths=[
+  {bucket:B7_ORIGINAL_VIDEO_BUCKET,path:'staged/'+id+'/'+sanitized.sourceSha256+'.mp4',
+   bytes:source,mime:'video/mp4',sha256:sanitized.sourceSha256},
   {bucket:B7_VIDEO_BUCKET,path:'staged/'+id+'/'+sanitized.videoSha256+'.mp4',
    bytes:sanitized.privateCleanMp4,mime:'video/mp4',sha256:sanitized.videoSha256},
   {bucket:B7_POSTER_BUCKET,path:'staged/'+id+'/'+sanitized.posterSha256+'.png',
@@ -91,11 +94,12 @@ export async function stageB7PrivateVideo(input,dep){
    asset_id:id,creative_id:creativeId,campaign_id:after.campaign_id,
    creative_version:after.version,owner_user_id:owner,
    original_sha256:sanitized.sourceSha256,
+   original_bucket:B7_ORIGINAL_VIDEO_BUCKET,original_path:paths[0].path,
    source_bytes:source.length,
-   video_bucket:B7_VIDEO_BUCKET,video_path:paths[0].path,
-   video_sha256:paths[0].sha256,video_bytes:paths[0].bytes.length,
-   poster_bucket:B7_POSTER_BUCKET,poster_path:paths[1].path,
-   poster_sha256:paths[1].sha256,poster_bytes:paths[1].bytes.length,
+   video_bucket:B7_VIDEO_BUCKET,video_path:paths[1].path,
+   video_sha256:paths[1].sha256,video_bytes:paths[1].bytes.length,
+   poster_bucket:B7_POSTER_BUCKET,poster_path:paths[2].path,
+   poster_sha256:paths[2].sha256,poster_bytes:paths[2].bytes.length,
    width:sanitized.derived.width,height:sanitized.derived.height,
    duration_seconds:sanitized.derived.durationSeconds,
    storage_readback_verified_at:new Date().toISOString()
@@ -106,6 +110,8 @@ export async function stageB7PrivateVideo(input,dep){
      saved.campaign_id!==before.campaign_id||
      saved.creative_version!==before.version||
      saved.owner_user_id!==owner||
+     saved.original_path!==record.original_path||
+     saved.original_sha256!==record.original_sha256||
      saved.video_path!==record.video_path||
      saved.video_sha256!==record.video_sha256||
      saved.poster_path!==record.poster_path||
@@ -128,13 +134,14 @@ export async function stageB7PrivateVideo(input,dep){
 export function b7VideoPrivateStore(client){
  if(!client?.storage?.getBucket||!client?.storage?.from)
   fail('ISOLATED_SERVER_CLIENT_REQUIRED');
- const allowed=new Map([[B7_VIDEO_BUCKET,{mime:'video/mp4',max:8388608}],
+ const allowed=new Map([[B7_ORIGINAL_VIDEO_BUCKET,{mime:'video/mp4',max:8388608}],
+  [B7_VIDEO_BUCKET,{mime:'video/mp4',max:8388608}],
   [B7_POSTER_BUCKET,{mime:'image/png',max:2097152}]]);
  const guard=(bucket,path)=>{
   if(!allowed.has(bucket))fail('BUCKET_NOT_ALLOWED');
   if(path!==undefined&&!/^staged\/[a-f0-9-]{36}\/[a-f0-9]{64}\.(?:mp4|png)$/.test(path))
    fail('PRIVATE_PATH_NOT_CANONICAL');
-  if(path!==undefined&&!(path.endsWith('.mp4')=== (bucket===B7_VIDEO_BUCKET)))
+  if(path!==undefined&&!(path.endsWith('.mp4')=== (bucket!==B7_POSTER_BUCKET)))
    fail('PRIVATE_PATH_MEDIA_MISMATCH');
  };
  const out={
