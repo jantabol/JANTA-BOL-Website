@@ -38,6 +38,40 @@ Deno.test('Header/body limits, bad methods and bad multipart form fail closed',a
  const dup=await request([['file',file()],['file',file()]]);
  r=await handlePrivateAdMediaPreview(dup,deps);assertEquals(r.status,400);
 });
+Deno.test('Forged HTTP Content-Length smaller or larger than actual body is refused before decoding',async()=>{
+ let decodeCount=0;
+ const deps={authorize:async()=>true,convert:async()=>{
+  decodeCount++;return image(new Uint8Array(32));
+ }};
+ const small=await request([['file',file()]]);
+ small.headers.set('content-length','1');
+ let r=await handlePrivateAdMediaPreview(small,deps);
+ assertEquals(r.status,400);
+ assertEquals((await r.json()).error,'DECLARED_BODY_LENGTH_MISMATCH');
+ const big=await request([['file',file()]]);
+ big.headers.set('content-length',String(Number(big.headers.get('content-length'))+1));
+ r=await handlePrivateAdMediaPreview(big,deps);
+ assertEquals(r.status,400);
+ assertEquals(decodeCount,0);
+});
+
+Deno.test('Bounded stream rejects oversized bytes despite forged small declared header',async()=>{
+ let decodeCount=0;
+ const over=MAX_IMAGE_MULTIPART_BYTES+1;
+ const body=new Uint8Array(over);
+ const incoming=new Request('https://example.test/media',{
+  method:'POST',
+  headers:{'Authorization':bearer,'Content-Type':'multipart/form-data; boundary=fixture',
+   'Content-Length':'1'},
+  body
+ });
+ const r=await handlePrivateAdMediaPreview(incoming,{
+  authorize:async()=>true,convert:async()=>{decodeCount++;return image(new Uint8Array(32));}
+ });
+ assertEquals(r.status,413);
+ assertEquals(decodeCount,0);
+});
+
 Deno.test('Valid Owner preview responds image/png with strict no-store, no approval token or storage URL',async()=>{
  let authorized=false,converted=false;
  const imageBytes=Uint8Array.from({length:24},(_,i)=>i+1);
