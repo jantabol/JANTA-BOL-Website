@@ -148,3 +148,36 @@ test('ADS-010 pagehide/reload dispose cancels an unresolved local preview and pr
  assert.match(html,/SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE/);
  assert.match(html,/files\?\.\[0\]===file/,'older failed file cannot clobber current media selection');
 });
+
+
+test('ADS-015 invalid NEW media selection revokes prior blob and removes old preview',async()=>{
+ const {window,urls,revoked}=setup();const nodes=[];
+ const box={replaceChildren(){nodes.length=0},append(...items){nodes.push(...items)}};
+ await window.JBAdMediaPreview.stage(box,
+  makeFile(bytes.jpeg,{name:'old-valid.jpg',type:'image/jpeg'}));
+ assert.equal(nodes.length,2);assert.equal(urls.length,1);
+ await assert.rejects(()=>window.JBAdMediaPreview.stage(box,
+  makeFile(bytes.png,{name:'invalid.jpg',type:'image/jpeg'})),
+  /AD_MEDIA_MIME_OR_MAGIC_SIGNATURE_MISMATCH/);
+ assert.equal(nodes.length,0,'an invalid NEW selection must not leave stale artwork');
+ assert.deepEqual(revoked,urls,'a cleared preview must revoke its private blob URL');
+});
+test('ADS-015 invalid OLD pending selection cannot clear newer valid preview',async()=>{
+ const {window,urls,revoked}=setup();const nodes=[];
+ const box={replaceChildren(){nodes.length=0},append(...items){nodes.push(...items)}};
+ let finishOld;
+ const old={
+  size:bytes.png.length,name:'bad-old.jpg',type:'image/jpeg',
+  slice(){return {arrayBuffer:()=>new Promise(resolve=>{finishOld=resolve})}}
+ };
+ const pending=window.JBAdMediaPreview.stage(box,old);
+ await window.JBAdMediaPreview.stage(box,
+  makeFile(bytes.webp,{name:'new-valid.webp',type:'image/webp'}));
+ const current=nodes[0].src;
+ finishOld(Uint8Array.from(bytes.png).buffer);
+ await assert.rejects(()=>pending,/AD_MEDIA_MIME_OR_MAGIC_SIGNATURE_MISMATCH/);
+ assert.equal(nodes[0].src,current);
+ assert.equal(nodes.length,2);
+ assert.equal(urls.length,1);
+ assert.deepEqual(revoked,[]);
+});
