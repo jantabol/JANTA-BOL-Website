@@ -35,7 +35,7 @@ begin
  raise notice 'PASS [ADS-015] anon cannot read/write B7 staged originals or clean previews';
 end $anonymous$;
 reset role;
-select set_config('b7.test_owner','enabled');
+select set_config('b7.test_owner','enabled',false);
 set local role authenticated;
 do $owner$
 declare n int;msg text;
