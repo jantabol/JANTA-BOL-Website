@@ -258,3 +258,11 @@ For every block:
 - `db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql` reuses SAME private helper for Homepage selection; not a second public selector. No server media scan exists yet, so media approval MUST stay blocked until first-party verified derivatives.
 - `ci/phase4/b7-weighted-regression.sql` (HTTP/loopback/local/internal/IPv4 shortening / invalid CTA and safe DNS positives) and `ci/phase4/b7-single-feed-regression.sql` (old approved Homepage media/CTA rejected). `ci/phase3-regression/db-function-security-regression.sql` conditioned T123 requires shared helper and Article geo INSERT trigger once staging schema exists.
 - Exact parent CI on `774fdd6aaafb7b47dca7916b2fb0815cf89fa307`: Candidate 38111683892 GREEN 16/16, Protected 38111683896 GREEN 2/2. Not Production migration/test PASS. 0/9 FINAL.
+
+## B7 continuation — single CTA authorization + offline government LGD preflight
+- `db/20261010_b7_cta_click_REVIEW_ONLY.sql`: immutable ticketed click uses existing `private.b7_safe_public_ad_https(cr.cta_target)`; no secondary regexp or parallel advertisement click endpoint.
+- `ci/phase4/b7-view-ticket-regression.sql`: loopback-shorthand/hex/octal negative click events; verifies ticket and shared `ad_events` unchanged on reject, positive genuine CTA still works.
+- `ci/phase3-regression/db-function-security-regression.sql`: conditional protected T123 requires click URL authority to reference private helper once G4 table/helper has been deployed.
+- `ci/phase4/b7-lgd-source-preflight.cjs`: offline CSV + manifest SHA256, 55 MP district and parent consistency; **cannot** set verified, generate SQL imports or authenticate source independently.
+- `ci/phase4/b7-lgd-source-preflight.test.cjs` + `.github/workflows/p4-t035-candidate-static.yml`: 100% synthetic negative contract cases; historical suite preserved, no official import.
+- `review/B7_20261012_CLICK_LGD_CHECKPOINT_RCA.md`: source trace, RCA and verified CI receipts. Exact pre-doc coding CI `231d2852a0...`: Candidate 38112503709 GREEN 16/16 and Protected 38112503725 GREEN 2/2.
