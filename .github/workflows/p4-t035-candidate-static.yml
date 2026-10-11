@@ -548,3 +548,43 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql
       - name: Private editorial/grievance anon and AAL1 denial, public read and Owner AAL2 upload positive
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-after-regression.sql
+
+
+  b7-creative-two-stage-postgres:
+    name: B7 explicit Owner draft and review preserve existing LIVE creative (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_two_stage_creatives
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_two_stage_creatives"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_two_stage_creatives
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build existing canonical campaigns with B3 audit and sticky approved-creative retention
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_retention_audit_REVIEW_ONLY.sql
+      - name: Recreate exact previous LIVE save/approve RPCs and prove the first divergence (rolled back)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-creative-legacy-source-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-creative-legacy-divergence.sql
+      - name: Replace ONLY reviewed creative RPC signatures, add Owner-gated capability sentinel (no LIVE writes)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_creative_draft_approval_REVIEW_ONLY.sql
+      - name: Reject unsafe text/media/CTA, unsafe AAL1, stale approval and protect current approved creative
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-creative-two-stage-regression.sql
