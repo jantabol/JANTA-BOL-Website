@@ -215,6 +215,9 @@ test('ADS-001/002 public enquiry: minimal WhatsApp form, explicit contact consen
  assert.match(html,/p_consent:consent/);
  assert.match(html,/REQUEST_RECEIPT_MISSING/);
  assert.match(html,/स्थिति: Pending/);
+ // Backend only returns a pending receipt; no WhatsApp send happened.
+ assert.match(html,/कोई स्वचालित WhatsApp संदेश भेजने की पुष्टि नहीं है/);
+ assert.doesNotMatch(html,/संदेश भेजा जाएगा/);
  assert.doesNotMatch(html,/type="file"|navigator\.geolocation|geolocation\.getCurrentPosition/);
  assert.doesNotMatch(html,/id="adPrice"|id="adPlacement"|id="adLocation"/);
 });
