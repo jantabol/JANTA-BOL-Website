@@ -166,6 +166,9 @@ begin
  for u in select unnest(array[
   'http://cdn.example.test/ad.png',
   'https://127.0.0.1/personal.png',
+  'https://cdn.example.test:99999/impossible.webp',
+  'https://cdn.example.test:65536/impossible.webp',
+  'https://cdn.example.test:00000/no-port-zero.webp',
   'https://127.1/abbreviated-loopback.png',
   'https://0x7f.0.0.1/hex-loopback.png',
   'https://0177.0.0.1/octal-loopback.png',
@@ -184,7 +187,8 @@ begin
  for u in select unnest(array[
   'https://cdn.example.test/approved.webp',
   'https://ads.example.test/sponsored?campaign=one',
-  'https://public.example.test:8443/poster.mp4'
+  'https://public.example.test:8443/poster.mp4',
+  'https://public.example.test:65535/poster.mp4'
  ]) loop
   if not private.b7_safe_public_ad_https(u)
   then raise exception 'VALID_PUBLIC_HTTPS_AD_URL_DENIED: %',u;end if;
