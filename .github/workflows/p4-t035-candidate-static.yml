@@ -387,6 +387,16 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql
       - name: Anonymous Article ID cannot forge location; legacy homepage retained; no second selection authority
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-single-feed-regression.sql
+      - name: Setup existing PRIVATE video photo and first-party release ledgers for poster-only public feed (disposable PG)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_media_immutable_evidence_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_video_private_evidence_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_clean_public_release_evidence_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_clean_origin_SINGLE_HOME_REVIEW_ONLY.sql
+      - name: REBUILD SAME canonical public feed transactionally, add verified poster_url only for SHA+Owner-matched videos
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_canonical_public_video_poster_REVIEW_ONLY.sql
+      - name: E2 video public feed remains single-authority, unsafe/no AAL2 release hidden, poster SHA proof
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-video-poster-single-feed-regression.sql
 
   b7-view-ticket-postgres:
     name: B7 one-use qualified Article view tickets & raw event isolation (disposable PostgreSQL)
