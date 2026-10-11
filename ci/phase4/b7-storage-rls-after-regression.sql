@@ -1,80 +1,90 @@
 \set ON_ERROR_STOP on
--- ADS-015/054/056 — minimum safe fix negative role matrix in disposable PG.
+-- ADS-015/054/056: the reviewed migration is now a read-only authority
+-- audit. Existing restrictive B5 policy and Owner AAL2 access must remain.
+-- This is disposable SQL RLS, NOT a real hosted REST/Storage client test.
 begin;
-set local role anon;
-do $after_anon$
-declare v_count integer;v_rows integer;msg text;
+do $preservation$
 begin
- select count(*) into v_count from storage.objects where bucket_id='public-media';
- if v_count<>1 then raise exception 'PUBLIC_NEWS_MEDIA_NOT_READABLE';end if;
- select count(*) into v_count from storage.objects where bucket_id='private-editorial';
- if v_count<>0 then raise exception 'ANON_PRIVATE_EDITORIAL_READ_STILL_OPEN';end if;
- select count(*) into v_count from storage.objects where bucket_id='grievance-private';
- if v_count<>0 then raise exception 'ANON_GRIEVANCE_READ_STILL_OPEN';end if;
- update storage.objects set contents='UNAUTHORIZED' where bucket_id='private-editorial';
+ if not exists(select 1 from pg_policies
+   where schemaname='storage' and tablename='objects'
+     and policyname='b5_private_gateway_only'
+     and permissive='RESTRICTIVE' and cmd='ALL')
+ then raise exception 'B5_RESTRICTIVE_GRIEVANCE_GUARD_REMOVED_OR_WEAKENED';end if;
+ if exists(select 1 from pg_policies
+   where schemaname='storage' and tablename='objects'
+     and policyname='b7_public_media_readonly')
+ then raise exception 'UNAUTHORIZED_ANON_PUBLIC_MEDIA_SQL_READ_ADDED';end if;
+ if not exists(select 1 from pg_policies
+   where schemaname='storage' and tablename='objects'
+     and policyname='owner_manage_public_media'
+     and permissive='PERMISSIVE')
+    or not exists(select 1 from pg_policies
+   where schemaname='storage' and tablename='objects'
+     and policyname='owner_manage_private_editorial'
+     and permissive='PERMISSIVE')
+ then raise exception 'EXISTING_OWNER_MEDIA_GRANTS_DAMAGED';end if;
+ raise notice 'PASS [ADS-054/056] B5 restrictive grievance barrier untouched; no new public CRUD policy';
+end $preservation$;
+set local role anon;
+do $anon$
+declare v_count integer;v_rows integer;
+begin
+ select count(*) into v_count from storage.objects;
+ if v_count<>0 then raise exception 'ANON_SQL_OBJECT_READ_EXPOSURE';end if;
+ update storage.objects set contents='malicious' where bucket_id='private-editorial';
  get diagnostics v_rows=row_count;
- if v_rows<>0 then raise exception 'ANON_PRIVATE_EDITORIAL_UPDATE_STILL_ALLOWED';end if;
- delete from storage.objects where bucket_id='private-editorial';
+ if v_rows<>0 then raise exception 'ANON_PRIVATE_EDITORIAL_MODIFY_EXPOSURE';end if;
+ delete from storage.objects where bucket_id='public-media';
  get diagnostics v_rows=row_count;
- if v_rows<>0 then raise exception 'ANON_PRIVATE_EDITORIAL_DELETE_STILL_ALLOWED';end if;
+ if v_rows<>0 then raise exception 'ANON_NEWS_MEDIA_DELETE_EXPOSURE';end if;
  begin
   insert into storage.objects(id,bucket_id,name)
-  values(22,'private-editorial','malicious-anonymous-write.pdf');
-  raise exception 'ANON_PRIVATE_EDITORIAL_INSERT_ALLOWED';
+    values(40,'private-editorial','malicious-upload');
+  raise exception 'ANON_PRIVATE_UPLOAD_ALLOWED';
  exception when insufficient_privilege then null;end;
  begin
   insert into storage.objects(id,bucket_id,name)
-  values(23,'public-media','malicious-anonymous-public-upload.png');
-  raise exception 'ANON_PUBLIC_MEDIA_UPLOAD_ALLOWED';
+    values(41,'public-media','malicious-public-upload');
+  raise exception 'ANON_PUBLIC_UPLOAD_ALLOWED';
  exception when insufficient_privilege then null;end;
- raise notice 'PASS [ADS-056] anon can read existing public-media only; private+grievance read/write and public upload all denied';
-end $after_anon$;
+ raise notice 'PASS [ADS-056] anonymous SQL role cannot read/edit private, delete News media, or upload assets';
+end $anon$;
 reset role;
 
 select set_config('b7.test_owner','',true);
 set local role authenticated;
-do $after_aal1$
+do $non_owner$
 declare v_count integer;v_rows integer;
 begin
  select count(*) into v_count from storage.objects where bucket_id='private-editorial';
  if v_count<>0 then raise exception 'AAL1_PRIVATE_EDITORIAL_READ_ALLOWED';end if;
- update storage.objects set contents='AAL1_UNAUTHORIZED' where bucket_id='public-media';
+ update storage.objects set contents='unauthorized' where bucket_id='public-media';
  get diagnostics v_rows=row_count;
- if v_rows<>0 then raise exception 'AAL1_PUBLIC_MEDIA_WRITE_ALLOWED';end if;
- raise notice 'PASS [ADS-054/056] AAL1 authenticated cannot read owner evidence or change newsroom media';
-end $after_aal1$;
+ if v_rows<>0 then raise exception 'AAL1_PUBLIC_NEWS_MEDIA_UPDATE_ALLOWED';end if;
+ raise notice 'PASS [ADS-054] authenticated without AAL2 cannot read editorial or mutate News assets';
+end $non_owner$;
 reset role;
 
 select set_config('b7.test_owner','enabled',true);
 set local role authenticated;
-do $after_owner$
+do $owner$
 declare v_count integer;v_rows integer;
 begin
  select count(*) into v_count from storage.objects where bucket_id='private-editorial';
- if v_count<>1 then raise exception 'OWNER_PRIVATE_EDITORIAL_ACCESS_BROKEN';end if;
+ if v_count<>1 then raise exception 'OWNER_PRIVATE_EDITORIAL_READ_BROKEN';end if;
+ select count(*) into v_count from storage.objects where bucket_id='public-media';
+ if v_count<>1 then raise exception 'OWNER_NEWS_COVER_READ_BROKEN';end if;
+ select count(*) into v_count from storage.objects where bucket_id='grievance-private';
+ if v_count<>0 then raise exception 'OWNER_BYPASSED_B5_GRIEVANCE_GATE';end if;
  insert into storage.objects(id,bucket_id,name)
- values(24,'public-media','synthetic-approved-owner-upload.png');
- update storage.objects set contents='owner_safe_update'
- where id=24 and bucket_id='public-media';
+ values(42,'public-media','founder-news-image-fixture.png');
+ update storage.objects set contents='founder-approved' where id=42;
  get diagnostics v_rows=row_count;
- if v_rows<>1 then raise exception 'OWNER_PUBLIC_UPLOAD_OR_EDIT_BROKEN';end if;
- delete from storage.objects where id=24 and bucket_id='public-media';
+ if v_rows<>1 then raise exception 'OWNER_NEWS_MEDIA_UPDATE_BROKEN';end if;
+ delete from storage.objects where id=42;
  get diagnostics v_rows=row_count;
- if v_rows<>1 then raise exception 'OWNER_PUBLIC_CLEANUP_BROKEN';end if;
- raise notice 'PASS [ADS-015] Owner/AAL2 existing public-media upload and private-editorial review preserved';
-end $after_owner$;
+ if v_rows<>1 then raise exception 'OWNER_NEWS_MEDIA_DELETE_BROKEN';end if;
+ raise notice 'PASS [ADS-015/054] Owner/AAL2 original News/media workflows remain intact and grievance guarded';
+end $owner$;
 reset role;
-
-do $no_other_policy$
-begin
- if exists(select 1 from pg_policies p
-  where p.schemaname='storage' and p.tablename='objects'
-   and p.policyname='b5_private_gateway_only')
- then raise exception 'BROAD_POLICY_REINTRODUCED';end if;
- if (select count(*) from pg_policies p
-  where p.schemaname='storage' and p.tablename='objects'
-   and p.policyname='b7_public_media_readonly')<>1
- then raise exception 'MISSING_EXACT_PUBLIC_READ_POLICY';end if;
- raise notice 'PASS [ADS-054/056] narrow public READ only; existing Owner policies preserved, no broad OR bypass';
-end $no_other_policy$;
 rollback;
