@@ -41,6 +41,15 @@ begin
   false,'GOVT-MP-TEST-GRANT');
  perform public.jb_ad_set_approved_quote_internal(
   campaign,50000,'VIDEO-POSTER-QUOTE');
+ -- Canonical payment guard requires an approved Creative FIRST.
+ -- Synthetic explicit Owner approval for disposable E2 ONLY.
+ if (select approved from public.ad_creatives where id=v) is distinct from false
+ then raise exception 'PRIVATE_RECEIPT_SILENTLY_APPROVED_VIDEO';end if;
+ update public.ad_creatives
+ set approved=true,media_url=v_root||
+  '/storage/v1/object/public/jb-ad-clean-public/creative/'||
+  v||'/'||a||'/'||repeat('b',64)||'.mp4'
+ where id=v;
  perform public.jb_ad_confirm_manual_payment_internal(
   campaign,'SYNTHETIC-VIDEO-POSTER-PROOF',50000,'upi',now(),
   'VIDEO-RECEIPT-EVIDENCE','VIDEO-TERMS-CONSENT',now(),
@@ -56,7 +65,8 @@ begin
  insert into private.b7_ad_clean_public_origin(storage_origin,enabled)
   values(v_root,false);
 end $source$;
--- The first-party release receipt does NOT approve Media by itself.
+-- Even with receipt and synthetic approved Creative, video is hidden
+-- until the safe first-party origin is explicitly enabled.
 do $not_ready$
 declare n integer;
 begin
@@ -66,11 +76,7 @@ begin
  then raise exception 'UNEXPECTED_PG_FIXTURE';end if;
  raise notice 'PASS [ADS-011] private + public media receipts NEVER auto approve canonical Creative';
 end $not_ready$;
--- Simulate *explicit* Owner approval in disposable fixture only, not
--- an actual E5 Founder or approved production operation.
-update public.ad_creatives set approved=true,
- media_url=current_setting('b7.poster_e2_video_url')
-where id=current_setting('b7.poster_e2_creative')::uuid;
+-- Owner approval above is disposable-only; REAL Founder E5 remains DUE.
 do $default_off$
 begin
  if (select count(*) from public.jb_ad_public_feed('homepage','global'))<>0
