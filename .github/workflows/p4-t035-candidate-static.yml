@@ -389,6 +389,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-single-feed-regression.sql
       - name: Setup existing PRIVATE video photo and first-party release ledgers for poster-only public feed (disposable PG)
         run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-creative-legacy-source-fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_media_immutable_evidence_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_video_private_evidence_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_clean_public_release_evidence_REVIEW_ONLY.sql
