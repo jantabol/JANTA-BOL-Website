@@ -181,3 +181,15 @@ test('ADS-015 invalid OLD pending selection cannot clear newer valid preview',as
  assert.equal(urls.length,1);
  assert.deepEqual(revoked,[]);
 });
+
+test('ADS-011 ISO-BMFF non-video HEIC/AVIF must not pass MP4 magic preflight',async()=>{
+ const {window,urls}=setup();
+ for(const brand of ['heic','heix','avif','mif1']){
+  const b=[0,0,0,24,102,116,121,112,...Array.from(brand,c=>c.charCodeAt(0))];
+  assert.equal(window.JBAdMediaPreview.signature(b),'',
+   'ftyp'+brand+' is not a valid MP4 video preview brand');
+  await assert.rejects(()=>window.JBAdMediaPreview.inspect(
+    makeFile(b,{name:'renamed.mp4',type:'video/mp4'})),/MIME_OR_MAGIC_SIGNATURE_MISMATCH/);
+ }
+ assert.equal(urls.length,0,'spoofed brand must never create a preview object URL');
+});
