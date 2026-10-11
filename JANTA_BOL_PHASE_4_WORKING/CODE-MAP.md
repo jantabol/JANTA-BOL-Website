@@ -266,3 +266,8 @@ For every block:
 - `ci/phase4/b7-lgd-source-preflight.cjs`: offline CSV + manifest SHA256, 55 MP district and parent consistency; **cannot** set verified, generate SQL imports or authenticate source independently.
 - `ci/phase4/b7-lgd-source-preflight.test.cjs` + `.github/workflows/p4-t035-candidate-static.yml`: 100% synthetic negative contract cases; historical suite preserved, no official import.
 - `review/B7_20261012_CLICK_LGD_CHECKPOINT_RCA.md`: source trace, RCA and verified CI receipts. Exact pre-doc coding CI `231d2852a0...`: Candidate 38112503709 GREEN 16/16 and Protected 38112503725 GREEN 2/2.
+
+## B7 shared URL valid-port boundary
+- `db/20261010_b7_weighted_private_REVIEW_ONLY.sql` — inside existing `private.b7_safe_public_ad_https(text)`, reject impossible `:65536`, `:99999` and unusable `:00000` before candidate selection/click. This is same SOT for Article, Homepage and protected CTA click; no URL parsing logic duplicated.
+- `ci/phase4/b7-weighted-regression.sql` and `ci/phase4/b7-view-ticket-regression.sql`: negative aliases plus invalid-port no-click event, valid port positive.
+- `ci/phase3-regression/db-function-security-regression.sql` T123 ensures approved helper includes `BETWEEN 1 AND 65535` whenever staged G4 is deployed. Verified exact original source HEAD `e8310c0cbd632d877fdba040e5c49e11756f930a` Candidate 38112739568 16/16 and Protected 38112739610 2/2 GREEN.

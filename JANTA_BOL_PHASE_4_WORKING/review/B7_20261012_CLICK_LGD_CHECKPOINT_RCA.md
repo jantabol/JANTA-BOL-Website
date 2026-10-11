@@ -26,3 +26,8 @@ Official directory references:
 - No exact-head Vercel deployed/Android proof, no actual independent MP district/subdistrict download/digests, no Owner AAL2 E5, no server-side media pipeline proof, no release E7 or paid LIVE activation. P4-T040 and G3 remain IN PROGRESS; release ZIP BLOCKED. E6 genuine online provider post-launch DUE per blueprint.
 
 **NO FAKE PASS. NO PRODUCTION WRITES. NEWS FIRST.**
+
+## Follow-up: browser URL port parity and verified code-only evidence
+- Additional security discrepancy: `:99999` and `:65536` satisfied old SQL `:[0-9]{1,5}` despite browser refusing these ports. Updated ONE `private.b7_safe_public_ad_https(text)` with optional-port integer range 1..65535; reference from Article, Homepage and ticket click is unchanged.
+- Synthetic negative proof in `ci/phase4/b7-weighted-regression.sql` and `ci/phase4/b7-view-ticket-regression.sql`; original approved CTA still works and invalid-port token never creates a click event.
+- Exact code HEAD `e8310c0cbd632d877fdba040e5c49e11756f930a`, candidate run **38112739568 SUCCESS 16/16**, protected run **38112739610 SUCCESS 2/2**. No true human view, Android, Owner-AAL2, real LGD data, media processing, production migration or E7 evidence obtained.
