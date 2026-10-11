@@ -73,11 +73,22 @@ function infra({noOwner=false,noServerRPC=false,badReadback=false}={}){
    throw Error('unexpected RPC: '+name);
   }
  };
- return {client,identifyOwner:async t=>!noOwner&&t==='OWNER_AUTH_JWT'?owner:null,
+ let authCalls=0;
+ const fetcher=async raw=>{
+  authCalls++;
+  if(String(raw).endsWith('/auth/v1/user'))
+   return new Response(JSON.stringify({id:owner}),{status:200});
+  if(String(raw).endsWith('/rest/v1/rpc/jb_ad_creative_workflow_capability_internal'))
+   return noOwner?new Response('{}',{status:403}):
+     new Response(JSON.stringify('B7_DRAFT_THEN_EXPLICIT_APPROVE_V1'),{status:200});
+  throw Error('UNEXPECTED_AUTH_SERVER_CALL');
+ };
+ return {client,supabaseUrl:'https://vrffsnkycvjithwtiylt.supabase.co',
+  anonKey:'PUBLIC_TEST_ANON',fetcher,
   allocateId:()=> '44444444-4444-4444-8444-444444444444',
   rpc,objects,events,receipts};
 }
-const input=src=>({token:'OWNER_AUTH_JWT',creativeId:creative,
+const input=src=>({token:'v'.repeat(120),creativeId:creative,
  source:src,name:'clip.mp4',mime:'video/mp4',policy});
 test('Real FFmpeg + canonical Creative + three storage readbacks -> 3 restricted SQL receipts, NO approval',async()=>{
  const server=infra();

@@ -6,18 +6,22 @@
  * Three server-only private buckets and three restricted receipt/orphan RPCs.
  * No media approval, feed, URL, or ad activation operation exists here.
  */
+import {identifyB7OwnerAal2} from './b7-owner-identity.mjs';
 import {b7MediaServerEvidence} from './b7-media-server-evidence.mjs';
 import {stageB7PrivateVideo,b7VideoPrivateStore} from './b7-video-private-stage.mjs';
 const denied=s=>{throw Error('B7_VIDEO_SERVER_'+s)};
 export async function processB7IsolatedVideoCandidate({
  token,creativeId,source,name,mime,policy
 },{
- client,identifyOwner,allocateId
+ client,supabaseUrl,anonKey,fetcher,allocateId
 }={}){
  if(!client||typeof client.rpc!=='function'||!client.storage||
-    typeof identifyOwner!=='function'||typeof token!=='string')
+    !supabaseUrl||!anonKey||typeof token!=='string')
   denied('PRIVILEGED_RUNTIME_NOT_CONFIGURED');
- const owner=await identifyOwner(token).catch(()=>null);
+ const identifyOwner=(jwt)=>identifyB7OwnerAal2(jwt,{
+  baseUrl:supabaseUrl,anonKey,request:fetcher??fetch
+ });
+ const owner=await identifyOwner(token);
  if(!owner)denied('EXISTING_OWNER_AAL2_REQUIRED');
  // Existing draft reader always uses canonical ad_creatives + ad_campaigns,
  // and SQL insert guard independently checks latest version under FOR UPDATE.
