@@ -398,6 +398,16 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_canonical_public_video_poster_REVIEW_ONLY.sql
       - name: E2 video public feed remains single-authority, unsafe/no AAL2 release hidden, poster SHA proof
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-video-poster-single-feed-regression.sql
+      - name: Bootstrap only required existing sticky ad_creatives field (disposable fixture)
+        run: psql -X -v ON_ERROR_STOP=1 -c "alter table public.ad_creatives add column approved_once boolean not null default false"
+      - name: Replace ORIGINAL creative SAVE/APPROVE to draft-first and CLEAN image-approved baseline (review only)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_creative_draft_approval_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_owner_clean_image_approval_REVIEW_ONLY.sql
+      - name: Extend the SAME Owner approval for verified VIDEO+POSTER and existing one public feed
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_owner_video_atomic_approval_REVIEW_ONLY.sql
+      - name: Exact Owner AAL2 video approval, sticky history, no release, no origin, poster and newer-draft negative cases
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-owner-video-atomic-approval-regression.sql
 
   b7-view-ticket-postgres:
     name: B7 one-use qualified Article view tickets & raw event isolation (disposable PostgreSQL)
