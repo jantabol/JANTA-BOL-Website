@@ -104,10 +104,17 @@ begin
   if msg<>'B7_ORPHAN_OBJECT_PATH_DENIED'
   then raise exception 'ORPHAN_BUCKET_GUARD_WEAKENED: %',msg;end if;
  end;
+ raise notice 'PASS [ADS-015] exact service_role receipts and orphan readback, stale version/dup/public path blocked';
+end $service$;
+reset role;
+-- Creator can read canonical Creative SOT. The disposable fixture's
+-- service_role intentionally has NO ad_creatives SELECT grant; do not
+-- weaken private Production grants just to make a fake privilege pass.
+do $canonical$
+begin
  if exists(select 1 from public.ad_creatives c
   where c.creative_type='image' and c.approved)
  then raise exception 'SERVER_MEDIA_LEDGER_SILENTLY_APPROVED_CREATIVE';end if;
- raise notice 'PASS [ADS-015] exact service_role receipts and orphan readback, stale version/dup/public path blocked, no media approval';
-end $service$;
-reset role;
+ raise notice 'PASS [ADS-015] original canonical creative remains not approved after private media receipt';
+end $canonical$;
 rollback;
