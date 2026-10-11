@@ -98,8 +98,10 @@ test('Revoked AAL2 and absent server-only RPC never yield a completed video ad',
  /EXISTING_OWNER_AAL2_REQUIRED/);
  assert.equal(denied.objects.size,0);assert.equal(denied.rpc.length,0);
  const legacy=infra({noServerRPC:true});
+ // Missing BOTH receipt RPC and durable orphan sink is stronger fail-closed:
+ // the worker cannot even claim its failed file batch was safely audited.
  await assert.rejects(processB7IsolatedVideoCandidate(input(sample),legacy),
- /PRIVATE_EVIDENCE_UNVERIFIED/);
+ /DURABLE_ORPHAN_AUDIT_REQUIRED/);
  assert.equal(legacy.objects.size,3);assert.equal(legacy.events.length,0,
  'missing orphan backend also fails closed, but real audit must be durable');
  const forged=infra({badReadback:true});
