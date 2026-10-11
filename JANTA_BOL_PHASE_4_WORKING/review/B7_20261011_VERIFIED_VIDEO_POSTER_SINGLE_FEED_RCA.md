@@ -1,0 +1,13 @@
+## B7 ADS-011 11 Oct 2026 — Verified Video Poster on ONE Canonical Public Feed (Review Only)
+
+- Exact code SHA `901b14954aa9e695134e497c19df91de3652e787`; candidate `38148390738` **18/18 SUCCESS**, protected Phase 3A+3B `38148390751` **2/2 SUCCESS** (real rollback-safe regressions). PR #5 remains DRAFT/UNMERGED.
+
+- Extracted disabled-by-default `private.b7_ad_clean_public_origin` as SINGLE HOME via `db/20261011_b7_clean_origin_SINGLE_HOME_REVIEW_ONLY.sql`, reused by original Owner image approval and video poster lookup. No duplicate origin settings or parallel public ad picker.
+
+- Added `db/20261011_b7_canonical_public_video_poster_REVIEW_ONLY.sql`: same original `public.jb_ad_public_feed(text,text)` now returns *ninth* `poster_url` for video only when canonical Creative approved, existing private 3-asset video receipt, first-party clean release SHA/path, OwnerID, latest version, media URL and origin all match. **NO** raw/video hotlinks, standalone poster RPC or fallback. Unverified video returns ZERO rows, fail closed. Legacy `jb_public_active_ads` remains same seven-field alias to the original picker. Return signature changes through **transactional DROP RESTRICT**, not CASCADE: unknown dependents abort. Requires coordinated source/deployment review before any LIVE cutover.
+
+- Actual PostgreSQL E2 `ci/phase4/b7-video-poster-single-feed-regression.sql` reuses existing paid/geo/campaign/creative source. Positive: ONE original anonymous homepage video with SHA-bound safe poster, anonymous cannot EXECUTE private helper, legacy alias still works. Negative: receipt alone never approves, origin disabled kills video, approved-looking HTTPS foreign URL denied, payment-before-approval guard preserved; E2 transaction ROLLBACK.
+
+- RED->RCA->FIX: first new feed suite lacked actual old Owner Creative approve RPC required by existing release migration; installed exact old fixture (NO alternate authority). Second failure `APPROVED_CREATIVE_REQUIRED` from canonical payment guard fixed E2 operation order (pending receipt -> simulated approval -> payment), no payment gate weakened. Third failure 42501 from anon using text regprocedure without private schema USAGE; used pg_catalog OID for real anon EXECUTE privilege test, no grant enabled.
+
+- Still DUE: **actual canonical Owner video approval** with signed E5 and tested paired `poster_url`, a safely deployed private worker/durable media queue, real public clean bucket and private asset migrations, real Android E3, official MP LGD, exact Production E7, Founder-reviewed B7 Final Tests. No Production SQL/storage writes, ad LIVE, or PR merge. Canonical P4-T034..T042 remain **0/9 FINAL PASS+LOCK**; `B7_ADVERTISEMENT.zip` is **BLOCKED**.
