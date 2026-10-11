@@ -647,3 +647,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_private_media_server_rpcs_REVIEW_ONLY.sql
       - name: E2 service-only media insert/readback/stale/forgery and orphan audit, no approval
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-media-server-rpc-regression.sql
+      - name: Install REVIEW ONLY immutable private VIDEO, POSTER, original evidence, no Production SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_video_private_evidence_REVIEW_ONLY.sql
+      - name: B7 real PostgreSQL video service_role-only evidence and never silent Owner approval
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-video-evidence-regression.sql
