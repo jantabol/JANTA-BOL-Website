@@ -57,25 +57,25 @@ end $no_auth$;
 reset role;
 set local role service_role;
 do $service$
-declare v jsonb;id uuid;d jsonb;msg text;
+declare v jsonb;v_asset uuid;d jsonb;msg text;
 begin
  v:=current_setting('b7.ci_media_fixture')::jsonb;
- id:=public.jb_ad_media_record_receipt_server(v);
- if id<> '88888888-8888-4888-8888-888888888888'::uuid
+ v_asset:=public.jb_ad_media_record_receipt_server(v);
+ if v_asset<> '88888888-8888-4888-8888-888888888888'::uuid
  then raise exception 'PRIVATE_RECEIPT_INSERT_RETURN_MISMATCH';end if;
- d:=public.jb_ad_media_read_receipt_server(id);
+ d:=public.jb_ad_media_read_receipt_server(v_asset);
  if d->>'approval_state'<>'private_quarantined' or
     d->>'source_sha256'<>repeat('a',64) or
     d->>'derivative_sha256'<>repeat('b',64)
  then raise exception 'DURABLE_BACKEND_RECEIPT_READBACK_INCORRECT';end if;
  if not public.jb_ad_media_log_orphan_server(jsonb_build_object(
-  'assetId',id,'reason','RECEIPT_OR_OWNER_STATE_FAILED',
+  'assetId',v_asset,'reason','RECEIPT_OR_OWNER_STATE_FAILED',
   'objects',jsonb_build_array(jsonb_build_object(
     'bucket','jb-ad-originals-private',
-    'path','staged/'||id::text||'/'||repeat('a',64)||'.png'))))
+    'path','staged/'||v_asset::text||'/'||repeat('a',64)||'.png'))))
  then raise exception 'ORPHAN_EVENT_NOT_APPEND_ONLY';end if;
  if (select count(*) from private.b7_ad_media_orphan_events
-  where asset_id=id and failure_code='DURABLE_RECEIPT_FAILED')<>1
+  where asset_id=v_asset and failure_code='DURABLE_RECEIPT_FAILED')<>1
  then raise exception 'FORENSIC_ORPHAN_MISSING';end if;
  begin
   perform public.jb_ad_media_record_receipt_server(v);
@@ -95,9 +95,9 @@ begin
  end;
  begin
   perform public.jb_ad_media_log_orphan_server(jsonb_build_object(
-    'assetId',id,'reason','PRIVATE_STORAGE_FAILED',
+    'assetId',v_asset,'reason','PRIVATE_STORAGE_FAILED',
     'objects',jsonb_build_array(jsonb_build_object(
-      'bucket','public-media','path','staged/'||id::text||'/'||repeat('a',64)||'.png'))));
+      'bucket','public-media','path','staged/'||v_asset::text||'/'||repeat('a',64)||'.png'))));
   raise exception 'PUBLIC_BUCKET_ORPHAN_ACCEPTED';
  exception when others then
   get stacked diagnostics msg=message_text;

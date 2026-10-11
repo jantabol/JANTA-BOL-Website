@@ -74,10 +74,11 @@ begin
  v_reason:=p_event->>'reason';
  if v_asset is null or jsonb_typeof(v_objects)<>'array' or
     jsonb_array_length(v_objects) not between 1 and 2 or
-    v_reason not in('PRIVATE_STORAGE_FAILED','RECEIPT_OR_OWNER_STATE_FAILED')
+    (v_reason is null or v_reason not in('PRIVATE_STORAGE_FAILED','RECEIPT_OR_OWNER_STATE_FAILED'))
  then raise exception 'B7_INVALID_ORPHAN_AUDIT';end if;
  if exists(select 1 from jsonb_array_elements(v_objects) as object(x)
-  where x->>'bucket' not in
+  where x->>'bucket' is null
+    or x->>'bucket' not in
      ('jb-ad-originals-private','jb-ad-previews-private')
     or x->>'path' is null
     or x->>'path' !~ ('^staged/'||v_asset::text||'/[a-f0-9]{64}\.(png|jpg|jpeg|webp)$'))
