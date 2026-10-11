@@ -98,6 +98,19 @@ returns trigger language plpgsql security definer
 set search_path to 'pg_catalog','public','private'
 as $article_guard$
 begin
+ -- INSERT is a distinct attack route: UPDATE OF only does not run for a
+ -- reporter-created Article. Even an Owner must first publish an Article,
+ -- then use the separate canonical verified-geo RPC with source evidence.
+ if tg_op='INSERT' then
+  if new.ad_geo_level is not null
+     or new.ad_geo_district_lgd_code is not null
+     or new.ad_geo_tehsil_lgd_code is not null
+     or new.ad_geo_verified_at is not null
+     or new.ad_geo_verified_by is not null
+     or new.ad_geo_evidence_ref is not null
+  then raise exception 'B7_ARTICLE_GEO_MUST_BE_VERIFIED_AFTER_PUBLISH';end if;
+  return new;
+ end if;
  if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
  return new;
 end $article_guard$;
@@ -106,6 +119,12 @@ create trigger b7_article_ad_geo_owner_guard
 before update of ad_geo_level,ad_geo_district_lgd_code,
  ad_geo_tehsil_lgd_code,ad_geo_verified_at,ad_geo_verified_by,
  ad_geo_evidence_ref on public.articles
+for each row execute function private.b7_article_ad_geo_owner_guard();
+-- Critical counterpart: a column-specific UPDATE trigger does not protect
+-- INSERT; block forged verified Article geography at initial creation.
+drop trigger if exists b7_article_ad_geo_insert_guard on public.articles;
+create trigger b7_article_ad_geo_insert_guard
+before insert on public.articles
 for each row execute function private.b7_article_ad_geo_owner_guard();
 revoke all on function private.b7_article_ad_geo_owner_guard()
  from public,anon,authenticated;
