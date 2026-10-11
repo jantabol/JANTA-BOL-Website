@@ -62,7 +62,7 @@ a{color:#ff9090}
    });
    if(error)throw error;
    if(typeof data!=='string'||!/^[0-9a-f-]{36}$/i.test(data))throw Error('REQUEST_RECEIPT_MISSING');
-   show('आपकी विज्ञापन Request Submit हो गई है।\nRequest ID: '+data+'\nस्थिति: Pending\nसत्यापन के लिए कुछ समय बाद आपके दिए गए WhatsApp नंबर पर संदेश भेजा जाएगा।',true);
+   show('आपकी विज्ञापन Request Submit हो गई है।\nRequest ID: '+data+'\nस्थिति: Pending\nसत्यापन के लिए टीम जरूरत पड़ने पर दिए गए WhatsApp नंबर पर संपर्क कर सकती है। कोई स्वचालित WhatsApp संदेश भेजने की पुष्टि नहीं है।',true);
    form.reset();
   }catch(e){
    const code=String(e?.message||'');
