@@ -221,6 +221,60 @@ begin
  raise notice 'PASS [ADS-056] private .internal destination cannot create paid click';
 end $reject_internal_cta$;
 reset role;
+-- Previous CTA-click SQL used a separate regex and could incorrectly
+-- COUNT click events for browser-normalized numeric loopback hosts even
+-- while the public Article/Homepage URL authority denies those links.
+-- The rejected click token must remain unconsumed and emit ZERO event rows.
+update public.ad_creatives
+set cta_target='https://127.1/owner'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $reject_alias_0$
+begin
+ if public.jb_ad_record_ticket_click(
+    current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'NUMERIC_ALIAS_CTA_CLICK_COUNTED_0';end if;
+ raise notice 'PASS [ADS-048/050/056] URL alias 0 refused by same Article/Homepage/click authority';
+end $reject_alias_0$;
+reset role;
+update public.ad_creatives
+set cta_target='https://0x7f.0.0.1/private'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $reject_alias_1$
+begin
+ if public.jb_ad_record_ticket_click(
+    current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'NUMERIC_ALIAS_CTA_CLICK_COUNTED_1';end if;
+ raise notice 'PASS [ADS-048/050/056] URL alias 1 refused by same Article/Homepage/click authority';
+end $reject_alias_1$;
+reset role;
+update public.ad_creatives
+set cta_target='https://0177.0.0.1/panel'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $reject_alias_2$
+begin
+ if public.jb_ad_record_ticket_click(
+    current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'NUMERIC_ALIAS_CTA_CLICK_COUNTED_2';end if;
+ raise notice 'PASS [ADS-048/050/056] URL alias 2 refused by same Article/Homepage/click authority';
+end $reject_alias_2$;
+reset role;
+do $reject_alias_no_event$
+begin
+ if exists(select 1 from public.ad_view_tickets
+ where token_hash=encode(extensions.digest(
+  current_setting('b7.fixture_unsafe_cta_token',true),'sha256'),'hex')
+ and click_at is not null)
+ then raise exception 'REJECTED_CTA_ALIAS_CONSUMED_TICKET';end if;
+ if exists(select 1 from public.ad_events
+ where view_ticket_hash=encode(extensions.digest(
+  current_setting('b7.fixture_unsafe_cta_token',true),'sha256'),'hex')
+ and event_type='click')
+ then raise exception 'REJECTED_CTA_ALIAS_EMITTED_EVENT';end if;
+ raise notice 'PASS [ADS-050] all invalid links leave original ticket unused and click ledger unchanged';
+end $reject_alias_no_event$;
 update public.ad_creatives
 set cta_target='https://advertiser.example.test/promo'
 where id='40000000-0000-0000-0000-000000000005';
