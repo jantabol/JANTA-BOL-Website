@@ -16,6 +16,38 @@ const image=(b:Uint8Array)=>({
  canApprove:false,canPublish:false,status:'PRIVATE_SANITIZED_PREVIEW_NOT_UPLOADED_NOT_APPROVED',
  privatePreviewPng:b
 });
+// End-to-end DIAGNOSTIC only: synthetic Owner authorization stub. This
+// is NOT actual Owner AAL2 E5, Production Storage or Android evidence.
+import {ImageMagick,initializeImageMagick,MagickFormat,MagickColor} from
+ 'npm:@imagemagick/magick-wasm@0.0.30';
+import {buildPrivateAdImagePreview} from
+ '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts';
+import {inspectCleanPngContainer} from
+ '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-media-byte-policy.mjs';
+
+Deno.test('Real synthetic Owner preview HTTP multipart -> WASM decode -> clean PNG, never approved',async()=>{
+ const wasm=await Deno.readFile(new URL('magick.wasm',
+  import.meta.resolve('npm:@imagemagick/magick-wasm@0.0.30')));
+ await initializeImageMagick(wasm);
+ const input=ImageMagick.read(new MagickColor('blue'),300,150,
+  img=>img.write(MagickFormat.Png,out=>Uint8Array.from(out)));
+ const f=new File([new Blob([new Uint8Array(input).buffer])],'sponsored.png',
+  {type:'image/png'});
+ const req=await request([['file',f]]);
+ const r=await handlePrivateAdMediaPreview(req,{
+  authorize:async()=>true,
+  convert:buildPrivateAdImagePreview
+ });
+ assertEquals(r.status,200);
+ assertEquals(r.headers.get('cache-control'),'no-store, private');
+ assertEquals(r.headers.has('access-control-allow-origin'),false);
+ const data=new Uint8Array(await r.arrayBuffer());
+ const clean=inspectCleanPngContainer(data);
+ assertEquals(clean.width,300);assertEquals(clean.height,150);
+ assertEquals(clean.containsMetadata,false);
+ assertEquals(clean.canApprove,false);assertEquals(clean.canPublish,false);
+});
+
 Deno.test('Unauthorized request is rejected BEFORE reading or decoding bytes',async()=>{
  let calls=0;
  const req=await request([['file',file()]]);
