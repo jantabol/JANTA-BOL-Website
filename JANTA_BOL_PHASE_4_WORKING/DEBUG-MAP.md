@@ -261,3 +261,9 @@ FIXED / EXACT OLD TEST GREEN
 - Pinned MagickWasm output generated private `orNT` despite `strip`; real decoded log confirmed exact chunk. Source-oriented fix sets orientation Undefined after auto-orient, before strip; did NOT whitelist `orNT`, eXIf or tEXt.
 - Deno TS fixes: strict typed x, then independently investigated ArrayBufferLike vs ArrayBuffer WebCrypto; copy to non-shared explicit ArrayBuffer. Attempted generic `Orientation` symbol did not exist in pinned v0.0.30, switched to numeric enum Undefined=0 (typed property).
 - Real head `9b6ace69080...` Candidate 38113900702 17/17 SUCCESS (includes actual WASM image processing, synthetic injected GPS comment removal). Only candidate and synthetic; no LIVE service, no AAL2 session/Storage. Final B7 0/9/ZIP BLOCKED.
+
+## B7 ADS-009/010/015 OWNER MEDIA HTTP PREVIEW — 11 OCT 2026
+- Real candidate RED 38114348621: 8 Deno strict TS7006/TS7031 implicit any errors from new handler. FIRST DIVERGENCE: untyped Request/stream/dependency callbacks. Minimum safe fix: explicit TypeScript types and strict check unchanged; no suppressed test.
+- HTTP security review found Content-Length declared value could differ from actual bytes. Added fail-closed exact equality and negative 8MiB stream overflow; real HTTP synthetic E2 must not call decoder on mismatched/overlimit payload.
+- Canonical Owner privilege tracing (LIVE read-only): p4_owner_allowed -> current_owner_aal2 -> current_session_active -> auth.sessions; owner-auth.ts also verifies authenticated user. This source trace is NOT actual Owner E5 session test.
+- Exact source 2cc2e04dd21e232ceda53c998b49512f3ae47246 Candidate 38114596493 17/17 and Protected 38114596457 2/2 SUCCESS. Private preview/no storage only; no media approval or release evidence.

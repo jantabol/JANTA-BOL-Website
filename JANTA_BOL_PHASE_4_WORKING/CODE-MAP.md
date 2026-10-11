@@ -277,3 +277,11 @@ For every block:
 - `CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts`: pinned magick-wasm@0.0.30 actual WASM decode, pixel orientation normalization, 1200px output limit, `img.strip()`, `Orientation Undefined=0`, PNG metadata restriction, source/derivative SHA-256; PREVIEW ONLY, no service-role/db/storage.
 - `ci/phase4/b7-media-byte-policy.test.mjs` and `ci/phase4/b7-image-sanitize.test.ts`, `.github/workflows/p4-t035-candidate-static.yml`: additive Node tests + new Deno WASM CI job, no old G3/G4/Phase3 test suppressed.
 - Proof `38113900702` Candidate 17/17 green (source `9b6ace69080...`). No actual owner upload/deploy PASS.
+
+## B7 ADS-009/010/015 OWNER MEDIA HTTP PREVIEW — 11 OCT 2026
+- CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/handler.ts : bounded streaming multipart + exact declared length; one file; no-store sanitized PNG preview; no upload/approve.
+- CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/owner-auth.ts : canonical Auth /user PLUS jb_ad_creative_workflow_capability_internal Owner/AAL2 RPC, same Bearer and anon key only.
+- CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/index.ts : isolated REVIEW-ONLY Edge entry (not deployed); imports real WASM sanitizer, no service-role, no writes.
+- ci/phase4/b7-ad-media-gateway.test.ts : real synthetic FormData/WASM e2e, mocked Owner, header spoof and streaming overflow, no CORS, no approval.
+- ci/phase4/b7-ad-owner-auth.test.ts : synthetic invalid, AAL1/revoked, wrong server capability, forged Supabase origin negative tests.
+- .github/workflows/p4-t035-candidate-static.yml : Deno v2.9.7 + pinned magick-wasm 0.0.30 real tests alongside previous 16 jobs. Exact SHA 2cc2e04dd21e232ceda53c998b49512f3ae47246 Candidate 38114596493 17/17 SUCCESS and Protected 38114596457 2/2 SUCCESS.

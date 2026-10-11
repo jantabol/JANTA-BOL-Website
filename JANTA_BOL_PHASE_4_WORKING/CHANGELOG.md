@@ -283,3 +283,8 @@ Protected workflow run #246 completed:
 - Added server-side magic/MIME/dimensions/pixel/PNG-CRC validation and pinned Magick WASM decoder/transcoder with no Storage/approval/public RPC. Actual preview pixel orientation normalization, private PNG re-encode, strict no-ancillary metadata proof and original+derivative SHA-256.
 - Negative Node tests plus Deno real WASM tests include synthetic GPS text injected into image metadata, verified stripped; failures restored through independent RCA, not by weakening `orNT`/eXIf defense. Candidate 38113900702 17/17 SUCCESS on `9b6ace69080...`.
 - Still DUE: private upload, Owner AAL2, immutable processed media ledger, protected public derivative, image Malware/Codec checks, video+poster, real Android E3/E5 and deployed E7, official LGD. No Production writes / no merge / no final ZIP. 0/9 canonical Final PASS+LOCK.
+
+## B7 ADS-009/010/015 OWNER MEDIA HTTP PREVIEW — 11 OCT 2026
+- Added isolated Owner HTTP private media-preview endpoint with canonical Auth + current Owner/AAL2 capability, byte-bound multipart, one-file real ImageMagick WASM PNG output, no-store and no-CORS. New code is REVIEW-ONLY, never deployed.
+- Added true synthetic end-to-end POST -> Magick WASM -> clean PNG plus fake revocation, AAL1 denial, URL spoof, duplicate file, wrong Content-Length and oversized stream tests; fixed real strict TS compile RCA.
+- Verified SHA 2cc2e04dd21e232ceda53c998b49512f3ae47246 Candidate 38114596493 SUCCESS 17/17, Protected 38114596457 SUCCESS 2/2. Production untouched, B5 RESTRICTIVE, current published ad 0. PR#5 Draft. Official 9/9 not passed, ZIP BLOCKED.
