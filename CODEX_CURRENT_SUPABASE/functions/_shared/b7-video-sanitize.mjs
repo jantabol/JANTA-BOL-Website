@@ -95,7 +95,7 @@ export async function sanitizeB7PrivateVideo({
    '-nostdin','-y','-threads','1','-i',src,
    '-map','0:v:0','-map','0:a:0?','-map_metadata','-1',
    '-map_chapters','-1','-sn','-dn',
-   '-vf','scale=w=1280:h=720:force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p',
+   '-vf','scale=w=min(1280\\,iw):h=min(720\\,ih):force_original_aspect_ratio=decrease:force_divisible_by=2,format=yuv420p',
    '-c:v','libx264','-preset','ultrafast','-crf','26',
    '-pix_fmt','yuv420p','-profile:v','main','-level','3.1',
    '-threads','1','-c:a','aac','-ac','2','-b:a','96k',
@@ -108,7 +108,7 @@ export async function sanitizeB7PrivateVideo({
   // Poster must be an actual decoded frame, never a user-provided URL.
   await tool('ffmpeg',['-hide_banner','-loglevel','error','-nostdin',
    '-y','-threads','1','-i',dest,'-map','0:v:0',
-   '-frames:v','1','-vf','scale=w=800:h=800:force_original_aspect_ratio=decrease',
+   '-frames:v','1','-vf','scale=w=min(800\\,iw):h=min(800\\,ih):force_original_aspect_ratio=decrease',
    '-map_metadata','-1','-f','image2',poster],30000);
   if((await stat(poster)).size>policy.maxPosterBytes)
    fail('POSTER_CAPACITY_LIMIT');
