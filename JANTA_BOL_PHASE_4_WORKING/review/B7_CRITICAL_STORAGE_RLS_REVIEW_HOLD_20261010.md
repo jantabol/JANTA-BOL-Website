@@ -1,3 +1,6 @@
+> **CORRECTION 12 OCTOBER 2026 — THIS ORIGINAL INCIDENT THEORY IS SUPERSEDED.**
+> Independent LIVE read-only audit established `b5_private_gateway_only` is **RESTRICTIVE** (`pg_policy.polpermissive=false`), NOT permissive. A restrictive policy does NOT itself grant anon CRUD. The original synthetic policy was configured incorrectly and did not prove a LIVE security flaw. **Never deploy the old migration that dropped this restriction.** The current `20261010_b7_storage_rls_critical_REVIEW_ONLY.sql` has been replaced with a ZERO-DDL audit that preserves the policy. See `B7_STORAGE_POLICY_INDEPENDENT_RCA_CORRECTION_20261012.md`. Original historical text retained below solely for transparent error tracing.
+
 # JANTA BOL B7 — CRITICAL STORAGE POLICY RELEASE HOLD
 Date: 10 October 2026
 Status: **OPEN / PRODUCTION PRIVACY RISK / NOT REMEDIATED**
