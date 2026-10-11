@@ -56,3 +56,28 @@ No B5 Storage policy was changed. Keep the independent restrictive-policy
 correction and protect previous B3, B5, Article URLs and permissions.
 
 **0/9 FINAL PASS+LOCK · B7_ADVERTISEMENT.zip BLOCKED · NO B8.**
+
+## Additional server-selection defense: stale newsroom district
+
+The same staged geo migration was audited for **post-review editorial drift**.
+The ad geo Owner UPDATE trigger watches `ad_geo_*`, not the existing
+`articles.district` label. A later edit of ordinary newsroom district
+could contradict a previously verified LGD code while the private
+ad selector continued to match the old verified code. This could
+misdirect district/tehsil paid ads if allowed into a paired LIVE release.
+
+**Minimum-safe fix:** `private.b7_geo_matches_article(uuid,uuid)` now
+fails closed for district/tehsil geography when the existing nonblank
+newsroom district disagrees with the verified LGD district name.
+An existing NULL newsroom label remains eligible when the Owner's
+LGD verification provides independent proof. No Article record,
+Article URL or geo audit log is deleted or rewritten.
+
+**E2 negative fixture:** initial Shivpuri campaign is eligible for a
+verified Pichhore Article; after a synthetic newsroom district change
+to Gwalior it is **not** eligible; reverting the edit to Shivpuri
+restores the original match. All fixture updates roll back.
+
+**Neither the INSERT route nor this drift behavior is claimed to be
+an actual LIVE incident.** Both are prospective staged safeguards
+until tested and approved for deployment.
