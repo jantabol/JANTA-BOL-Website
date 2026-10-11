@@ -298,6 +298,11 @@ begin
       or not exists(select 1 from pg_trigger t
            where t.tgname='b7_article_ad_geo_owner_guard'
              and t.tgrelid='public.articles'::regclass and t.tgenabled='O')
+      -- AD Geo INSERT has a separate trust boundary: the older UPDATE OF
+      -- trigger alone cannot reject forged initial verified geography.
+      or not exists(select 1 from pg_trigger t
+           where t.tgname='b7_article_ad_geo_insert_guard'
+             and t.tgrelid='public.articles'::regclass and t.tgenabled='O')
       or not exists(select 1 from pg_trigger t
            where t.tgname='b7_area_grant_insert_guard'
              and t.tgrelid='public.ad_campaign_area_grants'::regclass and t.tgenabled='O')
