@@ -76,7 +76,7 @@ jobs:
         run: |
           deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts
           deno check CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/index.ts
-          deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts ci/phase4/b7-ad-media-gateway.test.ts
+          deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts ci/phase4/b7-ad-media-gateway.test.ts ci/phase4/b7-ad-owner-auth.test.ts
 
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
