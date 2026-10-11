@@ -253,3 +253,8 @@ For every block:
 - `ads.html`: adds preview container to cleanup set *before* await, suppresses outdated selection errors and detached element updates. `ci/phase4/b7-media-preview-regression.cjs` adds deterministic deferred File.arrayBuffer() slow/fast tests, pagehide cancellation, invalid-current blob revocation and stale-invalid guard. Preview is local-only, never upload/creative approval.
 - Still E1 + synthetic E2/source-only, no real Android E3/Owner E5 or final B7 PASS/LOCK.
 
+## B7 paid media/CTA URL policy — single private Source of Truth
+- `db/20261010_b7_weighted_private_REVIEW_ONLY.sql` adds `private.b7_safe_public_ad_https(text)` (SQL IMMUTABLE, SECURITY INVOKER, no anon/authenticated EXECUTE) and uses it for both Article media and website/map CTA.
+- `db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql` reuses SAME private helper for Homepage selection; not a second public selector. No server media scan exists yet, so media approval MUST stay blocked until first-party verified derivatives.
+- `ci/phase4/b7-weighted-regression.sql` (HTTP/loopback/local/internal/IPv4 shortening / invalid CTA and safe DNS positives) and `ci/phase4/b7-single-feed-regression.sql` (old approved Homepage media/CTA rejected). `ci/phase3-regression/db-function-security-regression.sql` conditioned T123 requires shared helper and Article geo INSERT trigger once staging schema exists.
+- Exact parent CI on `774fdd6aaafb7b47dca7916b2fb0815cf89fa307`: Candidate 38111683892 GREEN 16/16, Protected 38111683896 GREEN 2/2. Not Production migration/test PASS. 0/9 FINAL.
