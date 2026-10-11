@@ -518,7 +518,7 @@ jobs:
 
 
   b7-storage-rls-critical-postgres:
-    name: B7 critical storage policy OR-bypass RCA and Owner-preserving fix (disposable PostgreSQL only)
+    name: B7 independent restrictive-vs-permissive Storage RLS RCA (unchanged Owner and B5 guard; disposable PostgreSQL)
     runs-on: ubuntu-latest
     services:
       postgres:
@@ -546,11 +546,11 @@ jobs:
         run: |
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-fixture.sql
-      - name: Reproduce original B5 broad permissive OR policy in disposable database
+      - name: Verify original B5 is RESTRICTIVE; contrast hypothetical permissive OR under rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-before-regression.sql
-      - name: Apply review-only minimum-safe-change (NEVER Production)
+      - name: Run zero-DDL read-only restrictive B5 policy authority audit (NEVER Production)
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql
-      - name: Private editorial/grievance anon and AAL1 denial, public read and Owner AAL2 upload positive
+      - name: Verify no anonymous Storage SQL reads/writes and unchanged Owner media/grievance workflows
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-storage-rls-after-regression.sql
 
 
