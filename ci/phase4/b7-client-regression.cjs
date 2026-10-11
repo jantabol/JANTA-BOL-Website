@@ -804,3 +804,84 @@ test('ADS-055 Owner UI refuses to mark undelivered retry as sent',async()=>{
  assert.match(html,/notification delivery issues \(Owner only\)/i);
  assert.match(html,/onclick="loadAdNotificationIssues/);
 });
+
+
+test('ADS-046 old backend capability refusal: client must NEVER invoke legacy auto-approve SAVE',async()=>{
+ const {window,calls}=client();window.JBBackend.requireOwner=async()=>true;
+ const campaign='30000000-0000-0000-0000-000000000001';
+ await assert.rejects(()=>window.JBPhase4.adCreative(campaign,{type:'text',text:'Legacy unsafe'}),
+  /B7_TWO_STAGE_CREATIVE_BACKEND_NOT_DEPLOYED/);
+ assert.deepEqual(calls.map(x=>x.name),['jb_ad_creative_workflow_capability_internal']);
+ const original=window.JBBackend.client.rpc;
+ window.JBBackend.client.rpc=async(name,args)=>(
+   name==='jb_ad_creative_workflow_capability_internal'
+   ?{data:null,error:new Error('PGRST202 no function')}
+   :original(name,args));
+ await assert.rejects(()=>window.JBPhase4.adCreative(campaign,{type:'text',text:'Unsafe'}),
+  /B7_TWO_STAGE_CREATIVE_BACKEND_NOT_DEPLOYED/);
+ assert.ok(!calls.some(x=>x.name==='jb_ad_save_creative_internal'));
+});
+test('ADS-046 strict Owner capability -> SAVE pending draft; explicit APPROVE uses another RPC',async()=>{
+ const {window,calls}=client();window.JBBackend.requireOwner=async()=>true;
+ const campaign='30000000-0000-0000-0000-000000000001';
+ const creative='40000000-0000-0000-0000-000000000005';
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});
+  return {data:name==='jb_ad_creative_workflow_capability_internal'
+   ?'B7_DRAFT_THEN_EXPLICIT_APPROVE_V1'
+   :name==='jb_ad_save_creative_internal'?creative:{id:creative,approved:true},
+   error:null};
+ };
+ assert.equal(await window.JBPhase4.adCreative(campaign,{
+  type:'text',text:'Verified copy',ctaType:'website',
+  ctaTarget:'https://advertiser.example.test'}),creative);
+ const approved=await window.JBPhase4.adApproveCreative(creative);
+ assert.equal(approved.approved,true);
+ assert.deepEqual(calls.map(x=>x.name),[
+  'jb_ad_creative_workflow_capability_internal',
+  'jb_ad_save_creative_internal',
+  'jb_ad_creative_workflow_capability_internal',
+  'jb_ad_approve_creative_internal'
+ ]);
+});
+test('ADS-046 AAL1, invalid campaign and creative IDs never reach mutation',async()=>{
+ const {window,calls}=client();const campaign='30000000-0000-0000-0000-000000000001';
+ window.JBBackend.requireOwner=async()=>{throw Error('OWNER_AAL2_REQUIRED')};
+ await assert.rejects(()=>window.JBPhase4.adCreative(campaign,{type:'text',text:'Fake'}),/OWNER_AAL2_REQUIRED/);
+ await assert.rejects(()=>window.JBPhase4.adApproveCreative(campaign),/OWNER_AAL2_REQUIRED/);
+ assert.deepEqual(calls,[]);
+ window.JBBackend.requireOwner=async()=>true;
+ await assert.rejects(()=>window.JBPhase4.adCreative('not-id',{type:'text',text:'Fake'}),/INVALID_CREATIVE_DRAFT/);
+ await assert.rejects(()=>window.JBPhase4.adApproveCreative('not-id'),/INVALID_CREATIVE_ID/);
+ assert.deepEqual(calls,[]);
+});
+test('ADS-046 Owner UI must show Draft Save and explicit user confirmed Preview APPROVE',async()=>{
+ const {context,window,elements}=adminClient();
+ const campaign='30000000-0000-0000-0000-000000000001';
+ const creative='40000000-0000-0000-0000-000000000005';
+ window.JBPhase4.adRows=async()=>[{id:campaign,status:'approved',
+  advertiser_id:'00000000-0000-0000-0000-000000000001',
+  ad_creatives:[
+   {id:'40000000-0000-0000-0000-000000000001',version:1,approved:true,
+      creative_type:'text',text_body:'Old verified ad'},
+   {id:creative,version:2,approved:false,creative_type:'text',
+      text_body:'Pending new copy',media_url:null,cta_type:null,cta_target:null}
+  ],advertisers:{name:'Fixture',verification_state:'verified'}}];
+ let approvals=0;window.JBPhase4.adApproveCreative=async id=>{
+  assert.equal(id,creative);approvals++;return {approved:true}};
+ context.confirm=()=>false;
+ await vm.runInContext("approveLatestDraft('"+campaign+"')",context);
+ assert.equal(approvals,0,'preview must not implicitly approve');
+ let preview='';
+ context.confirm=message=>{preview=message;return true};
+ await vm.runInContext("approveLatestDraft('"+campaign+"')",context);
+ assert.equal(approvals,1);
+ assert.match(preview,/CREATIVE VERSION: 2/);
+ assert.match(preview,/Pending new copy/);
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/Save Pending DRAFT/);
+ assert.match(html,/Explicit APPROVE/);
+ assert.doesNotMatch(html,/Save and approve creative/);
+ const output=elements.get('rows').innerHTML;
+ assert.match(output,/पुराना LIVE Advertisement/);
+});
