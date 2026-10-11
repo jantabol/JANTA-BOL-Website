@@ -6,6 +6,7 @@
 (function(g){'use strict';
 const max=52428800; // Exact inspected public-media bucket per-file 50MiB cap.
 const objects=new WeakMap();
+const generations=new WeakMap(); // invalidate out-of-order Android file selections
 const ascii=a=>Array.from(a).map(n=>String.fromCharCode(n)).join('');
 function signature(a){
  if(a.length>=3&&a[0]===255&&a[1]===216&&a[2]===255)return 'jpeg';
@@ -34,6 +35,7 @@ async function inspect(file){
    warning:'Server byte/codec/dimension validation, EXIF/GPS stripping, poster and Owner approval still required'};
 }
 function dispose(container){
+ if(container)generations.set(container,(generations.get(container)||0)+1);
  const old=objects.get(container);
  if(old&&g.URL?.revokeObjectURL){try{g.URL.revokeObjectURL(old)}catch(_){}}
  objects.delete(container);
@@ -42,7 +44,13 @@ function dispose(container){
 async function stage(container,file){
  if(!container||!g.document||!g.URL?.createObjectURL)
   throw Error('MEDIA_PREVIEW_NOT_SUPPORTED');
+ // Android may resolve two file.arrayBuffer() calls out of order.
+ // Latest request wins; an old decode MUST NOT replace current artwork.
+ const request=(generations.get(container)||0)+1;
+ generations.set(container,request);
  const info=await inspect(file);
+ if(generations.get(container)!==request)
+  return {...info,status:'SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE'};
  dispose(container);
  const tag=info.kind==='image'?'img':'video',media=g.document.createElement(tag);
  media.setAttribute('aria-label','विज्ञापन media local preview — not approved');
