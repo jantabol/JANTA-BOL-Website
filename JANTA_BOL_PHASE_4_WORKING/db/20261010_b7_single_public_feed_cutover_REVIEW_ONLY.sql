@@ -84,14 +84,12 @@ with requested as materialized (
    and (
      (cr.creative_type='text' and length(btrim(coalesce(cr.text_body,'')))>0)
      or (cr.creative_type in ('image','video')
-         and cr.media_url ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-         and cr.media_url !~ '[<>"''\\]')
+         and private.b7_safe_public_ad_https(cr.media_url))
    )
    and (
      cr.cta_type is null
      or (cr.cta_type in('website','map')
-         and cr.cta_target ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-         and cr.cta_target !~ '[<>"''\\]')
+         and private.b7_safe_public_ad_https(cr.cta_target))
      or (cr.cta_type in('call','whatsapp')
          and cr.cta_target ~ '^\+?[0-9][0-9 ()-]{5,19}$')
    )
