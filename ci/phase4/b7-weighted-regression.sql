@@ -166,6 +166,9 @@ begin
  for u in select unnest(array[
   'http://cdn.example.test/ad.png',
   'https://127.0.0.1/personal.png',
+  'https://127.1/abbreviated-loopback.png',
+  'https://0x7f.0.0.1/hex-loopback.png',
+  'https://0177.0.0.1/octal-loopback.png',
   'https://10.0.0.8/personal.png',
   'https://media.internal/private.png',
   'https://shop.local/ad.png',
