@@ -156,6 +156,35 @@ begin
 end $privileges$;
 reset role;
 
+-- The homepage reuses EXACTLY the Article URL guard. A newer legacy
+-- approved creative with a private hostname must not be served, nor may
+-- the picker fall back to an older approved creative behind it.
+do $homepage_legacy_hosts$
+declare id uuid; n int;
+begin
+ insert into public.ad_creatives(
+  campaign_id,creative_type,media_url,approved,version
+ ) values(
+  '30000000-0000-0000-0000-000000000007',
+  'image','https://127.0.0.1/internal.webp',true,99
+ ) returning id into id;
+ select count(*) into n from public.jb_ad_public_feed('homepage','global');
+ if n<>0 then raise exception 'HOMEPAGE_UNSAFE_LEGACY_MEDIA_SELECTED';end if;
+ delete from public.ad_creatives where public.ad_creatives.id=id;
+ insert into public.ad_creatives(
+  campaign_id,creative_type,text_body,cta_type,cta_target,approved,version
+ ) values(
+  '30000000-0000-0000-0000-000000000007',
+  'text','Malicious old CTA','website','https://intranet.local/billing',true,100
+ ) returning id into id;
+ select count(*) into n from public.jb_ad_public_feed('homepage','global');
+ if n<>0 then raise exception 'HOMEPAGE_UNSAFE_LEGACY_CTA_SELECTED';end if;
+ delete from public.ad_creatives where public.ad_creatives.id=id;
+ select count(*) into n from public.jb_ad_public_feed('homepage','global');
+ if n<>1 then raise exception 'HOMEPAGE_SAFE_ORIGINAL_CREATIVE_NOT_RESTORED';end if;
+ raise notice 'PASS [ADS-034/048] homepage private/intranet media and CTA denied; original safe creative still selectable';
+end $homepage_legacy_hosts$;
+
 -- A disabled creative or expired campaign must disappear on the next Article
 -- opening without changing the Article URL. (Already-open client pins selection.)
 update public.ad_campaigns set status='hidden',hidden_at=now() where
