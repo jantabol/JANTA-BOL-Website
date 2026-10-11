@@ -49,6 +49,8 @@ jobs:
         run: node --test ci/phase4/b7-lgd-source-preflight.test.cjs
       - name: B7 ADS-010/011/015 server media byte and dimension preflight — no sanitization or release claims
         run: node --test ci/phase4/b7-media-byte-policy.test.mjs
+      - name: B7 ADS-015 two private buckets, immutable upload, verified readback SHA256 and orphan audit
+        run: node --test ci/phase4/b7-media-private-storage.test.mjs
       - name: B7 ADS-056 client privileged-secret exposure E1 scan — secrets never printed
         run: |
           node ci/phase4/b7-public-secret-scan.cjs
