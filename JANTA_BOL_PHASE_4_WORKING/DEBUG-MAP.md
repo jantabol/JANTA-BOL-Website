@@ -267,3 +267,9 @@ FIXED / EXACT OLD TEST GREEN
 - HTTP security review found Content-Length declared value could differ from actual bytes. Added fail-closed exact equality and negative 8MiB stream overflow; real HTTP synthetic E2 must not call decoder on mismatched/overlimit payload.
 - Canonical Owner privilege tracing (LIVE read-only): p4_owner_allowed -> current_owner_aal2 -> current_session_active -> auth.sessions; owner-auth.ts also verifies authenticated user. This source trace is NOT actual Owner E5 session test.
 - Exact source 2cc2e04dd21e232ceda53c998b49512f3ae47246 Candidate 38114596493 17/17 and Protected 38114596457 2/2 SUCCESS. Private preview/no storage only; no media approval or release evidence.
+
+## B7 ADS-015 two private Storage buckets, immutable SHA receipts and B5 regression (11 Oct 2026)
+- ACTUAL first divergence and RCA history, original RED NOT hidden: ledger SQL E2 initially expected append-only trigger to fire for a service_role UPDATE even though stricter GRANT did not include UPDATE/DELETE. GitHub 38117962806 RED. Correct E2 now first asserts permission denial, then IN DISPOSABLE ROLLBACK grants hypothetical UPDATE/DELETE+RLS and independently verifies trigger still blocks audit mutation. No real grant widened.
+- Second RED: PL/pgSQL variable id conflicted with orphan_events.id column (38118034575); exact minimum fix v_asset_id qualifier in test only, no schema change.
+- Storage E2 initial RED: pg_policies.roles is name[] (not text[]), fixed cast ARRAY[..]::name[]; later E2 used set_config(text,text) instead of required set_config(text,text,boolean) (38118105226), fixed explicit false arg. No B5 policy deletion, no old test skipped.
+- Finally source 26e783b2434cdee1e4171bb9fd33be7aaca9e0b0: candidate 38118203598 17/17 jobs SUCCESS, protected 38118203562 2/2 SUCCESS. This proves synthetic E2 and code-only regressions, NOT real Storage upload, Production integration, Owner E5, Android E3 or final B7 PASS.
