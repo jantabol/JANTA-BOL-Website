@@ -261,6 +261,21 @@ begin
  raise notice 'PASS [ADS-048/050/056] URL alias 2 refused by same Article/Homepage/click authority';
 end $reject_alias_2$;
 reset role;
+-- Even a public DNS hostname cannot use a browser-invalid 5-digit port
+-- to manufacture a paid click when its link cannot be opened.
+update public.ad_creatives
+set cta_target='https://advertiser.example.test:99999/unopenable'
+where id='40000000-0000-0000-0000-000000000005';
+set local role anon;
+do $invalid_public_port$
+begin
+ if public.jb_ad_record_ticket_click(
+    current_setting('b7.fixture_unsafe_cta_token',true))
+ then raise exception 'BROWSER_INVALID_CTA_PORT_WAS_COUNTED';end if;
+ raise notice 'PASS [ADS-048/056] unopenable HTTPS :99999 cannot count a click';
+end $invalid_public_port$;
+reset role;
+
 do $reject_alias_no_event$
 begin
  if exists(select 1 from public.ad_view_tickets
