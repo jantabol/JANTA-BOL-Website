@@ -607,6 +607,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_video_storage_buckets_REVIEW_ONLY.sql
       - name: Negative SQL access proof to three video buckets; original B5 grants unchanged
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-video-buckets-rls-regression.sql
+      - name: Install isolated clean public COPY bucket and 3 restrictive no-client-write gates (disposable PG only)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_clean_public_bucket_REVIEW_ONLY.sql
+      - name: Prove existing B5+private policies unchanged and no browser/public client can write clean Storage
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-clean-public-storage-regression.sql
 
 
   b7-creative-two-stage-postgres:
