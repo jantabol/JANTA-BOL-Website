@@ -77,7 +77,7 @@ reset role;
 -- E2 synthetic DBA switches origin ON temporarily ONLY inside rollback.
 update private.b7_ad_clean_public_origin set enabled=true where singleton=true;
 do $verify_owner$
-declare v uuid;v_old uuid;approved public.ad_creatives%rowtype;
+declare v uuid;v_old uuid;approved_row public.ad_creatives%rowtype;
  poster text;verified_mp4 text;count_before int;count_after int;
 begin
  perform set_config('b7.test_owner','enabled',true);
@@ -86,17 +86,17 @@ begin
  select count(*) into count_before from public.ad_history
   where campaign_id='30000000-0000-0000-0000-000000000003'
    and event_type='creative_approved';
- approved:=public.jb_ad_approve_creative_internal(v);
+ approved_row:=public.jb_ad_approve_creative_internal(v);
  verified_mp4:='https://vrffsnkycvjithwtiylt.supabase.co'||
   '/storage/v1/object/public/jb-ad-clean-public/creative/'||
   v||'/99999999-9999-4999-8999-999999999999/'||repeat('b',64)||'.mp4';
  poster:='https://vrffsnkycvjithwtiylt.supabase.co'||
   '/storage/v1/object/public/jb-ad-clean-public/creative/'||
   v||'/99999999-9999-4999-8999-999999999999/'||repeat('c',64)||'.png';
- if approved.approved is distinct from true
-  or approved.approved_once is distinct from true
-  or approved.media_url is distinct from verified_mp4
-  or private.b7_verified_public_video_poster(v,approved.media_url)
+ if approved_row.approved is distinct from true
+  or approved_row.approved_once is distinct from true
+  or approved_row.media_url is distinct from verified_mp4
+  or private.b7_verified_public_video_poster(v,approved_row.media_url)
        is distinct from poster
  then raise exception 'OWNER_VIDEO_ATOMIC_POSTER_APPROVAL_INCORRECT';end if;
  if (select approved from public.ad_creatives where id=v_old)
