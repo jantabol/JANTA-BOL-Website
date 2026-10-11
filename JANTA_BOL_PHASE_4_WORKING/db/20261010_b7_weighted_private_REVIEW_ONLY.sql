@@ -21,6 +21,11 @@ as $safeurl$
     and p_value ~* '^https://[a-z0-9-]+(\.[a-z0-9-]+)+(:[0-9]{1,5})?([/?#][^[:space:]<>"'']*)?$'
     and split_part(split_part(p_value,'/',3),':',1)
       !~* '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'
+    -- WHATWG browsers interpret abbreviated, octal and hexadecimal IPv4
+    -- as address literals (e.g. 127.1 => 127.0.0.1). Reject numeric-only
+    -- labels instead of treating them as a normal public DNS name.
+    and split_part(split_part(p_value,'/',3),':',1)
+      !~* '^(0x[0-9a-f]+|[0-9]+)(\.(0x[0-9a-f]+|[0-9]+))*$'
     and split_part(split_part(p_value,'/',3),':',1)
       !~* '(^|\.)(localhost|local|internal)$'
 $safeurl$;
