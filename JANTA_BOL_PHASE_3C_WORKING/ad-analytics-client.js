@@ -39,9 +39,14 @@ async function prepare({element,articleId,campaignId,creativeId,ctaElement}={}){
      typeof ctaElement.addEventListener==='function'&&
      (typeof element.contains!=='function'||element.contains(ctaElement))){
    let clicked=false;
+   // Preserve the exact approved CTA destination and DOM attachment for this
+   // opening. A moved or mutated link is NOT a click on this displayed ad.
+   const approvedHref=String(ctaElement.href||'');
    ctaElement.addEventListener('click',event=>{
     if(clicked||event?.isTrusted!==true||event.defaultPrevented||
        element.isConnected===false||ctaElement.isConnected===false||
+       (typeof element.contains==='function'&&!element.contains(ctaElement))||
+       String(ctaElement.href||'')!==approvedHref||
        g.document?.visibilityState==='hidden')return;
     clicked=true;
     // No preventDefault/stopPropagation: News and real CTA work even if
