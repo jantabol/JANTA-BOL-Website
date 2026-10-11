@@ -185,6 +185,31 @@ begin
     then v_bad_public_ad_guard:=v_bad_public_ad_guard+1;end if;
   end if;
 
+  -- B7 ADS-015/034/048: Article and Homepage MUST use one reviewed
+  -- private URL safety function when staged media/link helpers are installed.
+  -- Old LIVE installs without this candidate keep their baseline contract.
+  if to_regprocedure('private.b7_safe_public_ad_https(text)') is not null then
+    if has_function_privilege('anon',
+          'private.b7_safe_public_ad_https(text)'::regprocedure,'EXECUTE')
+      or has_function_privilege('authenticated',
+          'private.b7_safe_public_ad_https(text)'::regprocedure,'EXECUTE')
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='private' and p.proname='b7_safe_public_ad_https'
+          and p.provolatile='i' and not p.prosecdef
+          and p.prosrc ilike '%localhost%'
+          and p.prosrc ilike '%internal%'
+          and p.prosrc ilike '%0x[0-9a-f]%')
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='private' and p.proname='b7_eligible_article_creatives'
+          and p.prosrc ilike '%b7_safe_public_ad_https(cr.media_url)%'
+          and p.prosrc ilike '%b7_safe_public_ad_https(cr.cta_target)%')
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public' and p.proname='jb_ad_public_feed'
+          and p.prosrc ilike '%b7_safe_public_ad_https(cr.media_url)%'
+          and p.prosrc ilike '%b7_safe_public_ad_https(cr.cta_target)%')
+    then v_bad_public_ad_guard:=v_bad_public_ad_guard+1;end if;
+  end if;
+
   -- ADS-002: conditional until migration is deployed. Once present, this exact
   -- anon API is reviewed for explicit consent and no other legacy public intake.
   -- Keep prior T123 checks, never whitelist unknown jb_* signatures.
