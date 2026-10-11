@@ -85,6 +85,21 @@ jobs:
           deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-private-image-job.ts
           deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts ci/phase4/b7-ad-media-gateway.test.ts ci/phase4/b7-ad-owner-auth.test.ts ci/phase4/b7-private-image-job.test.ts
 
+  b7-video-server-codec-candidate:
+    name: B7 real H264 AAC FFmpeg and sanitized PNG poster isolated worker E2 (not deployed)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install deterministic FFmpeg codec toolchain, no Production use
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y ffmpeg
+          ffmpeg -hide_banner -encoders | grep -q libx264
+      - name: Syntax and REAL video decode-encode-poster with spoofed/invalid inputs
+        run: |
+          node --check CODEX_CURRENT_SUPABASE/functions/_shared/b7-video-sanitize.mjs
+          node --test ci/phase4/b7-video-sanitize.test.mjs
+
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
     runs-on: ubuntu-latest
