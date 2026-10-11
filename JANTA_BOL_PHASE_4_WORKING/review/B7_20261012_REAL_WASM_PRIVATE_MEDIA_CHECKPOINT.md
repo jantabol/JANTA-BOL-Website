@@ -1,6 +1,6 @@
 # B7 ADS-010/011/015 — REAL WASM PHOTO PROTOTYPE / MINIMUM-SAFE CONTINUATION
 SOURCE SHA: `9b6ace69080b691a9a26b1d73bac52e337288323`
-DATE: 12 OCT 2026 working checkpoint
+DATE: 11 OCT 2026 — current engineering continuation; filename retains planned 12-Oct handoff tag
 STATUS: REVIEW-ONLY; NO DEPLOYMENT; NO APPROVED AD; NO B7 FINAL TEST PASS.
 
 ## Exact code and authority
