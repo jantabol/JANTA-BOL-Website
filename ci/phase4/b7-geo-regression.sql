@@ -294,6 +294,24 @@ begin
  raise notice 'PASS [G3/ADS-014/028] % synthetic positive/negative Article-identity geo matches',count_test;
 end $geo_matrix$;
 
+-- Verified location may go stale after an ordinary newsroom edit to
+-- Article.district (not an ad_geo_* column). Feed MUST fail closed rather
+-- than silently deliver a paid local campaign in the wrong district.
+do $newsroom_geo_drift$
+declare v_article uuid:='10000000-0000-0000-0000-000000000001';
+        v_campaign uuid:='20000000-0000-0000-0000-000000000002';
+begin
+ if not private.b7_geo_matches_article(v_article,v_campaign)
+ then raise exception 'EXPECTED_INITIAL_SHIVPURI_ELIGIBILITY';end if;
+ update public.articles set district='Gwalior' where id=v_article;
+ if private.b7_geo_matches_article(v_article,v_campaign)
+ then raise exception 'B7_STALE_GEO_AFTER_NEWSROOM_DISTRICT_EDIT';end if;
+ update public.articles set district='Shivpuri' where id=v_article;
+ if not private.b7_geo_matches_article(v_article,v_campaign)
+ then raise exception 'B7_VERIFIED_GEO_NOT_RESTORED_AFTER_NEWSROOM_CORRECTION';end if;
+ raise notice 'PASS [G3/ADS-014/028] newsroom district drift blocks old verified paid local match; consistent restore works';
+end $newsroom_geo_drift$;
+
 -- Untrusted callers must not be permitted to invoke/alter private matcher
 -- or read commercial grant sources directly.
 select set_config('b7.test_owner','',true);
