@@ -62,7 +62,8 @@ test('Unauthenticated or stale approved, wrong source creative is denied BEFORE 
 });
 test('Owner session revoked after upload triggers durable orphan event, NO receipt',async()=>{
  let count=0;
- const f=await fixture({authorize:async()=>++count<4});
+ // Exact call trace: initial auth #1, stage auth #2, POST-STORAGE auth #3.
+ const f=await fixture({authorize:async()=>++count<3});
  await assert.rejects(linkB7VerifiedPrivateMedia(f.input,f.data),/PRIVATE_EVIDENCE_NOT_COMPLETE/);
  assert.equal(f.records.size,0);assert.equal(f.events.length,1);assert.equal(f.objects.size,2);
 });
