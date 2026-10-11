@@ -599,6 +599,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_private_storage_bucket_REVIEW_ONLY.sql
       - name: B7 same B5 owner/editorial policies, no direct B7 access, broad permissive cannot bypass restrictive
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-private-storage-bucket-regression.sql
+      - name: Install 3 isolated video original/transcode/poster PRIVATE buckets and restrictive gate (disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_video_storage_buckets_REVIEW_ONLY.sql
+      - name: Negative SQL access proof to three video buckets; original B5 grants unchanged
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-video-buckets-rls-regression.sql
 
 
   b7-creative-two-stage-postgres:
