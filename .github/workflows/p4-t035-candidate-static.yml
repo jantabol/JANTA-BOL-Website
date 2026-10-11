@@ -55,6 +55,8 @@ jobs:
         run: node --test ci/phase4/b7-media-coordinator.test.mjs
       - name: B7 canonical Creative and restricted media RPC server adapter - no public URLs
         run: node --test ci/phase4/b7-media-server-evidence.test.mjs
+      - name: B7 explicit Owner clean-media public release candidate, no Creative approval or raw file leakage
+        run: node --test ci/phase4/b7-public-release-worker.test.mjs
       - name: B7 ADS-056 client privileged-secret exposure E1 scan — secrets never printed
         run: |
           node ci/phase4/b7-public-secret-scan.cjs
