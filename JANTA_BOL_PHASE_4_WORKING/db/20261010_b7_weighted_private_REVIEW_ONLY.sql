@@ -7,6 +7,26 @@
 -- Supersedes (does not apply) review/b7_t037_weighted_feed_REVIEW_ONLY.sql,
 -- whose free-text caller p_scope cannot be authoritative Article geography.
 begin;
+-- One private, side-effect-free HTTPS policy for BOTH Article and Homepage
+-- public projections. Legacy approved links remain untrusted. This is NOT
+-- proof of sanitized bytes, redirects, codec, derivative or EXIF removal.
+create or replace function private.b7_safe_public_ad_https(p_value text)
+returns boolean language sql immutable security invoker
+set search_path to 'pg_catalog'
+as $safeurl$
+ select p_value is not null
+    and length(p_value) between 12 and 2000
+    and btrim(p_value)=p_value
+    and position(chr(92) in p_value)=0
+    and p_value ~* '^https://[a-z0-9-]+(\.[a-z0-9-]+)+(:[0-9]{1,5})?([/?#][^[:space:]<>"'']*)?$'
+    and split_part(split_part(p_value,'/',3),':',1)
+      !~* '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'
+    and split_part(split_part(p_value,'/',3),':',1)
+      !~* '(^|\.)(localhost|local|internal)$'
+$safeurl$;
+revoke all on function private.b7_safe_public_ad_https(text)
+ from public,anon,authenticated;
+
 -- Eligible creative pool: one private authority for weighted selection and
 -- protected qualified-view tickets; never duplicate the payment/geo rules.
 create or replace function private.b7_eligible_article_creatives(
@@ -63,23 +83,12 @@ as $eligible$
       (cr.creative_type='text' and
         length(btrim(coalesce(cr.text_body,'')))>0)
       or (cr.creative_type in ('image','video') and
-        cr.media_url ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-        and cr.media_url !~ '[<>"''\\]'
-        -- An older legacy "approved" URL may bypass the new explicit
-        -- Owner draft-review validator. Fail closed at the SAME private
-        -- eligibility source before exposing the media URL to the public.
-        and split_part(split_part(cr.media_url,'/',3),':',1)
-           ~* '^[a-z0-9-]+(\.[a-z0-9-]+)+$'
-        and split_part(split_part(cr.media_url,'/',3),':',1)
-           !~* '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'
-        and split_part(split_part(cr.media_url,'/',3),':',1)
-           !~* '(^|\.)(localhost|local|internal)$')
+        private.b7_safe_public_ad_https(cr.media_url))
     )
     and (
       cr.cta_type is null
       or (cr.cta_type in('website','map') and
-          cr.cta_target ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-          and cr.cta_target !~ '[<>"''\\]')
+          private.b7_safe_public_ad_https(cr.cta_target))
       or (cr.cta_type in('call','whatsapp') and
           cr.cta_target ~ '^\+?[0-9][0-9 ()-]{5,19}$')
     )
