@@ -667,3 +667,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_clean_public_release_evidence_REVIEW_ONLY.sql
       - name: B7 clean release negative security/approval proof E2 SQL, original Creative remains pending
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-clean-release-evidence-regression.sql
+      - name: B7 original Owner creative approval RPC for CLEAN first-party images (OFF by default, disposable only)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_owner_clean_image_approval_REVIEW_ONLY.sql
+      - name: B7 Owner AAL2 media provenance, legacy active preservation, idempotent image approval; video poster hold
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-owner-clean-image-approval-regression.sql
