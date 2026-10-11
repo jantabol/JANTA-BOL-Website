@@ -240,3 +240,9 @@ For every block:
 - Exact E1/isolated E2: `ci/phase4/b7-creative-two-stage-regression.sql`, `b7-creative-legacy-divergence.sql`, `b7-client-regression.cjs`, `b7-media-preview-regression.cjs`, additive `b7-creative-two-stage-postgres` Candidate job. Protected T123 conditionally checks Owner grant and two-stage source when capability is installed; all older News/Ads checks retained.
 - **Production release dependencies:** B7 privacy `b5_private_gateway_only` RLS incident unresolved, backend first-party media processor mandatory, production-like staging parity, full Android/Owner E3/E5 signoff, official LGD. Final ZIP BLOCKED.
 
+
+## B7 Storage RLS source authority correction (Independent RCA checkpoint)
+- Actual LIVE `pg_policy.polpermissive=false` for `storage.objects.b5_private_gateway_only`: **RESTRICTIVE**, AND-constrained with permissive Owner policies, never a standalone anonymous GRANT. The original staged script to drop it was wrong; now neutralized as read-only zero-DDL audit with ROLLBACK.
+- `ci/phase4/b7-storage-rls-fixture.sql`: original B5 `AS RESTRICTIVE`; `...before-regression.sql` proves anonymously zero SQL visible objects and no insert, plus **hypothetical only** transaction-switch to PERMISSIVE showing the logical distinction, rollback. `...after-regression.sql` verifies original B5 remains, no new public SQL access, AAL1 denial, original Owner media writes/read and Grievance guard. New Candidate workflow job description explicitly states RESTRICTIVE, not incident reproduction. Existing jobs all preserved.
+- Exact independent audit: `review/B7_STORAGE_POLICY_INDEPENDENT_RCA_CORRECTION_20261012.md`. Original critical hold prefaced with superseding correction; no silent historical erasure. Public-media bucket HTTP read is a separate Storage API/CDN behavior, not direct SQL SELECT. Future sensitive Production authorization remains mandatory.
+

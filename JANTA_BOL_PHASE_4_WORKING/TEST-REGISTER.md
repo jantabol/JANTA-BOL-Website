@@ -540,3 +540,12 @@ Execution branch: `codex/b7-blueprint-20261010`, directly based on `777341a37e73
 - **Critical Storage Policy:** read-only LIVE still has `b5_private_gateway_only` broad permissive anonymous/authenticated ALL for non-grievance objects. `ADS-015/054/056` security incident is OPEN / NOT DEPLOYED. DO NOT use Owner local preview as excuse to publish/upload an ad or claim secure private asset storage. Actual recovery requires Founder production authorization and staging role-negative proof.
 - For full B7 the official 55 MP districts+tehsil catalogue, media server worker, controlled paired deployment, Android E3, Owner E5, provider E6 where needed, complete source E7 and 9/9 canonical proof remain due. No B8.
 
+
+## B7 P4-T041 / ADS-054/056 — independent Storage RLS source correction (review checkpoint)
+
+**Final status: IN PROGRESS, NOT PASS/LOCK.** A previous checkpoint mistakenly described `b5_private_gateway_only` as PERMISSIVE and claimed anonymous access to private-editorial media. Independent **LIVE read-only** verification of `pg_policies.permissive` and `pg_policy.polpermissive` instead established it is **RESTRICTIVE (false)**. Because RESTRICTIVE policies cannot independently grant access, the prior alleged Storage data exposure was **not demonstrated**. The old Candidate test incorrectly built a PERMISSIVE synthetic policy.
+
+Minimum safe fix: `db/20261010_b7_storage_rls_critical_REVIEW_ONLY.sql` no longer drops B5 or adds an anonymous policy; it is a zero-DDL/zero-DML audit with ROLLBACK that verifies exactly the restrictive B5 and Owner/AAL2 policy matrix. The old broad-policy-drop candidate MUST NOT BE DEPLOYED. `ci/phase4/b7-storage-rls-fixture.sql` now mirrors RESTRICTIVE; baseline E2 denies anon SQL SELECT/UPDATE/INSERT. A separate transaction tests the **counterfactual** PERMISSIVE exploit then rolls it back, while the preservation E2 proves Owner/AAL2 editorial read and News image upload/write/delete still work with B5 grievance guard intact. The original critical report is preserved with a prominent correction, not silently deleted. Independent RCA: `review/B7_STORAGE_POLICY_INDEPENDENT_RCA_CORRECTION_20261012.md`.
+
+**Still due:** actual hosted anonymous/AAL1 Storage API deny test, public bucket HTTP delivery, signed URLs, Owner Android upload and B5 Grievance gateway E3/E5; live Production untouched. Final 9/9 B7 tests remain DUE and ZIP BLOCKED. No incident, remediation or PASS is claimed without external evidence.
+

@@ -251,3 +251,9 @@ Protected workflow run #246 completed:
 - New isolated SQL and Node tests; additive 16th Candidate PostgreSQL job; kept all original protected tests. SQL patch interpolation RCA led to temporary RED, then intact source reconstruction (commit `3e7b91a7`) and complete Candidate 38108342059 GREEN **16/16**. Later commits require same-HEAD Candidate + protected GREEN.
 - No Production changes, no PR merge, no final zip. Current B7 ~80% previous subjective estimate may change after full dependency review. Canonical final 0/9 PASS+LOCK. NO FAKE PASS, NEWS FIRST.
 
+
+## B7 independent RLS RCA correction — no Production migration
+- Discovered serious *assessment bug*: `b5_private_gateway_only` was labeled PERMISSIVE despite LIVE `pg_policy.polpermissive=false`. The previous synthetic model deliberately granted broader anonymous access because its policy `AS PERMISSIVE` did not match LIVE. No evidence was obtained of the claimed deployed anonymous exposure.
+- Replaced potentially unsafe review SQL that dropped the live B5 restriction with a **zero-DDL audit**; edited fixture and positive/negative RLS checks to validate actual restrictive semantics, original Owner upload, Grievance gateway barrier and denial to anon/AAL1. Hypothetical permissive policy demonstrated only under transaction ROLLBACK. Workflow job title corrected; all old CI jobs retained.
+- Historical false-positive report is preserved with a prominent superseding note and a new independent RCA document. Never claim production vulnerability/remediation, PASS or incident closure from incorrect or synthetic evidence. P4-T041 IN PROGRESS, final ZIP BLOCKED. E3/E5 and external public CDN tests pending.
+
