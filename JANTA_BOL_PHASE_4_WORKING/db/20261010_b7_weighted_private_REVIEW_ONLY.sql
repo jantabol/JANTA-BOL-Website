@@ -19,6 +19,13 @@ as $safeurl$
     and btrim(p_value)=p_value
     and position(chr(92) in p_value)=0
     and p_value ~* '^https://[a-z0-9-]+(\.[a-z0-9-]+)+(:[0-9]{1,5})?([/?#][^[:space:]<>"'']*)?$'
+    -- URL/WHATWG rejects out-of-range HTTPS ports. A legacy backend URL
+    -- must not count clicks for :65536/:99999 that the browser cannot open.
+    and coalesce(
+      (substring(p_value from '^https://[^/?#]+:([0-9]{1,5})'))::integer
+         between 1 and 65535,
+      true
+    )
     and split_part(split_part(p_value,'/',3),':',1)
       !~* '^[0-9]{1,3}(\.[0-9]{1,3}){3}$'
     -- WHATWG browsers interpret abbreviated, octal and hexadecimal IPv4
