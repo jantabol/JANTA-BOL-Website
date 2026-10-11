@@ -64,7 +64,16 @@ as $eligible$
         length(btrim(coalesce(cr.text_body,'')))>0)
       or (cr.creative_type in ('image','video') and
         cr.media_url ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-        and cr.media_url !~ '[<>"''\\]')
+        and cr.media_url !~ '[<>"''\\]'
+        -- An older legacy "approved" URL may bypass the new explicit
+        -- Owner draft-review validator. Fail closed at the SAME private
+        -- eligibility source before exposing the media URL to the public.
+        and split_part(split_part(cr.media_url,'/',3),':',1)
+           ~* '^[a-z0-9-]+(\\.[a-z0-9-]+)+$'
+        and split_part(split_part(cr.media_url,'/',3),':',1)
+           !~* '^[0-9]{1,3}(\\.[0-9]{1,3}){3}$'
+        and split_part(split_part(cr.media_url,'/',3),':',1)
+           !~* '(^|\\.)(localhost|local|internal)$')
     )
     and (
       cr.cta_type is null
