@@ -1,0 +1,75 @@
+/* JANTA BOL B7 / ADS-010,011,015 — Founder LOCAL ONLY media preview.
+ * NO upload, no new server Storage API, no approval, no analytics, no EXIF
+ * claims. Server-side AV/codec/image-dimension/EXIF/GPS validation is
+ * mandatory before media can be approved. REVIEW/preview stage only.
+ */
+(function(g){'use strict';
+const max=52428800; // Exact inspected public-media bucket per-file 50MiB cap.
+const objects=new WeakMap();
+const ascii=a=>Array.from(a).map(n=>String.fromCharCode(n)).join('');
+function signature(a){
+ if(a.length>=3&&a[0]===255&&a[1]===216&&a[2]===255)return 'jpeg';
+ if(a.length>=8&&a.slice(0,8).every((x,i)=>x===[137,80,78,71,13,10,26,10][i]))return 'png';
+ if(a.length>=12&&ascii(a.slice(0,4))==='RIFF'&&ascii(a.slice(8,12))==='WEBP')return 'webp';
+ if(a.length>=12&&ascii(a.slice(4,8))==='ftyp')return 'mp4';
+ return '';
+}
+const map={
+ jpeg:{kind:'image',mime:'image/jpeg',ext:['jpg','jpeg']},
+ png:{kind:'image',mime:'image/png',ext:['png']},
+ webp:{kind:'image',mime:'image/webp',ext:['webp']},
+ mp4:{kind:'video',mime:'video/mp4',ext:['mp4']}
+};
+async function inspect(file){
+ if(!file||typeof file.size!=='number'||!Number.isFinite(file.size)||
+    file.size<=0||file.size>max||
+    typeof file.slice!=='function')throw Error('AD_MEDIA_FILE_SIZE_OR_INPUT_INVALID');
+ const bytes=new Uint8Array(await file.slice(0,32).arrayBuffer());
+ const format=signature(bytes),info=map[format],extension=String(file.name||'')
+   .trim().toLowerCase().split('.').pop(),mime=String(file.type||'').toLowerCase();
+ if(!info||!info.ext.includes(extension)||mime!==info.mime)
+  throw Error('AD_MEDIA_MIME_OR_MAGIC_SIGNATURE_MISMATCH');
+ return {format,kind:info.kind,mime:info.mime,size:file.size,
+   status:'LOCAL_PREVIEW_ONLY_NOT_UPLOADED_OR_APPROVED',
+   warning:'Server byte/codec/dimension validation, EXIF/GPS stripping, poster and Owner approval still required'};
+}
+function dispose(container){
+ const old=objects.get(container);
+ if(old&&g.URL?.revokeObjectURL){try{g.URL.revokeObjectURL(old)}catch(_){}}
+ objects.delete(container);
+ if(container&&typeof container.replaceChildren==='function')container.replaceChildren();
+}
+async function stage(container,file){
+ if(!container||!g.document||!g.URL?.createObjectURL)
+  throw Error('MEDIA_PREVIEW_NOT_SUPPORTED');
+ const info=await inspect(file);
+ dispose(container);
+ const tag=info.kind==='image'?'img':'video',media=g.document.createElement(tag);
+ media.setAttribute('aria-label','विज्ञापन media local preview — not approved');
+ media.style.maxWidth='100%';media.style.width='100%';
+ media.style.maxHeight='320px';media.style.objectFit='contain';
+ media.style.background='#e8e8e8';
+ media.style.height='auto';
+ media.setAttribute('playsinline','');
+ if(tag==='video'){
+  media.controls=true;media.autoplay=false;media.muted=true;
+  media.preload='metadata';
+ }else media.setAttribute('loading','lazy');
+ const label=g.document.createElement('p');
+ label.textContent='LOCAL PREVIEW ONLY — File नहीं भेजी गई, Approved नहीं है. '+
+   info.warning+'; Whole photo visible (contain), no crop.';
+ let url='';
+ try{
+  url=g.URL.createObjectURL(file);
+  if(!url)throw Error('AD_MEDIA_LOCAL_PREVIEW_URL_NOT_READY');
+  media.src=url;
+  objects.set(container,url);
+  container.append(media,label);
+ }catch(e){
+  if(url&&g.URL?.revokeObjectURL)g.URL.revokeObjectURL(url);
+  throw e;
+ }
+ return info;
+}
+g.JBAdMediaPreview=Object.freeze({inspect,signature,stage,dispose});
+})(window);
