@@ -16,7 +16,9 @@ const fixture=async()=> {
   await run('ffmpeg',['-hide_banner','-loglevel','error','-y',
    '-f','lavfi','-i','testsrc2=size=720x400:rate=12',
    '-f','lavfi','-i','sine=frequency=520:sample_rate=44100',
-   '-t','1','-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p',
+   '-t','1','-metadata','comment=GPS SECRET private coordinates',
+   '-metadata','location=+18.52+73.85/',
+   '-c:v','libx264','-preset','ultrafast','-pix_fmt','yuv420p',
    '-threads','1','-c:a','aac','-b:a','64k',f],{timeout:30000});
   return new Uint8Array(await readFile(f));
  }finally{await rm(dir,{recursive:true,force:true})}
@@ -31,6 +33,8 @@ test('ACTUAL ffmpeg input MP4 H264/AAC -> stripped MP4 H264/AAC + real PNG poste
  assert.equal(output.original.audioCodec,'aac');
  assert.equal(output.derived.codec,'h264');
  assert.equal(output.derived.audioCodec,'aac');
+ assert.equal(output.derived.width,720);
+ assert.equal(output.derived.height,400);
  assert.equal(output.derived.width,720);assert.equal(output.derived.height,400);
  assert(output.privateCleanMp4.length>1024);
  assert.deepEqual(Array.from(output.privatePosterPng.subarray(0,8)),

@@ -39,7 +39,7 @@ async function tool(bin,args,timeout=30000){
 async function probe(path){
  const out=await tool('ffprobe',[
  '-v','error','-show_entries',
- 'stream=index,codec_type,codec_name,width,height,channels:format=format_name,duration',
+ 'stream=index,codec_type,codec_name,width,height,channels:format=format_name,duration:format_tags',
  '-of','json','-i',path],15000);
  try{return JSON.parse(out)}catch{fail('INVALID_FFPROBE_OUTPUT')}
 }
@@ -47,7 +47,10 @@ function verifyStreams(info,policy,output=false){
  if(!info||!Array.isArray(info.streams)||
     typeof info.format?.duration!=='string')fail('UNVERIFIED_MP4_STREAM');
  const format=String(info.format.format_name||'').split(',');
- if(!format.includes('mp4')&&!format.includes('mov'))fail('UNSUPPORTED_CONTAINER');
+ if(!format.includes('mp4'))fail('UNSUPPORTED_CONTAINER');
+ const major=String(info.format.tags?.major_brand||'').trim();
+ if(!['isom','iso2','iso4','iso5','iso6','mp41','mp42','avc1','M4V'].includes(major))
+  fail('UNSUPPORTED_MOV_OR_MP4_BRAND');
  const streams=info.streams;
  const videos=streams.filter(x=>x.codec_type==='video');
  const audios=streams.filter(x=>x.codec_type==='audio');
@@ -104,7 +107,11 @@ export async function sanitizeB7PrivateVideo({
    fail('DERIVED_VIDEO_CAPACITY_LIMIT');
   const cleanVideo=await readFile(dest);
   if(cleanVideo.length<1024)fail('EMPTY_ENCODED_VIDEO');
-  const outputProof=verifyStreams(await probe(dest),policy,true);
+  const derivedProbe=await probe(dest);
+  const outputProof=verifyStreams(derivedProbe,policy,true);
+  const normalizedTags=JSON.stringify(derivedProbe.format?.tags||{}).toLowerCase();
+  if(/location|gps|latitude|longitude|comment|artist|copyright/.test(normalizedTags))
+   fail('PRIVACY_METADATA_SURVIVED_TRANSCODE');
   // Poster must be an actual decoded frame, never a user-provided URL.
   await tool('ffmpeg',['-hide_banner','-loglevel','error','-nostdin',
    '-y','-threads','1','-i',dest,'-map','0:v:0',
