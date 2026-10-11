@@ -38,12 +38,32 @@
 <div id="adNotificationIssues" role="status" aria-live="polite"></div>
 </details></section>
 <div id="rows"></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261010-b7-manualpay"></script><script src="admin-auth.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261012-b7-creativedraft"></script><script src="ad-media-preview.js"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 let packageList=[];
-async function load(){try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
+const activeAdMediaPreviews=new Set();
+async function previewLocalMedia(id){
+ const box=document.getElementById('adfilepreview-'+id);
+ const file=document.getElementById('adfile-'+id)?.files?.[0];
+ if(!box)return;
+ try{
+  if(!file)throw Error('SELECT_LOCAL_MEDIA_FILE_FIRST');
+  // File remains in this browser ONLY. Not uploaded, not approved,
+  // never substitutes for the source server-side codec/EXIF/MIME worker.
+  await JBAdMediaPreview.stage(box,file);
+  activeAdMediaPreviews.add(box);
+ }catch(e){box.textContent='Local preview blocked: '+String(e.message||'invalid media');}
+}
+if(typeof window.addEventListener==='function')
+ window.addEventListener('pagehide',()=>{
+  for(const box of activeAdMediaPreviews)JBAdMediaPreview.dispose(box);
+  activeAdMediaPreviews.clear();
+ });
+async function load(){
+ for(const box of activeAdMediaPreviews)JBAdMediaPreview.dispose(box);
+ activeAdMediaPreviews.clear();try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
 <p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Source: ${esc(x.enquiry_origin||'legacy/manual')} · Article context: ${esc(x.enquiry_article_id||'—')} · Submitted: ${esc(x.created_at||'')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
 <div class="row"><select id="vstate-${x.id}"><option value="">Verification decision</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="pending">Pending / recheck</option></select><input id="vnote-${x.id}" maxlength="1000" placeholder="Verification note (min 8 characters)"><input id="vref-${x.id}" maxlength="300" placeholder="High-risk: independent evidence reference"><button class="btn" onclick="verifyAdvertiser('${x.id}','${x.advertiser_id}')">Record verification (Owner/AAL2)</button></div>
@@ -57,7 +77,10 @@ async function load(){try{const a=await JBPhase4.adRows();document.getElementByI
 <div class="row"><button class="btn" type="button" onclick="qualifiedStats('${x.id}')">View estimated ad analytics (Owner)</button></div>
 <div id="qualified-stats-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
 <p class="meta">Paid views and CTA clicks are client-reported estimates; NOT unique people or independently verified bot-free reach. Historical raw events remain separate.</p>
-<details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL"><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
+<details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL (pending server verification)">
+<input id="adfile-${x.id}" type="file" accept="image/jpeg,image/png,image/webp,video/mp4" aria-label="Local advertisement image or video preview only">
+<button class="btn" type="button" onclick="previewLocalMedia('${x.id}')">Local File Preview — NO UPLOAD</button>
+<div id="adfilepreview-${x.id}" class="meta" role="status" aria-live="polite"></div><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
 <button class="btn" onclick="approveLatestDraft('${x.id}')">Review latest draft → Explicit APPROVE</button>
 <p class="meta">पुराना LIVE Advertisement नई Draft Save करने से नहीं हटेगा। Image/Video approval server media verification के बाद ही होगा। अगर Backend अभी upgrade नहीं हुआ है तो SAVE सुरक्षा के लिए बंद रहेगा।</p>
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
