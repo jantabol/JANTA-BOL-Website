@@ -612,3 +612,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_creative_draft_approval_REVIEW_ONLY.sql
       - name: Reject unsafe text/media/CTA, unsafe AAL1, stale approval and protect current approved creative
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-creative-two-stage-regression.sql
+      - name: Install REVIEW-ONLY private media evidence append-only table (disposable postgres)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_media_immutable_evidence_REVIEW_ONLY.sql
+      - name: E2 private media receipt validation; anon denial, service_role immutability and NO premature approval
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-media-evidence-regression.sql
