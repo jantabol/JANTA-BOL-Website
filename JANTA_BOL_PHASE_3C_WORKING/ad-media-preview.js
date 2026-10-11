@@ -12,7 +12,11 @@ function signature(a){
  if(a.length>=3&&a[0]===255&&a[1]===216&&a[2]===255)return 'jpeg';
  if(a.length>=8&&a.slice(0,8).every((x,i)=>x===[137,80,78,71,13,10,26,10][i]))return 'png';
  if(a.length>=12&&ascii(a.slice(0,4))==='RIFF'&&ascii(a.slice(8,12))==='WEBP')return 'webp';
- if(a.length>=12&&ascii(a.slice(4,8))==='ftyp')return 'mp4';
+ // ftyp alone is NOT proof of MP4: AVIF/HEIC/other ISO-BMFF files
+ // also have that box. This is local preflight only, not codec validation.
+ if(a.length>=12&&ascii(a.slice(4,8))==='ftyp'&&
+    ['isom','iso2','iso4','iso5','iso6','mp41','mp42','avc1','M4V ','dash']
+      .includes(ascii(a.slice(8,12))))return 'mp4';
  return '';
 }
 const map={
