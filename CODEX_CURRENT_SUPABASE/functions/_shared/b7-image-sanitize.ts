@@ -46,8 +46,15 @@ export async function buildPrivateAdImagePreview(
  const proof=inspectCleanPngContainer(sanitized);
  if(proof.width>1200||proof.height>1200)
    throw Error('B7_MEDIA_DERIVATIVE_DIMENSIONS_WRONG');
- const hash=async (x:Uint8Array)=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',x)))
-   .map(n=>n.toString(16).padStart(2,'0')).join('');
+ // INDEPENDENT RCA: Deno 2.9.7 requires WebCrypto BufferSource backed
+ // by ArrayBuffer, while typed Uint8Array defaults to ArrayBufferLike.
+ // An explicit, non-shared buffer copy is safe for original AND derivative.
+ const hash=async (x:Uint8Array)=>{
+  const buffer=new ArrayBuffer(x.byteLength);
+  new Uint8Array(buffer).set(x);
+  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',buffer));
+  return Array.from(digest,n=>n.toString(16).padStart(2,'0')).join('');
+ };
  return Object.freeze({
   privatePreviewPng:sanitized,
   sourceSha256:await hash(input),
