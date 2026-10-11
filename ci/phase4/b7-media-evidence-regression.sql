@@ -89,16 +89,16 @@ begin
   raise exception 'SERVICE_ROLE_MUTATED_MEDIA_RECEIPT';
  exception when others then
   get stacked diagnostics msg=message_text;
-  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
-  then raise exception 'IMMUTABLE_TRIGGER_BYPASS_UPDATE: %',msg;end if;
+  if msg<>'permission denied for table b7_ad_media_receipts'
+  then raise exception 'SERVICE_ROLE_UPDATE_PERMISSION_WEAKENED: %',msg;end if;
  end;
  begin
   delete from private.b7_ad_media_receipts where asset_id=id;
   raise exception 'SERVICE_ROLE_DELETED_MEDIA_RECEIPT';
  exception when others then
   get stacked diagnostics msg=message_text;
-  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
-  then raise exception 'IMMUTABLE_TRIGGER_BYPASS_DELETE: %',msg;end if;
+  if msg<>'permission denied for table b7_ad_media_receipts'
+  then raise exception 'SERVICE_ROLE_DELETE_PERMISSION_WEAKENED: %',msg;end if;
  end;
  insert into private.b7_ad_media_orphan_events(asset_id,stored_paths,failure_code)
  values(id,'[{"bucket":"jb-ad-originals-private","path":"pending"}]'::jsonb,
@@ -108,11 +108,54 @@ begin
   raise exception 'SERVICE_ROLE_DELETED_ORPHAN_AUDIT';
  exception when others then
   get stacked diagnostics msg=message_text;
-  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
-  then raise exception 'ORPHAN_APPEND_ONLY_BYPASS: %',msg;end if;
+  if msg<>'permission denied for table b7_ad_media_orphan_events'
+  then raise exception 'ORPHAN_DELETE_PERMISSION_WEAKENED: %',msg;end if;
  end;
  raise notice 'PASS [ADS-015] backend service_role may insert-only and read; cannot UPDATE/DELETE evidence or orphan audit';
 end $service$;
+reset role;
+-- IN THIS ROLLED-BACK E2 TRANSACTION ONLY: deliberately widen grants
+-- and RLS temporarily to prove APPEND-ONLY triggers remain effective
+-- even if future DBA migration erroneously grants extra DML.
+grant update,delete on private.b7_ad_media_receipts to service_role;
+grant update,delete on private.b7_ad_media_orphan_events to service_role;
+create policy b7_ci_only_update on private.b7_ad_media_receipts
+ for update to service_role using(true) with check(true);
+create policy b7_ci_only_delete on private.b7_ad_media_receipts
+ for delete to service_role using(true);
+create policy b7_ci_only_delete_orphans on private.b7_ad_media_orphan_events
+ for delete to service_role using(true);
+set local role service_role;
+do $trigger_probe$
+declare msg text;aid uuid:='66666666-6666-4666-8666-666666666666';
+begin
+ begin
+  update private.b7_ad_media_receipts
+   set approval_state='private_quarantined' where asset_id=aid;
+  raise exception 'TRIGGER_ALLOWED_RECEIPT_UPDATE';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
+  then raise exception 'DANGEROUS_UPDATE_TRIGGER_BYPASS: %',msg;end if;
+ end;
+ begin
+  delete from private.b7_ad_media_receipts where asset_id=aid;
+  raise exception 'TRIGGER_ALLOWED_RECEIPT_DELETE';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
+  then raise exception 'DANGEROUS_DELETE_TRIGGER_BYPASS: %',msg;end if;
+ end;
+ begin
+  delete from private.b7_ad_media_orphan_events where asset_id=aid;
+  raise exception 'TRIGGER_ALLOWED_ORPHAN_ERASURE';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_MEDIA_AUDIT_APPEND_ONLY'
+  then raise exception 'DANGEROUS_ORPHAN_TRIGGER_BYPASS: %',msg;end if;
+ end;
+ raise notice 'PASS [ADS-015] even hypothetical widened service_role DML/RLS cannot erase audit (transaction rollback)';
+end $trigger_probe$;
 reset role;
 do $final$
 begin
