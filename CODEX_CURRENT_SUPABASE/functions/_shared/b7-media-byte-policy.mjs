@@ -60,7 +60,7 @@ function png(b,derivative){
    fail('PNG_UNKNOWN_CRITICAL');
   if(!['IHDR','PLTE','tRNS','IDAT','IEND'].includes(type))metadata=true;
   if(derivative&&!['IHDR','PLTE','tRNS','IDAT','IEND'].includes(type))
-   fail('DERIVATIVE_HAS_ANCILLARY');
+   fail('DERIVATIVE_HAS_ANCILLARY_'+type);
   p=end;
   if(type==='IEND'){if(len!==0||p!==b.length)fail('PNG_TRAILING');done=true;break;}
  }
