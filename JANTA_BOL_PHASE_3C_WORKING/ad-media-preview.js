@@ -48,7 +48,14 @@ async function stage(container,file){
  // Latest request wins; an old decode MUST NOT replace current artwork.
  const request=(generations.get(container)||0)+1;
  generations.set(container,request);
- const info=await inspect(file);
+ let info;
+ try{info=await inspect(file)}
+ catch(e){
+  // An invalid CURRENT selection cannot leave the old thumbnail/URL alive.
+  // A failed STALE selection may not destroy a newer approved local preview.
+  if(generations.get(container)===request)dispose(container);
+  throw e;
+ }
  if(generations.get(container)!==request)
   return {...info,status:'SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE'};
  dispose(container);
