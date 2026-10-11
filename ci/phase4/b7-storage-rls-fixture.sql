@@ -27,9 +27,10 @@ grant select,insert,update,delete on storage.objects
  to anon,authenticated,service_role;
 alter table storage.objects enable row level security;
 
--- Reproduce exact LIVE policies read-only inspected on 2026-10-10.
+-- Exact LIVE polpermissive=false confirmed 2026-10-12 (RESTRICTIVE,
+-- not permissive). Keep source topology, do NOT fabricate a live breach.
 create policy b5_private_gateway_only on storage.objects
- as permissive for all to anon,authenticated
+ as restrictive for all to anon,authenticated
  using(bucket_id <> 'grievance-private')
  with check(bucket_id <> 'grievance-private');
 create policy owner_manage_private_editorial on storage.objects
