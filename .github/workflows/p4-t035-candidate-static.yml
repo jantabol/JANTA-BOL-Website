@@ -64,6 +64,19 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-analytics-client.js
           node --test ci/phase4/b7-analytics-client-regression.cjs
 
+  b7-media-wasm-preview:
+    name: B7 private media real WASM transcode - REVIEW ONLY, no upload or approval
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - name: Deno TS compile and real private WASM image processing; never Production
+        run: |
+          deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts
+          deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts
+
   anonymous-http:
     name: Production anonymous HTTP read-only contract (no writes)
     runs-on: ubuntu-latest
