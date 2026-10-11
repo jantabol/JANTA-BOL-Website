@@ -50,11 +50,18 @@ async function previewLocalMedia(id){
  if(!box)return;
  try{
   if(!file)throw Error('SELECT_LOCAL_MEDIA_FILE_FIRST');
-  // File remains in this browser ONLY. Not uploaded, not approved,
-  // never substitutes for the source server-side codec/EXIF/MIME worker.
-  await JBAdMediaPreview.stage(box,file);
+  // Register BEFORE the async file read. Pagehide/Owner reload must also
+  // invalidate previews which have not yet finished reading magic bytes.
   activeAdMediaPreviews.add(box);
- }catch(e){box.textContent='Local preview blocked: '+String(e.message||'invalid media');}
+  // LOCAL ONLY: never upload, approve, or bypass server codec/EXIF checks.
+  const outcome=await JBAdMediaPreview.stage(box,file);
+  if(outcome?.status==='SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE')return;
+ }catch(e){
+  // An older failed selection must not erase the currently selected file.
+  if(document.getElementById('adfile-'+id)?.files?.[0]===file &&
+      box.isConnected!==false)
+   box.textContent='Local preview blocked: '+String(e.message||'invalid media');
+ }
 }
 if(typeof window.addEventListener==='function')
  window.addEventListener('pagehide',()=>{
