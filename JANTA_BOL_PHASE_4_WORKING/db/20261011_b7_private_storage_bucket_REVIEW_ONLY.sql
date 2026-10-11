@@ -47,7 +47,7 @@ begin
   where schemaname='storage' and tablename='objects'
     and policyname='b7_private_stage_server_only'
     and permissive='RESTRICTIVE' and cmd='ALL'
-    and roles @> array['anon','authenticated'])
+    and roles @> array['anon','authenticated']::name[])
  then raise exception 'B7_STORAGE_DENY_POLICY_NOT_RESTRICTIVE';end if;
  if not exists(select 1 from pg_policies where schemaname='storage'
    and tablename='objects' and policyname='b5_private_gateway_only'
