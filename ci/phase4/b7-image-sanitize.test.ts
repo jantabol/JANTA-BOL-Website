@@ -112,3 +112,67 @@ Deno.test('Width limits fail closed before creating any responsive variants',asy
   image(600,400),'safe.png','image/png',[480,1400]),Error,
   'B7_MEDIA_WIDTH_VARIANTS_POLICY_INVALID');
 });
+
+
+Deno.test('REAL WASM GPS scrubbed image -> public release pending Owner approval (no autoapprove)',async()=>{
+ const {prepareB7PublicRelease,CLEAN_PUBLIC_BUCKET}=await import(
+  '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-public-release-worker.mjs');
+ const asset='44444444-4444-4444-8444-444444444444',
+  creativeId='22222222-2222-4222-8222-222222222222',
+  campaignId='33333333-3333-4333-8333-333333333333',
+  ownerId='11111111-1111-4111-8111-111111111111';
+ const withGps=pngAddText(image(800,450));
+ const sanitized=await buildPrivateAdImagePreview(withGps,'verified.png','image/png');
+ assertEquals(sanitized.sourceSha256===sanitized.derivativeSha256,false);
+ assertEquals(inspectCleanPngContainer(sanitized.privatePreviewPng).containsMetadata,false);
+ const privatePath='staged/'+asset+'/'+sanitized.derivativeSha256+'.png';
+ const publicObjects=new Map<string,Uint8Array>();
+ const input={
+  token:'owner-synthetic-token',
+  creativeId,assetId:asset,
+  approvalIntent:{action:'B7_EXPLICIT_MEDIA_RELEASE_V1',creativeId,
+   assetId:asset,version:2}
+ };
+ const receipt={
+  asset_id:asset,creative_id:creativeId,campaign_id:campaignId,
+  creative_version:2,owner_user_id:ownerId,
+  approval_state:'private_quarantined',
+  derivative_path:privatePath,derivative_sha256:sanitized.derivativeSha256
+ };
+ let stored:Record<string,unknown>|null=null;
+ const deps={
+  verifyOwner:async (_token:string)=>ownerId,
+  loadCreative:async (_id:string)=>({id:creativeId,campaign_id:campaignId,
+   creative_type:'image',approved:false,version:2,latest_version:2,
+   campaign_status:'requested'}),
+  loadReceipt:async (_asset:string)=>receipt,
+  readPrivate:async (bucket:string,path:string)=>
+   bucket==='jb-ad-previews-private'&&path===privatePath?
+     sanitized.privatePreviewPng:undefined,
+  checkPublicBucket:async (bucket:string)=>bucket===CLEAN_PUBLIC_BUCKET,
+  putPublicCreateOnly:async (bucket:string,path:string,bytes:Uint8Array)=>
+   {publicObjects.set(bucket+'/'+path,Uint8Array.from(bytes));return true;},
+  readPublic:async (bucket:string,path:string)=>publicObjects.get(bucket+'/'+path),
+  recordRelease:async (record:Record<string,unknown>)=>{
+   stored={...record};return true;},
+  readRelease:async (_asset:string)=>stored,
+  auditOrphan:async (_evt:unknown)=>true
+ };
+ const result=await prepareB7PublicRelease(input,deps);
+ assertEquals(result.approved,false);assertEquals(result.publishable,false);
+ assertEquals(result.status,'PUBLIC_ASSET_CANDIDATE_PENDING_ATOMIC_OWNER_APPROVAL');
+ assertEquals(publicObjects.size,1);
+ const clean=[...publicObjects.values()][0];
+ assertEquals(inspectCleanPngContainer(clean).containsMetadata,false);
+ assertEquals(inspectCleanPngContainer(clean).width,800);
+ assertEquals(JSON.stringify(result).includes('publicUrl'),false);
+ // Negative: unsafe original bytes are NOT interchangeable with the
+ // SHA attested first-party derivative. This must fail BEFORE public write.
+ publicObjects.clear();
+ const forged={
+  ...deps,readPrivate:async (_bucket:string,_path:string)=>withGps
+ };
+ await assertRejects(()=>prepareB7PublicRelease(input,forged),
+  Error,'PRIVATE_SANITIZED_DERIVATIVE_HASH_MISMATCH');
+ assertEquals(publicObjects.size,0);
+});
