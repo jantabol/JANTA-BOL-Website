@@ -179,6 +179,12 @@ jobs:
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-function-security-regression.sql 2>&1 | tee ci-results/db-function-security-regression.log
 
+      - name: B7 actual Storage RLS restrictiveness audit (read-only policy metadata)
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b7-storage-policy-source-audit.sql 2>&1 | tee ci-results/db-b7-storage-policy-source-audit.log
+
       - name: Run Phase 3A security lifecycle regression
         shell: bash
         run: |
