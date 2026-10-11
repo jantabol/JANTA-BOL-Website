@@ -53,6 +53,7 @@ returns trigger language plpgsql security definer
 set search_path to 'pg_catalog','public','private'
 as $guard$
 declare c public.ad_creatives%rowtype;last_version integer;img record;vid record;
+ v_media_suffix text;
 begin
  -- Lock order same as the ONLY existing Creative save/approve authority.
  perform 1 from public.ad_campaigns where id=new.campaign_id for update;
@@ -67,11 +68,13 @@ begin
  where campaign_id=new.campaign_id;
  if last_version is distinct from new.creative_version
  then raise exception 'B7_RELEASE_STALE_CREATIVE';end if;
- if new.media_path is distinct from 'creative/'||new.creative_id||'/'||
-   new.asset_id||'/'||new.media_sha256||
-   case when new.media_type='image' then '.png' else '.mp4' end or
-  (new.media_type='video' and new.poster_path is distinct from
-   'creative/'||new.creative_id||'/'||new.asset_id||'/'||new.poster_sha256||'.png')
+ v_media_suffix:=case when new.media_type='image' then '.png' else '.mp4' end;
+ if new.media_path is distinct from
+    ('creative/'||new.creative_id||'/'||new.asset_id||'/'||
+     new.media_sha256||v_media_suffix) or
+    (new.media_type='video' and new.poster_path is distinct from
+     ('creative/'||new.creative_id||'/'||new.asset_id||'/'||
+      new.poster_sha256||'.png'))
  then raise exception 'B7_RELEASE_PUBLIC_PATH_NOT_CANONICAL';end if;
  if new.verified_at<now()-interval '1 day' or
     new.verified_at>now()+interval '60 seconds'
