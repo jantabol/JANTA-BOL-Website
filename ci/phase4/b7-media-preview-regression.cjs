@@ -99,3 +99,52 @@ test('ADS-010 local preview keeps user-supplied file name OUT of DOM HTML (no XS
  assert.doesNotMatch(nodes[1].textContent,/<img/);
  assert.match(nodes[1].textContent,/LOCAL PREVIEW ONLY/);
 });
+
+
+test('ADS-010 two rapid Android file selections: newest preview wins despite old slow byte read',async()=>{
+ const {window,urls,revoked}=setup();
+ const nodes=[];
+ const box={replaceChildren(){nodes.length=0},append(...items){nodes.push(...items)}};
+ let finishOld;
+ const slow={
+  size:bytes.jpeg.length,name:'slow-old.jpg',type:'image/jpeg',
+  slice(){return {arrayBuffer:()=>new Promise(resolve=>{finishOld=resolve})}}
+ };
+ const old=window.JBAdMediaPreview.stage(box,slow);
+ assert.equal(typeof finishOld,'function');
+ const newest=await window.JBAdMediaPreview.stage(box,
+  makeFile(bytes.png,{name:'current-new.png',type:'image/png'}));
+ assert.equal(newest.format,'png');
+ assert.equal(nodes.length,2);
+ assert.equal(urls.length,1);
+ const actual=nodes[0].src;
+ finishOld(Uint8Array.from(bytes.jpeg).buffer);
+ const after=await old;
+ assert.equal(after.status,'SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE');
+ assert.equal(nodes.length,2,'a slow old file must not replace newer artwork');
+ assert.equal(nodes[0].src,actual);
+ assert.equal(urls.length,1,'a superseded file must not create a blob URL');
+ assert.deepEqual(revoked,[]);
+ window.JBAdMediaPreview.dispose(box);
+ assert.deepEqual(revoked,[actual],'latest valid blob remains revocable');
+});
+test('ADS-010 pagehide/reload dispose cancels an unresolved local preview and produces no URL',async()=>{
+ const {window,urls}=setup();
+ const nodes=[];
+ const box={replaceChildren(){nodes.length=0},append(...items){nodes.push(...items)}};
+ let finish;
+ const slow={
+  size:bytes.webp.length,name:'waiting.webp',type:'image/webp',
+  slice(){return {arrayBuffer:()=>new Promise(resolve=>{finish=resolve})}}
+ };
+ const pending=window.JBAdMediaPreview.stage(box,slow);
+ window.JBAdMediaPreview.dispose(box);
+ finish(Uint8Array.from(bytes.webp).buffer);
+ assert.equal((await pending).status,'SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE');
+ assert.equal(nodes.length,0);
+ assert.deepEqual(urls,[]);
+ const html=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ assert.match(html,/activeAdMediaPreviews\.add\(box\)/);
+ assert.match(html,/SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE/);
+ assert.match(html,/files\?\.\[0\]===file/,'older failed file cannot clobber current media selection');
+});
