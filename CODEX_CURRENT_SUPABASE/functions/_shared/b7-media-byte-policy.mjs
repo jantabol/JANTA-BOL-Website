@@ -25,6 +25,7 @@ const pngMagic=[137,80,78,71,13,10,26,10];
 function png(b,derivative){
  if(!pngMagic.every((x,i)=>b[i]===x))fail('PNG_SIGNATURE');
  let p=8,ihdr=false,idat=false,done=false,w=0,h=0,metadata=false;
+ let colorType=-1,bitDepth=-1,paletteSize=0,paletteSeen=false,transparencySeen=false;
  while(p<b.length){
   if(p+12>b.length)fail('PNG_TRUNCATED');
   const len=be(b,p),type=txt(b,p+4,4),end=p+len+12;
@@ -34,21 +35,36 @@ function png(b,derivative){
   if(!ihdr){
    if(type!=='IHDR'||len!==13)fail('PNG_IHDR');
    w=be(b,p+8);h=be(b,p+12);size(w,h);
-   if(b[p+16]!==8||![0,2,4,6].includes(b[p+17])||
-      b[p+18]!==0||b[p+19]!==0||b[p+20]!==0)fail('PNG_MODE');
+   bitDepth=b[p+16];colorType=b[p+17];
+   // Indexed PNGs use PLTE (actual pixel palette), not EXIF metadata.
+   // Magick-WASM legitimately chooses 1/2/4/8-bit indexed output.
+   const validMode=(colorType===3&&[1,2,4,8].includes(bitDepth))||
+     ([0,2,4,6].includes(colorType)&&bitDepth===8);
+   if(!validMode||b[p+18]!==0||b[p+19]!==0||b[p+20]!==0)
+     fail('PNG_MODE');
    ihdr=true;
   }else if(type==='IHDR')fail('PNG_DUP_IHDR');
+  if(type==='PLTE'){
+   if(paletteSeen||idat||colorType===0||colorType===4||
+      len===0||len>768||len%3!==0)fail('PNG_PALETTE_ORDER');
+   paletteSeen=true;paletteSize=len/3;
+   if(colorType===3&&paletteSize>2**bitDepth)fail('PNG_PALETTE_TOO_LARGE');
+  }
+  if(type==='tRNS'){
+   if(transparencySeen||idat||colorType!==3||!paletteSeen||
+      len===0||len>paletteSize)fail('PNG_TRANSPARENCY_SHAPE');
+   transparencySeen=true;
+  }
   if(type==='IDAT')idat=true;
-  if(type==='PLTE'&&idat)fail('PNG_PALETTE_ORDER');
   if(type[0]===type[0].toUpperCase()&&!['IHDR','IDAT','IEND','PLTE'].includes(type))
    fail('PNG_UNKNOWN_CRITICAL');
-  if(!['IHDR','IDAT','IEND'].includes(type))metadata=true;
-  if(derivative&&!['IHDR','IDAT','IEND'].includes(type))
+  if(!['IHDR','PLTE','tRNS','IDAT','IEND'].includes(type))metadata=true;
+  if(derivative&&!['IHDR','PLTE','tRNS','IDAT','IEND'].includes(type))
    fail('DERIVATIVE_HAS_ANCILLARY');
   p=end;
   if(type==='IEND'){if(len!==0||p!==b.length)fail('PNG_TRAILING');done=true;break;}
  }
- if(!done||!idat)fail('PNG_INCOMPLETE');
+ if(!done||!idat||(colorType===3&&!paletteSeen))fail('PNG_INCOMPLETE');
  return {format:'png',mime:'image/png',...size(w,h),containsMetadata:metadata};
 }
 function jpeg(b){
