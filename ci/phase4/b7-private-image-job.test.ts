@@ -98,6 +98,7 @@ function fakeInfra(settings:{revokeAt?:number;badBucket?:boolean;badReceipt?:boo
 Deno.test('FULL REAL WASM -> 2 private Supabase create-only blobs -> SQL receipt readback -> stays unapproved',async()=>{
  const f=fakeInfra();
  const r=await processB7PrivateImageJob(input(),f.env);
+ assert(r!==undefined,'real private worker MUST return a verified receipt');
  assertEquals(r.state,'VERIFIED_PRIVATE_EVIDENCE_ONLY');
  assertEquals(r.approved,false);assertEquals(r.publishable,false);
  assertEquals(f.stored.size,2);assertEquals(f.receipt.size,1);
@@ -121,6 +122,7 @@ Deno.test('Wrong browser ownerId is ignored; only Auth+AAL2 controls derived ide
  const f=fakeInfra();
  const forged=input({ownerId:'99999999-9999-4999-8999-999999999999'});
  const r=await processB7PrivateImageJob(forged,f.env);
+ assert(r!==undefined,'forged ownerId must never skip server Owner identity resolution');
  assertEquals(r.approved,false);
  assertEquals(([...f.receipt.values()][0] as Record<string,unknown>).owner_user_id,owner);
 });
