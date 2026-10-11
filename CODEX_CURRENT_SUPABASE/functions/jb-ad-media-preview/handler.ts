@@ -66,6 +66,9 @@ export async function handlePrivateAdMediaPreview(req:Request,{authorize,convert
  let raw;
  try{raw=await boundedPayload(req,MAX_IMAGE_MULTIPART_BYTES);}
  catch(_){return deny('INVALID_OR_TOO_LARGE_MULTIPART_BODY',413);}
+ // Source of truth is the actual bounded stream. Refuse forged smaller or
+ // larger Content-Length headers instead of parsing an ambiguous message.
+ if(raw.byteLength!==length)return deny('DECLARED_BODY_LENGTH_MISMATCH',400);
  let form;
  try{
   form=await new Request('https://internal.invalid/',{method:'POST',
