@@ -65,6 +65,10 @@ set search_path to 'pg_catalog','public','private'
 as $guard$
 declare v public.ad_creatives%rowtype;v_latest integer;
 begin
+ -- Match the EXISTING Creative save/approve lock ordering: Campaign FIRST.
+ -- A concurrent new draft/approval cannot race this latest-version guard.
+ perform 1 from public.ad_campaigns where id=new.campaign_id for update;
+ if not found then raise exception 'B7_MEDIA_CAMPAIGN_NOT_FOUND';end if;
  select * into v from public.ad_creatives where id=new.creative_id;
  if not found or v.campaign_id is distinct from new.campaign_id
     or v.creative_type<>'image' or v.approved

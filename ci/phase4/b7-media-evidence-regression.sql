@@ -1,6 +1,16 @@
 \set ON_ERROR_STOP on
 -- Disposable PostgreSQL 17 only. Synthetic hashes/IDs DO NOT prove file bytes.
 begin;
+do $verify_same_home_lock$
+declare src text;
+begin
+ select pg_get_functiondef('private.b7_ad_media_receipt_insert_guard()'::regprocedure)
+ into src;
+ if position('from public.ad_campaigns where id=new.campaign_id for update'
+  in lower(src))=0
+ then raise exception 'B7_MEDIA_LATEST_CHECK_MISSING_CAMPAIGN_SERIALIZATION';end if;
+ raise notice 'PASS [ADS-015] new media receipt uses canonical campaign FOR UPDATE, same as Creative save/approve';
+end $verify_same_home_lock$;
 do $create$
 declare v uuid;asset uuid:='66666666-6666-4666-8666-666666666666';
         r public.ad_creatives%rowtype;msg text;
