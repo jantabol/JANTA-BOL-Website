@@ -19,18 +19,12 @@ begin
    or source_text not like '%OWNER_AAL2_REQUIRED%'
  then raise exception 'B7_EXISTING_OWNER_APPROVAL_SOURCE_CHANGED';end if;
 end $guards$;
--- Deployment origin is a secure DBA-controlled setting, NOT a user
--- parameter, JWT claim or advertiser-submitted URL. Disabled by DEFAULT.
-create table private.b7_ad_clean_public_origin(
- singleton boolean primary key default true check(singleton),
- storage_origin text not null check(
-  storage_origin ~ '^https://[a-z0-9-]+[.]supabase[.]co$'),
- enabled boolean not null default false,
- created_at timestamptz not null default now()
-);
-alter table private.b7_ad_clean_public_origin enable row level security;
-revoke all on private.b7_ad_clean_public_origin
- from public,anon,authenticated,service_role;
+-- One canonical source for clean first-party origin: apply only
+-- 20261011_b7_clean_origin_SINGLE_HOME_REVIEW_ONLY.sql beforehand.
+do $origin$ begin
+ if to_regclass('private.b7_ad_clean_public_origin') is null
+ then raise exception 'B7_CLEAN_ORIGIN_SINGLE_HOME_MISSING';end if;
+end $origin$;
 -- No INSERT / enable operation is exposed through the Data API.
 create or replace function public.jb_ad_approve_creative_internal(
  p_creative uuid
