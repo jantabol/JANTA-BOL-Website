@@ -158,6 +158,69 @@ end $bad_creative$;
 delete from public.ad_creatives
 where id='40000000-0000-0000-0000-000000000009';
 
+-- One private HTTPS host validation contract serves Article and Homepage.
+-- Synthetic examples only; accepted CDN URL does NOT prove server media scan.
+do $safe_links$
+declare u text;n integer;
+begin
+ for u in select unnest(array[
+  'http://cdn.example.test/ad.png',
+  'https://127.0.0.1/personal.png',
+  'https://10.0.0.8/personal.png',
+  'https://media.internal/private.png',
+  'https://shop.local/ad.png',
+  'https://localhost/ad.png',
+  'https://intranet/ad.png',
+  'https://cdn.example.test/ad.png' || chr(92) || 'x',
+  'https://cdn.example.test:443@127.0.0.1/secret',
+  'https://cdn.example.test /ad.png'
+ ]) loop
+  if private.b7_safe_public_ad_https(u)
+  then raise exception 'UNSAFE_HTTPS_AD_URL_NOT_REJECTED: %',u;end if;
+ end loop;
+ for u in select unnest(array[
+  'https://cdn.example.test/approved.webp',
+  'https://ads.example.test/sponsored?campaign=one',
+  'https://public.example.test:8443/poster.mp4'
+ ]) loop
+  if not private.b7_safe_public_ad_https(u)
+  then raise exception 'VALID_PUBLIC_HTTPS_AD_URL_DENIED: %',u;end if;
+ end loop;
+ -- Simulate a preexisting LEGACY auto-approved creative, bypassing the
+ -- new Founder draft gate. Server picks the latest approved version only.
+ for u in select unnest(array[
+  'https://127.0.0.1/internal.png',
+  'https://media.internal/private.webp',
+  'https://store.local/creative.jpg'
+ ]) loop
+  insert into public.ad_creatives(
+   id,campaign_id,creative_type,media_url,approved,version
+  ) values(
+   '40000000-0000-0000-0000-000000000009',
+   '30000000-0000-0000-0000-000000000005',
+   'image',u,true,99);
+  select count(*) into n from private.b7_weighted_article_candidate(
+    '10000000-0000-0000-0000-000000000001');
+  if n<>0 then raise exception 'LEGACY_PRIVATE_MEDIA_HOST_SELECTED: %',u;end if;
+  delete from public.ad_creatives where
+    id='40000000-0000-0000-0000-000000000009';
+ end loop;
+ -- A forged CTA on a genuine-looking legacy text creative is also refused.
+ insert into public.ad_creatives(
+  id,campaign_id,creative_type,text_body,cta_type,cta_target,approved,version
+ ) values(
+  '40000000-0000-0000-0000-000000000009',
+  '30000000-0000-0000-0000-000000000005',
+  'text','Legacy approved with unsafe CTA','website',
+  'https://localhost/owner',true,99);
+ select count(*) into n from private.b7_weighted_article_candidate(
+  '10000000-0000-0000-0000-000000000001');
+ if n<>0 then raise exception 'LEGACY_PRIVATE_CTA_SELECTED';end if;
+ delete from public.ad_creatives where
+   id='40000000-0000-0000-0000-000000000009';
+ raise notice 'PASS [ADS-015/034/048] shared HTTPS policy denies private/loopback/legacy media & CTA before public selection';
+end $safe_links$;
+
 -- A changed package snapshot MUST exclude this frozen paid booking.
 update public.ad_campaigns set package_snapshot='{"version":1,"price_minor":1}'::jsonb
 where id='30000000-0000-0000-0000-000000000005';
