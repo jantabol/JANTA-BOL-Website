@@ -87,7 +87,32 @@ async function adIssuePortal(id){
  return rpc('jb_ad_issue_portal_internal',{p_campaign:id});
 }
 const adTransition=(id,status,note='')=>rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
-const adCreative=(id,x)=>rpc('jb_ad_save_creative_internal',{p_campaign:id,p_type:x.type,p_media:x.media||null,p_text:x.text||null,p_cta_type:x.ctaType||null,p_cta_target:x.ctaTarget||null});
+// B7 draft/approval MUST be deployed atomically with its reviewed backend.
+ // The old LIVE creative-save RPC auto-approves; never call it when the
+ // Owner-only backend capability sentinel is absent or wrong.
+ const adId=id=>/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}[0-9a-f]{8}$/i.test(String(id||''));
+ async function creativeDraftCapability(){
+  await owner();
+  let capability;
+  try{capability=await rpc('jb_ad_creative_workflow_capability_internal',{});}
+  catch(_){throw Error('B7_TWO_STAGE_CREATIVE_BACKEND_NOT_DEPLOYED');}
+  if(capability!=='B7_DRAFT_THEN_EXPLICIT_APPROVE_V1')
+   throw Error('B7_TWO_STAGE_CREATIVE_BACKEND_NOT_DEPLOYED');
+ }
+ async function adCreative(id,x){
+  if(!adId(id)||!x||!['image','video','text'].includes(x.type))
+   throw Error('INVALID_CREATIVE_DRAFT');
+  await creativeDraftCapability();
+  return rpc('jb_ad_save_creative_internal',{
+   p_campaign:id,p_type:x.type,p_media:x.media||null,p_text:x.text||null,
+   p_cta_type:x.ctaType||null,p_cta_target:x.ctaTarget||null
+  });
+ }
+ async function adApproveCreative(id){
+  if(!adId(id))throw Error('INVALID_CREATIVE_ID');
+  await creativeDraftCapability();
+  return rpc('jb_ad_approve_creative_internal',{p_creative:id});
+ }
 const adConfirmPayment=(id,ref,amount)=>rpc('jb_ad_confirm_payment_internal',{p_campaign:id,p_provider_ref:ref||'',p_amount_minor:Number(amount||0)});
 function scheduleInstant(value){
  const text=typeof value==='string'?value.trim():'';
@@ -137,5 +162,5 @@ async function adSchedule(id,start,end){
  if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
  return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
 }
-g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adNotificationFailures,adRetryNotification,adQualifiedAnalytics,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
+g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adNotificationFailures,adRetryNotification,adQualifiedAnalytics,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adCreative,adApproveCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
 })(window);
