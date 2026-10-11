@@ -101,15 +101,15 @@ create or replace function public.jb_ad_approve_creative_internal(
 set search_path to 'pg_catalog','public','private'
 as $approve$
 declare v public.ad_creatives;v_c public.ad_campaigns%rowtype;
-        v_version integer;v_risk text;v_verification text;
+        v_campaign uuid;v_version integer;v_risk text;v_verification text;
 begin
  if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
  if p_creative is null then raise exception 'CREATIVE_NOT_FOUND';end if;
  -- Lookup campaign first, lock it before any competing SAVE/APPROVE.
- select campaign_id into v_c.id from public.ad_creatives
+ select campaign_id into v_campaign from public.ad_creatives
  where id=p_creative;
  if not found then raise exception 'CREATIVE_NOT_FOUND';end if;
- select * into v_c from public.ad_campaigns where id=v_c.id for update;
+ select * into v_c from public.ad_campaigns where id=v_campaign for update;
  if not found then raise exception 'CAMPAIGN_NOT_FOUND';end if;
  select * into v from public.ad_creatives where id=p_creative for update;
  if not found then raise exception 'CREATIVE_NOT_FOUND';end if;
@@ -150,6 +150,22 @@ begin
         'Creative version '||v.version||' approved.',auth.uid());
  return v;
 end $approve$;
+
+-- Atomic UI/backend release capability: the NEW Admin UI MUST call this
+-- RPC before SAVE or APPROVE. Old Production lacks it, so an accidental
+-- frontend-only deployment CANNOT call the unsafe legacy auto-LIVE SAVE.
+create or replace function public.jb_ad_creative_workflow_capability_internal()
+returns text language plpgsql stable security definer
+set search_path to 'pg_catalog','public','private'
+as $capability$
+begin
+ if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
+ return 'B7_DRAFT_THEN_EXPLICIT_APPROVE_V1';
+end $capability$;
+revoke all on function public.jb_ad_creative_workflow_capability_internal()
+ from public,anon;
+grant execute on function public.jb_ad_creative_workflow_capability_internal()
+ to authenticated,service_role;
 
 revoke all on function public.jb_ad_save_creative_internal(
  uuid,text,text,text,text,text) from public,anon;
