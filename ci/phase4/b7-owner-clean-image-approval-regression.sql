@@ -4,7 +4,8 @@
 begin;
 do $setup$
 declare v uuid;asset uuid:='99999999-9999-4999-8999-999999999999';
- v_old uuid;
+ v_old uuid;v_release private.b7_ad_clean_release_receipts%rowtype;
+ v_draft public.ad_creatives%rowtype;
 begin
  perform set_config('b7.test_owner','enabled',true);
  select id into v_old from public.ad_creatives
@@ -45,6 +46,20 @@ begin
  '11111111-1111-1111-1111-111111111111',
  'image','creative/'||v||'/'||asset||'/'||repeat('b',64)||'.png',
  repeat('b',64),now());
+ select * into v_release from private.b7_ad_clean_release_receipts
+ where creative_id=v and media_type='image';
+ select * into v_draft from public.ad_creatives where id=v;
+ raise notice 'B7 SYNTHETIC RCA: found=% owner_equal=% camp_equal=% version_equal=% type=% state_equal=% bucket_equal=% path_equal=% uid=% release_owner=%',
+  found,
+  (v_release.owner_user_id is not distinct from auth.uid()),
+  (v_release.campaign_id is not distinct from v_draft.campaign_id),
+  (v_release.creative_version is not distinct from v_draft.version),
+  v_draft.creative_type,
+  (v_release.approval_state is not distinct from 'awaiting_atomic_owner_approval'),
+  (v_release.clean_public_bucket is not distinct from 'jb-ad-clean-public'),
+  (v_release.media_path is not distinct from
+   'creative/'||v||'/'||v_release.asset_id||'/'||v_release.media_sha256||'.png'),
+  auth.uid(),v_release.owner_user_id;
  begin
   perform public.jb_ad_approve_creative_internal(v);
   raise exception 'IMAGE_APPROVED_WITHOUT_DISABLED_SAFE_ORIGIN';
