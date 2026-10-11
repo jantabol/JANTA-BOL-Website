@@ -278,3 +278,8 @@ Protected workflow run #246 completed:
 - Follow-up RCA to click/link single-home: five-digit URL regex accepted `:65536` and `:99999`, which browsers reject. Safe minimum source fix enforces optional HTTPS port 1..65535 in the EXISTING private URL gate; Article/Homepage selection and click all consume same guard.
 - New isolated invalid-port test cases cover E2 no eligible ad/no fraudulent click to unopenable destination, preserve good-port behavior and all previous anti-replay checks. Protected T123 updated conditionally without downgrading live 3A/3B security.
 - Exact head `e8310c0cbd632d877fdba040e5c49e11756f930a` Candidate **38112739568 SUCCESS 16/16**, Protected **38112739610 SUCCESS 2/2**. No production change; final 0/9 canonical PASS+LOCK, ZIP BLOCKED, PR #5 DRAFT/UNMERGED.
+
+## B7 ADS-015 real WASM image decoder preview (review-only)
+- Added server-side magic/MIME/dimensions/pixel/PNG-CRC validation and pinned Magick WASM decoder/transcoder with no Storage/approval/public RPC. Actual preview pixel orientation normalization, private PNG re-encode, strict no-ancillary metadata proof and original+derivative SHA-256.
+- Negative Node tests plus Deno real WASM tests include synthetic GPS text injected into image metadata, verified stripped; failures restored through independent RCA, not by weakening `orNT`/eXIf defense. Candidate 38113900702 17/17 SUCCESS on `9b6ace69080...`.
+- Still DUE: private upload, Owner AAL2, immutable processed media ledger, protected public derivative, image Malware/Codec checks, video+poster, real Android E3/E5 and deployed E7, official LGD. No Production writes / no merge / no final ZIP. 0/9 canonical Final PASS+LOCK.

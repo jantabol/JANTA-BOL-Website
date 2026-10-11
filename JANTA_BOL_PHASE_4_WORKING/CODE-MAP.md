@@ -271,3 +271,9 @@ For every block:
 - `db/20261010_b7_weighted_private_REVIEW_ONLY.sql` — inside existing `private.b7_safe_public_ad_https(text)`, reject impossible `:65536`, `:99999` and unusable `:00000` before candidate selection/click. This is same SOT for Article, Homepage and protected CTA click; no URL parsing logic duplicated.
 - `ci/phase4/b7-weighted-regression.sql` and `ci/phase4/b7-view-ticket-regression.sql`: negative aliases plus invalid-port no-click event, valid port positive.
 - `ci/phase3-regression/db-function-security-regression.sql` T123 ensures approved helper includes `BETWEEN 1 AND 65535` whenever staged G4 is deployed. Verified exact original source HEAD `e8310c0cbd632d877fdba040e5c49e11756f930a` Candidate 38112739568 16/16 and Protected 38112739610 2/2 GREEN.
+
+## B7 new REVIEW-ONLY server Media Studio code (not exposed nor deployed)
+- `CODEX_CURRENT_SUPABASE/functions/_shared/b7-media-byte-policy.mjs`: HEADER/PAYLOAD preflight, PNG safe palette and CRC, JPEG SOF, WebP static structure, strict postprocess PNG container; NOT a decoder or media approval grant.
+- `CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts`: pinned magick-wasm@0.0.30 actual WASM decode, pixel orientation normalization, 1200px output limit, `img.strip()`, `Orientation Undefined=0`, PNG metadata restriction, source/derivative SHA-256; PREVIEW ONLY, no service-role/db/storage.
+- `ci/phase4/b7-media-byte-policy.test.mjs` and `ci/phase4/b7-image-sanitize.test.ts`, `.github/workflows/p4-t035-candidate-static.yml`: additive Node tests + new Deno WASM CI job, no old G3/G4/Phase3 test suppressed.
+- Proof `38113900702` Candidate 17/17 green (source `9b6ace69080...`). No actual owner upload/deploy PASS.

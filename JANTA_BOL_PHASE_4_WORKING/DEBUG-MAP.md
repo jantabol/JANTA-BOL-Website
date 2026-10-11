@@ -255,3 +255,9 @@ FIXED / EXACT OLD TEST GREEN
 ## B7 second URL RCA: valid DNS + invalid browser HTTPS port
 - The same server-side SQL host policy accepted five-digit out-of-range HTTPS ports (`:99999`, `:65536`). Browser WHATWG URL parsing rejects these URLs before navigation. This is not evidence of a LIVE incident: the SQL remains REVIEW_ONLY, and no paid ad is currently LIVE.
 - Added conservative range guard in existing private URL SOT (`1..65535`), reused by Article/Homepage/CTA click, plus isolated E2 negative `:99999` click ledger proof and direct validator negative/positive. Protected conditional T123 catches future regression. Candidate 38112739568 16/16 + protected 38112739610 2/2 SUCCESS. Release still waits on actual E3/E5/E7.
+
+## B7 independent media WASM RCA (real source+CI logs, NOT fake production incident)
+- New server-byte parser originally denied valid MagickWasm indexed PNG (colorType3). Fixed actual PLTE+tRNS pixel semantics while keeping derivative metadata forbidden.
+- Pinned MagickWasm output generated private `orNT` despite `strip`; real decoded log confirmed exact chunk. Source-oriented fix sets orientation Undefined after auto-orient, before strip; did NOT whitelist `orNT`, eXIf or tEXt.
+- Deno TS fixes: strict typed x, then independently investigated ArrayBufferLike vs ArrayBuffer WebCrypto; copy to non-shared explicit ArrayBuffer. Attempted generic `Orientation` symbol did not exist in pinned v0.0.30, switched to numeric enum Undefined=0 (typed property).
+- Real head `9b6ace69080...` Candidate 38113900702 17/17 SUCCESS (includes actual WASM image processing, synthetic injected GPS comment removal). Only candidate and synthetic; no LIVE service, no AAL2 session/Storage. Final B7 0/9/ZIP BLOCKED.
