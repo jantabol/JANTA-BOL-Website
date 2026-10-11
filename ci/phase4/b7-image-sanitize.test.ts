@@ -52,3 +52,36 @@ Deno.test('Unsafe HTML bytes never enter image decoding; cannot approve video',a
  await assertRejects(()=>buildPrivateAdImagePreview(new TextEncoder().encode('<svg></svg>'),'x.svg','image/svg+xml'),Error,'B7_MEDIA_');
  await assertRejects(()=>buildPrivateAdImagePreview(new TextEncoder().encode('....ftypisom'),'x.mp4','video/mp4'),Error,'B7_MEDIA_');
 });
+
+Deno.test('B7 actual Magick-WASM source and derivative are separately staged to private create-only buckets with SHA readback, NOT public',async()=>{
+ const {stageB7Image,RAW,DERIV}=await import('../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-private-media-stage.mjs');
+ const objects=new Map<string,Uint8Array>();const uploads:string[]=[];const orphans:unknown[]=[];
+ const original=image(680,300);
+ const receipt=await stageB7Image({
+  token:'owner-fixture-'+('a'.repeat(100)),bytes:original,name:'source.png',mime:'image/png'
+ },{
+  authorize:async()=>true,
+  convert:buildPrivateAdImagePreview,
+  allocateId:()=> '55555555-5555-4555-8555-555555555555',
+  onOrphan:async x=>{orphans.push(x);return true;},
+  store:{
+   checkPrivate:async b=>b===RAW||b===DERIV,
+   createOnly:async (b,p,bytes)=>{
+    const k=b+'/'+p;uploads.push(k);
+    if(objects.has(k))return false;
+    objects.set(k,Uint8Array.from(bytes));return true;
+   },
+   readPrivate:async (b,p)=>objects.get(b+'/'+p)
+  }
+ });
+ assertEquals(receipt.verifiedReadback,true);
+ assertEquals(receipt.approved,false);assertEquals(receipt.publishable,false);
+ assertEquals(receipt.state,'PRIVATE_QUARANTINE_NOT_REGISTERED');
+ assertEquals(receipt.source.bucket,RAW);assertEquals(receipt.derivative.bucket,DERIV);
+ assertEquals(receipt.derivative.width,680);assertEquals(receipt.derivative.height,300);
+ assertEquals(uploads.length,2);assertEquals(orphans.length,0);
+ const cleaned=objects.get(receipt.derivative.bucket+'/'+receipt.derivative.path);
+ assert(cleaned instanceof Uint8Array);
+ assertEquals(inspectCleanPngContainer(cleaned).containsMetadata,false);
+ assertEquals(JSON.stringify(receipt).includes('publicUrl'),false);
+});
