@@ -207,6 +207,12 @@ begin
         where n.nspname='public' and p.proname='jb_ad_public_feed'
           and p.prosrc ilike '%b7_safe_public_ad_https(cr.media_url)%'
           and p.prosrc ilike '%b7_safe_public_ad_https(cr.cta_target)%')
+      -- Public ad click accounting may not use a second, weaker URL
+      -- policy (e.g. browser-normalized abbreviated loopback IPv4).
+      or not exists(select 1 from pg_proc p join pg_namespace n on n.oid=p.pronamespace
+        where n.nspname='public' and p.proname='jb_ad_record_ticket_click'
+          and p.prosecdef
+          and p.prosrc ilike '%private.b7_safe_public_ad_https(cr.cta_target)%')
     then v_bad_public_ad_guard:=v_bad_public_ad_guard+1;end if;
   end if;
 
