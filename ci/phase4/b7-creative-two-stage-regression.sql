@@ -173,6 +173,46 @@ begin
   if msg<>'HTTPS_CTA_REQUIRED' then
    raise exception 'BAD_CTA_DENIAL_CODE: %',msg;end if;
  end;
+ begin
+  perform public.jb_ad_save_creative_internal(
+   '30000000-0000-0000-0000-000000000003',null,null,
+   'null type',null,null);
+  raise exception 'NULL_CREATIVE_TYPE_SAVED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_CREATIVE_TYPE' then
+   raise exception 'NULL_TYPE_NOT_DENIED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_save_creative_internal(
+   '30000000-0000-0000-0000-000000000003','image',
+   'https://127.0.0.1/private/secret.png','IP local',null,null);
+  raise exception 'PRIVATE_IP_DRAFT_SAVED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_UNTRUSTED_AD_MEDIA' then
+   raise exception 'PRIVATE_IP_MEDIA_NOT_DENIED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_save_creative_internal(
+   '30000000-0000-0000-0000-000000000003','image',
+   'https://media.internal/photo.jpg','Intranet',null,null);
+  raise exception 'PRIVATE_INTRANET_DRAFT_SAVED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'INVALID_UNTRUSTED_AD_MEDIA' then
+   raise exception 'INTRANET_MEDIA_NOT_DENIED: %',msg;end if;
+ end;
+ begin
+  perform public.jb_ad_save_creative_internal(
+   '30000000-0000-0000-0000-000000000003','text',null,
+   'Private CTA','website','https://localhost/owner');
+  raise exception 'LOCAL_HOST_CTA_DRAFT_SAVED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'HTTPS_CTA_REQUIRED' then
+   raise exception 'LOCAL_CTA_NOT_DENIED: %',msg;end if;
+ end;
  if (select count(*) from public.ad_creatives)<>v_before
  then raise exception 'INVALID_CREATIVE_MUTATED_SOURCE';end if;
  raise notice 'PASS [ADS-015/048] malicious media/CTA rejected without any creative write';
