@@ -159,6 +159,7 @@ Deno.test('REAL WASM GPS scrubbed image -> public release pending Owner approval
   auditOrphan:async (_evt:unknown)=>true
  };
  const result=await prepareB7PublicRelease(input,deps);
+ assert(result!==undefined,'pending release receipt is REQUIRED for successful return');
  assertEquals(result.approved,false);assertEquals(result.publishable,false);
  assertEquals(result.status,'PUBLIC_ASSET_CANDIDATE_PENDING_ATOMIC_OWNER_APPROVAL');
  assertEquals(publicObjects.size,1);
