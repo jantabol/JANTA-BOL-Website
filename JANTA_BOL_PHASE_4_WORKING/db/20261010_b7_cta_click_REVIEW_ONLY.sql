@@ -45,17 +45,11 @@ begin
   where cr.id=v.creative_id and cr.campaign_id=v.campaign_id
     and cr.approved=true
     and (
+      -- EXACT SAME private HTTPS authority as the canonical Article and
+      -- Homepage feed. Previously this click RPC duplicated an older regex
+      -- and could count clicks to URL spellings the renderer would hide.
       (cr.cta_type in('website','map') and
-        cr.cta_target ~* '^https://[a-z0-9.-]+(:[0-9]{1,5})?([/?#][^[:space:]]*)?$'
-        and cr.cta_target !~ '[<>"''\\]'
-        -- Backend must not count clicks to IP literal/localhost/intranet
-        -- links the safe public renderer intentionally never displays.
-        and split_part(split_part(cr.cta_target,'/',3),':',1)
-          ~ '^[a-z0-9-]+([.][a-z0-9-]+)+$'
-        and split_part(split_part(cr.cta_target,'/',3),':',1)
-          !~* '(^|[.])(localhost|local|internal)$'
-        and split_part(split_part(cr.cta_target,'/',3),':',1)
-          !~ '^([0-9]{1,3}[.]){3}[0-9]{1,3}$')
+        private.b7_safe_public_ad_https(cr.cta_target))
       or (cr.cta_type in('call','whatsapp') and
         cr.cta_target ~ '^\+?[0-9][0-9 ()-]{5,19}$')
     )
