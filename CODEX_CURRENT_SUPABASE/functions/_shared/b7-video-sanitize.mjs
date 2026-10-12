@@ -14,6 +14,7 @@ import {join} from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createHash} from 'node:crypto';
+import {crc32} from 'node:zlib';
 import {inspectCleanPngContainer} from './b7-media-byte-policy.mjs';
 const exec=promisify(execFile);
 const LIMIT=50*1024*1024;
@@ -76,6 +77,29 @@ function verifyStreams(info,policy,output=false){
   durationSeconds:duration,hasAudio:!!a,codec:'h264',
   audioCodec:a?'aac':'none'});
 }
+// FFmpeg's PNG encoder inserts pHYs pixel-density ancillary even when
+// -map_metadata -1 is used. It is not required for an ad poster. Drop ONLY
+// that fully CRC-verified chunk; refuse a duplicate/corrupt chunk. All
+// remaining chunks must pass the EXISTING strict clean-PNG policy.
+function stripFfmpegPosterDensity(png){
+ if(!(png instanceof Uint8Array)||png.length<33)fail('POSTER_BYTES_INVALID');
+ const be=i=>(png[i]*16777216+png[i+1]*65536+png[i+2]*256+png[i+3])>>>0;
+ const pieces=[png.subarray(0,8)];
+ let pos=8,removed=0;
+ while(pos<png.length){
+  if(pos+12>png.length)fail('POSTER_PNG_TRUNCATED');
+  const n=be(pos),end=pos+12+n;
+  if(n>8388608||end>png.length)fail('POSTER_PNG_CHUNK_BOUNDS');
+  const type=String.fromCharCode(...png.subarray(pos+4,pos+8));
+  if(type==='pHYs'){
+   if(n!==9||removed++)fail('POSTER_PNG_DENSITY_INVALID');
+   if(crc32(png.subarray(pos+4,pos+8+n))!==be(pos+8+n))
+    fail('POSTER_PNG_DENSITY_CRC');
+  }else pieces.push(png.subarray(pos,end));
+  pos=end;
+ }
+ return Uint8Array.from(Buffer.concat(pieces));
+}
 const hex=bytes=>createHash('sha256').update(bytes).digest('hex');
 export async function sanitizeB7PrivateVideo({
  source,name,mime,policy
@@ -120,7 +144,8 @@ export async function sanitizeB7PrivateVideo({
    '-map_metadata','-1','-f','image2',poster],30000);
   if((await stat(poster)).size>policy.maxPosterBytes)
    fail('POSTER_CAPACITY_LIMIT');
-  const cleanPoster=await readFile(poster);
+  const rawPoster=await readFile(poster);
+  const cleanPoster=stripFfmpegPosterDensity(rawPoster);
   // A PNG signature alone misses malicious trailing bytes, broken chunk CRC,
   // unknown ancillary metadata (including GPS-like text) and fake dimensions.
   // Reuse the EXISTING private image derivative policy: no new media authority.
