@@ -193,3 +193,88 @@ test('ADS-011 ISO-BMFF non-video HEIC/AVIF must not pass MP4 magic preflight',as
  }
  assert.equal(urls.length,0,'spoofed brand must never create a preview object URL');
 });
+
+test('ADS-015 expected creative kind rejects JPG file in Video mode',async()=>{
+ const {window,urls,revoked}=setup(),nodes=[];
+ const box={replaceChildren(){nodes.length=0},append(...items){nodes.push(...items)}};
+ const jpg=makeFile(bytes.jpeg,{name:'5990.jpg',type:'image/jpeg'});
+ await window.JBAdMediaPreview.stage(box,jpg,'image');
+ assert.equal(nodes[0].tagName,'IMG');
+ await assert.rejects(()=>window.JBAdMediaPreview.stage(box,jpg,'video'),/LOCAL_MEDIA_TYPE_MISMATCH/);
+ assert.equal(nodes.length,0);
+ assert.deepEqual(revoked,urls);
+ await window.JBAdMediaPreview.stage(box,makeFile(bytes.mp4,{name:'clip.mp4',type:'video/mp4'}),'video');
+ assert.equal(nodes[0].tagName,'VIDEO');
+});
+
+function ownerUiHarness(){
+ const page=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
+ const script=page.split("<script>'use strict';")[1]?.split('</script>')[0];
+ assert.ok(script);
+ const elements=new Map(),disposed=[];
+ function get(id){
+  if(!elements.has(id))elements.set(id,{
+   id,value:'',files:[],hidden:false,disabled:false,accept:'',textContent:'',
+   setAttribute(k,v){this[k]=v}
+  });
+  return elements.get(id);
+ }
+ const document={documentElement:{dataset:{jbAuth:'pending'}},getElementById:get};
+ const ctx=vm.createContext({document,addEventListener(){},
+  window:{addEventListener(){}},
+  JBBackend:{esc:x=>x},JBPhase4:{},
+  JBAdMediaPreview:{dispose(box){disposed.push(box.id);box.textContent=''}},
+  Intl,Date,Set});
+ vm.runInContext("'use strict';"+script,ctx,{filename:'ads-inline'});
+ return {ctx,get,disposed,page};
+}
+test('ADS-015 Image to Video/Text clears chooser and all old previews',()=>{
+ const h=ownerUiHarness(),id='uuid';
+ const file=h.get('adfile-'+id),box=h.get('adfilepreview-'+id),kind=h.get('ct-'+id);
+ kind.value='video';file.value='5990.jpg';box.textContent='OLD PHOTO';
+ h.ctx.creativeTypeChanged(id);
+ assert.equal(file.value,'');
+ assert.equal(file.accept,'video/mp4');
+ assert.equal(box.textContent,'');
+ assert.equal(h.get('admedia-controls-'+id).hidden,false);
+ kind.value='text';file.value='clip.mp4';box.textContent='OLD VIDEO';
+ h.ctx.creativeTypeChanged(id);
+ assert.equal(file.value,'');
+ assert.equal(file.disabled,true);
+ assert.equal(box.textContent,'');
+ assert.equal(h.get('admedia-controls-'+id).hidden,true);
+ assert.ok(h.disposed.length>=2);
+ assert.ok(h.page.includes('Remove selected local file'));
+});
+test('ADS-015 CTA pair No CTA/Call/Map cannot reuse a Website URL',()=>{
+ const h=ownerUiHarness(),id='uuid';
+ const action=h.get('ca-'+id),target=h.get('cu-'+id);
+ target.value='https://example.com';
+ action.value='';
+ h.ctx.creativeCtaChanged(id);
+ assert.equal(target.value,'');
+ assert.equal(target.hidden,true);
+ assert.equal(target.disabled,true);
+ target.value='https://example.com';action.value='call';
+ h.ctx.creativeCtaChanged(id);
+ assert.equal(target.value,'');
+ assert.equal(target.type,'tel');
+ assert.equal(target.hidden,false);
+ target.value='+919876543210';action.value='map';
+ h.ctx.creativeCtaChanged(id);
+ assert.equal(target.value,'');
+ assert.equal(target.type,'url');
+ assert.ok(target.placeholder.includes('map'));
+ assert.ok(h.page.includes('ctaTarget:target'));
+});
+test('ADS-057 owner Android single-column and explicit Remove clear',()=>{
+ const h=ownerUiHarness(),id='uuid';
+ assert.ok(h.page.includes('@media(max-width:720px)'));
+ assert.ok(h.page.includes('min-height:44px'));
+ const file=h.get('adfile-'+id),box=h.get('adfilepreview-'+id);
+ file.value='wrong.jpg';box.textContent='WRONG FILE';
+ h.ctx.clearLocalAdFile(id);
+ assert.equal(file.value,'');
+ assert.ok(box.textContent.includes('nothing uploaded'));
+ assert.ok(h.page.includes('LOCAL_MEDIA_NOT_UPLOADED'));
+});
