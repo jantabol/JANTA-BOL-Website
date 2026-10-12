@@ -87,7 +87,8 @@ jobs:
           deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-image-sanitize.ts
           deno check CODEX_CURRENT_SUPABASE/functions/jb-ad-media-preview/index.ts
           deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-private-image-job.ts
-          deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts ci/phase4/b7-ad-media-gateway.test.ts ci/phase4/b7-ad-owner-auth.test.ts ci/phase4/b7-private-image-job.test.ts
+          deno check CODEX_CURRENT_SUPABASE/functions/_shared/b7-private-image-worker-ingress.ts
+          deno test --allow-read --allow-env --allow-ffi ci/phase4/b7-image-sanitize.test.ts ci/phase4/b7-ad-media-gateway.test.ts ci/phase4/b7-ad-owner-auth.test.ts ci/phase4/b7-private-image-job.test.ts ci/phase4/b7-private-image-worker-ingress.test.ts
 
   b7-video-server-codec-candidate:
     name: B7 real H264 AAC FFmpeg and sanitized PNG poster isolated worker E2 (not deployed)
