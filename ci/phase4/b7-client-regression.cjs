@@ -459,7 +459,13 @@ test('ADS-047 Owner-only renewal queue client refuses unauthorised actor',async(
  await assert.rejects(()=>window.JBPhase4.adRenewalRequests(),/OWNER_AAL2_REQUIRED/);
  assert.equal(calls.length,0);
  window.JBBackend.requireOwner=async()=>true;
- await window.JBPhase4.adRenewalRequests();
+ // The real Owner renewal RPC returns a JSON array, never boolean true.
+ // Do not weaken the new fail-closed client just to accommodate this
+ // former generic RPC mock. A successful empty queue is [].
+ window.JBBackend.client.rpc=async(name,args)=>{
+  calls.push({name,args});return {data:[],error:null};
+ };
+ assert.deepEqual(Array.from(await window.JBPhase4.adRenewalRequests()),[]);
  assert.deepEqual(JSON.parse(JSON.stringify(calls[0])),{
   name:'jb_ad_owner_renewals_internal',args:{}
  });
