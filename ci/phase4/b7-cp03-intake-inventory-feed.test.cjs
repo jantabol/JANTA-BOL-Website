@@ -120,3 +120,55 @@ test('CP03 BE13: homepage multirow backend anomaly renders nothing, never select
  assert.equal(x.shown,0);
  assert.equal(x.calls,1);
 });
+
+function enquiryHarness(receipt){
+ const page=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/advertise-request.html','utf8');
+ const script=page.split('<script>')[1]?.split('</script>')[0];
+ assert.ok(script,'public enquiry inline code must be present');
+ const fields={
+  adName:{value:'Local Reporter Office'},
+  adWhatsApp:{value:'+919876543210'},
+  adNote:{value:'District newspaper advertising'},
+  adConsent:{checked:true},
+  adSubmit:{disabled:false},
+  adFeedback:{hidden:true,textContent:'',className:''}
+ };
+ let send,reset=0,requests=0;
+ fields.enquiry={
+  addEventListener(event,fn){if(event==='submit')send=fn;},
+  reportValidity(){return true;},
+  reset(){reset++}
+ };
+ const document={getElementById:id=>fields[id]};
+ const backend={client:{rpc:async(name,args)=>{
+  requests++;
+  assert.equal(name,'jb_ad_public_enquiry');
+  assert.equal(args.p_consent,true);
+  return {data:receipt,error:null};
+ }}};
+ const ctx=vm.createContext({window:{JBBackend:backend},JBBackend:backend,
+   document,location:{search:''},URLSearchParams,Error});
+ vm.runInContext(script,ctx);
+ assert.equal(typeof send,'function');
+ return {fields,submit:()=>send({preventDefault(){}}),
+  get reset(){return reset},get requests(){return requests}};
+}
+test('CP03 BE11: fake 36-char hyphen receipt is not claimed successfully submitted',async()=>{
+ for(const receipt of ['-'.repeat(36),'g'.repeat(36),
+  '11111111-----4111-8111-111111111111','11111111111141118111111111111111']){
+  const h=enquiryHarness(receipt);
+  await h.submit();
+  assert.equal(h.requests,1);
+  assert.equal(h.reset,0);
+  assert.equal(h.fields.adFeedback.className,'feedback error');
+  assert.match(h.fields.adFeedback.textContent,/अभी अनुरोध दर्ज नहीं हो पाया/);
+ }
+});
+test('CP03 BE11: genuine canonical UUID receipt gives pending result without LIVE promise',async()=>{
+ const h=enquiryHarness(uuid);
+ await h.submit();
+ assert.equal(h.reset,1);
+ assert.equal(h.fields.adFeedback.className,'feedback success');
+ assert.match(h.fields.adFeedback.textContent,/स्थिति: Pending/);
+ assert.doesNotMatch(h.fields.adFeedback.textContent,/स्थिति: LIVE/);
+});
