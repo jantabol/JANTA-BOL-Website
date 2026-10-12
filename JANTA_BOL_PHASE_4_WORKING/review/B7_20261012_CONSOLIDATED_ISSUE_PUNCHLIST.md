@@ -4,7 +4,7 @@
 ## Governance
 This is an **issue index, not the Master Blueprint or a PASS declaration**. Cross-reference: `B7_20261012_ANDROID_E3_ISSUE_REGISTER.md`, `B7_FINAL_ZIP_CLOSURE_MANIFEST.json`, official 60 ADS checks, 9 P4-T034..P4-T042 canonical tests. All nine currently **DUE (0/9 FINAL PASS+LOCK)**. No production deployment, migration, payment, advertiser verification, publication, PR merge or B7 ZIP follows from this checklist.
 
-### A — Reproduced local Android UI defects (OPEN / batch-fix together)
+### A — Nine Android UI findings (UI01..UI08 SOURCE+CI FIXED; UI09 physical E3 retest DUE)
 | ID | Priority | Observed failure / source | Fix and proof |
 |---|---|---|---|
 | UI01 | HIGH | CTA Website target `https://example.com` remains when switched to **No CTA**, then **Call** (6030,6031). | Clear incompatible target and hide for No CTA; independently validate CTA+target server-side; regression across all five kinds. |
@@ -17,7 +17,7 @@ This is an **issue index, not the Master Blueprint or a PASS declaration**. Cros
 | UI08 | MED | Owner package/quotation/payment/request controls cramped on Android; tiny narrow fields, awkward wrapping (B7-E3-002). | Mobile-first single-column responsive controls and readable tap targets. |
 | UI09 | RETEST | Homepage `विज्ञापन के लिए संपर्क करें` link was too small (B7-E3-001); source CSS fix at `fbf1bbf` with green 20/20 + 2/2, but **updated bundle Android retest still DUE**. | Do not call this source bug unfixed; confirm on current Android build before closure. |
 
-### B — Observed unavailable functions and undeployed integration (DUE, NOT automatically security vulnerabilities)
+### B — Sixteen backend/integration findings (BE01..BE16, E2/E5/E7 DUE where applicable)
 | ID | Priority | Gap and supporting result | Required evidence |
 |---|---|---|---|
 | BE01 | BLOCKER | Owner qualified analytics: `Qualified analytics unavailable...` on 6050, no figures. | Verify correct project, `jb_ad_qualified_analytics_internal`, Owner AAL2/RLS and honest estimates E1/E2/E3. |
@@ -35,16 +35,17 @@ This is an **issue index, not the Master Blueprint or a PASS declaration**. Cros
 | BE13 | HIGH | Actual approved homepage/article ad display, one article=one ad, no in-page swap while open, paragraph placement, rotation and sanitized single canonical public feed unverified. | ADS-013/014/024..034, release E2/E3/E5/E7; protect permanent article URL. |
 | BE14 | HIGH | `No packages configured` UI (6052), which **may be legitimate empty inventory**, not automatically a bug. | Read true package records; owner save/version/old-contract immutability backend tests. |
 | BE15 | BLOCKER | SPCK localhost:7700 is local preview, not exact Vercel/production release. B7 review-only SQL not deployed; PR #5 draft/unmerged; no complete Owner E5 signoff, E7 deployment proof. | Stage with independent regression/rollback, obtain Founder production permission, exact SHA-to-deploy E7, real Android E3. |
+| BE16 | HIGH | **Former ENV06**: generic Owner `unavailable until backend rollout` hid missing RPC vs Owner AAL2 vs configuration; now read-only production catalog confirms five missing Owner RPCs. | Source-fix safe scoped diagnostic messages + no secret leak, separate E2 actual functionality; no silent zero data, no invented availability. |
 
 **Independent backend read-only observation, 12 Oct:** Supabase project `vrffsnkycvjithwtiylt` catalog query found no functions with names `jb_ad_notification_failures_internal`, `jb_ad_notification_retry_internal`, `jb_ad_qualified_analytics_internal`, `jb_ad_owner_renewals_internal`, `jb_ad_owner_change_requests_internal`. Verify SPCK `supabase-config.js` targets this same project before asserting cause for the local preview. No database write made.
 
-### C — Environment and evidence ambiguities (not confirmed app bugs)
+### C — Five environment/evidence findings (ENV01..ENV05; physical checks / diagnostics pending)
 - ENV01: `localhost:7700 ERR_CONNECTION_REFUSED` intermittently when SPCK preview server/tab was unavailable; recovered after restarting preview. **Not proven B7 code failure.**
 - ENV02: Advertiser portal could open directly in SPCK but initial newly opened Chrome tab refused localhost. **Navigation/server lifecycle unresolved.**
 - ENV03: Embedded SPCK Admin Login preview reported device biometric/credential API unavailable. May be WebView/secure-context limitation; verify correct real Android Chrome/deploy.
 - ENV04: Gallery chooser sometimes delivered a screenshot containing the photograph, rather than the original cropped image. Do not call this backend image corruption; add preview/remove UX. True ultra-wide original and 4:5 image still unverified.
 - ENV05: Observed 16:9 (3264x1840), 1:1 (2448x2448), portrait local photo and 15s MP4 preview are **client visual-only**; server sanitization, EXIF/GPS removal, poster, release not established.
-- ENV06: Generic “unavailable until backend rollout” screen can hide different errors (missing RPC, AAL2/role, wrong environment). Establish exact first divergence, do not invent root cause from text alone.
+**Count reconciliation:** ENV06 was moved to BE16 because the first divergence is an Owner/backend diagnostic gap. Original identifier `ENV06` remains an alias for traceability; no issue removed. **Total: A=9, B=16, C=5 (30 distinct findings).**
 
 ### D — Positive local safeguards to PRESERVE (not final official PASS)
 - Empty local picker Preview blocked `SELECT_LOCAL_MEDIA_FILE_FIRST` (6034); selected JPG Save DRAFT blocked `LOCAL_MEDIA_NOT_UPLOADED` (6036). Local correct-kind image preview recovery (6038).
@@ -83,3 +84,12 @@ This is an **issue index, not the Master Blueprint or a PASS declaration**. Cros
 - REAL RED evidence: candidate run `38263533938` (commit 166c041) failed original URL-only Creative no-file control after stricter CTA regex was accidentally double-escaped; same issue persisted at test commit 6851c92 (`38263890303`). **First divergence traced to `ads.html` URL/phone regex escape, not a legitimate backend denial**. Only the two regex escapes corrected at `d12ece4`; no tests relaxed or disabled. Green proof: candidate run `38264147918` **20/20 jobs completed SUCCESS**, protected Phase3A+3B run `38264147842` **2/2 SUCCESS** on exactly same code SHA.
 - ISSUE STATE: UI01..UI08 **SOURCE FIXED + CI VERIFIED**, but **DEVICE RETEST DUE** on an Android bundle built from this SHA; UI09 prior source fix still phone retest DUE. This is not Owner E2 backend proof nor final P4-T035/T042 PASS. Backend RPC/worker/queued media/official LGD/deployment/E5/E6 remain DUE. Source only on draft unmerged PR #5, no Supabase production DDL/DML, no LIVE, payment, advertiser, media upload or branch merge.
 - OFFICIAL FINAL: P4-T034..P4-T042 **0/9 FINAL PASS+LOCK**; B7_ADVERTISEMENT.zip BLOCKED. DO NOT CLAIM a shipped Android fix until Founder tests a matching SPCK build.
+
+
+## Backend-first independent read-only investigation — 12 October 2026
+- SPCK configuration source URL: `https://vrffsnkycvjithwtiylt.supabase.co` — matches linked JANTA BOL project; no misplaced environment inferred from the repo config alone.
+- Live catalog read-only SELECT confirms **five missing RPCs**: `jb_ad_notification_failures_internal`, `jb_ad_notification_retry_internal`, `jb_ad_qualified_analytics_internal`, `jb_ad_owner_renewals_internal`, `jb_ad_owner_change_requests_internal`. Their existing review-only implementations must pass independent E2/RLS/Owner tests before authorized rollout; **BE01..04 not operationally fixed**.
+- Live dataset read-only facts: `ad_packages` **0 rows** (BE14 empty UI is legitimate, not a proven defect); `ad_campaigns` **5**, LIVE **0**; B7 storage bucket count **0** (BE05/06 not operational). No insertion, change or delete performed.
+- Live function-source inspection BE07: existing `jb_ad_transition_internal` Owner AAL2 path requires payment confirmed for `live`, but does **not** itself establish clean approved media, full signed receipt, schedule, inventory and all verification conditions. **Premature direct promotion server guard remains incomplete**. Source-only browser safety interlock `phase4-domain-client.js` `jb_ad_lifecycle_capability_internal` (commit `2643b279`) blocks `approved/payment_pending/live` until a later hardened backend advertises `B7_LIFECYCLE_PROTECTED_V1`. Existing Owner HIDE/PAUSE/REJECT/CANCEL preserved; **client interlock is not a substitute for server E2**. That particular code SHA had Candidate CI 20/20 SUCCESS and protected 2/2 SUCCESS.
+- Safe SPCK read-only error classification + same-tab advertiser portal link added in `ads.html` (commit `c470a3b`); the original exact-match analytics wording regression initially RED at protected run `38271443461` (and candidate at `38271443162`). Minimum wording fix `64b8c559` preserves old requirement that failure says `unavailable`, without disabling tests; later Candidate CI run `38271632240` SUCCESS, protected run `38271632281` must be confirmed before claiming final green.
+- Official B7 canonical `P4-T034..042` **0/9 FINAL PASS+LOCK**. A9 source status is not E3 deployed, B16 not full backend rollout, C5 environment proofs still gated. No production DDL/DML, PR merge or final ZIP.
