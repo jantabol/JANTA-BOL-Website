@@ -81,23 +81,30 @@ function verifyStreams(info,policy,output=false){
 // -map_metadata -1 is used. It is not required for an ad poster. Drop ONLY
 // that fully CRC-verified chunk; refuse a duplicate/corrupt chunk. All
 // remaining chunks must pass the EXISTING strict clean-PNG policy.
-function stripFfmpegPosterDensity(png){
+export function stripFfmpegPosterDensity(png){
  if(!(png instanceof Uint8Array)||png.length<33)fail('POSTER_BYTES_INVALID');
  const be=i=>(png[i]*16777216+png[i+1]*65536+png[i+2]*256+png[i+3])>>>0;
  const pieces=[png.subarray(0,8)];
- let pos=8,removed=0;
+ let pos=8,removed=0,seenIHDR=false,seenIDAT=false;
  while(pos<png.length){
   if(pos+12>png.length)fail('POSTER_PNG_TRUNCATED');
   const n=be(pos),end=pos+12+n;
   if(n>8388608||end>png.length)fail('POSTER_PNG_CHUNK_BOUNDS');
   const type=String.fromCharCode(...png.subarray(pos+4,pos+8));
   if(type==='pHYs'){
-   if(n!==9||removed++)fail('POSTER_PNG_DENSITY_INVALID');
+   // The sole accepted density chunk must be between IHDR and IDAT.
+   // Never scrub trailing/polyglot data after an IEND into apparent safety.
+   if(!seenIHDR||seenIDAT||n!==9||removed++)
+    fail('POSTER_PNG_DENSITY_INVALID');
    if(crc32(png.subarray(pos+4,pos+8+n))!==be(pos+8+n))
     fail('POSTER_PNG_DENSITY_CRC');
   }else pieces.push(png.subarray(pos,end));
+  if(type==='IHDR')seenIHDR=true;
+  if(type==='IDAT')seenIDAT=true;
   pos=end;
  }
+ // Original non-density chunks, including critical ordering/CRC, still
+ // require full validation by inspectCleanPngContainer at call site.
  return Uint8Array.from(Buffer.concat(pieces));
 }
 const hex=bytes=>createHash('sha256').update(bytes).digest('hex');
