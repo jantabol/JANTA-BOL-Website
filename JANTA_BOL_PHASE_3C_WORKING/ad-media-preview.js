@@ -45,7 +45,7 @@ function dispose(container){
  objects.delete(container);
  if(container&&typeof container.replaceChildren==='function')container.replaceChildren();
 }
-async function stage(container,file){
+async function stage(container,file,expectedKind){
  if(!container||!g.document||!g.URL?.createObjectURL)
   throw Error('MEDIA_PREVIEW_NOT_SUPPORTED');
  // Android may resolve two file.arrayBuffer() calls out of order.
@@ -62,6 +62,11 @@ async function stage(container,file){
  }
  if(generations.get(container)!==request)
   return {...info,status:'SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE'};
+ if(expectedKind&&info.kind!==expectedKind){
+  // A valid JPEG is NOT a valid video creative. Clear any previous thumbnail.
+  dispose(container);
+  throw Error('LOCAL_MEDIA_TYPE_MISMATCH');
+ }
  dispose(container);
  const tag=info.kind==='image'?'img':'video',media=g.document.createElement(tag);
  media.setAttribute('aria-label','विज्ञापन media local preview — not approved');

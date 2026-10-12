@@ -1,7 +1,22 @@
 <!doctype html>
 <html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Advertising - JANTA BOL</title><link rel="stylesheet" href="admin-common.css">
-<style>.card{margin:12px 0}.row{display:flex;gap:8px;flex-wrap:wrap}.row>*{flex:1;min-width:130px}.meta{font-size:12px;opacity:.8}</style></head>
+<style>
+.card{margin:12px 0}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.row>*{flex:1;min-width:130px}
+.meta{font-size:12px;opacity:.8}
+.ad-media-controls[hidden],.ad-cta-target[hidden]{display:none!important}
+.ad-media-controls input[type=file]{max-width:100%}
+@media(max-width:720px){
+ .row{display:grid;grid-template-columns:minmax(0,1fr);gap:10px}
+ .row>*{min-width:0;width:100%;box-sizing:border-box}
+ .row label input{width:100%;box-sizing:border-box}
+ .card input,.card select,.card button,.card textarea{max-width:100%;box-sizing:border-box;min-height:44px}
+ .card{overflow-wrap:anywhere}
+ .ad-media-controls input[type=file]{width:100%}
+}
+</style></head>
 <body><header class="topbar"><h1>JANTA BOL — Advertising</h1><p>Canonical campaign backend</p></header>
 <main class="page"><a class="back-link" href="admin.html">← Dashboard</a>
 <div class="notice backend">Vigyapan ke liye sampark — Request ≠ LIVE. Approval + confirmed payment ke bina LIVE nahi hoga. Payment/provider unavailable ho to status DUE/Pending hi rahega.</div>
@@ -44,21 +59,72 @@ const esc=x=>JBBackend.esc(String(x??''));
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 let packageList=[];
 const activeAdMediaPreviews=new Set();
+function clearLocalAdPreview(id,message){
+ const box=document.getElementById('adfilepreview-'+id);
+ if(box){
+  JBAdMediaPreview.dispose(box);activeAdMediaPreviews.delete(box);
+  if(message)box.textContent=message;
+ }
+}
+function clearLocalAdFile(id){
+ const chooser=document.getElementById('adfile-'+id);
+ if(chooser)chooser.value='';
+ clearLocalAdPreview(id,'Local file cleared — nothing uploaded.');
+}
+function creativeFileChanged(id){
+ // A newly selected photo must never inherit the previous error or object URL.
+ clearLocalAdPreview(id);
+}
+function creativeTypeChanged(id){
+ const kind=document.getElementById('ct-'+id)?.value;
+ const chooser=document.getElementById('adfile-'+id);
+ const media=document.getElementById('cm-'+id);
+ const controls=document.getElementById('admedia-controls-'+id);
+ if(chooser){
+  chooser.value=''; // Switching type invalidates an incompatible prior selection.
+  chooser.accept=kind==='video'?'video/mp4':'image/jpeg,image/png,image/webp';
+  chooser.disabled=kind==='text';
+ }
+ if(media){media.value='';media.disabled=kind==='text';}
+ if(controls)controls.hidden=kind==='text';
+ clearLocalAdPreview(id);
+}
+function creativeCtaChanged(id){
+ const kind=document.getElementById('ca-'+id)?.value||'';
+ const target=document.getElementById('cu-'+id);
+ if(!target)return;
+ // Do not leak Website URL into Call, WhatsApp, Map or No CTA.
+ target.value='';target.hidden=!kind;target.disabled=!kind;
+ const phone=kind==='call'||kind==='whatsapp';
+ target.type=phone?'tel':'url';
+ target.placeholder=phone?'+91 9876543210':kind==='map'?
+  'HTTPS map location link':'HTTPS website URL';
+ target.setAttribute('aria-label',phone?'Phone number with country code':
+  kind==='map'?'Verified HTTPS map URL':'HTTPS website URL');
+}
 async function previewLocalMedia(id){
  const box=document.getElementById('adfilepreview-'+id);
  const file=document.getElementById('adfile-'+id)?.files?.[0];
  if(!box)return;
  try{
   if(!file)throw Error('SELECT_LOCAL_MEDIA_FILE_FIRST');
+  const requested=document.getElementById('ct-'+id)?.value;
+  if(requested!=='image'&&requested!=='video')
+   throw Error('LOCAL_MEDIA_NOT_ALLOWED_FOR_TEXT_CREATIVE');
   // Register BEFORE the async file read. Pagehide/Owner reload must also
   // invalidate previews which have not yet finished reading magic bytes.
   activeAdMediaPreviews.add(box);
   // LOCAL ONLY: never upload, approve, or bypass server codec/EXIF checks.
-  const outcome=await JBAdMediaPreview.stage(box,file);
+  const outcome=await JBAdMediaPreview.stage(box,file,requested);
   if(outcome?.status==='SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE')return;
  }catch(e){
+  if(String(e.message||'')==='LOCAL_MEDIA_TYPE_MISMATCH'&&
+     document.getElementById('adfile-'+id)?.files?.[0]===file){
+   document.getElementById('adfile-'+id).value='';
+  }
   // An older failed selection must not erase the currently selected file.
-  if(document.getElementById('adfile-'+id)?.files?.[0]===file &&
+  if((document.getElementById('adfile-'+id)?.files?.[0]===file||
+      String(e.message||'')==='LOCAL_MEDIA_TYPE_MISMATCH')&&
       box.isConnected!==false)
    box.textContent='Local preview blocked: '+String(e.message||'invalid media');
  }
@@ -84,11 +150,19 @@ async function load(){
 <div class="row"><button class="btn" type="button" onclick="qualifiedStats('${x.id}')">View estimated ad analytics (Owner)</button></div>
 <div id="qualified-stats-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
 <p class="meta">Paid views and CTA clicks are client-reported estimates; NOT unique people or independently verified bot-free reach. Historical raw events remain separate.</p>
-<details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL (pending server verification)">
-<input id="adfile-${x.id}" type="file" accept="image/jpeg,image/png,image/webp,video/mp4" aria-label="Local advertisement image or video preview only">
-<button class="btn" type="button" onclick="previewLocalMedia('${x.id}')">Local File Preview — NO UPLOAD</button>
+<details><summary>Creative / schedule / payment tools</summary>
+<label>Advertisement media type <select id="ct-${x.id}" onchange="creativeTypeChanged('${x.id}')"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select></label>
+<div id="admedia-controls-${x.id}" class="ad-media-controls">
+<input id="cm-${x.id}" placeholder="Media URL (pending server verification)" aria-label="Pending media proposal URL">
+<input id="adfile-${x.id}" type="file" accept="image/jpeg,image/png,image/webp" onchange="creativeFileChanged('${x.id}')" aria-label="Local advertisement image or video preview only">
+<div class="row"><button class="btn" type="button" onclick="previewLocalMedia('${x.id}')">Local File Preview — NO UPLOAD</button>
+<button class="btn" type="button" onclick="clearLocalAdFile('${x.id}')">Remove selected local file</button></div>
 <p class="meta" role="note">Android Gallery की चुनी हुई File अभी Local Preview है। Upload/Approval Backend जुड़ने तक File चयन रहने पर Draft Save बंद रहेगा—गलत LIVE/Media claim नहीं होगा।</p>
-<div id="adfilepreview-${x.id}" class="meta" role="status" aria-live="polite"></div><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
+<div id="adfilepreview-${x.id}" class="meta" role="status" aria-live="polite"></div></div>
+<div class="row"><input id="cx-${x.id}" placeholder="Advertisement text" aria-label="Advertisement text">
+<select id="ca-${x.id}" onchange="creativeCtaChanged('${x.id}')" aria-label="CTA choice"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select>
+<input id="cu-${x.id}" class="ad-cta-target" type="url" placeholder="HTTPS website URL" aria-label="CTA destination" hidden disabled></div>
+<button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
 <button class="btn" onclick="approveLatestDraft('${x.id}')">Review latest draft → Explicit APPROVE</button>
 <p class="meta">पुराना LIVE Advertisement नई Draft Save करने से नहीं हटेगा। Image/Video approval server media verification के बाद ही होगा। अगर Backend अभी upgrade नहीं हुआ है तो SAVE सुरक्षा के लिए बंद रहेगा।</p>
 <p class="meta">समय इस डिवाइस के टाइमज़ोन में है: ${esc(Intl.DateTimeFormat().resolvedOptions().timeZone)}</p>
@@ -240,12 +314,25 @@ async function creative(id){
   // Fail BEFORE calling the existing canonical Creative-save RPC.
   const selected=document.getElementById('adfile-'+id)?.files?.[0];
   if(selected)throw Error('LOCAL_MEDIA_NOT_UPLOADED: File sirf phone preview hai. Isse server par upload/approve nahi kiya gaya. Abhi Save DRAFT me ye file nahi ja sakti.');
+  const type=document.getElementById('ct-'+id).value;
+  const ctaType=document.getElementById('ca-'+id).value;
+  const rawTarget=document.getElementById('cu-'+id).value.trim();
+  const target=ctaType?rawTarget:'';
+  if(ctaType){
+   if(!target)throw Error('CTA_TARGET_REQUIRED');
+   if((ctaType==='call'||ctaType==='whatsapp')&&
+      !/^\\+?[0-9][0-9 ()-]{5,19}$/.test(target))
+    throw Error('CTA_PHONE_NUMBER_INVALID');
+   if((ctaType==='website'||ctaType==='map')&&
+      !/^https:\/\/[a-z0-9-]+(\\.[a-z0-9-]+)+(?:\/[a-z0-9_./%?=&-]*)?$/i.test(target))
+    throw Error('CTA_HTTPS_URL_INVALID');
+  }
   await JBPhase4.adCreative(id,{
-   type:document.getElementById('ct-'+id).value,
-   media:document.getElementById('cm-'+id).value,
+   type,
+   media:type==='text'?'':document.getElementById('cm-'+id).value,
    text:document.getElementById('cx-'+id).value,
-   ctaType:document.getElementById('ca-'+id).value,
-   ctaTarget:document.getElementById('cu-'+id).value
+   ctaType,
+   ctaTarget:target
   });
   await load();
  }catch(e){alert(e.message);}
