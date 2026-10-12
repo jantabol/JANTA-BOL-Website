@@ -5,8 +5,9 @@ import {promisify} from 'node:util';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
+import {crc32} from 'node:zlib';
 import {inspectCleanPngContainer} from '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-media-byte-policy.mjs';
-import {sanitizeB7PrivateVideo,validateB7VideoCandidatePolicy}
+import {stripFfmpegPosterDensity,sanitizeB7PrivateVideo,validateB7VideoCandidatePolicy}
  from '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-video-sanitize.mjs';
 const run=promisify(execFile);
 const quota={maxSourceBytes:5*1024*1024,maxDerivedBytes:5*1024*1024,
@@ -51,6 +52,29 @@ test('ACTUAL ffmpeg input MP4 H264/AAC -> stripped MP4 H264/AAC + real PNG poste
  assert.equal(output.videoSha256.length,64);
  assert.equal(output.posterSha256.length,64);
  assert(!JSON.stringify({...output,privateCleanMp4:undefined,privatePosterPng:undefined}).includes('publicUrl'));
+});
+test('FFmpeg pHYs density can be scrubbed only once, with exact CRC and IHDR-before-IDAT order',async()=>{
+ // Use the actual canonical clean output from real FFmpeg, and insert only
+ // a CRC-valid ancillary density chunk (normally emitted by FFmpeg).
+ const output=await sanitizeB7PrivateVideo({
+  source:await fixture(),name:'field-ad.mp4',mime:'video/mp4',policy:quota});
+ const clean=Buffer.from(output.privatePosterPng);
+ assert.equal(clean.toString('ascii',12,16),'IHDR');
+ assert.equal(clean.readUInt32BE(8),13);
+ const density=Buffer.alloc(21);
+ density.writeUInt32BE(9,0);density.write('pHYs',4,'ascii');
+ density.writeUInt32BE(2835,8);density.writeUInt32BE(2835,12);
+ density[16]=1;
+ density.writeUInt32BE(crc32(density.subarray(4,17)),17);
+ const injected=Buffer.concat([clean.subarray(0,33),density,clean.subarray(33)]);
+ assert.deepEqual(Buffer.from(stripFfmpegPosterDensity(injected)),clean);
+ assert.throws(()=>inspectCleanPngContainer(injected),/B7_MEDIA_DERIVATIVE_HAS_ANCILLARY_pHYs/);
+ const broken=Buffer.from(injected);broken[53]^=1;
+ assert.throws(()=>stripFfmpegPosterDensity(broken),/B7_VIDEO_POSTER_PNG_DENSITY_CRC/);
+ const duplicate=Buffer.concat([clean.subarray(0,33),density,density,clean.subarray(33)]);
+ assert.throws(()=>stripFfmpegPosterDensity(duplicate),/B7_VIDEO_POSTER_PNG_DENSITY_INVALID/);
+ const afterIend=Buffer.concat([clean,density]);
+ assert.throws(()=>stripFfmpegPosterDensity(afterIend),/B7_VIDEO_POSTER_PNG_DENSITY_INVALID/);
 });
 test('Malicious unsupported MIME, MOV and impossible policy fail before executing decoder',async()=>{
  const genuine=await fixture();
