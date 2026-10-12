@@ -47,6 +47,8 @@ jobs:
         run: node --test ci/phase4/b7-legacy-payment-client-gate.test.cjs
       - name: B7 Owner backend failure classification + safe advertiser navigation
         run: node --test ci/phase4/b7-owner-readiness.test.cjs
+      - name: B7 CP03 all 5 intake, Owner package, official geo and single-ad safety contracts
+        run: node --test ci/phase4/b7-cp03-intake-inventory-feed.test.cjs
       - name: B7 CP02 five existing media lifecycle schedule payment boundaries
         run: node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs
       - name: B7 CP01 Owner 5-issue truthful RPC response/queue contract regression

@@ -13,7 +13,26 @@ const complianceApproveMonth=(m,summary)=>rpc('jb_compliance_approve_month_inter
 const complianceTransition=(id,status,ack='')=>rpc('jb_compliance_transition_internal',{p_id:id,p_status:status,p_ack:ack||null});
 const publicAdRequest=x=>rpc('jb_ad_public_request',{p_name:x.name,p_contact:x.contact,p_package:x.package||null,p_placement:x.placement||'homepage',p_scope:x.scope||'global',p_risk:x.risk||'normal',p_kind:x.kind||'standard'});
 const publicAdPackages=()=>rpc('jb_ad_public_packages',{});
-async function adPackages(){await owner();const {data,error}=await c().from('ad_packages').select('id,name,placement,price_minor,currency,duration_days,weight,active,version').order('name',{ascending:true});if(error)throw error;return data||[]}
+async function adPackages(){
+ await owner();
+ const {data,error}=await c().from('ad_packages')
+  .select('id,name,placement,price_minor,currency,duration_days,weight,active,version')
+  .order('name',{ascending:true});
+ if(error)throw error;
+ // Actual zero inventory is an [] response, NOT null (failed/missing
+ // backend result). A malformed Owner record cannot become a priced offer.
+ if(!Array.isArray(data)||!data.every(p=>p&&typeof p==='object'&&
+   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(p.id||''))&&
+   typeof p.name==='string'&&p.name.trim().length>=2&&
+   ['homepage','article'].includes(p.placement)&&
+   Number.isSafeInteger(p.price_minor)&&p.price_minor>=0&&
+   p.currency==='INR'&&Number.isSafeInteger(p.duration_days)&&p.duration_days>=1&&
+   Number.isSafeInteger(p.weight)&&p.weight>=1&&p.weight<=100&&
+   Number.isSafeInteger(p.version)&&p.version>=1&&
+   typeof p.active==='boolean'))
+  throw Error('B7_OWNER_PACKAGE_RESPONSE_INVALID');
+ return data;
+}
 async function adSavePackage(x){
  await owner();
  const name=String(x?.name||'').trim(),placement=String(x?.placement||'');

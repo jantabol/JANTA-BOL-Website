@@ -94,7 +94,7 @@ async function render(placement,scope='global'){
  try{
   if(!g.JBBackend?.client)return;
   const {data,error}=await g.JBBackend.client.rpc('jb_ad_public_feed',{p_placement:placement,p_scope:scope});
-  if(!current()||error||!Array.isArray(data)||!data.length)return;
+  if(!current()||error||!Array.isArray(data)||data.length!==1)return;
   const ad=data[0],box=node('aside','jb-public-ad');box.setAttribute('aria-label','विज्ञापन');
   let mediaNode=null;
   box.append(node('div','jb-public-ad-label','विज्ञापन'));
