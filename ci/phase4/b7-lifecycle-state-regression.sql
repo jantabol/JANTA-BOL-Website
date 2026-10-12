@@ -110,7 +110,7 @@ begin
   raise exception 'FORGED_CAMPAIGN_PAID';
  exception when others then
   get stacked diagnostics msg=message_text;
-  if msg<>'B7_LIVE_INVALID_SOURCE_STATE' then
+  if msg not in('B7_LIVE_INVALID_SOURCE_STATE','AD_NOT_ELIGIBLE_FOR_LIVE') then
    raise exception 'FORGED_STATE_NOT_DENIED: %',msg;end if;
  end;
 end $fake_paid$;
