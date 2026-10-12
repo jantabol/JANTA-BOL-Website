@@ -78,7 +78,7 @@ CREATE FUNCTION private.b7_media_queue_enqueue_server(p jsonb)
 RETURNS uuid LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','private','public' AS $enqueue$
 DECLARE v record; prior private.b7_ad_media_commands%ROWTYPE;
-        cr record; newest integer; ext text; id uuid;
+        cr record; newest integer; ext text; v_job_id uuid;
 BEGIN
  IF p IS NULL OR jsonb_typeof(p)<>'object' OR length(p::text)>3600 OR
     p ? 'token' OR p ? 'bearer' OR p ? 'url' OR p ? 'file_bytes'
@@ -150,8 +150,8 @@ BEGIN
   v.campaign_id,v.creative_id,v.creative_version,v.kind,
   v.source_asset_id,v.source_bucket,v.source_path,
   v.source_sha256,v.source_bytes,v.source_mime)
- RETURNING private.b7_ad_media_commands.id INTO id;
- RETURN id;
+ RETURNING private.b7_ad_media_commands.id INTO v_job_id;
+ RETURN v_job_id;
 END $enqueue$;
 
 CREATE FUNCTION private.b7_media_queue_read_server(p_id uuid)
