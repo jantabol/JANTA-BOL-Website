@@ -5,6 +5,7 @@ import {promisify} from 'node:util';
 import {mkdtemp,readFile,rm} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
+import {inspectCleanPngContainer} from '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-media-byte-policy.mjs';
 import {sanitizeB7PrivateVideo,validateB7VideoCandidatePolicy}
  from '../../CODEX_CURRENT_SUPABASE/functions/_shared/b7-video-sanitize.mjs';
 const run=promisify(execFile);
@@ -39,6 +40,13 @@ test('ACTUAL ffmpeg input MP4 H264/AAC -> stripped MP4 H264/AAC + real PNG poste
  assert(output.privateCleanMp4.length>1024);
  assert.deepEqual(Array.from(output.privatePosterPng.subarray(0,8)),
   [137,80,78,71,13,10,26,10]);
+ const poster=inspectCleanPngContainer(output.privatePosterPng);
+ assert.equal(poster.containsMetadata,false,'poster cannot carry ancillary metadata');
+ assert.equal(poster.format,'png');assert(poster.width<=800&&poster.height<=800);
+ assert(poster.width<=output.derived.width&&poster.height<=output.derived.height);
+ await assert.rejects(async()=>inspectCleanPngContainer(
+  Uint8Array.from([...output.privatePosterPng,0,71,80,83,32])
+ ),/B7_MEDIA_PNG_TRAILING/,'trailing GPS-like polyglot bytes must fail');
  assert.equal(output.sourceSha256.length,64);
  assert.equal(output.videoSha256.length,64);
  assert.equal(output.posterSha256.length,64);
