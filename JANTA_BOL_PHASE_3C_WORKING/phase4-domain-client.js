@@ -86,7 +86,22 @@ async function adIssuePortal(id){
  if(!Array.isArray(ready))throw Error('B7_SAFE_PORTAL_BACKEND_REQUIRED');
  return rpc('jb_ad_issue_portal_internal',{p_campaign:id});
 }
-const adTransition=(id,status,note='')=>rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
+async function adTransition(id,status,note=''){
+ // LIVE/positive promotion is forbidden against legacy backend: its RPC
+ // checks an old payment flag but not safe current media/quote/inventory.
+ // Founder emergency HIDE/PAUSE/REJECT remains available.
+ await owner();
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))
+  throw Error('INVALID_CAMPAIGN_ID');
+ if(['approved','payment_pending','live'].includes(status)){
+  let capability;
+  try{capability=await rpc('jb_ad_lifecycle_capability_internal',{});}
+  catch(_){throw Error('B7_SAFE_LIFECYCLE_BACKEND_NOT_DEPLOYED');}
+  if(capability!=='B7_LIFECYCLE_PROTECTED_V1')
+   throw Error('B7_SAFE_LIFECYCLE_BACKEND_NOT_DEPLOYED');
+ }
+ return rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
+}
 // B7 draft/approval MUST be deployed atomically with its reviewed backend.
  // The old LIVE creative-save RPC auto-approves; never call it when the
  // Owner-only backend capability sentinel is absent or wrong.
