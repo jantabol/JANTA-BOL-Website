@@ -59,3 +59,12 @@ This is an **evidence-routing register**, NOT an independent test authority, not
 Latest physical public CTA CSS fix in commit `fbf1bbf09d3e4fc9cd4cd56660b313ede50cdd7d`, candidate 20/20 and protected 2/2. Device screenshots above were from the prior SPCK build; new CSS physical retest remains DUE.
 
 **Next nonmutating high-value Android manual run**: ADS-010, use a normal landscape (16:9) JPG (no sensitive data), open Owner Advertising → Creative tools → Image → Choose file → LOCAL File Preview — NO UPLOAD. Check entire image visible/no crop/no horizontal scroll; screenshot. NEVER Save/Approve/Schedule/Payment. A local preview is not complete ADS-010 PASS because actual image processing and storage E2 are absent.
+
+
+## ADS-010 Android local aspect-ratio checks — 12 Oct 2026
+- 16:9 landscape: user Gallery detail reported 3264 × 1840 JPG (approx 16:9), 1.43 MB; Android SPCK Chrome preview screenshot (image 5988.jpg) shows full landscape image centered with no obvious crop/stretch. **LOCAL E3 VISUAL PASS only.**
+- 1:1 square: Gallery detail 2448 × 2448 JPG, 1.23 MB; Android preview screenshot (image 5992.jpg) shows whole square photo with side gutters, no obvious crop/stretch. **LOCAL E3 VISUAL PASS only.**
+- 9:16 portrait: Android preview screenshot (image 5994.jpg) showing selected 5993.jpg centered, full tall image visible with neutral side gutters, no obvious cropping/stretch; no upload, approval, or payment. **LOCAL E3 VISUAL PASS only.** No verified native pixel dimensions were supplied for this sample.
+- Earlier independent portrait photo preview and 15-second portrait MP4 local preview/playback documented above.
+- ADS-010 remains **PARTIAL**: 4:5, ultra-wide, EXIF-rotated image and actual secure backend image processing/asset storage E2 remain DUE; client-only visuals do not establish production creative E2/E3.
+- Next user-assisted test: 4:5 photo via Camera ratio selector or Gallery crop to 4:5, then LOCAL File Preview with screenshot. Do not Save, Approve, or Pay.
