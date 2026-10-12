@@ -33,10 +33,29 @@ async function adVerifyAdvertiser(id,state,note,evidence){
    p_advertiser:id,p_state:state,p_note:String(note).trim(),p_evidence_ref:String(evidence||'').trim()||null
  });
 }
+// Fail closed: an unavailable or corrupt Owner RPC is NOT a zero-item queue.
+// Existing private B3, ad_renewal_requests and ad_change_requests remain
+// canonical single homes. No browser fallback or new authority.
+const ownerUuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+function validatedOwnerQueue(rows,kind){
+ if(!Array.isArray(rows))throw Error('B7_OWNER_QUEUE_INVALID_RESPONSE');
+ for(const row of rows){
+  if(!row||typeof row!=='object'||Array.isArray(row))
+   throw Error('B7_OWNER_QUEUE_INVALID_RESPONSE');
+  if(kind==='notification'){
+   if(!Number.isSafeInteger(Number(row.audit_id))||Number(row.audit_id)<=0||
+      !ownerUuid.test(String(row.record_id||'')))
+    throw Error('B7_OWNER_QUEUE_INVALID_RESPONSE');
+  }else if(!ownerUuid.test(String(row.id||''))||
+            !ownerUuid.test(String(row.campaign_id||'')))
+   throw Error('B7_OWNER_QUEUE_INVALID_RESPONSE');
+ }
+ return rows;
+}
 async function adNotificationFailures(){
  await owner();
  const rows=await rpc('jb_ad_notification_failures_internal',{});
- return Array.isArray(rows)?rows:[];
+ return validatedOwnerQueue(rows,'notification');
 }
 async function adRetryNotification(auditId){
  await owner();
@@ -50,19 +69,24 @@ async function adQualifiedAnalytics(id){
  if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))
   throw Error('INVALID_CAMPAIGN_ID');
  const data=await rpc('jb_ad_qualified_analytics_internal',{p_campaign:id});
- if(!data||typeof data!=='object'||data.reach_type!=='client_reported_estimate_not_unique_people')
+ if(!data||typeof data!=='object'||Array.isArray(data)||
+  data.reach_type!=='client_reported_estimate_not_unique_people'||
+  data.anti_bot_verified!==false||
+  !['today','d7','d30','total','unverified_legacy'].every(k=>
+    typeof data[k]==='number'&&Number.isSafeInteger(data[k])&&data[k]>=0)||
+  data.today>data.d7||data.d7>data.d30||data.d30>data.total)
   throw Error('QUALIFIED_ANALYTICS_NOT_AVAILABLE');
  return data;
 }
 async function adRenewalRequests(){
  await owner();
  const rows=await rpc('jb_ad_owner_renewals_internal',{});
- return Array.isArray(rows)?rows:[];
+ return validatedOwnerQueue(rows,'renewal');
 }
 async function adChangeRequests(){
  await owner();
  const rows=await rpc('jb_ad_owner_change_requests_internal',{});
- return Array.isArray(rows)?rows:[];
+ return validatedOwnerQueue(rows,'change');
 }
 async function adDecideChange(id,decision,note){
  await owner();
