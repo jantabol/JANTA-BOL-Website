@@ -47,6 +47,8 @@ jobs:
         run: node --test ci/phase4/b7-legacy-payment-client-gate.test.cjs
       - name: B7 Owner backend failure classification + safe advertiser navigation
         run: node --test ci/phase4/b7-owner-readiness.test.cjs
+      - name: B7 CP02 five existing media lifecycle schedule payment boundaries
+        run: node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs
       - name: B7 CP01 Owner 5-issue truthful RPC response/queue contract regression
         run: node --test ci/phase4/b7-cp01-owner-contract-regression.cjs
       - name: B7 Founder full A9 B16 C5 issue ledger and no fake PASS
