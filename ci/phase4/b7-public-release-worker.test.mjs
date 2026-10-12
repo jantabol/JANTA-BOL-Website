@@ -101,3 +101,23 @@ test('Missing forensic sink is not a pass or a silent cleanup',async()=>{
  /DURABLE_PUBLIC_ORPHAN_AUDIT_REQUIRED/);
  assert.equal(x.events.length,1);
 });
+
+test('CP02 BE05/06 release candidate: undefined, expired, cancelled or unknown campaign state never creates public assets',async()=>{
+ for(const state of [undefined,null,'expired','cancelled','rejected','garbage','PUBLIC']){
+  const x=f('video');
+  const old=x.dep.loadCreative;
+  x.dep.loadCreative=async()=>({...await old(),campaign_status:state});
+  await assert.rejects(prepareB7PublicRelease(x.input,x.dep),/NOT_LATEST_PENDING_CREATIVE/);
+  assert.equal(x.out.size,0,'Invalid campaign must not create public bytes: '+String(state));
+  assert.equal(x.events.length,0);
+ }
+});
+test('CP02 BE05/06 valid currently reviewable, paused and hidden states still have no automatic approval',async()=>{
+ for(const state of ['requested','verified','approved','payment_pending','paid','scheduled','live','paused','hidden']){
+  const x=f('image'),old=x.dep.loadCreative;
+  x.dep.loadCreative=async()=>({...await old(),campaign_status:state});
+  const result=await prepareB7PublicRelease(x.input,x.dep);
+  assert.equal(result.publishable,false);assert.equal(result.approved,false);
+  assert.equal(x.out.size,1,'Existing permitted Owner flow preserved for '+state);
+ }
+});

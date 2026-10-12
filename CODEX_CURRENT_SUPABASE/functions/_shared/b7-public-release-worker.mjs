@@ -15,11 +15,19 @@ export const CLEAN_PUBLIC_BUCKET='jb-ad-clean-public';
 const err=code=>{throw Error('B7_RELEASE_'+code)};
 const uuid=x=>typeof x==='string'&&/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(x);
 const sha=x=>createHash('sha256').update(x).digest('hex');
+const eligiblePendingCampaignStates=Object.freeze([
+ 'requested','verified','approved','payment_pending','paid',
+ 'scheduled','live','paused','hidden'
+]);
 const canon=(r,creativeId)=>{
+ // All unknown, unrecognized, expired, cancelled and rejected states deny
+ // copying an ad asset to the publicly readable candidate bucket.
+ // A missing campaign_status from the trusted DB join is NEVER consent.
  if(!r||r.id!==creativeId||!uuid(r.campaign_id)||
  !['image','video'].includes(r.creative_type)||r.approved!==false||
  !Number.isInteger(r.version)||r.version<1||r.latest_version!==r.version||
- ['cancelled','rejected'].includes(r.campaign_status))err('NOT_LATEST_PENDING_CREATIVE');
+ !eligiblePendingCampaignStates.includes(r.campaign_status))
+  err('NOT_LATEST_PENDING_CREATIVE');
  return r;
 };
 const mime=(kind)=>kind==='video'?'video/mp4':'image/png';
