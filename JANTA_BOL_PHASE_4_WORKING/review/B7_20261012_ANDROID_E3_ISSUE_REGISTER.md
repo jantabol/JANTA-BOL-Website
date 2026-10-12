@@ -132,3 +132,8 @@ Latest physical public CTA CSS fix in commit `fbf1bbf09d3e4fc9cd4cd56660b313ede5
 ## Schedule start datetime picker Android UI — 12 Oct
 - Screenshot 6041.jpg, Founder Android Chrome/SPCK local ads.html: tapped **शुरू** (schedule start) input for existing T034 campaign. Android browser native 'Set date and time' picker opens with day/month/year plus hour/minute/AM-PM selector and buttons Clear, Cancel, Set. Screenshot shows currently selected 12 Oct 2026 at 6:52 pm, but **no time submitted, start/end dates persisted, or Schedule triggered**. E3 UI picker-open evidence only; scheduling backend owner authority, timezone, minimum-range, inventory and lifecycle tests remain DUE.
 - Safe next Android step: choose a future start date/time, press picker Set (sets only browser form field); inspect displayed time without pressing the actual Schedule button. Then separately set end after start; backend test requires independent E2 verification and explicit safe authorization before mutating production.
+
+
+## Start scheduled time selected in Android form — 13 Oct 2026 19:00
+- Founder Android Chrome/SPCK screenshot 6044.jpg: in existing T034 requested campaign, after setting native datetime picker, **शुरू** field displays `13/10/2026, 19:00` (device-local, UI says Asia/Calcutta); **समाप्त** remains blank. The actual `Schedule` action was **not pressed**, no backend scheduling or persistence verified. This is a **nonmutating E3 date/time form-entry observation**, not schedule PASS/LOCK.
+- Next safe check: set **समाप्त** to `14/10/2026, 19:00` using picker Set, then inspect both populated fields, without pressing Schedule. Backend/permission/timezone verification remains due.
