@@ -68,3 +68,13 @@ Latest physical public CTA CSS fix in commit `fbf1bbf09d3e4fc9cd4cd56660b313ede5
 - Earlier independent portrait photo preview and 15-second portrait MP4 local preview/playback documented above.
 - ADS-010 remains **PARTIAL**: 4:5, ultra-wide, EXIF-rotated image and actual secure backend image processing/asset storage E2 remain DUE; client-only visuals do not establish production creative E2/E3.
 - Next user-assisted test: 4:5 photo via Camera ratio selector or Gallery crop to 4:5, then LOCAL File Preview with screenshot. Do not Save, Approve, or Pay.
+
+
+## ADS-012 Android text creative UI — 12 Oct 2026
+- Owner Android SPCK Chrome screenshot 6023.jpg: changing selected creative type Image → Text leaves previously rendered LOCAL image preview visible even though file control states “No file chosen”. **UI STALE_PREVIEW BUG**, not an uploaded/approved image. Type switch must dispose object URL, invalidate pending decode, clear thumbnail and file state atomically; never silently reuse media for text creative.
+- Owner Android SPCK Chrome screenshot 6025.jpg: refresh removes local photo preview; Text option selected, empty file selector and Text field visible; **CLIENT UI CONDITION OBSERVED**, no server creative write.
+- Owner Android SPCK Chrome screenshot 6026.jpg: Text field shows literal “JANTA BOL B7 TEXT AD TEST”, CTA remains “No CTA”, no selected file. **ADS-012 TEXT ENTRY UI OBSERVED**, not full ADS-012 PASS (requires canonical server draft/version, public approved text ad with “विज्ञापन” marker, permissions and audit E2/E3/E5).
+- **Mobile UX**: Image/Video-only Media URL, Choose file and Local File Preview controls remain shown when creative type is Text. These should hide/be disabled in Text mode, keeping server authority, and be reenabled for Image/Video without changing saved state.
+- **Missing standalone remove control**: Wrong local photo can only be replaced or removed by page refresh; add one accessible “Remove selected local media” button, revoking URL and invalidating stale async reads while preserving other unsaved fields.
+- Android picker sometimes returned screenshots of Gallery UI rather than underlying cropped original JPG; this is **input selection ambiguity**, not established browser cropping bug. Extra-wide actual-original 2.39:1 remains PENDING; do not credit screenshot-containing photo as test of intrinsic aspect ratio. SPCK local port 7700 occasionally refused connection while preview server stopped; recovered on relaunch, not yet evidence of B7 application failure.
+- Next non-mutating E3 visual test: tap CTA select currently “No CTA” and inspect available choices, WITHOUT creating a draft/approving/contacting others.
