@@ -137,3 +137,9 @@ Latest physical public CTA CSS fix in commit `fbf1bbf09d3e4fc9cd4cd56660b313ede5
 ## Start scheduled time selected in Android form — 13 Oct 2026 19:00
 - Founder Android Chrome/SPCK screenshot 6044.jpg: in existing T034 requested campaign, after setting native datetime picker, **शुरू** field displays `13/10/2026, 19:00` (device-local, UI says Asia/Calcutta); **समाप्त** remains blank. The actual `Schedule` action was **not pressed**, no backend scheduling or persistence verified. This is a **nonmutating E3 date/time form-entry observation**, not schedule PASS/LOCK.
 - Next safe check: set **समाप्त** to `14/10/2026, 19:00` using picker Set, then inspect both populated fields, without pressing Schedule. Backend/permission/timezone verification remains due.
+
+
+## Android unsubmitted start/end 24-hour duration — 12 Oct 2026
+- Screenshot 6045.jpg, Android Chrome/SPCK localhost:7700/ads.html: existing T034 campaign **शुरू** `13/10/2026, 19:00`, **समाप्त** `14/10/2026, 19:00`, interface device timezone `Asia/Calcutta`; interval **24 hours**, based on displayed fields only. Actual **Schedule** button remains unpressed. This is **E3 UI form entry OBSERVED**, not proof of server conversion, authorization, persistence or ad activation.
+- Important: scheduling is a backend mutation of the existing campaign; do not ask Founder to press actual Schedule on an existing advert merely to prove UI. Schedule transactional E2 testing must use isolated test fixtures/staging and approved credentials. The existing selected JPG preview in incompatible Video mode remains a known E3 UI defect and does not satisfy media approval requirements.
+- Next safe Android checks can move to entirely nonmutating payment/quotation UI exploration, but no fake receipt, payment confirmation, advertiser verification, or live state transition is authorized. Full scheduling tests DUE.
