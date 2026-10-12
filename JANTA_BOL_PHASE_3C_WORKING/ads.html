@@ -87,6 +87,7 @@ async function load(){
 <details><summary>Creative / schedule / payment tools</summary><select id="ct-${x.id}"><option value="image">Image</option><option value="video">Video</option><option value="text">Text</option></select><input id="cm-${x.id}" placeholder="Media URL (pending server verification)">
 <input id="adfile-${x.id}" type="file" accept="image/jpeg,image/png,image/webp,video/mp4" aria-label="Local advertisement image or video preview only">
 <button class="btn" type="button" onclick="previewLocalMedia('${x.id}')">Local File Preview — NO UPLOAD</button>
+<p class="meta" role="note">Android Gallery की चुनी हुई File अभी Local Preview है। Upload/Approval Backend जुड़ने तक File चयन रहने पर Draft Save बंद रहेगा—गलत LIVE/Media claim नहीं होगा।</p>
 <div id="adfilepreview-${x.id}" class="meta" role="status" aria-live="polite"></div><input id="cx-${x.id}" placeholder="Text"><select id="ca-${x.id}"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select><input id="cu-${x.id}" placeholder="HTTPS URL / phone with country code"><button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
 <button class="btn" onclick="approveLatestDraft('${x.id}')">Review latest draft → Explicit APPROVE</button>
 <p class="meta">पुराना LIVE Advertisement नई Draft Save करने से नहीं हटेगा। Image/Video approval server media verification के बाद ही होगा। अगर Backend अभी upgrade नहीं हुआ है तो SAVE सुरक्षा के लिए बंद रहेगा।</p>
@@ -230,7 +231,25 @@ async function qualifiedStats(id){
   box.textContent='Qualified analytics unavailable until secure backend deployment and Owner verification.';
  }
 }
-async function creative(id){try{await JBPhase4.adCreative(id,{type:document.getElementById('ct-'+id).value,media:document.getElementById('cm-'+id).value,text:document.getElementById('cx-'+id).value,ctaType:document.getElementById('ca-'+id).value,ctaTarget:document.getElementById('cu-'+id).value});await load();}catch(e){alert(e.message);}}
+async function creative(id){
+ try{
+  // ADS-015: a phone gallery selection is LOCAL PREVIEW ONLY until actual
+  // authenticated server ingestion and immutable private receipt exist.
+  // Saving a URL/text while a file is selected silently loses that file and
+  // misleads the Founder into believing that media was uploaded.
+  // Fail BEFORE calling the existing canonical Creative-save RPC.
+  const selected=document.getElementById('adfile-'+id)?.files?.[0];
+  if(selected)throw Error('LOCAL_MEDIA_NOT_UPLOADED: File sirf phone preview hai. Isse server par upload/approve nahi kiya gaya. Abhi Save DRAFT me ye file nahi ja sakti.');
+  await JBPhase4.adCreative(id,{
+   type:document.getElementById('ct-'+id).value,
+   media:document.getElementById('cm-'+id).value,
+   text:document.getElementById('cx-'+id).value,
+   ctaType:document.getElementById('ca-'+id).value,
+   ctaTarget:document.getElementById('cu-'+id).value
+  });
+  await load();
+ }catch(e){alert(e.message);}
+}
 async function approveLatestDraft(id){
  try{
   const campaigns=await JBPhase4.adRows();

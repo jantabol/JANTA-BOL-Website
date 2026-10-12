@@ -45,6 +45,8 @@ jobs:
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js
           node --test ci/phase4/b7-media-preview-regression.cjs
+      - name: B7 SPCK Owner draft does not silently accept a selected but unuploaded media file
+        run: node --test ci/phase4/b7-spck-local-media-save-safety.test.cjs
       - name: B7 G3 official LGD structural CSV preflight regression — synthetic tests only, import DUE
         run: node --test ci/phase4/b7-lgd-source-preflight.test.cjs
       - name: B7 ADS-010/011/015 server media byte and dimension preflight — no sanitization or release claims
