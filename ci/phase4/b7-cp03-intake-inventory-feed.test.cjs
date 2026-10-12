@@ -70,3 +70,53 @@ test('CP03 BE10: Owner verification remains an independent review; reverify does
  assert.ok(sql.includes('b7_verified_advertiser_downgrade_guard'));
  assert.ok(sql.includes('OWNER_AAL2_REQUIRED'));
 });
+
+
+function publicDom(rows,placement='article'){
+ let calls=0,shown=0,clears=0,opened=null;
+ const slot={dataset:{jbAdPlacement:placement},
+  replaceChildren(){clears++;opened=null},
+  append(box){shown++;opened=box;}};
+ const document={
+  querySelectorAll:()=>[slot],
+  createElement(tag){
+   const el={tagName:tag.toUpperCase(),children:[],textContent:'',
+    append(...children){this.children.push(...children)},
+    setAttribute(){},addEventListener(){}};
+   return el;
+  }
+ };
+ const window={JBBackend:{client:{rpc:async()=>{calls++;return {data:rows,error:null}}}}};
+ vm.runInNewContext(pub,{window,document,URL,Set,WeakMap,WeakSet,Array});
+ return {api:window.JBPublicAds,slot,get calls(){return calls},
+  get shown(){return shown},get clears(){return clears},
+  get box(){return opened}};
+}
+test('CP03 BE13: executable DOM fails closed on two ad rows; article stays pinned',async()=>{
+ const rows=[{creative_type:'text',text_body:'One ad'},
+             {creative_type:'text',text_body:'Injected second ad'}];
+ const x=publicDom(rows,'article');
+ await x.api.render('article','article:'+uuid);
+ assert.equal(x.shown,0);
+ assert.equal(x.calls,1);
+ await x.api.render('article','article:'+uuid);
+ assert.equal(x.calls,1,'no second selection during same article view');
+ assert.equal(x.shown,0);
+});
+test('CP03 BE13: legitimate single ad still renders once in existing article slot',async()=>{
+ const x=publicDom([{creative_type:'text',text_body:'Verified paid text creative'}]);
+ await x.api.render('article','global');
+ assert.equal(x.shown,1);
+ assert.equal(x.box.tagName,'ASIDE');
+ assert.equal(x.box.children.some(e=>e.textContent==='Verified paid text creative'),true);
+ await x.api.render('article','global');
+ assert.equal(x.shown,1);
+ assert.equal(x.calls,1);
+});
+test('CP03 BE13: homepage multirow backend anomaly renders nothing, never selects first silently',async()=>{
+ const x=publicDom([{creative_type:'text',text_body:'one'},
+  {creative_type:'text',text_body:'two'}],'homepage');
+ await x.api.render('homepage','global');
+ assert.equal(x.shown,0);
+ assert.equal(x.calls,1);
+});
