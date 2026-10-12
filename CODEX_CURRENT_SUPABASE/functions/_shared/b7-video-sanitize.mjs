@@ -14,6 +14,7 @@ import {join} from 'node:path';
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import {createHash} from 'node:crypto';
+import {inspectCleanPngContainer} from './b7-media-byte-policy.mjs';
 const exec=promisify(execFile);
 const LIMIT=50*1024*1024;
 const fail=s=>{throw Error('B7_VIDEO_'+s)};
@@ -120,9 +121,16 @@ export async function sanitizeB7PrivateVideo({
   if((await stat(poster)).size>policy.maxPosterBytes)
    fail('POSTER_CAPACITY_LIMIT');
   const cleanPoster=await readFile(poster);
-  if(cleanPoster.length<32||!Uint8Array.from(
-   [137,80,78,71,13,10,26,10]).every((byte,i)=>cleanPoster[i]===byte))
-   fail('POSTER_IS_NOT_CLEAN_PNG');
+  // A PNG signature alone misses malicious trailing bytes, broken chunk CRC,
+  // unknown ancillary metadata (including GPS-like text) and fake dimensions.
+  // Reuse the EXISTING private image derivative policy: no new media authority.
+  let posterProof;
+  try{posterProof=inspectCleanPngContainer(cleanPoster)}
+  catch{fail('POSTER_CONTAINER_OR_METADATA_UNVERIFIED')}
+  if(posterProof.containsMetadata!==false||posterProof.width<1||
+     posterProof.height<1||posterProof.width>800||posterProof.height>800||
+     posterProof.width>outputProof.width||posterProof.height>outputProof.height)
+    fail('POSTER_DIMENSION_OR_PRIVACY_MISMATCH');
   // NEVER return process stdout, private temp file paths, uploaded object
   // identifiers or approval. They are caller-owned private byte arrays.
   return Object.freeze({
