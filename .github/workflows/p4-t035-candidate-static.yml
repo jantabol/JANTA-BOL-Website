@@ -260,6 +260,44 @@ jobs:
       - name: Direct bypass negative, receipt, resume, emergency hide and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-lifecycle-state-regression.sql
 
+  b7-schedule-postgres:
+    name: B7 BE08 canonical Owner schedule + paid-window immutability (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_schedule
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_schedule"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_schedule
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap isolated canonical campaign and original schedule RPC fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-schedule-legacy-source-fixture.sql
+      - name: Preserve existing original Owner payment and lifecycle guard (source candidates only)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_lifecycle_state_guard_REVIEW_ONLY.sql
+      - name: Add schedule guard + atomic audit only to disposable PostgreSQL
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_schedule_integrity_REVIEW_ONLY.sql
+      - name: Verify illegal/past/paid/hidden reschedules denied, Owner approved and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-schedule-integrity-regression.sql
+
   b7-payment-postgres:
     name: B7 owner payment/consent/anti-fraud (isolated PostgreSQL)
     runs-on: ubuntu-latest
