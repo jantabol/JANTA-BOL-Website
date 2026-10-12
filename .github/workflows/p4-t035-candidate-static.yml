@@ -260,6 +260,42 @@ jobs:
       - name: Direct bypass negative, receipt, resume, emergency hide and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-lifecycle-state-regression.sql
 
+  b7-verification-revoke-postgres:
+    name: B7 BE10 Owner verification downgrade revokes portal sessions (disposable PostgreSQL)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_verification_revoke
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_verification_revoke"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_verification_revoke
+    steps:
+      - uses: actions/checkout@v4
+      - name: Existing JANTA BOL enquiry schema and exact Owner verification RPC
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
+      - name: Bootstrap synthetic A/B tenant portal records only
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-verification-revocation-fixture.sql
+      - name: Install additive Owner downgrade and verification-portals guard only in CI
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_verification_portal_revocation_REVIEW_ONLY.sql
+      - name: Verify no AAL1 and high-risk bypass; revoke session, hide and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-verification-revocation-regression.sql
+
   b7-schedule-postgres:
     name: B7 BE08 canonical Owner schedule + paid-window immutability (disposable PostgreSQL)
     runs-on: ubuntu-latest
