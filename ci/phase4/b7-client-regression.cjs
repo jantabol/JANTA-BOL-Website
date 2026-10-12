@@ -663,7 +663,10 @@ test('ADS-049 Owner qualified analytics client needs AAL2 and exact campaign UUI
  assert.equal(calls.length,0);
  window.JBBackend.client.rpc=async(name,args)=>{
   calls.push({name,args});
-  return {data:{today:2,total:14,clicks_reported:1,
+  // Existing Owner analytics SQL returns a COMPLETE JSON contract.
+  // Malformed partial JSON now fails closed instead of masquerading as zero.
+  return {data:{today:2,d7:3,d30:8,total:14,unverified_legacy:1,
+   clicks_verified:0,anti_bot_verified:false,
    reach_type:'client_reported_estimate_not_unique_people'},error:null};
  };
  const data=await window.JBPhase4.adQualifiedAnalytics(id);
