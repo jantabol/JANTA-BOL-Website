@@ -61,7 +61,7 @@ function b7OwnerReadFailure(error,scope){
  // stack traces, secrets, SQL text, or imply a failed request is empty data.
  const code=String(error?.code||error?.message||'');
  if(code==='PGRST202'||code==='42883')return scope+
-  ': required server function is not deployed (E2/E7 DUE).';
+  ': unavailable — required server function is not deployed (E2/E7 DUE).';
  if(code==='42501'||code==='PGRST301'||/OWNER_AAL2_REQUIRED|OWNER_REQUIRED/.test(code))
   return scope+': Owner/AAL2 access denied; recheck session (E5 DUE).';
  if(code==='BACKEND_NOT_READY')return scope+
