@@ -103,3 +103,9 @@ Latest physical public CTA CSS fix in commit `fbf1bbf09d3e4fc9cd4cd56660b313ede5
 ## Empty local file preview denial — Android E3 12 Oct
 - Screenshot 6034.jpg, Chrome Android SPCK localhost:7700/ads.html for T034 requested campaign, creative type Image with 'No file chosen', clicked 'Local File Preview — NO UPLOAD'; in-page message `Local preview blocked: SELECT_LOCAL_MEDIA_FILE_FIRST`. This confirms **client empty-file preview DENY / expected negative UI outcome**; it does NOT establish server ingestion or ADS-015 full PASS. No file uploaded, no draft saved, no approval, no payment.
 - Remaining ADS-015 real E2/E3: authenticated server upload/verification + immutable receipt and independent fail-closed save gate, proper media error handling and negative cases. Do not misreport empty-picker guard as backend safety PASS.
+
+
+## Selected but unuploaded file save denied — Android E3 12 Oct
+- Screenshot 6035.jpg, Android Chrome SPCK localhost:7700/ads.html, existing T034 requested campaign: creative mode Image, selected local JPG `5990.jpg`, no server upload. Prior empty-preview status line persists after new picker selection; cosmetic stale status pending fix.
+- Screenshot 6036.jpg: Founder tapped 'Save Pending DRAFT (Owner)' once with selected local JPG. Browser showed `LOCAL_MEDIA_NOT_UPLOADED: File sirf phone preview hai. Isse server par upload/approve nahi kiya gaya. Abhi Save DRAFT me ye file nahi ja sakti.` Expected **client fail-closed save DENY — Android E3 observed**. Do not imply server RPC denial, actual server traffic inspection, DB no-write evidence, or fully passing ADS-015. Actual media upload/receipt remains DUE. No approval or payment initiated.
+- Next E3 safe action: dismiss alert with OK, stop clicking Save for existing requested campaign; continue independent negative tests after verifying backend contract. Record as client guard partial evidence, NOT final P4-T035 or ADS-015 PASS/LOCK.
