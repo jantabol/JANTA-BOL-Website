@@ -154,6 +154,38 @@ jobs:
       - name: Run transaction rollback regression
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/p4-t035-postgres-regression.sql
 
+  b7-media-queue-postgres:
+    name: B7 durable isolated media queue with SQL receipt, lease and access-denial E2 (REVIEW ONLY)
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_media_queue
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_media_queue"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_media_queue
+    steps:
+      - uses: actions/checkout@v4
+      - name: Bootstrap synthetic canonical Creative + private media ledgers
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-media-queue-fixture.sql
+      - name: Apply private server-only B7 queue to DISPOSABLE PostgreSQL ONLY
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_private_media_durable_queue_REVIEW_ONLY.sql
+      - name: Verify atomic lease, immutable queued authority, real ledger check and no anon/advertiser grant
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-media-queue-regression.sql
+
   b7-enquiry-postgres:
     name: B7 public enquiry consent/Owner regression (isolated PostgreSQL)
     runs-on: ubuntu-latest
