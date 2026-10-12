@@ -321,10 +321,10 @@ async function creative(id){
   if(ctaType){
    if(!target)throw Error('CTA_TARGET_REQUIRED');
    if((ctaType==='call'||ctaType==='whatsapp')&&
-      !/^\\+?[0-9][0-9 ()-]{5,19}$/.test(target))
+      !/^\+?[0-9][0-9 ()-]{5,19}$/.test(target))
     throw Error('CTA_PHONE_NUMBER_INVALID');
    if((ctaType==='website'||ctaType==='map')&&
-      !/^https:\/\/[a-z0-9-]+(\\.[a-z0-9-]+)+(?:\/[a-z0-9_./%?=&-]*)?$/i.test(target))
+      !/^https:\/\/[a-z0-9-]+(\.[a-z0-9-]+)+(?:\/[a-z0-9_./%?=&-]*)?$/i.test(target))
     throw Error('CTA_HTTPS_URL_INVALID');
   }
   await JBPhase4.adCreative(id,{
