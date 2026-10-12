@@ -128,7 +128,15 @@ async function adTransition(id,status,note=''){
   await creativeDraftCapability();
   return rpc('jb_ad_approve_creative_internal',{p_creative:id});
  }
-const adConfirmPayment=(id,ref,amount)=>rpc('jb_ad_confirm_payment_internal',{p_campaign:id,p_provider_ref:ref||'',p_amount_minor:Number(amount||0)});
+async function adConfirmPayment(){
+ // Preserve exported API shape for old callers, but NEVER issue the legacy
+ // production RPC which marks payment CONFIRMED without verified receipt,
+ // consent, agreed quotation and independent Owner bank-ledger evidence.
+ // The only Owner UI path is the explicit adConfirmManualPayment form,
+ // whose server-side evidence trigger is REVIEW_ONLY until safe rollout.
+ await owner();
+ throw Error('B7_LEGACY_PAYMENT_CONFIRMATION_DISABLED_USE_MANUAL_EVIDENCE');
+}
 function scheduleInstant(value){
  const text=typeof value==='string'?value.trim():'';
  const parts=/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-]\d{2}:\d{2})?$/.exec(text);
