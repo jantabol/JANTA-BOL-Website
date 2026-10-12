@@ -30,9 +30,9 @@ async function request(fields:Array<[string,string|File]>=[
  return req;
 }
 Deno.test('internal command + Owner bearer + canonical file yields PRIVATE receipt, no public URL',async()=>{
- let got:Record<string,unknown>|null=null;
+ const got:Record<string,unknown>[]=[];
  const d=deps({executeImageJob:async(value:Record<string,unknown>)=>{
-  got=value;return goodReceipt();
+  got.push(value);return goodReceipt();
  }});
  const res=await handleB7InternalImageIngest(await request(),d.config);
  assertEquals(res.status,200);
@@ -44,9 +44,9 @@ Deno.test('internal command + Owner bearer + canonical file yields PRIVATE recei
  assertEquals(res.headers.get('cache-control'),'no-store, private');
  assertEquals(JSON.stringify(body).includes(ownerToken),false);
  assertEquals(JSON.stringify(body).includes('url'),false);
- assertEquals(got?.token,ownerToken);assertEquals(got?.creativeId,creative);
- assertEquals(got?.name,'photo.png');assertEquals(got?.mime,'image/png');
- assert((got?.bytes as Uint8Array).byteLength===48);
+ assertEquals(got[0]?.token,ownerToken);assertEquals(got[0]?.creativeId,creative);
+ assertEquals(got[0]?.name,'photo.png');assertEquals(got[0]?.mime,'image/png');
+ assert((got[0]?.bytes as Uint8Array).byteLength===48);
 });
 Deno.test('no private gateway attestation => deny BEFORE reading Owner or bytes',async()=>{
  const d=deps({verifyInternalCommand:async()=>false});
