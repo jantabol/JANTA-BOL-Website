@@ -39,6 +39,13 @@ returns trigger language plpgsql security definer
 set search_path to 'pg_catalog','public'
 as $cred$
 begin
+ -- A later Owner re-verification must NOT make an old password valid again.
+ -- The preexisting Owner issue RPC intentionally rotates secret_hash on
+ -- ON CONFLICT reissue; require a NEW secret for revoked credential release.
+ if tg_op='UPDATE' and old.revoked_at is not null
+    and new.revoked_at is null
+    and new.secret_hash is not distinct from old.secret_hash
+ then raise exception 'B7_PORTAL_REISSUE_FRESH_SECRET_REQUIRED';end if;
  if new.revoked_at is null and not exists(
   select 1 from public.ad_campaigns c
   join public.advertisers a on a.id=c.advertiser_id

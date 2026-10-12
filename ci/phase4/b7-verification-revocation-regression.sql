@@ -135,6 +135,32 @@ begin
  where c.advertiser_id='a0000000-0000-0000-0000-000000000001'
   and k.revoked_at is null)<>0
  then raise exception 'REVERIFY_RESURRECTED_OLD_SECRET';end if;
+ -- Independent red-team: explicitly reactivating a revoked hashed password
+ -- via UPDATE, without fresh secret, must be denied even after re-verify.
+ begin
+  update public.ad_portal_credentials
+   set revoked_at=null
+  where campaign_id='a1000000-0000-0000-0000-000000000001';
+  raise exception 'REUSED_OLD_SECRET_REACTIVATED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'B7_PORTAL_REISSUE_FRESH_SECRET_REQUIRED'
+  then raise exception 'REISSUE_ROTATION_NOT_ENFORCED: %',msg;end if;
+ end;
+ if (select revoked_at from public.ad_portal_credentials
+  where campaign_id='a1000000-0000-0000-0000-000000000001') is null
+ then raise exception 'REVOKED_SECRET_WRONG_AFTER_DENIAL';end if;
+ -- The canonical Owner portal-issuance action rotates the temporary secret;
+ -- a fresh unrelated secret is accepted after verification, but old token
+ -- sessions remain revoked and old HIDDEN campaigns stay hidden.
+ update public.ad_portal_credentials
+   set secret_hash='SYNTHETIC-FRESH-PASSWORD-HASH-A1',
+       revoked_at=null,issued_at=clock_timestamp()
+ where campaign_id='a1000000-0000-0000-0000-000000000001';
+ if (select count(*) from public.ad_portal_sessions
+   where campaign_id='a1000000-0000-0000-0000-000000000001'
+      and revoked_at is null)<>0
+ then raise exception 'NEW_SECRET_REOPENED_OLD_SESSION';end if;
  if (select count(*) from public.ad_campaigns
   where advertiser_id='a0000000-0000-0000-0000-000000000001'
     and status='live')<>0
