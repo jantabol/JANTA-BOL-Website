@@ -50,6 +50,21 @@ begin
   then raise exception 'OWNER_REQUIRED_WRONG: %',msg;end if;
  end;
 end $high_risk$;
+-- Neither the original RPC nor a direct UPDATE can self-verify a
+-- pending advertiser without Owner/AAL2 (even if someone has table DML).
+do $direct_upgrade_denial$
+declare msg text;
+begin
+ begin
+  update public.advertisers set verification_state='verified'
+  where id='c0000000-0000-0000-0000-000000000003';
+  raise exception 'OWNERLESS_DIRECT_VERIFIED';
+ exception when others then
+  get stacked diagnostics msg=message_text;
+  if msg<>'OWNER_AAL2_REQUIRED'
+  then raise exception 'DIRECT_OWNER_UPGRADE_NOT_DENIED: %',msg;end if;
+ end;
+end $direct_upgrade_denial$;
 select set_config('b7.test_owner','enabled',false);
 
 do $verified_only$
@@ -165,15 +180,19 @@ begin
   where advertiser_id='a0000000-0000-0000-0000-000000000001'
     and status='live')<>0
  then raise exception 'REVERIFY_RESTARTED_OLD_AD';end if;
+ -- After a genuine NEW secret reissue, new token creation is allowed.
+ -- A prior revoked session must remain revoked, and re-inserting its OLD
+ -- token hash must fail the existing unique replay guard (not a new token).
+ if (select count(*) from public.ad_portal_sessions
+  where campaign_id='a1000000-0000-0000-0000-000000000001'
+   and token_hash='fake-token-sha256-A1' and revoked_at is not null)<>1
+ then raise exception 'REISSUE_REACTIVATED_REVOKED_SESSION';end if;
  begin
   insert into public.ad_portal_sessions(campaign_id,token_hash,expires_at)
   values('a1000000-0000-0000-0000-000000000001',
-   'old-session-reuse',now()+interval '1 day');
-  raise exception 'REVERIFY_SESSION_WITH_OLD_SECRET';
- exception when others then
-  get stacked diagnostics msg=message_text;
-  if msg<>'B7_PORTAL_VERIFIED_CREDENTIAL_REQUIRED'
-  then raise exception 'REVERIFY_PROOF_WRONG: %',msg;end if;
+   'fake-token-sha256-A1',now()+interval '1 day');
+  raise exception 'OLD_SESSION_HASH_REPLAY_SUCCEEDED';
+ exception when unique_violation then null;
  end;
  raise notice 'PASS BE10: Owner verified evidence; downgrade invalidated sessions, safety-hidden ads, no other tenant changes, no reactivation';
 end $downgrade$;

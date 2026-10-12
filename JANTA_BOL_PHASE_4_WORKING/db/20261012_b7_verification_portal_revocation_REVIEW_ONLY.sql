@@ -93,11 +93,13 @@ declare v_now timestamptz:=clock_timestamp();
 begin
  if new.verification_state is not distinct from old.verification_state then
   return null;end if;
+ -- A direct table UPDATE may never bypass the original Owner/AAL2 RPC,
+ -- including the pending->verified direction.
+ if not private.p4_owner_allowed()
+ then raise exception 'OWNER_AAL2_REQUIRED';end if;
  if old.verification_state<>'verified' or
     new.verification_state='verified'
  then return null;end if;
- if not private.p4_owner_allowed()
- then raise exception 'OWNER_AAL2_REQUIRED';end if;
  update public.ad_portal_credentials k
   set revoked_at=v_now
   from public.ad_campaigns c
