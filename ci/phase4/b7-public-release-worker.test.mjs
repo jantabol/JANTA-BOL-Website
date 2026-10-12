@@ -121,3 +121,20 @@ test('CP02 BE05/06 valid currently reviewable, paused and hidden states still ha
   assert.equal(x.out.size,1,'Existing permitted Owner flow preserved for '+state);
  }
 });
+
+test('CP02 BE05/06 forged public release readback campaign, media type or bucket cannot be approved',async()=>{
+ for(const wrong of [
+  {campaign_id:'55555555-5555-4555-8555-555555555555'},
+  {media_type:'image'},
+  {clean_public_bucket:'public-editorial-assets'}
+ ]){
+  const x=f('video');
+  const original=x.dep.readRelease;
+  x.dep.readRelease=async()=>({...await original(),...wrong});
+  await assert.rejects(prepareB7PublicRelease(x.input,x.dep),
+   /PUBLIC_RELEASE_NOT_VERIFIED/);
+  assert.equal(x.events.length,1,'Must append orphan forensic evidence');
+  assert.equal(x.events[0].reason,'RELEASE_OR_OWNER_STATE_FAILED');
+  assert.equal(x.out.size,2,'Public candidate bytes need explicit audit, not silent discard');
+ }
+});

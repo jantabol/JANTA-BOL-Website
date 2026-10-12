@@ -135,9 +135,12 @@ export async function prepareB7PublicRelease(input,dep){
   if(await dep.recordRelease(record)!==true)err('RELEASE_RECEIPT_FAILED');
   const stored=await dep.readRelease(assetId);
   if(!stored||stored.asset_id!==assetId||
+     stored.campaign_id!==before.campaign_id||
      stored.creative_id!==creativeId||
      stored.creative_version!==before.version||
      stored.owner_user_id!==owner||
+     stored.media_type!==before.creative_type||
+     stored.clean_public_bucket!==CLEAN_PUBLIC_BUCKET||
      stored.media_path!==record.media_path||
      stored.media_sha256!==record.media_sha256||
      stored.poster_path!==record.poster_path||
