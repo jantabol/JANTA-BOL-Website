@@ -695,3 +695,58 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261011_b7_owner_clean_image_approval_REVIEW_ONLY.sql
       - name: B7 Owner AAL2 media provenance, legacy active preservation, idempotent image approval; video poster hold
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-owner-clean-image-approval-regression.sql
+
+  b7-spck-test-zip:
+    name: B7 exact-HEAD SPCK test ZIP (NOT final PASS / no production changes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check user-visible source for privileged secrets before packaging
+        run: node ci/phase4/b7-public-secret-scan.cjs
+      - name: Build actual SPCK Android test candidate + review-only backend reference
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f JANTA_BOL_PHASE_3C_WORKING/index.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/ads.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+          test -f JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js
+          mkdir -p "$RUNNER_TEMP/b7-spck" dist
+          cp -a JANTA_BOL_PHASE_3C_WORKING/. "$RUNNER_TEMP/b7-spck/"
+          mkdir -p "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY"
+          cp -a CODEX_CURRENT_SUPABASE "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY/"
+          cp -a JANTA_BOL_PHASE_4_WORKING/db "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY/"
+          cp -a JANTA_BOL_PHASE_4_WORKING/review "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY/"
+          printf '%s\n' \
+            'JANTA BOL B7 — SPCK ANDROID TEST BUILD (UNLOCKED / NOT FINAL PASS)' \
+            "GITHUB SOURCE COMMIT: $GITHUB_SHA" \
+            "REPOSITORY: $GITHUB_REPOSITORY" \
+            "BUILD: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" \
+            'SPCK: Import this ZIP as a project; index.html = Public; ads.html = Owner Ad Studio.' \
+            'SPCK local preview DOES NOT deploy Supabase migrations, isolated private worker or Vercel.' \
+            'Local ad-media-preview.js is PREVIEW ONLY. It does NOT upload/approve video or image.' \
+            'The B7_BACKEND_REVIEW_ONLY folder contains SQL, workers and RCA for review, NOT deployed.' \
+            'Never execute REVIEW_ONLY SQL on production or copy service-role keys into SPCK.' \
+            'Real Android E3, Owner AAL2 E5, exact deployed E7 and final B7 signoff are still DUE.' \
+            'B7 final 9/9 PASS+LOCK cannot be claimed from this build.' \
+            'No production data, settings, Owner roles, B5 security policy or article URLs changed.' \
+            > "$RUNNER_TEMP/b7-spck/B7_SPCK_START_HERE.txt"
+          (
+            cd "$RUNNER_TEMP/b7-spck"
+            zip -q -r "$GITHUB_WORKSPACE/dist/B7_SPCK_TEST_BUILD.zip" .
+          )
+          unzip -t dist/B7_SPCK_TEST_BUILD.zip | tail -n 2
+          unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq index.html
+          unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq ads.html
+          unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq B7_SPCK_START_HERE.txt
+          sha256sum dist/B7_SPCK_TEST_BUILD.zip
+      - name: Make Android SPCK ZIP downloadable from this GitHub Actions run
+        uses: actions/upload-artifact@v4
+        with:
+          name: B7_SPCK_TEST_BUILD
+          path: dist/B7_SPCK_TEST_BUILD.zip
+          if-no-files-found: error
+          retention-days: 30
