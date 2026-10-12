@@ -56,6 +56,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261012-b7-creativedraft"></script><script src="ad-media-preview.js"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
+function b7OwnerReadFailure(error,scope){
+ // Owner-only UI: classify known backend failures but never render raw
+ // stack traces, secrets, SQL text, or imply a failed request is empty data.
+ const code=String(error?.code||error?.message||'');
+ if(code==='PGRST202'||code==='42883')return scope+
+  ': required server function is not deployed (E2/E7 DUE).';
+ if(code==='42501'||code==='PGRST301'||/OWNER_AAL2_REQUIRED|OWNER_REQUIRED/.test(code))
+  return scope+': Owner/AAL2 access denied; recheck session (E5 DUE).';
+ if(code==='BACKEND_NOT_READY')return scope+
+  ': configured backend connection unavailable (E7 DUE).';
+ return scope+': request unavailable; exact cause needs Owner backend diagnostics (NOT PASS).';
+}
 function localScheduleValue(value){if(!value)return '';const d=new Date(value);if(!Number.isFinite(d.getTime()))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());}
 let packageList=[];
 const activeAdMediaPreviews=new Set();
@@ -143,7 +155,7 @@ async function load(){
 <div class="row"><select id="s-${x.id}"><option>${esc(x.status)}</option><option>review</option><option>approved</option><option>payment_pending</option><option>live</option><option>paused</option><option>hidden</option><option>expired</option><option>rejected</option><option>cancelled</option></select><input id="n-${x.id}" placeholder="Audit note"><button class="btn primary" onclick="move('${x.id}')">Apply</button></div>
 <div class="row">
 <button class="btn" type="button" onclick="issuePortal('${x.id}')">Issue one-time advertiser login (Owner/AAL2)</button>
-<a href="advertiser-portal.html" target="_blank" rel="noopener noreferrer">Advertiser portal page</a>
+<a href="advertiser-portal.html">Advertiser portal page</a>
 </div>
 <div id="portal-login-${x.id}" class="meta" role="status" aria-live="polite" hidden></div>
 <p class="meta">Temporary login is shown here ONLY once. Owner manually delivers it after verification; no WhatsApp delivery is assumed. Regenerating revokes older sessions.</p>
@@ -199,8 +211,8 @@ async function loadAdNotificationIssues(){
      '<button class="btn" type="button" onclick="retryAdNotification('+id+
      ')">Retry in-app only (Owner/AAL2)</button></div>';
   }).join('')||'<p class="meta">No pending ad in-app notification failures.</p>';
- }catch(_){
-  box.textContent='Notification issue queue unavailable until safe backend rollout.';
+ }catch(e){
+  box.textContent=b7OwnerReadFailure(e,'Notification issues queue');
  }
 }
 async function retryAdNotification(id){
@@ -225,7 +237,7 @@ async function loadRenewalRequests(){
    '<p>Requested end: '+esc(x.requested_end_at||'')+'</p>'+
    '<p class="meta">No automatic payment or campaign extension. Founder must review new terms.</p></div>'
   ).join('')||'<p class="meta">No renewal requests.</p>';
- }catch(_){box.textContent='Renewal queue unavailable (backend deployment may be pending).';}
+ }catch(e){box.textContent=b7OwnerReadFailure(e,'Renewal queue');}
 }
 async function loadChangeRequests(){
  const box=document.getElementById('changeRequestRows');
@@ -242,7 +254,7 @@ async function loadChangeRequests(){
      '<p class="meta">Decision: '+esc(x.decision_note||'')+' (existing creative unchanged)</p>')+
     '</div>').join('')||'<p class="meta">No advertiser change requests.</p>';
  }catch(e){
-  box.textContent='Change-request queue unavailable (backend deployment may be pending).';
+  box.textContent=b7OwnerReadFailure(e,'Change-request queue');
  }
 }
 async function decideChange(id,decision){
@@ -300,9 +312,9 @@ async function qualifiedStats(id){
    +'\nOld unverified raw events (separate): '+count(data.unverified_legacy)
    +'\nUnique-human/bot-free reach: NOT VERIFIED'
    +'\nNews Article views: independent / not included';
- }catch(_){
+ }catch(e){
   // No fallback to raw ad events: that would present fake impression counts.
-  box.textContent='Qualified analytics unavailable until secure backend deployment and Owner verification.';
+  box.textContent=b7OwnerReadFailure(e,'Qualified analytics');
  }
 }
 async function creative(id){
