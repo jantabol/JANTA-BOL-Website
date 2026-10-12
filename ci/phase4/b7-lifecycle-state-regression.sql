@@ -16,7 +16,21 @@ begin
 end $deny_owner$;
 select set_config('b7.test_owner','enabled',false);
 
+-- Regression must NEVER disable/reorder original B7 payment LIVE guard.
+do $triggers$
+begin
+ if not exists(select 1 from pg_trigger
+  where tgrelid='public.ad_campaigns'::regclass
+   and tgname='b7_guard_campaign_live' and not tgisinternal)
+   or not exists(select 1 from pg_trigger
+  where tgrelid='public.ad_campaigns'::regclass
+   and tgname='b7_verified_state_guard' and not tgisinternal)
+ then raise exception 'B7_BOTH_LIVE_DEFENSES_REQUIRED';end if;
+end $triggers$;
+
 -- Direct LIVE from approved must remain denied, regardless of paid flags.
+-- PostgreSQL fires preexisting alphabetical b7_guard_campaign_live first:
+-- its AD_NOT_ELIGIBLE_FOR_LIVE is correct older safety, not a bypass.
 do $source_state$
 declare msg text;
 begin
@@ -26,7 +40,7 @@ begin
   raise exception 'LIVE_FROM_APPROVED';
  exception when others then
   get stacked diagnostics msg=message_text;
-  if msg<>'B7_LIVE_INVALID_SOURCE_STATE' then
+  if msg not in('B7_LIVE_INVALID_SOURCE_STATE','AD_NOT_ELIGIBLE_FOR_LIVE') then
    raise exception 'SOURCE_STATE_NOT_GATED: %',msg;end if;
  end;
 end $source_state$;
