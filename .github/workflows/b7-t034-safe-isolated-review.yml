@@ -60,6 +60,45 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
       - name: ADS-008 — HIGH pending both RPC negatives, direct DML, Owner AAL2, verified normal/high positives
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-regression.sql
+      - name: Capture ORIGINAL legacy function hashes before exact rollback (isolated only)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE TABLE public.b7_t034_ci_baseline AS
+          SELECT p.oid::regprocedure::text AS signature,md5(pg_get_functiondef(p.oid)) AS definition_hash
+          FROM pg_proc p
+          WHERE p.oid IN(
+           'public.jb_ad_confirm_payment_internal(uuid,text,bigint)'::regprocedure,
+           'public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)'::regprocedure);
+          SQL
+      - name: Test only new guard objects removed with reviewed rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_ROLLBACK_REVIEW_ONLY.sql
+      - name: Verify unchanged original function bytes and untouched historical fixture after rollback
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $check$
+          BEGIN
+           IF (SELECT count(*) FROM public.b7_t034_ci_baseline) <> 2 THEN
+             RAISE EXCEPTION 'BASELINE_SNAPSHOT_MISSING';END IF;
+           IF EXISTS(SELECT 1 FROM public.b7_t034_ci_baseline b
+              LEFT JOIN pg_proc p ON p.oid::regprocedure::text=b.signature
+              WHERE p.oid IS NULL OR md5(pg_get_functiondef(p.oid))<>b.definition_hash)
+           THEN RAISE EXCEPTION 'ROLLBACK_CHANGED_EXISTING_FUNCTION_BYTES';END IF;
+           IF EXISTS(SELECT 1 FROM pg_trigger WHERE tgname LIKE 'b7_t034_%')
+             OR to_regprocedure('private.b7_t034_assert_advertiser_verified(uuid)') IS NOT NULL
+           THEN RAISE EXCEPTION 'ROLLBACK_LEFT_GUARD_OBJECTS';END IF;
+           IF (SELECT count(*) FROM public.advertisers)<>4 OR
+              (SELECT count(*) FROM public.ad_campaigns)<>4 OR
+              (SELECT count(*) FROM public.ad_payments)<>0 OR
+              (SELECT count(*) FROM public.ad_history)<>0
+           THEN RAISE EXCEPTION 'ROLLBACK_MUTATED_FIXTURE_DATA';END IF;
+           RAISE NOTICE 'PASS [ADS-008 rollback] only new objects removed, original source hashes unchanged, zero data side effects';
+          END $check$;
+          SQL
+      - name: Reapply isolated guard to show reversal is recoverable (no live rollout)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-regression.sql
+
       - name: Existing role functions unchanged, no public EXECUTE on guard
         shell: bash
         run: |
