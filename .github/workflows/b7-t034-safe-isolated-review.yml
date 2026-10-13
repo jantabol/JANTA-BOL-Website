@@ -23,7 +23,7 @@ jobs:
           --health-cmd "pg_isready -U postgres -d b7_t034_guard"
           --health-interval 5s
           --health-timeout 5s
-          --retries 8
+          --health-retries 8
     env:
       PGHOST: localhost
       PGPORT: '5432'
@@ -94,7 +94,7 @@ jobs:
           --health-cmd "pg_isready -U postgres -d b7_t034_enquiry"
           --health-interval 5s
           --health-timeout 5s
-          --retries 8
+          --health-retries 8
     env:
       PGHOST: localhost
       PGPORT: '5432'
