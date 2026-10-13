@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),
 const adsHtml=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/ads.html','utf8');
 const adminHtml=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/admin.html','utf8');
 const adsScript=adsHtml.split("<script>'use strict';")[1]?.split('</script>')[0];
-const adminScript=adminHtml.split('<script>async function jbRecoveryPhysicalReminder()')[1]?.split('</script>')[0];
+const adminScript=adminHtml.match(/<script>\s*(async function jbRecoveryPhysicalReminder\(\)[\s\S]*?)<\/script>/)?.[1];
 assert.ok(adsScript&&adminScript,'expected exact old Owner scripts must remain');
 function elements(){
  const all=new Map();
@@ -54,7 +54,7 @@ function adminHarness(){
   JBBackend:{client:api,recoveryPhysicalStatus:async()=>({due:false})},
   addEventListener(){},setInterval(){return 1},Date,Intl
  });
- vm.runInContext('async function jbRecoveryPhysicalReminder()'+adminScript,context);
+ vm.runInContext(adminScript,context);
  return {context,get,
   update(id,n){latest={id,created_at:'2026-10-13T10:26:34Z'};count=n},
   fail(){unavailable=true}
