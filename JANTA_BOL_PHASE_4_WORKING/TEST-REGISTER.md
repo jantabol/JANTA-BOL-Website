@@ -970,3 +970,21 @@ Authoritative B7 Final Test Blueprint page 4 ADS-002: POST blank / letters / ema
 **Actual isolated E2:** run `38402325199` 2/2 SUCCESS on code `d482145bed11ddb4a3912310301eb82aae1b6469`. The first-party anonymous public request function's source-body MD5 `542024c1c167d0129d5b6cbd6068c2de` is independently equal in LIVE Supabase and the isolated runtime. `ci/phase4/b7-enquiry-regression.sql` proves same normalized-phone repeat within 10 minutes rejects `ENQUIRY_COOLDOWN`. `ci/phase4/b7-t034-concurrent-intake-runtime.cjs` spins **two actual independent PostgreSQL client processes simultaneously** using a ten-digit Indian number and the same +91-normalized identity: EXACTLY one successful receipt and one `ENQUIRY_COOLDOWN`; 1 requested-only campaign, 1 advertiser, 1 `public_enquiry` history; no auto-approval. A 501-character note rejects `INVALID_ENQUIRY_OR_CONSENT`; forged scope fails; neither rejected attempt creates a row. These are executed actual E2 client connections on a disposable PostgreSQL 17 instance, not static text or mock UI. Fixture and role tests remain separate, isolated and/or rolled back. No production request was sent by this run.
 
 **Verdict:** `ADS-005 = PASS + LOCK (E2 criteria listed above)`. Operational public IP/network-wide bot protection and provider rate controls are separately due for broader B7 production resilience; per-phone 10-minute cooldown is NOT advertised as a universal DoS shield. **P4-T034 still FINAL HOLD. B7 canonical 0/9 final PASS.** No existing data/file/function modified for the test.
+
+## B7 official first-of-nine P4-T034 execution checkpoint — 13 October 2026
+**Status: 4 of 9 ADS SUBGATES independently PASS+LOCK, P4-T034 itself still HOLD, B7 0/9 canonical tests FINAL PASS.**
+| ADS subgate | Current official evidence disposition |
+|:--|:--|
+| ADS-001 Homepage+Article CTA @ 360px | PARTIAL: genuine Android CTA works, precise 360 CSS px test and before/after screen evidence DUE |
+| ADS-002 WhatsApp mandatory + consent | **PASS+LOCK** E2 exact LIVE body parity, 7 invalid / 3 valid real PostgreSQL CI |
+| ADS-003 No forged public media/placement/geo | **PASS+LOCK** E2 9 forged argument negatives and real Android simple form E3 |
+| ADS-004 Stable Pending receipt, audit | **PASS+LOCK** E2 isolated receipt, E3 Android receipt, E5 LIVE read-only actual pending article/history |
+| ADS-005 Duplicate/concurrent/oversize | **PASS+LOCK** E2 isolated 2 Postgres processes; same normalized phone 1 allowed/1 cooldown; 501-char rejected |
+| ADS-006 Owner queue both standard and custom | PARTIAL: genuine Owner Android standard queue and LIVE request context verified; custom Owner UI proof DUE |
+| ADS-007 Normal contact verification | PARTIAL: genuine AAL2 pending/recheck and audit, but Owner verified-positive genuine action DUE |
+| ADS-008 High-risk historical paid guard | **FAIL/HOLD LIVE**: minimum-additive SQL guard, direct paid-state guard, exact rollback and reapply isolated CI PASS; production deployment blocked by absent actual production restorable backup. Existing high-risk pending historical data not touched. |
+| ADS-009 full actor approvals and verification deny | PARTIAL: LIVE function ACL read-only + synthetic anon/nonowner negative; distinct advertiser/reporter/revoked/AAL1 Owner authentic E2/E5 matrix DUE |
+
+**Exact test branch** `codex/b7-t034-safe-guard-20261013`, no legacy application files modified; only newly added isolated fixture/test/workflow/backup scripts and append-only TEST-REGISTER. CI source `55c61559edfff51a12ba612e5c4eee2c445cbc11`: B7 isolated run `38402885406` both jobs SUCCESS, including ADDITIVE ADS008 RED/guard/rollback/reapply and 4 ADS E2 cases; encryption sandbox regression separately success on preceding SHA. READ-ONLY LIVE invariants checked: 31 articles, 7 campaigns, 7 advertisers, 26 ad_history, ZERO ad_payments, zero new ADS008 triggers, original Article receipt still pending. This is not a Production migration or final lock.
+
+**Next execution gate:** complete ADS-001 exact 360px genuine Android E3, ADS-006 custom queue E3, ADS-007 authenticated actual Owner verify-positive on genuine verified contact, ADS-009 complete role negatives, and required independent backup→restore→controlled ADS008 live guard prior to any T034 official final PASS. No fake pass, no unsafe payment test, no B2 credentials in chat.
