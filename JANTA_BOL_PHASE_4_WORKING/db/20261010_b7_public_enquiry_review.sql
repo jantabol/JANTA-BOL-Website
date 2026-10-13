@@ -115,9 +115,14 @@ begin
  return public.jb_ad_public_request(p_name,p_contact,p_package,p_placement,p_scope,p_risk,'standard');
 end $legacy6$;
 
+-- Critical compatibility fix: the historical 7-arg overload had defaults
+-- for BOTH last arguments, so 6-arg calls were ambiguous with the real 6-arg
+-- overload even when explicit argument types were supplied. Keep the same
+-- 7-arg identity and Owner/AAL2 guard, but require explicit 7-arg calls.
+-- The real 6-arg overload remains the intended default-kind entry point.
 create or replace function public.jb_ad_public_request(
  p_name text,p_contact text,p_package uuid,p_placement text,p_scope text,
- p_risk text default 'normal',p_kind text default 'standard'
+ p_risk text,p_kind text
 ) returns uuid language plpgsql security definer
 set search_path to 'pg_catalog','public','private'
 as $legacy7$
