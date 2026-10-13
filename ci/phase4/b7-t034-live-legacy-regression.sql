@@ -37,7 +37,7 @@ begin
   if position('permission denied' in msg)=0 then raise exception 'ANON_5_NOT_DENIED: %',msg;end if;
  end;
  begin
-  perform public.jb_ad_public_request('Anon Shop','9999912345',null::uuid,'homepage','global','normal');
+  perform public.jb_ad_public_request('Anon Shop'::text,'9999912345'::text,null::uuid,'homepage'::text,'global'::text,'normal'::text);
   raise exception 'ANON_INSERT_SUCCEEDED_6';
  exception when others then
   get stacked diagnostics msg=message_text;
@@ -65,7 +65,7 @@ begin
   if msg<>'OWNER_AAL2_REQUIRED' then raise exception 'NONOWNER_5_BYPASS: %',msg;end if;
  end;
  begin
-  perform public.jb_ad_public_request('Other User Shop','9999912345',null::uuid,'homepage','global','normal');
+  perform public.jb_ad_public_request('Other User Shop'::text,'9999912345'::text,null::uuid,'homepage'::text,'global'::text,'normal'::text);
   raise exception 'NONOWNER_6_INSERT_SUCCEEDED';
  exception when others then
   get stacked diagnostics msg=message_text;
@@ -91,7 +91,7 @@ begin
  perform set_config('b7.test_owner','enabled',true);
  new_id:=public.jb_ad_public_request('Owner Shop','7777712345','homepage','global','normal');
  if new_id is null then raise exception 'OWNER_LEGACY_5_NO_RECEIPT';end if;
- new_id:=public.jb_ad_public_request('Owner Shop 6','7777712346',null::uuid,'homepage','local','high');
+ new_id:=public.jb_ad_public_request('Owner Shop 6'::text,'7777712346'::text,null::uuid,'homepage'::text,'local'::text,'high'::text);
  if new_id is null then raise exception 'OWNER_LEGACY_6_NO_RECEIPT';end if;
  new_id:=public.jb_ad_public_request('Owner Shop 7','7777712347',null::uuid,'article','local','normal','custom');
  if new_id is null then raise exception 'OWNER_LEGACY_7_NO_RECEIPT';end if;
