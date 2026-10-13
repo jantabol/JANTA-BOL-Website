@@ -150,6 +150,22 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
       - name: Existing invalid WhatsApp, forged origin, rate cooldown, verification matrix
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
+      - name: ADS-002 fail-closed parity against LIVE JANTA BOL public enquiry function body fingerprint (read-only source)
+        shell: bash
+        run: |
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $parity$
+          DECLARE fingerprint text;
+          BEGIN
+            SELECT md5(p.prosrc) INTO fingerprint
+              FROM pg_proc p
+              WHERE p.oid='public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)'::regprocedure;
+            IF fingerprint IS DISTINCT FROM '542024c1c167d0129d5b6cbd6068c2de' THEN
+              RAISE EXCEPTION 'ADS002_LIVE_SOURCE_PARITY_FAILED: expected, current isolated %',fingerprint;
+            END IF;
+            RAISE NOTICE 'PASS [ADS002] isolated code body fingerprint equals read-only LIVE Supabase function MD5';
+          END $parity$;
+          SQL
       - name: ADS-002 independent FINAL E2 seven-negative three-positive WhatsApp and consent matrix
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-ads002-final-gate.sql
       - name: Existing all legacy overloads no anonymous/nonowner bypass
