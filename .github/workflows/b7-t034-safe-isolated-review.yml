@@ -113,3 +113,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
       - name: Existing all legacy overloads no anonymous/nonowner bypass
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-live-legacy-regression.sql
+      - name: ADS-003/005 LIVE parallel database connections in isolated PG, forged scope and oversized payload
+        run: node ci/phase4/b7-t034-concurrent-intake-runtime.cjs
