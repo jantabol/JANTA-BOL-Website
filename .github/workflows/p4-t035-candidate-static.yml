@@ -235,10 +235,14 @@ jobs:
       - uses: actions/checkout@v4
       - name: Bootstrap disposable enquiry schema
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-fixture.sql
-      - name: Apply review-only migration to disposable database
+      - name: RED — recreate all three EXACT observed insecure LIVE legacy request RPCs in disposable PG
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-live-legacy-fixture.sql
+      - name: Apply reviewed in-place Owner/AAL2 repair and consent-only public route in disposable PG
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
       - name: Verify anonymous input, consent, scope, cooldown, legacy denial
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
+      - name: T034 verify ALL original legacy signatures deny anon and nonowner, still support Owner AAL2
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-live-legacy-regression.sql
 
   b7-lifecycle-postgres:
     name: B7 existing Owner lifecycle hard-stop with honest receipt (DISPOSABLE ONLY)
