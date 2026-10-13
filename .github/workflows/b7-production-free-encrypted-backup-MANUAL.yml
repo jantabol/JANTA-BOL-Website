@@ -24,6 +24,7 @@ jobs:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
       JB_BACKUP_RCLONE_CONFIG_B64: ${{ secrets.JB_BACKUP_RCLONE_CONFIG_B64 }}
+      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
     steps:
       - uses: actions/checkout@v4
       - name: Verify remote and encryption are configured before connecting to DB
@@ -33,6 +34,7 @@ jobs:
           test -n "$SUPABASE_DB_PASSWORD" || { echo "::error::Missing production DB password"; exit 1; }
           test -n "$JB_BACKUP_AGE_RECIPIENT" || { echo "::error::Missing OWNER public age recipient"; exit 1; }
           test -n "$JB_BACKUP_RCLONE_CONFIG_B64" || { echo "::error::Missing owner-controlled private offsite rclone config"; exit 1; }
+          test -n "$JB_BACKUP_REMOTE_PREFIX" || { echo "::error::Missing approved private destination bucket/folder"; exit 1; }
           echo "Preflight present. No data was exported before this point."
       - name: Install backup and transfer clients (runner ephemeral)
         shell: bash
