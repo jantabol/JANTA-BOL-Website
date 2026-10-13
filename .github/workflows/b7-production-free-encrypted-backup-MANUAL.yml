@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y -qq age rclone zstd postgresql-client-17
+          sudo apt-get install -y -qq age rclone zstd
       - name: Supabase CLI (official setup action)
         uses: supabase/setup-cli@v1
         with:
