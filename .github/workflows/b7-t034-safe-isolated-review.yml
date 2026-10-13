@@ -150,6 +150,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
       - name: Existing invalid WhatsApp, forged origin, rate cooldown, verification matrix
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-regression.sql
+      - name: ADS-002 independent FINAL E2 seven-negative three-positive WhatsApp and consent matrix
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-ads002-final-gate.sql
       - name: Existing all legacy overloads no anonymous/nonowner bypass
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-live-legacy-regression.sql
       - name: ADS-003/005 LIVE parallel database connections in isolated PG, forged scope and oversized payload
