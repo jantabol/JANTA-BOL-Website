@@ -75,7 +75,7 @@ begin
       'jb_verify_owner_recovery_key',
       'jb_ad_analytics_internal','jb_ad_qualified_analytics_internal','jb_ad_creative_workflow_capability_internal','jb_ad_approve_creative_internal','jb_ad_confirm_payment_internal','jb_ad_event',
       'jb_ad_issue_portal_internal','jb_ad_link_advertiser_user_internal','jb_ad_my_campaigns','jb_ad_portal_campaign',
-      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_record_event',
+      'jb_ad_portal_login','jb_ad_portal_submit_creative','jb_ad_portal_request_renewal','jb_ad_issue_view_ticket','jb_ad_qualify_view_ticket','jb_ad_record_ticket_click','jb_ad_public_packages','jb_ad_public_request','jb_ad_public_enquiry','jb_ad_record_event',
       'jb_ad_record_payment_internal','jb_ad_request_internal','jb_ad_request_renewal','jb_ad_save_creative_internal','jb_ad_creative_workflow_capability_internal',
       'jb_ad_save_package_internal','jb_ad_schedule_internal','jb_ad_transition_internal','jb_ad_verify_advertiser_internal',
       'jb_ad_notification_failures_internal','jb_ad_notification_retry_internal','jb_ad_qualified_analytics_internal','jb_ad_set_approved_quote_internal','jb_ad_confirm_manual_payment_internal','jb_ad_owner_change_requests_internal','jb_ad_decide_change_request_internal','jb_ad_owner_renewals_internal',
