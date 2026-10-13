@@ -14,6 +14,11 @@
  .row label input{width:100%;box-sizing:border-box}
  .card input,.card select,.card button,.card textarea{max-width:100%;box-sizing:border-box;min-height:44px}
  .card{overflow-wrap:anywhere}
+ .page,.card,.card details,.card .row,.card label{min-width:0;max-width:100%;box-sizing:border-box}
+ .card input,.card select,.card button,.card textarea{font-size:16px}
+ .card input[type=datetime-local],.card input[type=number],.card input[type=tel],
+ .card input[type=url],.card input[type=file]{width:100%;min-width:0}
+ .card button{white-space:normal;overflow-wrap:anywhere}
  .ad-media-controls input[type=file]{width:100%}
 }
 </style></head>
@@ -105,6 +110,7 @@ function creativeCtaChanged(id){
  const kind=document.getElementById('ca-'+id)?.value||'';
  const target=document.getElementById('cu-'+id);
  if(!target)return;
+ const hint=document.getElementById('cta-hint-'+id);
  // Do not leak Website URL into Call, WhatsApp, Map or No CTA.
  target.value='';target.hidden=!kind;target.disabled=!kind;
  const phone=kind==='call'||kind==='whatsapp';
@@ -113,6 +119,14 @@ function creativeCtaChanged(id){
   'HTTPS map location link':'HTTPS website URL';
  target.setAttribute('aria-label',phone?'Phone number with country code':
   kind==='map'?'Verified HTTPS map URL':'HTTPS website URL');
+ target.setAttribute('inputmode',phone?'tel':'url');
+ target.setAttribute('autocomplete','off');
+ if(hint){
+  hint.textContent=!kind?'No CTA: कोई फोन नंबर या URL सेव नहीं होगा।':
+   phone?'Country code सहित फोन नंबर डालें, जैसे +91 9876543210।':
+   kind==='map'?'केवल HTTPS Map URL मान्य है।':
+   'केवल HTTPS Website URL मान्य है।';
+ }
 }
 async function previewLocalMedia(id){
  const box=document.getElementById('adfilepreview-'+id);
@@ -130,14 +144,13 @@ async function previewLocalMedia(id){
   const outcome=await JBAdMediaPreview.stage(box,file,requested);
   if(outcome?.status==='SUPERSEDED_LOCAL_PREVIEW_NO_CHANGE')return;
  }catch(e){
-  if(String(e.message||'')==='LOCAL_MEDIA_TYPE_MISMATCH'&&
-     document.getElementById('adfile-'+id)?.files?.[0]===file){
-   document.getElementById('adfile-'+id).value='';
-  }
-  // An older failed selection must not erase the currently selected file.
-  if((document.getElementById('adfile-'+id)?.files?.[0]===file||
-      String(e.message||'')==='LOCAL_MEDIA_TYPE_MISMATCH')&&
-      box.isConnected!==false)
+  const chooser=document.getElementById('adfile-'+id);
+  // The old async Android decode may fail AFTER a new Gallery selection.
+  // Only the exact still-selected file may clear chooser or show its error.
+  const isCurrent=Boolean(file&&chooser?.files?.[0]===file);
+  const mismatch=String(e.message||'')==='LOCAL_MEDIA_TYPE_MISMATCH';
+  if(isCurrent&&mismatch)chooser.value='';
+  if(isCurrent&&box.isConnected!==false)
    box.textContent='Local preview blocked: '+String(e.message||'invalid media');
  }
 }
@@ -173,7 +186,8 @@ async function load(){
 <div id="adfilepreview-${x.id}" class="meta" role="status" aria-live="polite"></div></div>
 <div class="row"><input id="cx-${x.id}" placeholder="Advertisement text" aria-label="Advertisement text">
 <select id="ca-${x.id}" onchange="creativeCtaChanged('${x.id}')" aria-label="CTA choice"><option value="">No CTA</option><option value="call">Call</option><option value="whatsapp">WhatsApp</option><option value="website">Website</option><option value="map">Map</option></select>
-<input id="cu-${x.id}" class="ad-cta-target" type="url" placeholder="HTTPS website URL" aria-label="CTA destination" hidden disabled></div>
+<input id="cu-${x.id}" class="ad-cta-target" type="url" placeholder="HTTPS website URL" aria-label="CTA destination" aria-describedby="cta-hint-${x.id}" autocomplete="off" hidden disabled></div>
+<p id="cta-hint-${x.id}" class="meta" role="note">No CTA: कोई फोन नंबर या URL सेव नहीं होगा।</p>
 <button class="btn" onclick="creative('${x.id}')">Save Pending DRAFT (Owner)</button>
 <button class="btn" onclick="approveLatestDraft('${x.id}')">Review latest draft → Explicit APPROVE</button>
 <p class="meta">पुराना LIVE Advertisement नई Draft Save करने से नहीं हटेगा। Image/Video approval server media verification के बाद ही होगा। अगर Backend अभी upgrade नहीं हुआ है तो SAVE सुरक्षा के लिए बंद रहेगा।</p>

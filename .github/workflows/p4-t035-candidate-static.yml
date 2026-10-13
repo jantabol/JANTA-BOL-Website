@@ -59,6 +59,8 @@ jobs:
         run: node --test ci/phase4/b7-public-ad-cta-android.test.cjs
       - name: B7 CP04 UI01-UI05 Owner creative cross-flow and URL cleanup regression
         run: node --test ci/phase4/b7-cp04-owner-creative-crossflow.test.cjs
+      - name: B7 CP05 UI06-09 + BE15 Android race, accessibility and exact-source artifact gate
+        run: node --test ci/phase4/b7-cp05-android-release-preflight.test.cjs
       - name: B7 ADS-010/011/015 local Media Studio preflight — no upload or premature media approval
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js
@@ -872,12 +874,18 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
           test -f JANTA_BOL_PHASE_3C_WORKING/index.html
           test -f JANTA_BOL_PHASE_3C_WORKING/ads.html
           test -f JANTA_BOL_PHASE_3C_WORKING/public-ads.js
           test -f JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js
           mkdir -p "$RUNNER_TEMP/b7-spck" dist
           cp -a JANTA_BOL_PHASE_3C_WORKING/. "$RUNNER_TEMP/b7-spck/"
+          (
+            cd "$RUNNER_TEMP/b7-spck"
+            sha256sum index.html ads.html ad-media-preview.js public-ads.js public-ads.css > B7_SPCK_SOURCE_SHA256.txt
+            sha256sum -c B7_SPCK_SOURCE_SHA256.txt
+          )
           mkdir -p "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY"
           cp -a CODEX_CURRENT_SUPABASE "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY/"
           cp -a JANTA_BOL_PHASE_4_WORKING/db "$RUNNER_TEMP/b7-spck/B7_BACKEND_REVIEW_ONLY/"
@@ -904,6 +912,7 @@ jobs:
           unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq index.html
           unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq ads.html
           unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq B7_SPCK_START_HERE.txt
+          unzip -Z1 dist/B7_SPCK_TEST_BUILD.zip | grep -Fxq B7_SPCK_SOURCE_SHA256.txt
           sha256sum dist/B7_SPCK_TEST_BUILD.zip
       - name: Make Android SPCK ZIP downloadable from this GitHub Actions run
         uses: actions/upload-artifact@v4
