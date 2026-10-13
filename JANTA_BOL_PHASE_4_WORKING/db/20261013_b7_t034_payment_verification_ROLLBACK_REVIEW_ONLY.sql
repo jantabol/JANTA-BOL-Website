@@ -24,7 +24,7 @@ BEGIN
          WHEN 'b7_t034_payment_verified_gate' THEN
            '%EXECUTE FUNCTION private.b7_t034_confirmed_payment_guard()%'
          ELSE '%EXECUTE FUNCTION private.b7_t034_paid_state_guard()%'
-       END
+       END)
     THEN RAISE EXCEPTION 'B7_T034_ROLLBACK_TRIGGER_DRIFT_ABORT: %',t.trigger_name;
     END IF;
   END LOOP;
