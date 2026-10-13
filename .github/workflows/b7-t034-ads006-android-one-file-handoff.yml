@@ -1,0 +1,41 @@
+name: B7 T034 ADS006 Android ONE FILE handoff - candidate only
+on:
+  push:
+    branches: [codex/b7-t034-safe-guard-20261013]
+    paths:
+      - .github/workflows/b7-t034-ads006-android-one-file-handoff.yml
+      - JANTA_BOL_PHASE_3C_WORKING/ads.html
+      - JANTA_BOL_PHASE_3C_WORKING/admin.html
+      - ci/phase4/b7-t034-owner-request-dashboard.test.cjs
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ads006-android-one-file:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Real Owner UX regression and existing Android safety checks
+        run: |
+          node --test ci/phase4/b7-t034-owner-request-dashboard.test.cjs
+          node --test ci/phase4/b7-cp05-android-release-preflight.test.cjs
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+      - name: Exact source and one file only Android SPCK candidate handoff
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          mkdir -p dist/ads006-android-one-file
+          cp JANTA_BOL_PHASE_3C_WORKING/ads.html dist/ads006-android-one-file/ads.html
+          sha256sum dist/ads006-android-one-file/ads.html | tee dist/ads006-android-one-file/ads.html.sha256
+          printf 'CANDIDATE ONLY - NOT PRODUCTION - DO NOT REPLACE ANY FILE UNTIL BACKUP AND EXACT SOURCE REVIEW\nGitHub commit: %s\nChanged Android file: ads.html ONLY\nAdmin dashboard notification badge requires a SEPARATE later file admin.html; it is NOT present in this one-file handoff.\nDo not approve/delete/record payment/verify while testing queue UI.\n' "$GITHUB_SHA" > dist/ads006-android-one-file/READ_ME_FIRST.txt
+          test "$(find dist/ads006-android-one-file -maxdepth 1 -type f -name '*.html' | wc -l)" -eq 1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: B7-T034-ADS006-SPCK-ONE-FILE-CANDIDATE
+          path: dist/ads006-android-one-file/
+          if-no-files-found: error
+          retention-days: 7
