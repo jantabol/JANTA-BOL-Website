@@ -1,0 +1,41 @@
+name: B7 T034 ADS001 Chromium 360 real CSS pixels (NO LIVE WRITES)
+on:
+  push:
+    branches: [codex/b7-t034-safe-guard-20261013]
+    paths:
+      - .github/workflows/b7-t034-ads001-360-browser.yml
+      - ci/phase4/b7-t034-ads001-360-browser.cjs
+      - JANTA_BOL_PHASE_3C_WORKING/index.html
+      - JANTA_BOL_PHASE_3C_WORKING/article.html
+      - JANTA_BOL_PHASE_3C_WORKING/advertise-request.html
+      - JANTA_BOL_PHASE_3C_WORKING/public-ads.css
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ads001-360-chrome:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Check Chrome installed on isolated runner
+        run: |
+          set -eu
+          command -v google-chrome
+          google-chrome --version
+      - name: Install isolated headless Chromium automation library (NO app package changes)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/b7_ads001_only" --no-audit --no-fund --no-save playwright-core@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/b7_ads001_only/node_modules" >> "$GITHUB_ENV"
+      - name: Actual CSS pixel viewport 360 - Homepage and synthetic Article CTA link/quiet layout
+        run: node ci/phase4/b7-t034-ads001-360-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: B7-T034-ADS001-360-CHROME-E1-NOT-ANDROID-E3
+          path: ads001-360-evidence/
+          retention-days: 7
+          if-no-files-found: warn
