@@ -25,6 +25,11 @@
 <body><header class="topbar"><h1>JANTA BOL — Advertising</h1><p>Canonical campaign backend</p></header>
 <main class="page"><a class="back-link" href="admin.html">← Dashboard</a>
 <div class="notice backend">Vigyapan ke liye sampark — Request ≠ LIVE. Approval + confirmed payment ke bina LIVE nahi hoga. Payment/provider unavailable ho to status DUE/Pending hi rahega.</div>
+<section class="card" id="adPendingQueue" aria-labelledby="adPendingHeading">
+<h2 id="adPendingHeading">📬 Advertisement Requests — Owner Queue <span id="adPendingCount" class="badge" role="status" aria-live="polite">Loading…</span></h2>
+<p class="meta">सबसे नई Requests पहले दिखेंगी। तारीख और समय भारत के समय (IST) में हैं। Review/Approval केवल Owner करेगा।</p>
+<div id="rows"></div>
+</section>
 <div class="card"><h2>New advertiser request</h2>
 <input id="name" placeholder="Advertiser / business name"><input id="contact" placeholder="Contact">
 <div class="row"><select id="placement"><option value="homepage">Homepage</option><option value="article">Article</option></select>
@@ -57,7 +62,7 @@
 <button class="btn" type="button" onclick="loadAdNotificationIssues()">Load pending notification issues</button>
 <div id="adNotificationIssues" role="status" aria-live="polite"></div>
 </details></section>
-<div id="rows"></div></main>
+</main>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase4-domain-client.js?v=20261012-b7-creativedraft"></script><script src="ad-media-preview.js"></script><script src="admin-auth.js"></script>
 <script>'use strict';
 const esc=x=>JBBackend.esc(String(x??''));
@@ -159,11 +164,32 @@ if(typeof window.addEventListener==='function')
   for(const box of activeAdMediaPreviews)JBAdMediaPreview.dispose(box);
   activeAdMediaPreviews.clear();
  });
+// Owner timestamps come only from immutable backend created_at; do not use device clock as submission authority.
+function adSubmittedIST(value){
+ const ts=Date.parse(String(value||''));
+ if(!Number.isFinite(ts))return 'Time unavailable — backend timestamp missing';
+ return new Intl.DateTimeFormat('hi-IN',{
+  timeZone:'Asia/Kolkata',day:'2-digit',month:'short',year:'numeric',
+  hour:'2-digit',minute:'2-digit',hour12:true
+ }).format(new Date(ts))+' IST';
+}
 async function load(){
  for(const box of activeAdMediaPreviews)JBAdMediaPreview.dispose(box);
- activeAdMediaPreviews.clear();try{const a=await JBPhase4.adRows();document.getElementById('rows').innerHTML=a.map(x=>`
+ activeAdMediaPreviews.clear();
+ const counter=document.getElementById('adPendingCount');
+ try{
+  const a=await JBPhase4.adRows();
+  const pending=a.filter(x=>x.status==='requested');
+  counter.textContent='Pending '+pending.length;
+  // Always put requests needing action first; newest by actual immutable server timestamp.
+  const ordered=a.slice().sort((x,y)=>{
+   const xp=x.status==='requested'?0:1,yp=y.status==='requested'?0:1;
+   return xp-yp||((Date.parse(y.created_at)||0)-(Date.parse(x.created_at)||0));
+  });
+  document.getElementById('rows').innerHTML=ordered.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
-<p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Source: ${esc(x.enquiry_origin||'legacy/manual')} · Article context: ${esc(x.enquiry_article_id||'—')} · Submitted: ${esc(x.created_at||'')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
+<p class="meta"><strong>📅 Received: ${esc(adSubmittedIST(x.created_at))}</strong> · <strong>Type: ${esc(x.request_kind==='custom'?'CUSTOM':'Standard')}</strong> · Source: ${esc(x.enquiry_origin||'legacy/manual')}</p>
+<p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Article context: ${esc(x.enquiry_article_id||'—')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
 <div class="row"><select id="vstate-${x.id}"><option value="">Verification decision</option><option value="verified">Verified</option><option value="rejected">Rejected</option><option value="pending">Pending / recheck</option></select><input id="vnote-${x.id}" maxlength="1000" placeholder="Verification note (min 8 characters)"><input id="vref-${x.id}" maxlength="300" placeholder="High-risk: independent evidence reference"><button class="btn" onclick="verifyAdvertiser('${x.id}','${x.advertiser_id}')">Record verification (Owner/AAL2)</button></div>
 <div class="row"><select id="s-${x.id}"><option>${esc(x.status)}</option><option>review</option><option>approved</option><option>payment_pending</option><option>live</option><option>paused</option><option>hidden</option><option>expired</option><option>rejected</option><option>cancelled</option></select><input id="n-${x.id}" placeholder="Audit note"><button class="btn primary" onclick="move('${x.id}')">Apply</button></div>
 <div class="row">
@@ -200,7 +226,7 @@ async function load(){
 <div class="row"><input id="paccept-${x.id}" placeholder="Advertiser acceptance evidence reference"><label>Acceptance timestamp<input id="pacceptedat-${x.id}" type="datetime-local"></label></div>
 <div class="row"><input id="pnote-${x.id}" placeholder="Owner receipt verification note"><input id="pconfirm-${x.id}" placeholder="Type CONFIRM"></div>
 <button class="btn" onclick="payment('${x.id}')">Record verified manual payment</button>
-<p class="meta">No confirmed payment without actual receipt, terms acceptance and Owner AAL2. Payment does not activate ads.</p></details></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){document.getElementById('rows').textContent=e.message;}}
+<p class="meta">No confirmed payment without actual receipt, terms acceptance and Owner AAL2. Payment does not activate ads.</p></details></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){counter.textContent='Queue unavailable';document.getElementById('rows').textContent=b7OwnerReadFailure(e,'Owner request queue');}}
 async function loadPackages(){
  const box=document.getElementById('packageRows'),chooser=document.getElementById('requestedPackage');
  try{
