@@ -10,9 +10,13 @@ fail(){ printf 'BACKUP_FAIL_CLOSED: %s\n' "$1" >&2; exit 1; }
 : "${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD secret missing}"
 : "${JB_BACKUP_AGE_RECIPIENT:?age public recipient key missing}"
 : "${JB_BACKUP_RCLONE_CONFIG_B64:?private remote config secret missing}"
+: "${JB_BACKUP_REMOTE_PREFIX:?user-controlled private offsite path missing}"
 : "${GITHUB_RUN_ID:?manual GitHub Action only}"
 
 [[ "${JB_BACKUP_AGE_RECIPIENT}" =~ ^age1[0-9a-z]+$ ]] || fail "invalid age recipient public key"
+[[ "${JB_BACKUP_REMOTE_PREFIX}" =~ ^jbbackup:[a-zA-Z0-9][a-zA-Z0-9._/-]+$ ]] ||
+ fail "unapproved private offsite remote prefix"
+[[ "${JB_BACKUP_REMOTE_PREFIX}" != *'..'* ]] || fail "invalid remote path"
 command -v age >/dev/null || fail "age not installed"
 command -v rclone >/dev/null || fail "rclone not installed"
 command -v supabase >/dev/null || fail "supabase CLI not installed"
@@ -66,10 +70,12 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 tar -C "$work/plain" -cf - roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt |
  zstd -T0 -q | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
-name="janta-bol/production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
-destination="jbbackup:${name}"
+name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
+destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
 # Fail if collision or remote access unavailable; no overwrites.
-rclone --config "$work/rclone.conf" ls "jbbackup:janta-bol/production/database" >/dev/null 2>&1 || :
+# Must be owner-provisioned private bucket/folder. Fail CLOSED if inaccessible.
+rclone --config "$work/rclone.conf" lsf "${JB_BACKUP_REMOTE_PREFIX%/}" >/dev/null ||
+ fail "approved offsite storage destination unavailable"
 rclone --config "$work/rclone.conf" copyto --immutable "$work/backup.age" "$destination" >/dev/null ||
   fail "upload failed"
 # Cryptographically verify ciphertext download bytes (does NOT prove DB restore).
@@ -78,5 +84,5 @@ rclone --config "$work/rclone.conf" copyto "$destination" "$work/remote.age" >/d
 cmp -s "$work/backup.age" "$work/remote.age" || fail "remote ciphertext does not match source"
 sha="$(sha256sum "$work/backup.age" | cut -d' ' -f1)"
 bytes="$(wc -c < "$work/backup.age")"
-printf 'OFFSITE_ENCRYPTED_BACKUP_UPLOADED=true\nREMOTE_OBJECT=%s\nSHA256_CIPHERTEXT=%s\nBYTES=%s\n' "$name" "$sha" "$bytes"
+printf 'OFFSITE_ENCRYPTED_BACKUP_UPLOADED=true\nOBJECT_SUFFIX=%s\nSHA256_CIPHERTEXT=%s\nBYTES=%s\n' "$name" "$sha" "$bytes"
 printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
