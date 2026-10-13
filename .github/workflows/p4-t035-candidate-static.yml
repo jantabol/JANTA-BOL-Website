@@ -61,6 +61,8 @@ jobs:
         run: node --test ci/phase4/b7-cp04-owner-creative-crossflow.test.cjs
       - name: B7 CP05 UI06-09 + BE15 Android race, accessibility and exact-source artifact gate
         run: node --test ci/phase4/b7-cp05-android-release-preflight.test.cjs
+      - name: B7 CP06 all 5 environment/secure-context/local preview provenance gates
+        run: node --test ci/phase4/b7-cp06-android-environment.test.cjs
       - name: B7 ADS-010/011/015 local Media Studio preflight — no upload or premature media approval
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js

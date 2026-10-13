@@ -80,9 +80,31 @@ async function stage(container,file,expectedKind){
   media.preload='metadata';
  }else media.setAttribute('loading','lazy');
  const label=g.document.createElement('p');
+ // Gallery sometimes returns a screenshot instead of the original image.
+ // Never print filenames or claim that local media provenance is validated.
  label.textContent='LOCAL PREVIEW ONLY — File नहीं भेजी गई, Approved नहीं है. '+
-   info.warning+'; Whole photo visible (contain), no crop.';
+   info.warning+'; Gallery screenshot भी चुन सकती है: तस्वीर खुद देखें. '+
+   'Whole photo visible (contain), no crop. Local dimensions pending.';
  let url='';
+ const previewGeneration=generations.get(container);
+ if(typeof media.addEventListener==='function'){
+  media.addEventListener(tag==='video'?'loadedmetadata':'load',()=>{
+   // Late metadata for superseded local files cannot replace current label.
+   if(!url||objects.get(container)!==url||
+      generations.get(container)!==previewGeneration)return;
+   const w=tag==='video'?media.videoWidth:media.naturalWidth;
+   const h=tag==='video'?media.videoHeight:media.naturalHeight;
+   if(!Number.isSafeInteger(w)||!Number.isSafeInteger(h)||w<=0||h<=0)return;
+   let note='Local visible dimensions: '+w+' × '+h+
+     ' pixels (aspect '+(w/h).toFixed(3)+'). ';
+   if(tag==='video'&&Number.isFinite(media.duration)&&media.duration>=0)
+    note+='Local video duration: '+media.duration.toFixed(1)+
+     ' seconds; 15s limit must still be validated by server. ';
+   label.textContent='LOCAL PREVIEW ONLY — File नहीं भेजी गई, Approved नहीं है. '+
+     note+info.warning+
+     '; Source file/original vs screenshot NOT independently verified; contain/no crop.';
+  },{once:true});
+ }
  try{
   url=g.URL.createObjectURL(file);
   if(!url)throw Error('AD_MEDIA_LOCAL_PREVIEW_URL_NOT_READY');
