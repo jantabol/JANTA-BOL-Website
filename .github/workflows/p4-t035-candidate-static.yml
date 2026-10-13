@@ -57,6 +57,8 @@ jobs:
         run: node --test ci/phase4/b7-issue-coverage.test.cjs
       - name: B7 ADS-001 real Android readable public contact CTA / one-ad scope regression
         run: node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+      - name: B7 CP04 UI01-UI05 Owner creative cross-flow and URL cleanup regression
+        run: node --test ci/phase4/b7-cp04-owner-creative-crossflow.test.cjs
       - name: B7 ADS-010/011/015 local Media Studio preflight — no upload or premature media approval
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js

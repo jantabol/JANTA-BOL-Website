@@ -90,7 +90,11 @@ async function stage(container,file,expectedKind){
   objects.set(container,url);
   container.append(media,label);
  }catch(e){
-  if(url&&g.URL?.revokeObjectURL)g.URL.revokeObjectURL(url);
+  // Even a DOM insertion failure after createObjectURL must leave no
+  // private blob reference or half-built old preview. Never retry/upload.
+  objects.delete(container);
+  if(url&&g.URL?.revokeObjectURL)try{g.URL.revokeObjectURL(url)}catch(_){}
+  try{container.replaceChildren()}catch(_){}
   throw e;
  }
  return info;
