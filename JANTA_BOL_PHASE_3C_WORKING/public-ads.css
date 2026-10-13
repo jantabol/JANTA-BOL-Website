@@ -9,3 +9,11 @@
 .jb-public-ad-cta{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;text-decoration:underline;color:inherit}
 .jb-public-ad-cta:focus-visible{outline:3px solid #ff6060;outline-offset:3px}
 [data-jb-ad-placement]:empty{display:none}
+
+/* A quiet contact link, NOT a second paid advertisement or forced modal. */
+/* ADS-001 Android E3 visual finding 2026-10-12: 13px text / 36px hit area was illegible.
+   This is the SAME quiet contact link, not a second ad or intrusive overlay. */
+.jb-ad-contact{font-size:clamp(17px,4vw,20px);line-height:1.5;text-align:center;margin:14px auto;color:#ddd}
+.jb-ad-contact a{color:#ffb5b5;text-decoration:underline;text-underline-offset:3px;font-weight:600;min-height:48px;padding:9px 12px;display:inline-flex;align-items:center;justify-content:center;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.jb-ad-contact a:focus-visible{outline:3px solid #ff6060;outline-offset:3px}
+.jb-ad-contact[hidden]{display:none}

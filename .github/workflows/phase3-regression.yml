@@ -7,6 +7,7 @@ on:
       - phase3-regression-ci
       - phase4-execution-2026-10-01
       - codex/b7-reconcile-20261009
+      - codex/b7-blueprint-20261010
       - phase3c-codex-baseline-2026-09-29
   pull_request:
     branches:
@@ -177,6 +178,12 @@ jobs:
         run: |
           set -o pipefail
           psql -X -v ON_ERROR_STOP=1 -f ci/phase3-regression/db-function-security-regression.sql 2>&1 | tee ci-results/db-function-security-regression.log
+
+      - name: B7 actual Storage RLS restrictiveness audit (read-only policy metadata)
+        shell: bash
+        run: |
+          set -o pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/db-b7-storage-policy-source-audit.sql 2>&1 | tee ci-results/db-b7-storage-policy-source-audit.log
 
       - name: Run Phase 3A security lifecycle regression
         shell: bash

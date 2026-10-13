@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="hi"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>विज्ञापनदाता पोर्टल — JANTA BOL</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101010;color:#eee;font:16px/1.55 Arial,sans-serif}
+header{background:#080808;border-bottom:2px solid #b30000;padding:15px}header a{color:white;font-weight:700;text-decoration:none}
+main{max-width:580px;margin:auto;padding:20px 14px 48px}
+.card{border:1px solid #444;background:#191919;border-radius:12px;padding:18px;margin:14px 0}
+label{display:block;margin-top:12px}input,textarea,button{font:inherit}
+input,textarea{background:#262626;color:#fff;border:1px solid #888;padding:10px;border-radius:7px;width:100%;min-height:44px}
+textarea{resize:vertical;min-height:130px}button{background:#ac1010;color:white;border:0;border-radius:7px;padding:10px 14px;min-height:44px;margin-top:12px;cursor:pointer}
+button:disabled{opacity:.5}button.secondary{background:#383838}
+.note{font-size:14px;color:#ccc}.status{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:12px}
+.status[hidden],section[hidden]{display:none}
+a{color:#ffa0a0}output{display:block;white-space:pre-wrap;overflow-wrap:anywhere}
+</style></head><body>
+<header><a href="index.html">JANTA <span style="color:#ff3434">BOL</span></a></header>
+<main><h1>विज्ञापनदाता पोर्टल</h1>
+<p class="note">यहाँ केवल अपने विज्ञापन की स्थिति देख सकते हैं और बदलाव के लिए अनुरोध भेज सकते हैं। फोटो, वीडियो, क्षेत्र और स्वीकृत विज्ञापन में कोई सीधा बदलाव नहीं होगा।</p>
+<section class="card" id="loginSection">
+<h2>सुरक्षित लॉगिन</h2>
+<form id="loginForm">
+<label for="portalLogin">लॉगिन ID</label><input id="portalLogin" autocomplete="username" maxlength="100" required>
+<label for="portalSecret">एक बार उपयोग होने वाला अस्थायी पासवर्ड</label>
+<input id="portalSecret" type="password" autocomplete="current-password" required>
+<button id="loginButton" type="submit">लॉगिन करें</button>
+</form>
+<p class="note">पहले सफल लॉगिन के बाद अस्थायी पासवर्ड दोबारा उपयोग नहीं होगा। यह सत्र केवल इसी Browser Tab में रहता है और अधिकतम 12 घंटे मान्य है। नए Login Code के लिए JANTA BOL Admin से संपर्क करें।</p>
+</section>
+<section id="portalSection" hidden>
+<div class="card"><h2>मेरा विज्ञापन</h2><output id="campaignDetails"></output>
+<p class="note" id="creativeDetails"></p>
+<button id="logoutButton" type="button" class="secondary">लॉगआउट</button></div>
+<div class="card"><h2>बदलाव का अनुरोध</h2>
+<p class="note">यह केवल टेक्स्ट में लिखा गया अनुरोध है। नई फोटो/वीडियो/क्षेत्र चुनना, उसे जाँचना और स्वीकृत करना केवल Admin का काम रहेगा। मौजूदा स्वीकृत विज्ञापन अपने-आप नहीं बदलेगा।</p>
+<form id="changeForm">
+<label for="changeText">क्या बदलवाना चाहते हैं?</label>
+<textarea id="changeText" minlength="10" maxlength="1000" required
+ placeholder="उदाहरण: कृपया मेरे विज्ञापन की फोटो बदलने पर विचार करें।"></textarea>
+<button id="changeButton" type="submit">अनुरोध भेजें</button>
+</form></div>
+<div class="card"><h2>विज्ञापन Renewal Request</h2>
+<p class="note">यह केवल अवधि बढ़ाने का अनुरोध है। Owner का नया Price/Terms Approval, वास्तविक Payment Verification और Schedule पूरा हुए बिना कोई विज्ञापन अपने-आप LIVE या Extend नहीं होगा।</p>
+<form id="renewalForm">
+<label for="renewalEnd">प्रस्तावित नई समाप्ति तारीख और समय</label>
+<input id="renewalEnd" type="datetime-local" required>
+<button id="renewalButton" type="submit">Renewal Request भेजें</button>
+</form></div></section>
+<p id="portalFeedback" role="status" aria-live="polite" class="status" hidden></p>
+<p class="note"><a href="index.html">← खबरों पर वापस जाएँ</a></p>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script><script src="backend-client.js"></script>
+<script>
+(function(){
+'use strict';
+const key='jb_b7_portal_session_v1';
+let token=null,expiry=0;
+const el=id=>document.getElementById(id);
+function feedback(message){const box=el('portalFeedback');box.textContent=message;box.hidden=false;}
+function clear(){
+ token=null;expiry=0;try{sessionStorage.removeItem(key)}catch(_){}
+ el('portalSection').hidden=true;el('loginSection').hidden=false;
+ el('portalSecret').value='';el('campaignDetails').textContent='';
+ el('creativeDetails').textContent='';
+}
+async function rpc(name,args){
+ if(!window.JBBackend?.client)throw Error('BACKEND_NOT_READY');
+ const {data,error}=await JBBackend.client.rpc(name,args);
+ if(error)throw error;
+ return data;
+}
+async function refresh(){
+ if(!token||expiry<=Date.now()){clear();return;}
+ let data;
+ try{data=await rpc('jb_ad_portal_campaign',{p_token:token});}
+ catch(_){feedback('अभी विज्ञापन स्थिति उपलब्ध नहीं है। कुछ समय बाद फिर कोशिश करें।');return;}
+ const own=Array.isArray(data)?data[0]:null;
+ if(!own||!own.campaign_id){clear();feedback('सत्र समाप्त या निरस्त हो गया है। नए लॉगिन के लिए Admin से संपर्क करें।');return;}
+ // No innerHTML, no untrusted hyperlinks: owner-approved fields only.
+ el('campaignDetails').textContent=
+   'Campaign ID: '+own.campaign_id+
+   '\nStatus: '+(own.status||'Pending')+
+   '\nPlacement: '+(own.placement||'')+
+   '\nPurchased scope: '+(own.scope||'')+
+   '\nStart: '+(own.starts_at?new Date(own.starts_at).toLocaleString('hi-IN'):'तय होना बाकी')+
+   '\nEnd: '+(own.ends_at?new Date(own.ends_at).toLocaleString('hi-IN'):'तय होना बाकी');
+ const approved=own.creative&&own.creative.approved===true?own.creative:null;
+ el('creativeDetails').textContent=approved?
+   'Approved creative: '+(approved.creative_type||'')+
+   ' · Version: '+(approved.version||'')+
+   (approved.creative_type==='text'?' · '+String(approved.text_body||'').slice(0,180):''):
+   'अभी कोई स्वीकृत विज्ञापन उपलब्ध नहीं है।';
+ el('loginSection').hidden=true;el('portalSection').hidden=false;
+}
+el('loginForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(!event.target.reportValidity())return;
+ const button=el('loginButton');button.disabled=true;
+ try{
+  const t=await rpc('jb_ad_portal_login',{
+    p_login:el('portalLogin').value.trim(),p_secret:el('portalSecret').value
+  });
+  if(typeof t!=='string'||!/^[0-9a-f]{48}$/.test(t))throw Error('BAD_SESSION');
+  token=t;expiry=Date.now()+12*60*60*1000;
+  try{sessionStorage.setItem(key,JSON.stringify({token,expiry}));}catch(_){}
+  el('portalSecret').value='';el('portalFeedback').hidden=true;
+  await refresh();
+ }catch(_){feedback('लॉगिन सफल नहीं हुआ। जानकारी जाँचें या Admin से संपर्क करें।');}
+ finally{button.disabled=false;el('portalSecret').value='';}
+});
+el('changeForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(!event.target.reportValidity())return;
+ if(!token||expiry<=Date.now()){clear();feedback('सत्र समाप्त हो गया है।');return;}
+ const note=el('changeText').value.trim(),button=el('changeButton');
+ if(note.length<10||note.length>1000){feedback('कम से कम 10 और अधिकतम 1000 अक्षर लिखें।');return;}
+ button.disabled=true;
+ try{
+  const id=await rpc('jb_ad_portal_submit_creative',{
+   p_token:token,p_type:'text',p_media:null,p_text:note,
+   p_cta_type:null,p_cta_target:null
+  });
+  if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))throw Error('RECEIPT_MISSING');
+  feedback('बदलाव का अनुरोध Pending है।\nRequest ID: '+id+
+    '\nमौजूदा स्वीकृत विज्ञापन अपने-आप नहीं बदलेगा।');
+  el('changeText').value='';
+ }catch(e){
+  feedback(String(e?.message||'').includes('CHANGE_REQUEST_COOLDOWN')?
+   'हाल में अनुरोध भेजा गया है। कृपया कुछ मिनट बाद कोशिश करें।':
+   'अभी अनुरोध दर्ज नहीं हो पाया। सत्र और नेटवर्क जाँचें।');
+ }finally{button.disabled=false;}
+});
+el('renewalForm').addEventListener('submit',async event=>{
+ event.preventDefault();if(!event.target.reportValidity())return;
+ if(!token||expiry<=Date.now()){clear();feedback('सत्र समाप्त हो गया है।');return;}
+ const button=el('renewalButton'),value=el('renewalEnd').value;
+ let when;
+ try{
+  const date=new Date(value);
+  if(!value||!Number.isFinite(date.getTime()))throw Error('BAD_END');
+  when=date.toISOString();
+ }catch(_){feedback('Renewal के लिए सही तारीख और समय चुनें।');return;}
+ button.disabled=true;
+ try{
+  const id=await rpc('jb_ad_portal_request_renewal',{
+    p_token:token,p_requested_end:when
+  });
+  if(typeof id!=='string'||!/^[0-9a-f-]{36}$/i.test(id))throw Error('RECEIPT_MISSING');
+  feedback('Renewal Request Pending है।\nRequest ID: '+id+
+    '\nOwner की स्वीकृति, नए Terms और Payment के बिना विज्ञापन अवधि नहीं बढ़ेगी।');
+  el('renewalEnd').value='';
+ }catch(e){
+  const reason=String(e?.message||'');
+  feedback(reason.includes('RENEWAL_ALREADY_PENDING')?
+   'इस विज्ञापन की Renewal Request पहले से Pending है।':
+   reason.includes('INVALID_RENEWAL_END')?
+   'नई समाप्ति तारीख वर्तमान समाप्ति तारीख से आगे होनी चाहिए।':
+   'Renewal Request अभी दर्ज नहीं हो पाई। बाद में कोशिश करें।');
+ }finally{button.disabled=false;}
+});
+el('logoutButton').addEventListener('click',()=>{clear();feedback('आप लॉगआउट हो गए हैं।');});
+try{
+ const saved=JSON.parse(sessionStorage.getItem(key)||'null');
+ if(saved&&typeof saved.token==='string'&&/^[0-9a-f]{48}$/.test(saved.token)
+    &&Number.isFinite(saved.expiry)&&saved.expiry>Date.now()){
+  token=saved.token;expiry=saved.expiry;refresh();
+ }else clear();
+}catch(_){clear();}
+})();
+</script></body></html>
