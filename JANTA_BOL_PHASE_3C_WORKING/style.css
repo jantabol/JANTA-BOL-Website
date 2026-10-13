@@ -998,3 +998,827 @@ text-align:center;
 box-sizing:border-box;
     margin-top:18px;
     padding:14px 28px;
+    border:3px solid #ff1e1e;
+    border-radius:50px;
+    color:#ff1e1e;
+    text-decoration:none;
+    font-weight:bold;
+    transition:.3s;
+}
+
+.contact-button:hover{
+    background:#ff1e1e;
+    color:#fff;
+}
+
+.contact-closing{
+    margin-top:35px;
+    color:#fff;
+    text-align:center;
+    font-size:22px;
+    font-weight:bold;
+}
+
+/* Mobile */
+
+@media(max-width:768px){
+
+.contact-section h2{
+    font-size:34px;
+}
+
+.contact-tagline{
+    font-size:18px;
+}
+
+.contact-description{
+    font-size:17px;
+}
+
+.contact-card h3{
+    font-size:24px;
+}
+
+.contact-card p{
+    font-size:16px;
+}
+
+.contact-button{
+    width:100%;
+    text-align:center;
+}
+
+.contact-closing{
+    font-size:18px;
+}
+
+}
+/* ================= FOOTER ================= */
+
+.footer{
+    background:#0d0d0d;
+    padding:60px 25px 35px;
+    text-align:center;
+    border-top:2px solid #ff1e1e;
+}
+
+.footer h2{
+    color:#fff;
+    font-size:34px;
+    margin-bottom:10px;
+}
+
+.footer-tagline{
+    color:#ff1e1e;
+    font-size:18px;
+    margin-bottom:35px;
+    font-weight:bold;
+}
+
+.footer-links h3{
+    color:#fff;
+    margin-top:28px;
+    margin-bottom:10px;
+    font-size:22px;
+}
+
+.footer-links p{
+    color:#bdbdbd;
+    line-height:1.8;
+    font-size:17px;
+}
+
+.copyright{
+    margin-top:35px;
+    color:#777;
+    font-size:15px;
+    line-height:1.7;
+}
+
+.footer-ending{
+    margin-top:25px;
+    color:#fff;
+    font-size:20px;
+    font-weight:bold;
+}
+/* ========================= */
+/* V2.01 - Header Menu Button */
+/* ========================= */
+
+.menu-btn{
+    background:transparent;
+    border:none;
+    color:#ffffff;
+    font-size:34px;
+    cursor:pointer;
+    padding:8px 10px;
+    transition:0.3s;
+}
+
+.menu-btn:hover{
+    color:#e50914;
+    transform:scale(1.08);
+}
+
+.navbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+/* ========================= */
+/* V2.01 Side Navigation */
+/* ========================= */
+
+.menu-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.65);
+    opacity:0;
+    visibility:hidden;
+    transition:.35s;
+    z-index:999;
+}
+
+.side-menu{
+    position:fixed;
+    top:0;
+    right:0;
+    width:min(86vw, 360px);
+    max-width:100%;
+    height:100dvh;
+    background:#111;
+    color:#fff;
+    overflow-x:hidden;
+    overflow-y:auto;
+    -webkit-overflow-scrolling:touch;
+    transform:translateX(105%);
+    transition:transform .35s ease;
+    z-index:1000;
+    padding:20px;
+    box-sizing:border-box;
+}
+
+.side-menu.open{
+    transform:translateX(0);
+}
+
+.side-menu nav,
+.menu-group,
+.submenu{
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+}
+
+.submenu{
+    overflow:hidden;
+}
+
+.side-menu nav a,
+.menu-toggle{
+    white-space:normal;
+    overflow-wrap:anywhere;
+}
+/* Menu Header */
+
+.menu-header{
+    border-bottom:1px solid #333;
+    padding-bottom:20px;
+    margin-bottom:20px;
+}
+
+.menu-header h2{
+    font-size:28px;
+    margin:0;
+    color:#ffffff;
+}
+
+.menu-header p{
+    color:#bbbbbb;
+    font-size:14px;
+    margin-top:8px;
+    line-height:1.6;
+}
+
+.close-menu{
+    background:none;
+    border:none;
+    color:#ffffff;
+    font-size:32px;
+    cursor:pointer;
+    float:right;
+}
+/* Menu Links */
+
+.side-menu nav a,
+.menu-toggle{
+    display:block;
+    width:100%;
+    padding:15px 0;
+    color:#ffffff;
+    text-decoration:none;
+    background:none;
+    border:none;
+    text-align:left;
+    font-size:18px;
+    display: flex;
+align-items: center;
+gap: 10px;
+    cursor:pointer;
+    border-bottom:1px solid #222;
+}
+
+.side-menu nav a:hover,
+.menu-toggle:hover{
+    color:#e50914;
+}
+
+.submenu{
+    display:none;
+    padding-left:18px;
+}
+
+.submenu a{
+    font-size:16px;
+    color:#bbbbbb;
+}
+.menu-group{
+    display:block;
+}
+
+.menu-group.active .submenu{
+    display:block;
+}
+
+/* V2 mobile menu stability fix */
+.menu-header{
+    position:relative;
+    padding-right:46px;
+}
+.close-menu{
+    position:absolute;
+    top:0;
+    right:0;
+    float:none;
+}
+@media (max-width:480px){
+    .side-menu{
+        width:min(88vw, 340px);
+        padding:18px;
+    }
+    .menu-header h2{font-size:24px;}
+    .side-menu nav a,
+    .menu-toggle{font-size:17px;}
+    .submenu{padding-left:14px;}
+}
+/* FINAL MOBILE SIDE MENU FIX */
+html, body {
+    max-width: 100%;
+    overflow-x: hidden;
+}
+
+.side-menu {
+    width: 85vw !important;
+    max-width: 360px !important;
+    right: -100% !important;
+    left: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.side-menu.open {
+    right: 0 !important;
+}
+.side-menu nav {
+    display: block !important;
+}
+
+.side-menu nav > a,
+.side-menu .menu-group,
+.side-menu .menu-toggle {
+    width: 100% !important;
+    display: block !important;
+    box-sizing: border-box !important;
+}
+
+.side-menu nav a {
+    white-space: normal !important;
+    word-break: normal !important;
+}
+/* ===== Politics Category ===== */
+
+#politics {
+    background: #000;
+    color: #fff;
+    padding: 35px 20px;
+}
+
+#politics h2 {
+    color: #fff;
+}
+
+#politics p {
+    color: #b5b5b5;
+}
+
+#politics .category-news p {
+    color: #fff;
+}
+#crime {
+    color: #ffffff !important;
+}
+
+#crime h2 {
+    color: #ffffff !important;
+}
+
+#crime p {
+    color: #aaaaaa !important;
+}
+
+#crime .category-news p {
+    color: #ffffff !important;
+}
+/* Crime section alignment fix */
+#crime {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box !important;
+}
+/* ===== Education Category Colors Only ===== */
+
+#education h2 {
+    color: #ffffff !important;
+}
+
+#education .category-header p {
+    color: #aaaaaa !important;
+}
+
+#education .category-news p {
+    color: #ffffff !important;
+}
+/* Education alignment - same as Crime */
+#education {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    box-sizing: border-box;
+}
+/* ===== SPORTS CATEGORY ===== */
+
+#sports {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+    color: #ffffff !important;
+}
+
+#sports h2 {
+    color: #ffffff !important;
+}
+
+#sports p {
+    color: #aaaaaa !important;
+}
+
+#sports .category-news p {
+    color: #ffffff !important;
+}
+/* ===== Health Category ===== */
+
+#health {
+    padding: 20px;
+}
+
+#health h2 {
+    color: #ffffff !important;
+}
+
+#health .category-header p {
+    color: #aaaaaa !important;
+}
+
+#health .category-news p {
+    color: #ffffff !important;
+}
+/* ===== Business Category ===== */
+
+#business {
+    padding: 20px;
+}
+
+#business h2 {
+    color: #ffffff !important;
+}
+
+#business .category-header p {
+    color: #aaaaaa !important;
+}
+
+#business .category-news p {
+    color: #ffffff !important;
+}
+#technology {
+    padding: 20px;
+}
+
+#technology h2 {
+    color: #ffffff !important;
+}
+
+#technology .category-header p {
+    color: #aaaaaa !important;
+}
+
+#technology .category-news p {
+    color: #ffffff !important;
+}
+/* ===== Entertainment Category ===== */
+
+#entertainment {
+    padding: 20px;
+}
+
+#entertainment h2 {
+    color: #ffffff !important;
+}
+
+#entertainment .category-header p {
+    color: #aaaaaa !important;
+}
+
+#entertainment .category-news p {
+    color: #ffffff !important;
+}
+
+/* ===== V2.2 Final category compatibility ===== */
+#administration, #agriculture, #religion-culture, #weather, #other {
+    padding: 20px;
+    color: #ffffff;
+}
+#administration h2, #agriculture h2, #religion-culture h2, #weather h2, #other h2 {
+    color: #ffffff !important;
+}
+#administration .category-header p, #agriculture .category-header p,
+#religion-culture .category-header p, #weather .category-header p, #other .category-header p {
+    color: #aaaaaa !important;
+}
+
+
+/* ===== V2.4 FINAL REVIEW: TOP BREAKING NEWS FIX ===== */
+#top-story.breaking-news{
+    display:flex;
+    align-items:stretch;
+    width:100%;
+    height:60px;
+    margin:0;
+    padding:0;
+    background:#111;
+    border:0;
+    border-top:2px solid #E50914;
+    border-bottom:2px solid #E50914;
+    border-radius:0;
+    overflow:hidden;
+    box-sizing:border-box;
+}
+
+#top-story .breaking-label{
+    position:relative;
+    z-index:2;
+    flex:0 0 auto;
+    height:100%;
+    padding:0 18px;
+    display:flex;
+    align-items:center;
+    background:#E50914;
+    color:#fff;
+    font-weight:700;
+    white-space:nowrap;
+    box-sizing:border-box;
+}
+
+#top-story .breaking-content{
+    position:relative;
+    flex:1 1 auto;
+    min-width:0;
+    height:100%;
+    padding:0;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    color:#fff;
+    white-space:nowrap;
+}
+
+#top-story .ticker{
+    display:inline-flex;
+    flex:none;
+    align-items:center;
+    width:max-content;
+    padding-left:100%;
+    animation:topBreakingTicker 22s linear infinite;
+    will-change:transform;
+}
+
+#top-story .ticker span{
+    flex:none;
+    margin-right:35px;
+}
+
+@keyframes topBreakingTicker{
+    from{ transform:translateX(0); }
+    to{ transform:translateX(-100%); }
+}
+
+
+/* ===== V2.4 FINAL REVIEW: Top Story + Shivpuri Tehsil preview ===== */
+button.read-more{
+    font-family:inherit;
+    cursor:pointer;
+}
+.tehsil-card[data-tehsil]{ cursor:pointer; }
+
+.preview-modal{
+    position:fixed;
+    inset:0;
+    z-index:2000;
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    background:rgba(0,0,0,.78);
+    box-sizing:border-box;
+}
+.preview-modal.open{ display:flex; }
+.preview-modal-card{
+    position:relative;
+    width:min(100%,520px);
+    background:#111;
+    border:1px solid #E50914;
+    border-radius:18px;
+    padding:28px 22px 24px;
+    box-sizing:border-box;
+    box-shadow:0 18px 50px rgba(0,0,0,.55);
+}
+.preview-modal-close{
+    position:absolute;
+    top:10px;
+    right:12px;
+    border:0;
+    background:transparent;
+    color:#fff;
+    font-size:24px;
+    cursor:pointer;
+}
+.preview-modal-kicker{
+    color:#E50914;
+    font-weight:700;
+    margin-bottom:10px;
+}
+.preview-modal-card h2{
+    color:#fff;
+    margin:0 32px 12px 0;
+    font-size:24px;
+    line-height:1.35;
+}
+.preview-modal-card p{
+    color:#cfcfcf;
+    margin:0;
+    font-size:16px;
+    line-height:1.7;
+}
+
+
+/* ===== V2.4 FINAL REVIEW: Video + Latest functional controls ===== */
+.video-news-open{ cursor:pointer; }
+button.latest-news-open{
+    font-family:inherit;
+    cursor:pointer;
+}
+
+/* ===== V2.4 COVERAGE NETWORK: functional cards ===== */
+.coverage-open{ cursor:pointer; }
+.coverage-open:active{ transform:scale(.99); }
+
+
+
+/* ===== V2.4 Category + Trending functional controls only ===== */
+.category-open, .trending-open { cursor:pointer; }
+button.trending-button {
+  background:transparent;
+  font-family:inherit;
+  font-size:inherit;
+  cursor:pointer;
+}
+
+
+/* ===== V2.4 ABOUT + CITIZEN REPORTER ===== */
+button.about-button,
+button.district-button{
+    background:transparent;
+    font-family:inherit;
+    cursor:pointer;
+}
+
+.citizen-action-card{
+    background:#151515;
+    border:1px solid #2c2c2c;
+    border-radius:22px;
+    padding:22px;
+    margin-bottom:30px;
+}
+.citizen-action-card h3{
+    color:#fff;
+    font-size:28px;
+    margin:0 0 8px;
+}
+.citizen-action-card > p{
+    color:#bdbdbd;
+    line-height:1.6;
+}
+
+.citizen-news-form,
+.official-reporter-form{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    margin-top:20px;
+}
+.citizen-news-form label,
+.official-reporter-form label,
+.experience-fieldset legend{
+    color:#fff;
+    font-weight:700;
+    font-size:15px;
+}
+.citizen-news-form input,
+.citizen-news-form textarea,
+.official-reporter-form input,
+.official-reporter-form textarea,
+.official-reporter-form select{
+    width:100%;
+    box-sizing:border-box;
+    background:#0b0b0b;
+    color:#fff;
+    border:1px solid #3a3a3a;
+    border-radius:12px;
+    padding:13px 14px;
+    font:inherit;
+    outline:none;
+}
+.citizen-news-form input:focus,
+.citizen-news-form textarea:focus,
+.official-reporter-form input:focus,
+.official-reporter-form textarea:focus,
+.official-reporter-form select:focus{
+    border-color:#E50914;
+}
+
+.citizen-submit,
+.reporter-submit{
+    margin-top:10px;
+    border:0;
+    border-radius:14px;
+    padding:14px 18px;
+    background:#E50914;
+    color:#fff;
+    font-size:17px;
+    font-weight:800;
+    cursor:pointer;
+}
+.citizen-verify-note{
+    margin:16px 0 0;
+    color:#cfcfcf !important;
+    font-size:14px;
+    line-height:1.6;
+}
+
+.reporter-modal{
+    position:fixed;
+    inset:0;
+    z-index:2200;
+    display:none;
+    align-items:flex-start;
+    justify-content:center;
+    padding:18px;
+    background:rgba(0,0,0,.82);
+    overflow-y:auto;
+    box-sizing:border-box;
+}
+.reporter-modal.open{ display:flex; }
+.reporter-modal-card{
+    position:relative;
+    width:min(100%,620px);
+    margin:18px auto;
+    background:#111;
+    border:1px solid #E50914;
+    border-radius:20px;
+    padding:26px 20px 24px;
+    box-sizing:border-box;
+}
+.reporter-modal-close{
+    position:absolute;
+    top:10px;
+    right:12px;
+    border:0;
+    background:transparent;
+    color:#fff;
+    font-size:24px;
+    cursor:pointer;
+}
+.reporter-modal-kicker{
+    color:#E50914;
+    font-weight:800;
+    margin-bottom:8px;
+}
+.reporter-modal-card h2{
+    color:#fff;
+    margin:0 34px 18px 0;
+    font-size:28px;
+}
+.form-section-title{
+    margin:18px 0 4px;
+    padding-top:14px;
+    border-top:1px solid #2b2b2b;
+    color:#E50914;
+    font-size:18px;
+    font-weight:800;
+}
+.experience-fieldset{
+    border:1px solid #333;
+    border-radius:12px;
+    padding:12px;
+    margin:4px 0;
+}
+.experience-fieldset label{
+    display:inline-flex;
+    align-items:center;
+    gap:6px;
+    margin-right:18px;
+    font-weight:500;
+}
+.experience-fieldset input{
+    width:auto;
+}
+.optional,
+.small-note{
+    color:#9f9f9f;
+    font-weight:400;
+}
+.declaration-check{
+    display:flex !important;
+    align-items:flex-start;
+    gap:10px;
+    line-height:1.5;
+    margin-top:10px;
+}
+.declaration-check input{
+    width:auto;
+    margin-top:4px;
+}
+.reporter-important-note{
+    margin-top:22px;
+    padding:16px;
+    background:#171717;
+    border-left:4px solid #E50914;
+    border-radius:10px;
+    color:#d0d0d0;
+    line-height:1.6;
+}
+.reporter-important-note strong{ color:#fff; }
+.reporter-important-note p{ margin:8px 0 0; }
+
+
+/* ===== V2.4 CONTACT/FOOTER: essential links only ===== */
+.footer-essential-links a{
+    color:inherit;
+    text-decoration:none;
+}
+.footer-essential-links a:hover,
+.footer-essential-links a:focus{
+    color:#E50914;
+}
+
+/* P4 public landing mobile readability/layout repair — 2026-10-08.
+   Scoped to existing landing markup; does not affect admin or backend. */
+body { color:#f5f5f5; }
+.category-section { padding:28px 20px; box-sizing:border-box; color:#f5f5f5; background:#070707; }
+.category-section .category-header h2 { color:#fff; line-height:1.3; }
+.category-section .category-header p { color:#bcbcbc; line-height:1.7; }
+.category-section .category-news, .category-section .category-news p { color:#eee; line-height:1.7; }
+.footer, .footer p, .footer-links, .footer-links a { color:#d6d6d6; }
+.footer-links a { display:inline-block; margin:5px 8px; overflow-wrap:anywhere; }
+.side-menu { background:#111; color:#fff; }
+.side-menu nav { display:block; }
+.side-menu nav a, .side-menu .menu-toggle { color:#fff; }
+.reporter-modal-card, .reporter-modal-card label, .reporter-modal-card p { color:#eee; }
+.official-reporter-form { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; }
+.official-reporter-form input:not([type=radio]):not([type=checkbox]):not([type=file]),
+.official-reporter-form select, .official-reporter-form textarea { box-sizing:border-box; max-width:100%; width:100%; min-width:0; }
+@media (max-width:600px) {
+  .category-section { padding:22px 16px; }
+  .footer { padding:36px 16px 24px; }
+  .footer-links { max-width:100%; overflow-wrap:anywhere; }
+  .reporter-modal { padding:10px; }
+  .reporter-modal-card { padding:22px 14px; }
+  .official-reporter-form { min-width:0; }
+}
