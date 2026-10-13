@@ -16,8 +16,7 @@ fail(){ printf 'BACKUP_FAIL_CLOSED: %s\n' "$1" >&2; exit 1; }
 command -v age >/dev/null || fail "age not installed"
 command -v rclone >/dev/null || fail "rclone not installed"
 command -v supabase >/dev/null || fail "supabase CLI not installed"
-command -v pg_dump >/dev/null || fail "pg_dump not installed"
-command -v pg_restore >/dev/null || fail "pg_restore not installed"
+command -v docker >/dev/null || fail "Docker required for exact PostgreSQL 17 client"
 command -v zstd >/dev/null || fail "zstd not installed"
 
 work="$(mktemp -d)"
@@ -46,15 +45,17 @@ fi
 export PGSSLMODE=require
 export PGCONNECT_TIMEOUT=15
 # Expected checkout data without copying any sensitive rows to stdout.
-pg_dump --version >/dev/null
+docker run --rm postgres:17 pg_dump --version >/dev/null
 printf 'BACKUP: three Supabase-recommended filtered roles/schema/data dumps + full raw disaster archive\n'
 supabase db dump --db-url "$JB_DB_URI" --role-only -f "$work/plain/roles.sql" >/dev/null
 supabase db dump --db-url "$JB_DB_URI" -f "$work/plain/schema.sql" >/dev/null
 supabase db dump --db-url "$JB_DB_URI" --use-copy --data-only -f "$work/plain/data.sql" >/dev/null
 # Raw full DB archive, including auth/storage metadata omitted from filtered dump;
 # Supabase-specific roles/extensions may need manual reconciliation on restoration.
-pg_dump --format=custom --no-owner --file="$work/plain/raw_full.dump" "$JB_DB_URI" >/dev/null
-pg_restore --list "$work/plain/raw_full.dump" > "$work/plain/raw_inventory.txt"
+docker run --rm --network=host -v "$work/plain:/backup" postgres:17 \
+  pg_dump --format=custom --no-owner --file=/backup/raw_full.dump "$JB_DB_URI" >/dev/null
+docker run --rm -v "$work/plain:/backup:ro" postgres:17 \
+  pg_restore --list /backup/raw_full.dump > "$work/plain/raw_inventory.txt"
 for fname in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt; do
   test -s "$work/plain/$fname" || fail "empty backup component $fname"
 done
