@@ -77,6 +77,7 @@ jobs:
             zstd -d -q | tar -C "$tmp" -xf -
           test "$(sha256sum "$tmp/backup.tar.zst.age" | cut -d' ' -f1)" = "$(cat "$tmp/hash")"
           createdb --maintenance-db=postgres restored_synthetic
+          psql -X -v ON_ERROR_STOP=1 -d restored_synthetic -c 'DROP SCHEMA public CASCADE;'
           docker run --rm --network=host -e PGPASSWORD="$PGPASSWORD" -v "$tmp:/backup:ro" postgres:17 \
             pg_restore --exit-on-error --no-owner --no-privileges \
               -h localhost -U postgres -d restored_synthetic /backup/fake.dump
