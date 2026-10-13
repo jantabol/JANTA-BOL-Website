@@ -20,7 +20,7 @@ BEGIN
       AND NOT tr.tgisinternal
   LOOP
     IF t.def IS NULL OR t.def NOT LIKE
-       CASE t.trigger_name
+       (CASE t.trigger_name
          WHEN 'b7_t034_payment_verified_gate' THEN
            '%EXECUTE FUNCTION private.b7_t034_confirmed_payment_guard()%'
          ELSE '%EXECUTE FUNCTION private.b7_t034_paid_state_guard()%'
