@@ -3,6 +3,13 @@ on:
   push:
     branches:
       - review/b7-backup-only-20261014
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ci/backup/**'
+      - '.github/workflows/b7-*.yml'
+      - '.github/workflows/jb-b2-*.yml'
 permissions:
   contents: read
 jobs:
