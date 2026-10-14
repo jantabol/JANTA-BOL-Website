@@ -34,6 +34,21 @@ for i in $(seq 1 35); do
   sleep 1
 done
 [[ "$ready" == 1 ]] || fail 'isolated clone did not start'
+# Supabase PostgreSQL first starts a TEMP bootstrap postmaster, shuts it down,
+# then launches the final server. A single pg_isready may race the shutdown.
+# Require a stable, real SQL-serving postmaster for multiple consecutive probes.
+stable=0
+for i in $(seq 1 100); do
+  if docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+       -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+    stable=$((stable + 1))
+    [[ "$stable" -ge 6 ]] && break
+  else
+    stable=0
+  fi
+  sleep 2
+done
+[[ "$stable" -ge 6 ]] || fail 'Supabase PG bootstrap/final postmaster never stabilized'
 # Confidential dump enters an offline container. No Docker port mapping, no logs/artifacts.
 docker cp "$snapshot_dir/raw_full.dump" "$clone:/tmp/jb_snapshot.dump" > /dev/null 2>&1 ||
  fail 'cannot deliver dump to isolated container'
@@ -57,6 +72,8 @@ if ! docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no
         "${GITHUB_WORKFLOW:-}" == 'JANTA BOL T034 dual recipient offline clone SYNTHETIC CI' &&
         -z "${SUPABASE_DB_PASSWORD:-}" ]]; then
     grep -E '(pg_restore: error|ERROR:|Command was:)' "$tmp/restore.log" | head -n 12 || true
+    docker inspect "$clone" --format 'SYNTHETIC_CONTAINER: exit={{.State.ExitCode}} OOM={{.State.OOMKilled}} running={{.State.Running}}' 2>/dev/null || true
+    docker logs "$clone" 2>&1 | grep -E '(FATAL|database system is shutting down|PostgreSQL init process complete|out of memory|OOM)' | tail -n 8 || true
   fi
   fail 'isolated public+private restore failed; live system unaffected; Supabase compatibility review required'
 fi
