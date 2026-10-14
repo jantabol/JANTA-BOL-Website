@@ -1,0 +1,82 @@
+# Investigate the two independently reproduced PostgreSQL-only divergences.
+# No credentials, no real DB export, no B2, no internet to containers.
+name: T034 RCA superuser/cron compatible FULL restore, FAKE only
+on:
+  push:
+    branches:
+      - review/t034-pgcron-fullrestore-rca-20261014
+permissions:
+  contents: read
+jobs:
+  fake-production-equivalent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Generate fake PG17 snapshot; test isolated superuser restore into real postgres DB
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          test -z "${SUPABASE_DB_PASSWORD:-}" && test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          src=jb-t034-source-fake
+          dst=jb-t034-target-fake
+          t="$(mktemp -d)"
+          cleanup(){ docker rm -f "$src" "$dst" >/dev/null 2>&1 || true; rm -rf -- "$t"; }
+          trap cleanup EXIT
+          for n in "$src" "$dst"; do
+            docker run -d --network none --name "$n" -e POSTGRES_PASSWORD=fake_only \
+              --memory 4g --cpus 2 supabase/postgres:17.6.1.136 >/dev/null
+          done
+          for n in "$src" "$dst"; do
+            stable=0
+            for i in $(seq 1 80); do
+              if docker exec -u postgres "$n" psql -X -At -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+                stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+              else stable=0; fi
+              sleep 1
+            done
+            [[ "$stable" -ge 6 ]]
+          done
+          # Use a matching supabase_admin superuser only INSIDE this fake container.
+          if ! docker exec -u postgres "$dst" psql -X -At -U supabase_admin -d postgres \
+              -c 'SELECT usesuper FROM pg_user WHERE usename=current_user' > "$t/super.log" 2>&1; then
+              echo 'FAKE_ADMIN_CONNECTION_DENIED'
+              grep -E 'FATAL:|ERROR:' "$t/super.log" | head -n 3 || true
+              exit 1
+          fi
+          grep -Fxq t "$t/super.log" || exit 1
+          echo 'PASS FAKE Supabase built-in supabase_admin is SQL superuser'
+          docker exec -u postgres "$src" psql -X -v ON_ERROR_STOP=1 -d postgres \
+             -c 'CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog' >/dev/null
+          docker exec -u postgres "$src" psql -X -v ON_ERROR_STOP=1 -d postgres \
+             -c "CREATE TABLE public.t034_demo(id int); INSERT INTO public.t034_demo VALUES(4);"
+          docker exec -u postgres "$src" pg_dump -Fc -d postgres -f /tmp/full.dump >/dev/null
+          docker cp "$src:/tmp/full.dump" "$t/full.dump" >/dev/null
+          docker cp "$t/full.dump" "$dst:/tmp/full.dump" >/dev/null
+          docker exec -u root "$dst" chown postgres:postgres /tmp/full.dump
+          # Only in disposable TEST container: delete its empty bootstrap postgres
+          # to permit extension recreation with cron.database_name=postgres.
+          if ! docker exec -u postgres "$dst" psql -X -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' > "$t/drop.log" 2>&1; then
+            echo 'FAKE_EMPTY_POSTGRES_RESET_FAILED'
+            grep -E 'ERROR:|FATAL:' "$t/drop.log" | head -n 3 || true
+            exit 1
+          fi
+          docker exec -u postgres "$dst" psql -X -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d template1 -c 'CREATE DATABASE postgres TEMPLATE template0;' >/dev/null
+          # Restore with privileges/owner intact; pg_cron must be created in postgres.
+          if ! docker exec -u postgres "$dst" pg_restore -U supabase_admin -d postgres \
+               --exit-on-error /tmp/full.dump > "$t/restore.log" 2>&1; then
+            echo 'FAKE_FULL_RESTORE_FAILED'
+            grep -m 4 -E 'pg_restore: error|ERROR:|DETAIL:' "$t/restore.log" || true
+            exit 1
+          fi
+          got="$(docker exec -u postgres "$dst" psql -X -At -U supabase_admin \
+             -d postgres -c 'SELECT count(*) FROM public.t034_demo')"
+          [[ "$got" == 1 ]]
+          cron="$(docker exec -u postgres "$dst" psql -X -At -U supabase_admin \
+             -d postgres -c "SELECT count(*) FROM pg_extension WHERE extname='pg_cron'")"
+          [[ "$cron" == 1 ]]
+          echo 'PASS FAKE FULL RESTORE: privileged owner, PG Cron and fake table after empty postgres reset'
+          echo 'NO LIVE SUPABASE OR B2 CREDENTIALS; NO PROD WRITES; NO GH ARTIFACTS.'

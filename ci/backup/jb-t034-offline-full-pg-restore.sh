@@ -43,10 +43,25 @@ for i in $(seq 1 100); do
   sleep 2
 done
 [[ "$stable" -ge 6 ]] || fail 'Supabase PG bootstrap/final postmaster never stabilized'
-# Create a pristine database from template0; the built-in auth/storage base
-# schemas in the bootstrap DB MUST NOT contaminate the restored snapshot.
-docker exec -u postgres "$clone" createdb --template=template0 jb_restored_test_db \
-  > "$temp/create.log" 2>&1 || fail 'cannot create clean isolated restore database'
+# ROOT CAUSE, proven by fake Supabase 17 CI:
+# (1) db role "postgres" is NOT SUPERUSER and cannot SET ROLE supabase_admin;
+# (2) pg_cron can only be created in cron.database_name=postgres.
+# On this NETWORKLESS THROWAWAY target ONLY, use the already-installed
+# supabase_admin role and replace the empty bootstrap database postgres with
+# a clean template0 postgres database. Never connect to source or Cricket here.
+super="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d template1 \
+  -c 'SELECT rolsuper FROM pg_roles WHERE rolname=current_user' 2>/dev/null)" ||
+  fail 'isolated built-in supabase_admin superuser not available'
+[[ "$super" == t ]] || fail 'isolated restore cannot preserve Supabase role ownership'
+docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
+  > "$temp/drop.log" 2>&1 ||
+  fail 'cannot replace ONLY disposable postgres DB; no live database touched'
+docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d template1 -c 'CREATE DATABASE postgres TEMPLATE template0;' \
+  > "$temp/create.log" 2>&1 ||
+  fail 'cannot recreate isolated postgres DB from template0'
 # Public namespace ownership varies by PostgreSQL/Supabase dump origin:
 # some snapshots include CREATE SCHEMA public and some leave template0 public
 # as a built-in namespace. Do not guess; decide from actual archive TOC.
@@ -58,11 +73,11 @@ docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/input.dump && c
 docker exec -u postgres "$clone" pg_restore --list /tmp/input.dump > "$temp/archive_toc.txt" 2>&1 ||
  fail 'cannot read PostgreSQL archive inventory'
 if grep -Eq '^[0-9]+;.* SCHEMA - public ' "$temp/archive_toc.txt"; then
-  docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d jb_restored_test_db \
+  docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d postgres \
     -c 'DROP SCHEMA IF EXISTS public CASCADE;' > "$temp/reset.log" 2>&1 ||
     fail 'cannot prepare blank public schema for archive-owned namespace'
 fi
-if ! docker exec -u postgres "$clone" pg_restore -d jb_restored_test_db \
+if ! docker exec -u postgres "$clone" pg_restore -U supabase_admin -d postgres \
     --exit-on-error /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
   # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
@@ -70,10 +85,23 @@ if ! docker exec -u postgres "$clone" pg_restore -d jb_restored_test_db \
         -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]; then
     grep -E '(pg_restore: error|ERROR:|Command was:)' "$temp/restore.log" | head -n 12 || true
   fi
+  # Never disclose SQL command, PII, auth rows, or function definitions.
+  # Fixed labels are enough for a safe new root-cause checkpoint.
+  if grep -Fq 'must be able to SET ROLE' "$temp/restore.log"; then
+    echo 'T034_RESTORE_ERROR_CLASS=TARGET_ROLE_PRIVILEGE'
+  elif grep -Fq 'can only create extension in database postgres' "$temp/restore.log"; then
+    echo 'T034_RESTORE_ERROR_CLASS=PG_CRON_DATABASE'
+  elif grep -Eiq 'extension .* is not available|extension .* version .* is not installed' "$temp/restore.log"; then
+    echo 'T034_RESTORE_ERROR_CLASS=EXTENSION_VERSION'
+  elif grep -Fq 'permission denied' "$temp/restore.log"; then
+    echo 'T034_RESTORE_ERROR_CLASS=PERMISSION_DENIED'
+  else
+    echo 'T034_RESTORE_ERROR_CLASS=OTHER_FAIL_CLOSED'
+  fi
   fail 'FULL PG restore failed (NO production change). Exact Supabase dependency review required.'
 fi
 q(){ docker exec -u postgres "$clone" psql -X -A -t -v ON_ERROR_STOP=1 \
-       -d jb_restored_test_db -c "$1" 2> "$temp/query.err"; }
+       -U supabase_admin -d postgres -c "$1" 2> "$temp/query.err"; }
 for schema in public private auth storage; do
   q "SELECT 1 FROM pg_namespace WHERE nspname='$schema'" | grep -Fxq 1 ||
     fail "missing restored schema $schema"
@@ -109,7 +137,7 @@ done
 docker cp ci/backup/jb-t034-restore-baseline.sql "$clone:/tmp/t034-identity.sql" >/dev/null 2>&1 ||
  fail 'reviewed identity query could not be sent into offline clone'
 docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
-  -d jb_restored_test_db -f /tmp/t034-identity.sql > "$temp/clone_identity.txt" 2> "$temp/identity.err" ||
+  -U supabase_admin -d postgres -f /tmp/t034-identity.sql > "$temp/clone_identity.txt" 2> "$temp/identity.err" ||
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'

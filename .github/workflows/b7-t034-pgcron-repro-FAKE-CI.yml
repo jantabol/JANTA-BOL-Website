@@ -1,0 +1,83 @@
+# Fake-only forensic reproduction of production's pg_cron restored into an
+# alternate PostgreSQL database. NEVER uses B2 credentials or LIVE Supabase.
+name: T034 RCA pg_cron extension restore to alternative DB (SYNTHETIC ONLY)
+on:
+  push:
+    branches:
+      - review/t034-pgcron-fullrestore-rca-20261014
+permissions:
+  contents: read
+jobs:
+  exact-pgcron-reproduction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Start network-isolated production-version Supabase PostgreSQL and reproduce extension error
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          name="jb-t034-cron-rca"
+          work="$(mktemp -d)"
+          trap 'docker rm -f "$name" >/dev/null 2>&1 || true; rm -rf "$work"' EXIT
+          docker run -d --network none --memory 4g --pids-limit 200 \
+            --name "$name" -e POSTGRES_PASSWORD=fake_only_local \
+            supabase/postgres:17.6.1.136 >/dev/null
+          stable=0
+          for i in $(seq 1 120); do
+            if docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -d postgres \
+              -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1))
+              [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]]
+          echo 'FAKE SOURCE: cron.database_name (no secret):'
+          docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -d postgres \
+            -c 'SHOW cron.database_name'
+          # No live database. Create extension only on disposable synthetic source DB postgres.
+          docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -d postgres \
+            -c 'CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog' \
+              > "$work/create.log" 2>&1 || {
+                echo 'SYNTHETIC_SOURCE_PGCRON_INSTALL_FAILED'
+                grep -E 'ERROR:|DETAIL:|HINT:' "$work/create.log" | head -n 5 || true
+                exit 1
+              }
+          test "$(docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -d postgres \
+             -c "SELECT count(*) FROM pg_extension WHERE extname='pg_cron'")" = 1
+          echo 'PASS fake source PG17 pg_cron is installed'
+          docker exec -u postgres "$name" pg_dump -Fc -d postgres -f /tmp/synthetic_cron.dump \
+            > /dev/null 2>&1
+          docker exec -u postgres "$name" createdb -T template0 jb_restored_test_db
+          if docker exec -u postgres "$name" pg_restore -e -d jb_restored_test_db \
+                 /tmp/synthetic_cron.dump > "$work/restore.log" 2>&1; then
+             echo 'SYNTHETIC_ALTERNATE_DB_RESTORE_SUCCEEDED'
+          else
+             echo 'SYNTHETIC_ALTERNATE_DB_RESTORE_FAILED'
+             # Fake data only: show a tiny bounded error excerpt, never live SQL.
+             grep -m 2 -E 'pg_restore: error|ERROR:' "$work/restore.log" || true
+             if grep -Eiq 'pg_cron|cron\.database_name|can only be created in database' "$work/restore.log"; then
+                echo 'RCA_REPRODUCED: pg_cron extension restricted to postgres DB'
+             else
+                echo 'RCA_NOT_CONFIRMED: first synthetic error unrelated to pg_cron'
+             fi
+          fi
+          echo 'SYNTHETIC CLUSTER ROLE METADATA:'
+          docker exec -u postgres "$name" psql -X -At -d postgres \
+            -c "SELECT rolname||' SUPER='||rolsuper::text||' CREATE_ROLE='||rolcreaterole::text||' LOGIN='||rolcanlogin::text FROM pg_roles WHERE rolname IN ('postgres','supabase_admin','supabase_auth_admin','supabase_storage_admin') ORDER BY rolname"
+          echo 'SYNTHETIC SET ROLE MEMBER:'
+          docker exec -u postgres "$name" psql -X -At -d postgres \
+            -c "SELECT pg_has_role('postgres','supabase_admin','SET')"
+          docker exec -u postgres "$name" createdb -T template0 jb_no_owner_probe
+          if docker exec -u postgres "$name" pg_restore --no-owner -e -d jb_no_owner_probe \
+             /tmp/synthetic_cron.dump > "$work/noowner.log" 2>&1; then
+            echo 'SYNTHETIC_NO_OWNER_RESTORE_SUCCEEDED'
+          else
+            echo 'SYNTHETIC_NO_OWNER_RESTORE_FAILED_FIRST_ERROR'
+            grep -m 3 -E 'pg_restore: error|ERROR:|DETAIL:|HINT:' "$work/noowner.log" || true
+          fi
+          echo 'NO LIVE SECRETS; NO LIVE BACKUP; NO PROD DATABASE WRITES.'

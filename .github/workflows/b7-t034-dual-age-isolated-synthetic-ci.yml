@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - review/t034-dual-recipient-real-restore-20261014
+      - review/t034-pgcron-fullrestore-rca-20261014
   pull_request:
     branches:
       - main
