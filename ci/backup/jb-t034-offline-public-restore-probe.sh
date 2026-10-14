@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# JANTA BOL / T034: isolated disposable PostgreSQL 17 PUBLIC-SCOPE restore probe.
+# JANTA BOL / T034: isolated Supabase-compatible PostgreSQL 17 APP-SCOPE restore probe.
 # NEVER points to production, Cricket, B2, or Supabase. No secrets or private rows
 # are printed. Public-only success MUST NOT be reported as a full Supabase restore.
 set -Eeuo pipefail
@@ -10,7 +10,7 @@ fail(){ printf 'T034_PUBLIC_CLONE_HOLD: %s\n' "$1" >&2; exit 1; }
 [[ "$#" == 1 ]] || fail 'exactly one local backup directory argument expected'
 snapshot_dir="$1"
 [[ -d "$snapshot_dir" && -s "$snapshot_dir/raw_full.dump" ]] || fail 'missing custom PG dump'
-[[ "${JB_T034_CLONE_SCOPE:-public}" == 'public' ]] || fail 'scope expansion must be separately reviewed'
+[[ "${JB_T034_CLONE_SCOPE:-app}" == 'app' ]] || fail 'only reviewed public+private app scope supported'
 command -v docker >/dev/null || fail 'Docker unavailable'
 
 tmp="$(mktemp -d)"
@@ -21,9 +21,9 @@ cleanup() {
 }
 trap cleanup EXIT
 # No external network; no source DB env/connection string; no persistent volume.
-docker run -d --network none --memory 1536m --pids-limit 200 --cpus 2 \
+docker run -d --network none --memory 4g --pids-limit 200 --cpus 2 \
   --name "$clone" -e POSTGRES_PASSWORD=disposable_runner_only \
-  postgres:17 > /dev/null || fail 'cannot start isolated PG17 clone'
+  supabase/postgres:17.6.1.136 > /dev/null || fail 'cannot start isolated Supabase PG17 clone'
 
 ready=0
 for i in $(seq 1 35); do
@@ -39,13 +39,17 @@ docker cp "$snapshot_dir/raw_full.dump" "$clone:/tmp/jb_snapshot.dump" > /dev/nu
  fail 'cannot deliver dump to isolated container'
 docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/jb_snapshot.dump && chmod 600 /tmp/jb_snapshot.dump' > /dev/null 2>&1 ||
  fail 'cannot protect isolated input dump'
-# pg_restore --schema=public only includes public OBJECTS, not CREATE SCHEMA.
-# The brand-new isolated PostgreSQL database's empty public schema must remain.
-# No cleanup is needed: this disposable database is never shared with production.
+# Schema-scoped pg_restore does not recreate selected namespaces.
+# Preserve blank public from initial bootstrap and create empty private only in
+# this offline disposable container. The platform's auth/storage namespaces stay
+# intact, never overwritten or claimed as restored.
+docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d postgres \
+  -c 'CREATE SCHEMA IF NOT EXISTS private;' > "$tmp/clone_init.log" 2>&1 ||
+  fail 'disposable private namespace could not be created'
 # Some live Supabase functions/constraints require auth, vault, net, etc.; do NOT
 # suppress their errors or claim full restore. Fail and retain production unchanged.
 if ! docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no-privileges \
-  --schema=public --dbname=postgres /tmp/jb_snapshot.dump \
+  --schema=public --schema=private --dbname=postgres /tmp/jb_snapshot.dump \
   > "$tmp/restore.log" 2>&1; then
   # Diagnostic exposure is allowed ONLY for synthetic workflow with NO real DB credentials.
   if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
@@ -54,7 +58,7 @@ if ! docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no
         -z "${SUPABASE_DB_PASSWORD:-}" ]]; then
     grep -E '(pg_restore: error|ERROR:|Command was:)' "$tmp/restore.log" | head -n 12 || true
   fi
-  fail 'isolated public-schema restore failed; live system unaffected; full Supabase environment may be required'
+  fail 'isolated public+private restore failed; live system unaffected; Supabase compatibility review required'
 fi
 q(){
   docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -d postgres -c "$1" 2>"$tmp/query.err"
@@ -74,6 +78,6 @@ done
  fail 'required public table/data/RLS/policy invariants missing'
 [[ "$rls_count" == "$table_count" ]] ||
  fail 'not all restored public tables have RLS enabled'
-printf 'T034_CLONE_PUBLIC_SCHEMA_PROBE=PASS\nPUBLIC_TABLES=%s\nPUBLIC_RLS_TABLES=%s\nPUBLIC_POLICY_COUNT=%s\nARTICLES_ROW_COUNT=%s\nAD_CAMPAIGNS_ROW_COUNT=%s\n' \
+printf 'T034_CLONE_APP_SCHEMAS_PROBE=PASS\nPUBLIC_TABLES=%s\nPUBLIC_RLS_TABLES=%s\nPUBLIC_POLICY_COUNT=%s\nARTICLES_ROW_COUNT=%s\nAD_CAMPAIGNS_ROW_COUNT=%s\n' \
   "$table_count" "$rls_count" "$policies_count" "$article_count" "$ads_count"
-printf 'T034_RESTORE_SCOPE=PUBLIC_ONLY; FULL_SUPABASE_RESTORE_VERIFIED=false\n'
+printf 'T034_RESTORE_SCOPE=APP_PUBLIC_PRIVATE_ONLY; FULL_SUPABASE_RESTORE_VERIFIED=false\n'
