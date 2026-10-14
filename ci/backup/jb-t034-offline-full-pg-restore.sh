@@ -103,7 +103,7 @@ done
  fail 'not every restored public table has RLS'
 [[ -s "$src/expected_identity.txt" ]] ||
  fail 'source snapshot count/RPC identity manifest missing from archive'
-[[ "$(wc -l < "$src/expected_identity.txt")" == 25 ]] ||
+[[ "$(wc -l < "$src/expected_identity.txt")" == 26 ]] ||
  fail 'invalid source manifest metric coverage'
 # Queries are fixed code from THIS reviewed repo, not from archived user data.
 docker cp ci/backup/jb-t034-restore-baseline.sql "$clone:/tmp/t034-identity.sql" >/dev/null 2>&1 ||
@@ -113,7 +113,7 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
-printf 'T034_SOURCE_TO_CLONE_25_METRICS=EXACT_MATCH\n'
+printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
   "$public_n" "$private_n" "$auth_n" "$storage_n"
