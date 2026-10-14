@@ -80,13 +80,13 @@ jobs:
           CREATE TABLE public.ad_history(id bigint PRIMARY KEY);
           CREATE TABLE public.audit_logs(id bigint PRIMARY KEY);
           CREATE FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
-            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
           CREATE FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
-            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
           CREATE FUNCTION public.jb_ad_transition_internal(uuid,text,text)
-            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
           CREATE FUNCTION public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)
-            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
           INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
           INSERT INTO public.ad_campaigns VALUES (1,'requested');
           ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
