@@ -1,0 +1,55 @@
+# No production connection. No GitHub Secrets. No app database changes.
+name: B7 T034 ADS009 disposable LIVE-function-source authority matrix
+on:
+  push:
+    branches:
+      - review/t034-ads009-isolated-e2-20261014
+permissions:
+  contents: read
+jobs:
+  ads009-source-role-matrix:
+    name: PostgreSQL 17 five synthetic principals, 10 negatives + owner positive
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic_only
+          POSTGRES_DB: ads009_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d ads009_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: synthetic_only
+      PGDATABASE: ads009_test
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Validate fixture is self-contained, synthetic, and never accesses production
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f ci/phase4/b7-t034-ads009-source-role-matrix.sql
+          if grep -E 'supabase\.co|pooler|pg_dump|rclone|COPY .*PROGRAM|\\\\connect ' ci/phase4/b7-t034-ads009-source-role-matrix.sql; then
+            echo '::error::ADS009 isolation guard blocked unsafe source'
+            exit 1
+          fi
+      - name: Execute source parity + 5 actor negative matrix + authorized positive
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-ads009-source-role-matrix.sql
+      - name: Confirm role fixtures were rolled back (no persistent test data)
+        shell: bash
+        run: |
+          set -euo pipefail
+          result="$(psql -X -A -t -c "SELECT count(*) FROM pg_namespace WHERE nspname='private'")"
+          test "$result" = '0' || { echo '::error::Synthetic SQL rollback not clean'; exit 1; }
+          echo 'PASS: fully isolated synthetic role fixtures rolled back.'
