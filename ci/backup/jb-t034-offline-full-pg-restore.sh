@@ -32,15 +32,21 @@ done
 # schemas in the bootstrap DB MUST NOT contaminate the restored snapshot.
 docker exec -u postgres "$clone" createdb --template=template0 jb_restored_test_db \
   > "$temp/create.log" 2>&1 || fail 'cannot create clean isolated restore database'
-# FULL pg_dump archives contain public namespace DDL; prevent name collision.
-docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d jb_restored_test_db \
-  -c 'DROP SCHEMA IF EXISTS public CASCADE;' > "$temp/reset.log" 2>&1 ||
- fail 'cannot prepare blank restoration target'
+# Public namespace ownership varies by PostgreSQL/Supabase dump origin:
+# some snapshots include CREATE SCHEMA public and some leave template0 public
+# as a built-in namespace. Do not guess; decide from actual archive TOC.
 # Exact archive inventory is text; do not disclose it to GitHub job logs.
 docker cp "$src/raw_full.dump" "$clone:/tmp/input.dump" > /dev/null 2>&1 ||
  fail 'cannot copy encrypted-source archive into offline target'
 docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/input.dump && chmod 600 /tmp/input.dump' \
   > /dev/null 2>&1 || fail 'cannot secure offline archive'
+docker exec -u postgres "$clone" pg_restore --list /tmp/input.dump > "$temp/archive_toc.txt" 2>&1 ||
+ fail 'cannot read PostgreSQL archive inventory'
+if grep -Eq '^[0-9]+;.* SCHEMA - public ' "$temp/archive_toc.txt"; then
+  docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d jb_restored_test_db \
+    -c 'DROP SCHEMA IF EXISTS public CASCADE;' > "$temp/reset.log" 2>&1 ||
+    fail 'cannot prepare blank public schema for archive-owned namespace'
+fi
 if ! docker exec -u postgres "$clone" pg_restore -d jb_restored_test_db \
     --exit-on-error --no-owner --no-privileges /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
