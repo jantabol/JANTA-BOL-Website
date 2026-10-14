@@ -81,10 +81,21 @@ jobs:
           ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
           CREATE POLICY fake_articles_public ON public.articles FOR SELECT USING (true);
           CREATE POLICY fake_ads_public ON public.ad_campaigns FOR SELECT USING (true);
+          CREATE SCHEMA private;
+          CREATE TABLE private.t034_admin_log(id bigint PRIMARY KEY);
+          INSERT INTO private.t034_admin_log VALUES (1);
+          ALTER TABLE private.t034_admin_log ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY fake_admin ON private.t034_admin_log FOR SELECT USING (false);
+          CREATE SCHEMA auth;
+          CREATE TABLE auth.users(id uuid PRIMARY KEY);
+          INSERT INTO auth.users VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+          CREATE SCHEMA storage;
+          CREATE TABLE storage.objects(id bigint PRIMARY KEY);
+          INSERT INTO storage.objects VALUES (1);
           SQL
           docker run --rm --network=host -v "$tmp/plain:/out" -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --format=custom \
-            --no-owner --no-privileges --schema=public -f /out/raw_full.dump >/dev/null
+            --no-owner --no-privileges -f /out/raw_full.dump >/dev/null
           docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
           docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --schema=public \
@@ -132,4 +143,5 @@ jobs:
           fi
           echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
+          JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
           echo 'SYNTHETIC ONLY: no live Supabase, no B2 upload, no Owner private key.'
