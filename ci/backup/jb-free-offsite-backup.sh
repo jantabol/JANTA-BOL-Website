@@ -133,12 +133,12 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/$f" "$work/recovered/$f" ||
       fail "recovered archive bytes differ from original component $f"
   done
-  printf 'T034_ACTUAL_REMOTE_AGE_DECRYPT=PASS; OWNER_PRIVATE_KEY_NOT_USED=true\\n'
+  printf 'T034_ACTUAL_REMOTE_AGE_DECRYPT=PASS; OWNER_PRIVATE_KEY_NOT_USED=true\n'
   # Disposable Docker has NO NETWORK. No real DB write is ever allowed.
   # Fail closed if Supabase public functions require additional extensions/auth.
   bash ci/backup/jb-t034-offline-public-restore-probe.sh "$work/recovered" ||
     fail 'isolated public-only restore refused; offsite encrypted archive remains preserved'
-  printf 'T034_PUBLIC_CLONE_SCOPE=PASS; FULL_SUPABASE_RESTORE_VERIFIED=false\\n'
+  printf 'T034_PUBLIC_CLONE_SCOPE=PASS; FULL_SUPABASE_RESTORE_VERIFIED=false\n'
 else
-  printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\\n'
+  printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
 fi
