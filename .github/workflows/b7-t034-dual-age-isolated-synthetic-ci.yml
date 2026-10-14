@@ -118,7 +118,7 @@ jobs:
           SQL
           docker run --rm --network=host -v "$tmp/plain:/out" -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --format=custom \
-            --no-owner -f /out/raw_full.dump >/dev/null
+            -f /out/raw_full.dump >/dev/null
           docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
           docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --schema=public \
