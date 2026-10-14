@@ -25,3 +25,68 @@ Working branch: `review/t034-dual-recipient-real-restore-20261014`, base `c80b5c
 - ADS-008 guard deployment, ADS-009 genuine role-negative sessions, and P4-T034 FINAL PASS remain blocked and out of scope.
 
 **DO NOT enable autorun, upload any plaintext/ciphertext as GitHub Actions artifact, reveal Owner AGE private key, or change Cricket project.**
+
+
+---
+
+## Superseding engineering checkpoint — 14 October 2026, 16:02 UTC
+
+This amendment supersedes the earlier *public-only* synthetic approach, WITHOUT
+claiming any real JANTA BOL restore. The isolated restore candidate now uses the
+official `supabase/postgres:17.6.1.136` PostgreSQL 17 image with **no network
+and no open ports**; creates a brand-new empty database from `template0`, and
+restores a complete custom PG archive, including public/private/auth/storage
+schema and underlying rows. It compares 25 exact source/restore metrics:
+article/advertiser/ad campaign/payments/history/audit count, auth users,
+storage OBJECT METADATA count, tables/RLS/policies/functions and 4 original
+advertisement authority RPC body MD5s, plus sample anon/auth ACL checks.
+Archival owner/GRANT metadata is retained in the NEW dual-identity mode;
+the previous manually verified ONE-key backup behavior is preserved.
+
+Verified live source **read-only** immediately before review:
+- public: 67 ordinary tables, 67 RLS; 72 RLS policies, 157 functions.
+- private: 5 ordinary tables, 3 RLS; 3 RLS policies, 30 functions.
+- auth: 27 ordinary tables, 5 user records.
+- storage: 8 ordinary tables, **4 actual Storage object references**.
+- 31 Articles, 7 ad campaigns, 7 advertisers, 0 ad payments.
+- Live database table owner roles: postgres for public/private;
+  supabase_auth_admin for auth; supabase_storage_admin for storage.
+- Existing payment RPC body fingerprints independently matched the old
+  pre-migration inventory. **No production SQL writes.**
+
+**Final synthetic evidence (fake-only):**
+- New full-PG17 2-AGE-recipient independent restore CI run
+  `38594370934`, job `115957164666`, **SUCCESS** on
+  `a245d4cfbb616cd5bced9f4e27ca566b78046597`.
+- GitHub logs: fake offsite ciphertext download match; two unrelated FAKE
+  AGE private keys decrypt; wrong key and tampering denied; isolated clone
+  restored fake public/private/auth/storage; 25 out of 25 deterministic fake
+  source-vs-restored metrics exact including RLS and sample grants and 4 RPC
+  fingerprint checks. Existing older backup synthetic regression also SUCCESS
+  on the same head. This is NOT independent proof for real production bytes.
+- CI RCA: container's short-lived bootstrap postmaster can shut down after an
+  early pg_isready; now requires consecutive SQL successful checks. A full PG
+  custom dump may or may not contain explicit public namespace creation,
+  so the probe checks actual custom archive TOC rather than blindly dropping.
+  Earlier SQL dummy-function quoting issue fixed in FAKE fixture only.
+- Candidate NEW manual workflow remains `workflow_dispatch` ONLY, exact
+  Founder identity, protected `main`, first attempt, restricted secrets
+  environment, typed confirmation. A merge does NOT run that workflow.
+
+### Remaining real gates (strict)
+1. **Not run:** second genuine JANTA BOL encrypted B2 export;
+   downloaded-ciphertext decryption with ephemeral runner key;
+   isolated exact DB restore; compare real counts/RLS/ACL/RPC MD5.
+2. Even with successful DB restore, **B2 AGE Owner paper private-key
+   decryption is still not independently tested**. Runner-only identity
+   proves a new archive is decryptable, not that Founder can decrypt.
+3. Supabase **Storage object's actual file bytes** (4 current object
+   references), Provider/Auth operational settings, Edge Functions runtime
+   and offsite media copies are NOT contained in SQL backup and are
+   separate hard gates for complete platform disaster recovery.
+4. Never deploy ADS-008 payment guard, claim ADS-009 genuine-role E5,
+   or declare P4-T034 FINAL PASS until actual evidence plus owner approval.
+   No Cricket DB touched, no new paid services, no public GitHub artifacts.
+
+**Decision:** Source+CI coding ready for review, real DATA restore = HOLD.
+One Founder approval checkpoint is still mandatory before any new REAL export.
