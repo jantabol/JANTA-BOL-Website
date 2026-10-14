@@ -1,0 +1,76 @@
+# JANTA BOL ONLY. Run manually on protected main AFTER Founder review and merge.
+# Read-only check: does NOT connect to Supabase or write any B2 object.
+name: JANTA BOL B2 connection PRE-FLIGHT (manual, read-only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type JANTA_BOL_B2_READ_ONLY to check scoped credentials and public recipient
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-b2-readonly
+  cancel-in-progress: false
+jobs:
+  read-only-b2-preflight:
+    if: ${{ github.event.inputs.confirmation == 'JANTA_BOL_B2_READ_ONLY' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: janta-bol-production-backup
+    timeout-minutes: 15
+    env:
+      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Check names, exact dedicated destination and public encryption recipient
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          : "${JB_BACKUP_B2_KEY_ID:?Missing JANTA BOL scoped key ID}"
+          : "${JB_BACKUP_B2_APPLICATION_KEY:?Missing JANTA BOL scoped application key}"
+          : "${JB_BACKUP_REMOTE_PREFIX:?Missing JANTA BOL remote prefix}"
+          : "${JB_BACKUP_AGE_RECIPIENT:?Missing JANTA BOL age public recipient}"
+          if [[ ! "${JB_BACKUP_REMOTE_PREFIX}" =~ ^jbbackup:jantabol-backup-euc-2026(/[a-zA-Z0-9._/-]+)?$ ]] || [[ "${JB_BACKUP_REMOTE_PREFIX}" == *'..'* ]]; then
+            echo "::error::Dedicated JANTA BOL private bucket prefix does not match approved destination."
+            exit 1
+          fi
+          [[ "${JB_BACKUP_AGE_RECIPIENT}" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]+$ ]] || {
+            echo "::error::Invalid AGE public recipient format"
+            exit 1
+          }
+          echo 'PASS: configured environment names and dedicated JANTA BOL bucket path syntax.'
+      - name: Install verified standard command-line tools (runner only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y age rclone
+      - name: Check B2 remote READ-ONLY and AGE recipient without leaking credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          tmp="$(mktemp -d)"
+          trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM
+          python3 ci/backup/jb-b2-rclone-config.py "$tmp/b2.conf" >/dev/null || {
+            echo '::error::B2 credential configuration rejected'
+            exit 1
+          }
+          if ! rclone --config "$tmp/b2.conf" --retries 1 --low-level-retries 1 lsf "jbbackup:jantabol-backup-euc-2026" > /dev/null 2>&1; then
+            echo '::error::Scoped JANTA BOL B2 bucket access denied. No backup attempted.'
+            exit 1
+          fi
+          echo 'PASS: dedicated JANTA BOL B2 bucket is LISTABLE using configured credentials.'
+          if ! printf '%s\n' 'SYNTHETIC READ ONLY PROBE' | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$tmp/nonsecret.age" > /dev/null 2>&1; then
+            echo '::error::AGE public recipient refused to encrypt synthetic text.'
+            exit 1
+          fi
+          test -s "$tmp/nonsecret.age"
+          echo 'PASS: public AGE recipient encrypted synthetic test data (owner private-key matching NOT proven).'
+          echo 'NO LIVE DB READ, NO B2 FILE WRITE, NO REAL BACKUP, NO PRIVATE KEY USED, NO RESTORE.'

@@ -1,0 +1,52 @@
+# REVIEW ONLY — Owner B2 storage selected, public recipient entered; no full DB restore evidence yet.
+# Candidate requires security review and merge to protected main; NEVER run automatically.
+# Public GitHub repository: NEVER upload DB dump, plaintext or ciphertext as artifact.
+name: JANTA BOL FREE encrypted offsite DB backup (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type JANTA_BOL_BACKUP_ONLY to start a read-only offsite export
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-free-backup
+  cancel-in-progress: false
+jobs:
+  backup:
+    if: ${{ github.event.inputs.confirmation == 'JANTA_BOL_BACKUP_ONLY' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    environment: janta-bol-production-backup
+    timeout-minutes: 45
+    env:
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Verify remote and encryption are configured before connecting to DB
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$SUPABASE_DB_PASSWORD" || { echo "::error::Missing production DB password"; exit 1; }
+          test -n "$JB_BACKUP_AGE_RECIPIENT" || { echo "::error::Missing OWNER public age recipient"; exit 1; }
+          test -n "$JB_BACKUP_B2_KEY_ID" || { echo "::error::Missing JANTA BOL-scoped Backblaze key ID"; exit 1; }
+          test -n "$JB_BACKUP_B2_APPLICATION_KEY" || { echo "::error::Missing JANTA BOL-scoped Backblaze application secret"; exit 1; }
+          test -n "$JB_BACKUP_REMOTE_PREFIX" || { echo "::error::Missing approved private destination bucket/folder"; exit 1; }
+          echo "Preflight present. No data was exported before this point."
+      - name: Install backup and transfer clients (runner ephemeral)
+        shell: bash
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone zstd
+      - name: Supabase CLI (official setup action)
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.120.0
+      - name: Create, AGE encrypt and upload — NEVER Github artifact
+        shell: bash
+        run: bash ci/backup/jb-free-offsite-backup.sh
