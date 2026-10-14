@@ -77,8 +77,8 @@ jobs:
           CREATE ROLE authenticated NOLOGIN;
           CREATE ROLE fake_t034_test NOLOGIN;
           CREATE TABLE public.articles(id bigint PRIMARY KEY, title text NOT NULL);
-          CREATE TABLE public.ad_campaigns(id bigint PRIMARY KEY, status text NOT NULL);
-          CREATE TABLE public.advertisers(id bigint PRIMARY KEY);
+          CREATE TABLE public.ad_campaigns(id bigint PRIMARY KEY, status text NOT NULL, advertiser_id bigint NOT NULL);
+          CREATE TABLE public.advertisers(id bigint PRIMARY KEY, risk_level text NOT NULL, verification_state text NOT NULL);
           CREATE TABLE public.ad_payments(id bigint PRIMARY KEY);
           CREATE TABLE public.ad_history(id bigint PRIMARY KEY);
           CREATE TABLE public.audit_logs(id bigint PRIMARY KEY);
@@ -95,7 +95,8 @@ jobs:
           GRANT SELECT ON public.articles TO anon;
           GRANT SELECT ON public.ad_campaigns TO authenticated;
           INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
-          INSERT INTO public.ad_campaigns VALUES (1,'requested');
+          INSERT INTO public.advertisers VALUES (1,'high','pending');
+          INSERT INTO public.ad_campaigns VALUES (1,'payment_pending',1);
           ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
           ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
           ALTER TABLE public.advertisers ENABLE ROW LEVEL SECURITY;
@@ -130,7 +131,7 @@ jobs:
           date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
           psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-restore-baseline.sql > "$tmp/plain/expected_identity.txt"
-          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 25 ]]
+          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 26 ]]
           ! grep -q '=MISSING' "$tmp/plain/expected_identity.txt"
           age-keygen -o "$tmp/fake-owner.identity" > /dev/null 2>&1
           age-keygen -o "$tmp/runner-restore.identity" > /dev/null 2>&1
