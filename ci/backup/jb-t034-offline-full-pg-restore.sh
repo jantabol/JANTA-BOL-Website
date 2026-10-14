@@ -63,7 +63,7 @@ if grep -Eq '^[0-9]+;.* SCHEMA - public ' "$temp/archive_toc.txt"; then
     fail 'cannot prepare blank public schema for archive-owned namespace'
 fi
 if ! docker exec -u postgres "$clone" pg_restore -d jb_restored_test_db \
-    --exit-on-error --no-owner /tmp/input.dump \
+    --exit-on-error /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
   # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
   if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
@@ -113,7 +113,7 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
-printf 'T034_SOURCE_TO_CLONE_20_METRICS=EXACT_MATCH\n'
+printf 'T034_SOURCE_TO_CLONE_25_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
   "$public_n" "$private_n" "$auth_n" "$storage_n"
