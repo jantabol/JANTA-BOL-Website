@@ -73,6 +73,9 @@ jobs:
           trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM
           mkdir -m 700 "$tmp/plain" "$tmp/fake-b2" "$tmp/readback" "$tmp/recovered"
           psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE anon NOLOGIN;
+          CREATE ROLE authenticated NOLOGIN;
+          CREATE ROLE fake_t034_test NOLOGIN;
           CREATE TABLE public.articles(id bigint PRIMARY KEY, title text NOT NULL);
           CREATE TABLE public.ad_campaigns(id bigint PRIMARY KEY, status text NOT NULL);
           CREATE TABLE public.advertisers(id bigint PRIMARY KEY);
@@ -87,6 +90,10 @@ jobs:
             RETURNS boolean LANGUAGE sql AS 'SELECT true';
           CREATE FUNCTION public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)
             RETURNS boolean LANGUAGE sql AS 'SELECT true';
+          REVOKE EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) FROM PUBLIC;
+          GRANT EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) TO authenticated;
+          GRANT SELECT ON public.articles TO anon, fake_t034_test;
+          GRANT SELECT ON public.ad_campaigns TO authenticated;
           INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
           INSERT INTO public.ad_campaigns VALUES (1,'requested');
           ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
@@ -111,7 +118,7 @@ jobs:
           SQL
           docker run --rm --network=host -v "$tmp/plain:/out" -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --format=custom \
-            --no-owner --no-privileges -f /out/raw_full.dump >/dev/null
+            --no-owner -f /out/raw_full.dump >/dev/null
           docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
           docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d fake_source --schema=public \
@@ -123,7 +130,7 @@ jobs:
           date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
           psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-restore-baseline.sql > "$tmp/plain/expected_identity.txt"
-          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 20 ]]
+          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 25 ]]
           ! grep -q '=MISSING' "$tmp/plain/expected_identity.txt"
           age-keygen -o "$tmp/fake-owner.identity" > /dev/null 2>&1
           age-keygen -o "$tmp/runner-restore.identity" > /dev/null 2>&1
