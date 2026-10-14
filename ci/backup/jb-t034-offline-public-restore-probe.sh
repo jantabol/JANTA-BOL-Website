@@ -44,10 +44,18 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d postgres -c 'DROP
   > "$tmp/drop.log" 2>&1 || fail 'disposable target schema reset refused'
 # Some live Supabase functions/constraints require auth, vault, net, etc.; do NOT
 # suppress their errors or claim full restore. Fail and retain production unchanged.
-docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no-privileges \
+if ! docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no-privileges \
   --schema=public --dbname=postgres /tmp/jb_snapshot.dump \
-  > "$tmp/restore.log" 2>&1 ||
- fail 'isolated public-schema restore failed; live system unaffected; full Supabase environment may be required'
+  > "$tmp/restore.log" 2>&1; then
+  # Diagnostic exposure is allowed ONLY for synthetic workflow with NO real DB credentials.
+  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
+        "${GITHUB_EVENT_NAME:-}" == push &&
+        "${GITHUB_WORKFLOW:-}" == 'JANTA BOL T034 dual recipient offline clone SYNTHETIC CI' &&
+        -z "${SUPABASE_DB_PASSWORD:-}" ]]; then
+    grep -E '(pg_restore: error|ERROR:|Command was:)' "$tmp/restore.log" | head -n 12 || true
+  fi
+  fail 'isolated public-schema restore failed; live system unaffected; full Supabase environment may be required'
+fi
 q(){
   docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -d postgres -c "$1" 2>"$tmp/query.err"
 }
