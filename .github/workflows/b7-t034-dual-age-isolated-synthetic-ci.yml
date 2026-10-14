@@ -75,10 +75,26 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 <<'SQL'
           CREATE TABLE public.articles(id bigint PRIMARY KEY, title text NOT NULL);
           CREATE TABLE public.ad_campaigns(id bigint PRIMARY KEY, status text NOT NULL);
+          CREATE TABLE public.advertisers(id bigint PRIMARY KEY);
+          CREATE TABLE public.ad_payments(id bigint PRIMARY KEY);
+          CREATE TABLE public.ad_history(id bigint PRIMARY KEY);
+          CREATE TABLE public.audit_logs(id bigint PRIMARY KEY);
+          CREATE FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
+            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+          CREATE FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
+            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+          CREATE FUNCTION public.jb_ad_transition_internal(uuid,text,text)
+            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
+          CREATE FUNCTION public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)
+            RETURNS boolean LANGUAGE sql AS $ SELECT true $;
           INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
           INSERT INTO public.ad_campaigns VALUES (1,'requested');
           ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
           ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.advertisers ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.ad_payments ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.ad_history ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
           CREATE POLICY fake_articles_public ON public.articles FOR SELECT USING (true);
           CREATE POLICY fake_ads_public ON public.ad_campaigns FOR SELECT USING (true);
           CREATE SCHEMA private;
@@ -106,13 +122,16 @@ jobs:
           printf 'CREATE ROLE fake_t034_test NOLOGIN;\n' > "$tmp/plain/roles.sql"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-restore-baseline.sql > "$tmp/plain/expected_identity.txt"
+          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 20 ]]
+          ! grep -q '=MISSING' "$tmp/plain/expected_identity.txt"
           age-keygen -o "$tmp/fake-owner.identity" > /dev/null 2>&1
           age-keygen -o "$tmp/runner-restore.identity" > /dev/null 2>&1
           owner="$(age-keygen -y "$tmp/fake-owner.identity")"
           runner="$(age-keygen -y "$tmp/runner-restore.identity")"
           test "$owner" != "$runner"
           tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
-            raw_inventory.txt backup_utc.txt source_project.txt | zstd -q | \
+            raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt | zstd -q | \
             age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
           test -s "$tmp/backup.tar.zst.age"
           # Simulate immutable private B2 object. Real transfer is a separate test.
@@ -125,6 +144,7 @@ jobs:
           age -d -i "$tmp/runner-restore.identity" "$tmp/readback/test-run.tar.zst.age" |
             zstd -dq | tar -C "$tmp/recovered" -xf -
           test -s "$tmp/recovered/raw_full.dump"
+          test -s "$tmp/recovered/expected_identity.txt"
           echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
           age -d -i "$tmp/fake-owner.identity" "$tmp/readback/test-run.tar.zst.age" |
             zstd -dq | tar -C "$tmp/readback" -xf -
