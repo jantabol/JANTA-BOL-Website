@@ -1,0 +1,103 @@
+# JANTA BOL ADS-008: Synthetic-only age interoperability gate.
+# NEVER provide production backups, DB URLs, private age keys or GitHub secrets to this job.
+name: B7 AGE JS to official CLI interoperability (synthetic only)
+on:
+  push:
+    branches:
+      - codex/b7-t034-safe-guard-20261013
+    paths:
+      - .github/workflows/b7-age-js-cli-interoperability.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  synthetic-cli-cross-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install official age CLI, synthetic test environment only
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age
+          age --version
+      - name: Install pinned JS age implementation without npm lifecycle scripts
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/jb-age-synthetic"
+          cd "$RUNNER_TEMP/jb-age-synthetic"
+          npm init -y >/dev/null
+          npm install --no-save --ignore-scripts --no-audit --no-fund --silent age-encryption@0.3.1
+      - name: JS->CLI and CLI->JS, wrong-key and tamper negative proofs
+        shell: bash
+        run: |
+          set -euo pipefail
+          cd "$RUNNER_TEMP/jb-age-synthetic"
+          cat > cross-test.mjs <<'JS'
+          import assert from "node:assert/strict";
+          import { readFileSync, writeFileSync, mkdtempSync, rmSync } from "node:fs";
+          import { tmpdir } from "node:os";
+          import { join } from "node:path";
+          import { execFileSync } from "node:child_process";
+          import * as age from "age-encryption";
+
+          // All test identities and synthetic content stay in ephemeral runner memory/files.
+          // No production credentials, no user data, no GitHub artifact upload.
+          const tmp = mkdtempSync(join(tmpdir(), "jb-age-interop-"));
+          try {
+            const identity = await age.generateIdentity();
+            const recipient = await age.identityToRecipient(identity);
+            assert.match(identity, /^AGE-SECRET-KEY-1/);
+            assert.match(recipient, /^age1/);
+
+            const plain = "JANTA_BOL_SYNTHETIC_ONLY_AGE_CLI_JS_INTEROP\n";
+            const identityPath = join(tmp, "identity.txt");
+            const inputPath = join(tmp, "input.txt");
+            const jsAgePath = join(tmp, "js.age");
+            const cliAgePath = join(tmp, "cli.age");
+            const cliOutPath = join(tmp, "cli-decrypted.txt");
+            writeFileSync(identityPath, "# Disposable synthetic identity\n" + identity + "\n", { mode: 0o600 });
+            writeFileSync(inputPath, plain, { mode: 0o600 });
+
+            const enc = new age.Encrypter();
+            enc.addRecipient(recipient);
+            const jsCiphertext = await enc.encrypt(plain);
+            assert.equal(Buffer.from(jsCiphertext).subarray(0, 22).toString("utf8"), "age-encryption.org/v1\n");
+            writeFileSync(jsAgePath, Buffer.from(jsCiphertext), { mode: 0o600 });
+
+            execFileSync("age", ["--decrypt", "-i", identityPath, "-o", cliOutPath, jsAgePath], { stdio: "pipe" });
+            assert.equal(readFileSync(cliOutPath, "utf8"), plain);
+            console.log("PASS [JS->official age CLI]: full encrypted payload decrypted unchanged");
+
+            execFileSync("age", ["--encrypt", "-r", recipient, "-o", cliAgePath, inputPath], { stdio: "pipe" });
+            const dec = new age.Decrypter();
+            dec.addIdentity(identity);
+            assert.equal(await dec.decrypt(new Uint8Array(readFileSync(cliAgePath)), "text"), plain);
+            console.log("PASS [official age CLI->JS]: full encrypted payload decrypted unchanged");
+
+            const wrongIdentity = await age.generateIdentity();
+            const wrong = new age.Decrypter();
+            wrong.addIdentity(wrongIdentity);
+            await assert.rejects(wrong.decrypt(new Uint8Array(readFileSync(cliAgePath)), "text"));
+            console.log("PASS [negative]: wrong test identity rejected");
+
+            const tampered = new Uint8Array(readFileSync(jsAgePath));
+            tampered[tampered.length - 1] ^= 1;
+            const decTamper = new age.Decrypter();
+            decTamper.addIdentity(identity);
+            await assert.rejects(decTamper.decrypt(tampered, "text"));
+            console.log("PASS [negative]: modified ciphertext rejected");
+
+            console.log("PASS [SYNTHETIC-ONLY]: JavaScript age-encryption@0.3.1 <-> official age CLI cross-compatibility.");
+            console.log("REAL OWNER KEY: NOT CREATED. REAL BACKUP: NOT TAKEN. LIVE DB: UNTOUCHED.");
+          } finally {
+            rmSync(tmp, { recursive: true, force: true });
+          }
+          JS
+          node cross-test.mjs
