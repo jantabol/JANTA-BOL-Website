@@ -1,0 +1,56 @@
+# NO automatic execution. Needs a NEW explicit Founder decision AFTER synthetic CI PASS.
+# WARNING: manual run reads LIVE JANTA BOL DB and creates a NEW encrypted B2 object.
+# Never use Cricket DB. Never send owner's AGE private key to Actions.
+name: JANTA BOL T034 dual AGE encrypted backup + OFFLINE public restore (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type JANTA_BOL_DUAL_RESTORE_ONLY AFTER separate Founder approval
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-free-backup
+  cancel-in-progress: false
+jobs:
+  dual-recipient-restore:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY' }}
+    runs-on: ubuntu-latest
+    environment: janta-bol-production-backup
+    timeout-minutes: 45
+    env:
+      JB_T034_DUAL_RESTORE_PROBE: '1'
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Fail closed before connecting to production
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -n "$SUPABASE_DB_PASSWORD"
+          test -n "$JB_BACKUP_AGE_RECIPIENT"
+          test -n "$JB_BACKUP_B2_KEY_ID"
+          test -n "$JB_BACKUP_B2_APPLICATION_KEY"
+          test -n "$JB_BACKUP_REMOTE_PREFIX"
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-public-restore-probe.sh
+          echo 'PASS: dedicated, Founder-only authorized preflight. No DB operations.'
+      - name: Install standard AGE, B2, compression and client tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone zstd
+      - name: Pinned official Supabase CLI
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.120.0
+      - name: ACTUAL encrypted B2 export, runner-only AGE decryption, offline public clone
+        shell: bash
+        run: bash ci/backup/jb-free-offsite-backup.sh
