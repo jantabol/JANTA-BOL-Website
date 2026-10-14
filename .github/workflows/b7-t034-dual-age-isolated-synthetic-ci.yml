@@ -86,8 +86,12 @@ jobs:
             pg_dump -h localhost -U postgres -d fake_source --format=custom \
             --no-owner --no-privileges --schema=public -f /out/raw_full.dump >/dev/null
           docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
-          pg_dump --schema=public --schema-only --no-owner --no-privileges > "$tmp/plain/schema.sql"
-          pg_dump --schema=public --data-only --no-owner --no-privileges > "$tmp/plain/data.sql"
+          docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
+            pg_dump -h localhost -U postgres -d fake_source --schema=public \
+            --schema-only --no-owner --no-privileges > "$tmp/plain/schema.sql"
+          docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
+            pg_dump -h localhost -U postgres -d fake_source --schema=public \
+            --data-only --no-owner --no-privileges > "$tmp/plain/data.sql"
           printf 'CREATE ROLE fake_t034_test NOLOGIN;\n' > "$tmp/plain/roles.sql"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
