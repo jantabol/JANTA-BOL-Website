@@ -50,6 +50,10 @@ jobs:
           set -Eeuo pipefail
           sudo apt-get update -qq
           sudo apt-get install -y -qq age zstd postgresql-client >/dev/null
+      - name: Install pinned Supabase CLI to verify actual backup command syntax
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.120.0
       - name: Generate fake database; archive, encrypt for owner and ephemeral restore key
         shell: bash
         run: |
@@ -67,6 +71,18 @@ jobs:
           ALTER TABLE public.t034_synthetic_article ENABLE ROW LEVEL SECURITY;
           CREATE POLICY t034_public_read ON public.t034_synthetic_article FOR SELECT TO t034_reader USING (true);
           SQL
+          # Exact production Supabase CLI command sequence, disposable FAKE source only.
+          # No Supabase service token, JANTA BOL password, or cloud project is used.
+          synthetic_uri='postgresql://postgres:synthetic_password_only@localhost:5432/synthetic_primary'
+          supabase db dump --db-url "$synthetic_uri" --role-only -f "$tmp/plain/roles.sql" >/dev/null
+          supabase db dump --db-url "$synthetic_uri" -f "$tmp/plain/schema.sql" >/dev/null
+          supabase db dump --db-url "$synthetic_uri" --use-copy --data-only -f "$tmp/plain/data.sql" >/dev/null
+          test -s "$tmp/plain/roles.sql"
+          test -s "$tmp/plain/schema.sql"
+          test -s "$tmp/plain/data.sql"
+          grep -q 't034_synthetic_article' "$tmp/plain/schema.sql"
+          grep -q 'FAKE RECORD ONE' "$tmp/plain/data.sql"
+          echo 'PASS [G2 synthetic] pinned official Supabase CLI role/schema/data SQL export flags executed.'
           docker run --rm --network=host -v "$tmp/plain:/backup" -e PGPASSWORD=synthetic_password_only postgres:17 \
             pg_dump -h localhost -U postgres -d synthetic_primary --format=custom --no-owner --no-privileges \
             --schema=public -f /backup/synthetic.dump >/dev/null
