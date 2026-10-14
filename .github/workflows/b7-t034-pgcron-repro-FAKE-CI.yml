@@ -66,4 +66,18 @@ jobs:
                 echo 'RCA_NOT_CONFIRMED: first synthetic error unrelated to pg_cron'
              fi
           fi
+          echo 'SYNTHETIC CLUSTER ROLE METADATA:'
+          docker exec -u postgres "$name" psql -X -At -d postgres \
+            -c "SELECT rolname||' SUPER='||rolsuper::text||' CREATE_ROLE='||rolcreaterole::text||' LOGIN='||rolcanlogin::text FROM pg_roles WHERE rolname IN ('postgres','supabase_admin','supabase_auth_admin','supabase_storage_admin') ORDER BY rolname"
+          echo 'SYNTHETIC SET ROLE MEMBER:'
+          docker exec -u postgres "$name" psql -X -At -d postgres \
+            -c "SELECT pg_has_role('postgres','supabase_admin','SET')"
+          docker exec -u postgres "$name" createdb -T template0 jb_no_owner_probe
+          if docker exec -u postgres "$name" pg_restore --no-owner -e -d jb_no_owner_probe \
+             /tmp/synthetic_cron.dump > "$work/noowner.log" 2>&1; then
+            echo 'SYNTHETIC_NO_OWNER_RESTORE_SUCCEEDED'
+          else
+            echo 'SYNTHETIC_NO_OWNER_RESTORE_FAILED_FIRST_ERROR'
+            grep -m 3 -E 'pg_restore: error|ERROR:|DETAIL:|HINT:' "$work/noowner.log" || true
+          fi
           echo 'NO LIVE SECRETS; NO LIVE BACKUP; NO PROD DATABASE WRITES.'
