@@ -39,7 +39,7 @@ jobs:
             echo "::error::Dedicated JANTA BOL private bucket prefix does not match approved destination."
             exit 1
           fi
-          [[ "${JB_BACKUP_AGE_RECIPIENT}" =~ ^age1[02-9ac-hj-np-z]+$ ]] || {
+          [[ "${JB_BACKUP_AGE_RECIPIENT}" =~ ^age1[023456789acdefghjklmnpqrstuvwxyz]+$ ]] || {
             echo "::error::Invalid AGE public recipient format"
             exit 1
           }
