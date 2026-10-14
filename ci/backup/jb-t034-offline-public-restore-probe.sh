@@ -39,9 +39,9 @@ docker cp "$snapshot_dir/raw_full.dump" "$clone:/tmp/jb_snapshot.dump" > /dev/nu
  fail 'cannot deliver dump to isolated container'
 docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/jb_snapshot.dump && chmod 600 /tmp/jb_snapshot.dump' > /dev/null 2>&1 ||
  fail 'cannot protect isolated input dump'
-# Restore archive's public schema on EMPTY public namespace; never on source.
-docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -d postgres -c 'DROP SCHEMA public CASCADE;' \
-  > "$tmp/drop.log" 2>&1 || fail 'disposable target schema reset refused'
+# pg_restore --schema=public only includes public OBJECTS, not CREATE SCHEMA.
+# The brand-new isolated PostgreSQL database's empty public schema must remain.
+# No cleanup is needed: this disposable database is never shared with production.
 # Some live Supabase functions/constraints require auth, vault, net, etc.; do NOT
 # suppress their errors or claim full restore. Fail and retain production unchanged.
 if ! docker exec -u postgres "$clone" pg_restore --exit-on-error --no-owner --no-privileges \
