@@ -92,7 +92,7 @@ jobs:
             RETURNS boolean LANGUAGE sql AS 'SELECT true';
           REVOKE EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) FROM PUBLIC;
           GRANT EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) TO authenticated;
-          GRANT SELECT ON public.articles TO anon, fake_t034_test;
+          GRANT SELECT ON public.articles TO anon;
           GRANT SELECT ON public.ad_campaigns TO authenticated;
           INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
           INSERT INTO public.ad_campaigns VALUES (1,'requested');
