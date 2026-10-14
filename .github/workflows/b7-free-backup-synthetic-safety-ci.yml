@@ -67,7 +67,21 @@ jobs:
             echo "::error::Missing B2 secret must fail CLOSED"
             exit 1
           fi
-          if JB_BACKUP_B2_APPLICATION_KEY=        run: |
+          if JB_BACKUP_B2_APPLICATION_KEY='INVALID SECRET WITH SPACES' python3 ci/backup/jb-b2-rclone-config.py "$tmp/injected.conf"; then
+            echo "::error::Malformed B2 secret must fail CLOSED"
+            exit 1
+          fi
+          test ! -e "$tmp/missing.conf"
+          test ! -e "$tmp/injected.conf"
+          grep -Fq 'jbbackup:jantabol-backup-euc-2026' ci/backup/jb-free-offsite-backup.sh
+          if grep -Fq 'cricket-prediction-backup-euc-2026' ci/backup/jb-free-offsite-backup.sh; then
+            echo "::error::JANTA BOL script must never reference Cricket bucket"
+            exit 1
+          fi
+          grep -q 'refs/heads/main' .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          echo 'PASS: production backup remains main-only, reviewed manual, dedicated JANTA BOL remote.'
+      - name: Install deterministic LOCAL encryption clients
+        run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq age zstd
       - name: Synthetic offline AGE encrypt, DELETE plaintext, restore, verify row counts and RLS
