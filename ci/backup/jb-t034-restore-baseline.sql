@@ -51,4 +51,9 @@ WITH facts AS (
     has_function_privilege('authenticated','public.jb_ad_confirm_payment_internal(uuid,text,bigint)','EXECUTE')::text
   UNION ALL SELECT '25_anon_ad_payments_insert',
     has_table_privilege('anon','public.ad_payments','INSERT')::text
+  UNION ALL SELECT '26_legacy_high_risk_pending_payment',
+    (SELECT count(*)::text FROM public.ad_campaigns c
+      JOIN public.advertisers a ON a.id = c.advertiser_id
+      WHERE a.risk_level = 'high' AND a.verification_state <> 'verified'
+        AND c.status = 'payment_pending')
 ) SELECT metric || '=' || result FROM facts ORDER BY metric;
