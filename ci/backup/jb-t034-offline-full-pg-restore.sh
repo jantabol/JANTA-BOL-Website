@@ -63,7 +63,7 @@ if grep -Eq '^[0-9]+;.* SCHEMA - public ' "$temp/archive_toc.txt"; then
     fail 'cannot prepare blank public schema for archive-owned namespace'
 fi
 if ! docker exec -u postgres "$clone" pg_restore -d jb_restored_test_db \
-    --exit-on-error --no-owner --no-privileges /tmp/input.dump \
+    --exit-on-error --no-owner /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
   # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
   if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
