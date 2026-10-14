@@ -92,8 +92,12 @@ supabase db dump --db-url "$JB_DB_URI" -f "$work/plain/schema.sql" >/dev/null
 supabase db dump --db-url "$JB_DB_URI" --use-copy --data-only -f "$work/plain/data.sql" >/dev/null
 # Raw full DB archive, including auth/storage metadata omitted from filtered dump;
 # Supabase-specific roles/extensions may need manual reconciliation on restoration.
+# Default legacy manual backup path unchanged. New explicitly authorized
+# double-recipient DR mode preserves table/function owners and original ACLs.
+raw_dump_args=(--format=custom --file=/backup/raw_full.dump)
+if [[ "$dual" == 0 ]]; then raw_dump_args+=(--no-owner); fi
 docker run --rm --network=host -v "$work/plain:/backup" postgres:17 \
-  pg_dump --format=custom --no-owner --file=/backup/raw_full.dump "$JB_DB_URI" >/dev/null
+  pg_dump "${raw_dump_args[@]}" "$JB_DB_URI" >/dev/null
 docker run --rm -v "$work/plain:/backup:ro" postgres:17 \
   pg_restore --list /backup/raw_full.dump > "$work/plain/raw_inventory.txt"
 for fname in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt; do
