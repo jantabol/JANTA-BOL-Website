@@ -25,7 +25,7 @@ jobs:
       JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
       JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Check names, exact dedicated destination and public encryption recipient
         shell: bash
         run: |
