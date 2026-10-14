@@ -43,6 +43,11 @@ jobs:
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          # Production exporter may run only for Founder on exact main/repo.
+          grep -Fq "github.actor == 'jantabol'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          grep -Fq "github.repository == 'jantabol/JANTA-BOL-Website'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          grep -Fq "github.ref == 'refs/heads/main'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          echo 'PASS: production backup manual Actor/Repository/Main branch fail-closed gate present.'
           echo 'PASS: no production secrets requested; self-contained synthetic only.'
       - name: Install offline tools for AGE, compression and PostgreSQL clients
         shell: bash
