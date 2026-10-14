@@ -111,6 +111,9 @@ jobs:
           fi
           echo 'PASS [G2 synthetic] ciphertext modification rejected.'
           createdb --maintenance-db=postgres restored_only_fake_data
+          # A pg_dump custom archive contains public schema DDL; remove the
+          # auto-created EMPTY public schema in this disposable target first.
+          psql -X -v ON_ERROR_STOP=1 -d restored_only_fake_data -c 'DROP SCHEMA public CASCADE;' >/dev/null
           docker run --rm --network=host -v "$tmp/restore:/backup:ro" -e PGPASSWORD=synthetic_password_only \
             postgres:17 pg_restore -h localhost -U postgres -d restored_only_fake_data \
               --exit-on-error --no-owner --no-privileges /backup/synthetic.dump >/dev/null
