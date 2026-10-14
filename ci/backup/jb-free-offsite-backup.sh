@@ -9,13 +9,14 @@ umask 077
 fail(){ printf 'BACKUP_FAIL_CLOSED: %s\n' "$1" >&2; exit 1; }
 : "${SUPABASE_DB_PASSWORD:?SUPABASE_DB_PASSWORD secret missing}"
 : "${JB_BACKUP_AGE_RECIPIENT:?age public recipient key missing}"
-: "${JB_BACKUP_RCLONE_CONFIG_B64:?private remote config secret missing}"
+: "${JB_BACKUP_B2_KEY_ID:?JANTA BOL Backblaze scoped key ID missing}"
+: "${JB_BACKUP_B2_APPLICATION_KEY:?JANTA BOL Backblaze scoped secret missing}"
 : "${JB_BACKUP_REMOTE_PREFIX:?user-controlled private offsite path missing}"
 : "${GITHUB_RUN_ID:?manual GitHub Action only}"
 
 [[ "${JB_BACKUP_AGE_RECIPIENT}" =~ ^age1[0-9a-z]+$ ]] || fail "invalid age recipient public key"
-[[ "${JB_BACKUP_REMOTE_PREFIX}" =~ ^jbbackup:[a-zA-Z0-9][a-zA-Z0-9._/-]+$ ]] ||
- fail "unapproved private offsite remote prefix"
+[[ "${JB_BACKUP_REMOTE_PREFIX}" =~ ^jbbackup:jantabol-backup-euc-2026(/[a-zA-Z0-9._/-]+)?$ ]] ||
+ fail "JANTA BOL ONLY: remote prefix must target dedicated approved jantabol-backup-euc-2026 bucket"
 [[ "${JB_BACKUP_REMOTE_PREFIX}" != *'..'* ]] || fail "invalid remote path"
 command -v age >/dev/null || fail "age not installed"
 command -v rclone >/dev/null || fail "rclone not installed"
@@ -27,10 +28,16 @@ work="$(mktemp -d)"
 cleanup() { rm -rf -- "$work"; }
 trap cleanup EXIT HUP INT TERM
 mkdir -m 700 "$work/plain"
-printf '%s' "$JB_BACKUP_RCLONE_CONFIG_B64" | base64 --decode > "$work/rclone.conf" || fail "private rclone remote config invalid"
-chmod 600 "$work/rclone.conf"
-# Config MUST name [jbbackup]. Never disclose remote auth.
+# Build b2 native config from owner-entered GitHub Environment secrets, NEVER in repo or logs.
+python3 ci/backup/jb-b2-rclone-config.py "$work/rclone.conf" || fail "JANTA BOL B2 config invalid"
+# Verify remote name and approved JANTA BOL private bucket BEFORE accessing database.
 rclone --config "$work/rclone.conf" listremotes | grep -Fxq 'jbbackup:' || fail "rclone [jbbackup] remote is not configured"
+rclone --config "$work/rclone.conf" --retries 1 lsf "jbbackup:jantabol-backup-euc-2026" >/dev/null ||
+ fail "JANTA BOL bucket unavailable or scoped key missing list/read permissions; no DB export was attempted"
+# Validate age recipient can encrypt public, disposable synthetic data without private key.
+printf 'JANTA_BOL_ONLY_NON_SECRET_PREFLIGHT\n' | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/public-recipient-probe.age" ||
+ fail "invalid JANTA BOL age public recipient; no DB export was attempted"
+rm -f -- "$work/public-recipient-probe.age"
 # Required connection string is session pooler, exactly JANTA BOL project.
 # Percent encode all characters (avoid broken URI for !/@/# in password).
 export JB_DB_URI
