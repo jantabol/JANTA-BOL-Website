@@ -99,11 +99,28 @@ docker run --rm -v "$work/plain:/backup:ro" postgres:17 \
 for fname in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt; do
   test -s "$work/plain/$fname" || fail "empty backup component $fname"
 done
+if [[ "$dual" == 1 ]]; then
+  # This deterministic read-only metadata query is the exact post-dump source
+  # identity to compare with a newly restored FULL isolated PostgreSQL database.
+  docker run --rm --network=host \
+    -v "$PWD/ci/backup:/jb-checks:ro" postgres:17 \
+    psql -X -v ON_ERROR_STOP=1 -At "$JB_DB_URI" \
+      -f /jb-checks/jb-t034-restore-baseline.sql > "$work/plain/expected_identity.txt" ||
+    fail 'cannot read harmless exact counts/fingerprints for post-dump baseline'
+  [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 20 ]] ||
+    fail 'invalid metric coverage in source baseline'
+  ! grep -q '=MISSING' "$work/plain/expected_identity.txt" ||
+    fail 'one of the four protected Ad RPCs is absent on live source'
+fi
 # SQL files contain personal/confidential data; never print their lines or hashes.
 date -u +%Y-%m-%dT%H:%M:%SZ > "$work/plain/backup_utc.txt"
 printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/source_project.txt"
 # Age secret identity never exists in Actions; owner retains it offline.
-tar -C "$work/plain" -cf - roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt |
+bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
+if [[ "$dual" == 1 ]]; then
+  bundle+=(expected_identity.txt)
+fi
+tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
@@ -133,12 +150,16 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/$f" "$work/recovered/$f" ||
       fail "recovered archive bytes differ from original component $f"
   done
+  [[ -s "$work/recovered/expected_identity.txt" ]] ||
+    fail 'signed encrypted bundle lacks source snapshot-identity baseline'
+  cmp -s "$work/plain/expected_identity.txt" "$work/recovered/expected_identity.txt" ||
+    fail 'source baseline did not survive encrypted B2 round trip'
   printf 'T034_ACTUAL_REMOTE_AGE_DECRYPT=PASS; OWNER_PRIVATE_KEY_NOT_USED=true\n'
   # Disposable Docker has NO NETWORK. No real DB write is ever allowed.
   # Fail closed if Supabase public functions require additional extensions/auth.
-  bash ci/backup/jb-t034-offline-public-restore-probe.sh "$work/recovered" ||
-    fail 'isolated public-only restore refused; offsite encrypted archive remains preserved'
-  printf 'T034_PUBLIC_CLONE_SCOPE=PASS; FULL_SUPABASE_RESTORE_VERIFIED=false\n'
+  bash ci/backup/jb-t034-offline-full-pg-restore.sh "$work/recovered" ||
+    fail 'full isolated PG17 restore verification refused; B2 encrypted archive is preserved'
+  printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
 else
   printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
 fi
