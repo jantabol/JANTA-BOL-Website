@@ -51,6 +51,9 @@ jobs:
           version="$(check 'SHOW server_version_num')"
           [[ "$version" =~ ^17[0-9]+$ ]]
           echo 'PASS [T034 synthetic] Offline Supabase PostgreSQL 17 boots with --network none.'
-          check "SELECT extname FROM pg_available_extensions WHERE name IN ('pg_net','pg_cron','supabase_vault','pgcrypto') ORDER BY name" || true
-          check "SELECT nspname FROM pg_namespace WHERE nspname IN ('auth','storage','extensions','private') ORDER BY nspname" || true
+          ext="$(check "SELECT count(*) FROM pg_available_extensions WHERE name IN ('pg_net','pg_cron','supabase_vault','pgcrypto')")"
+          [[ "$ext" -ge 3 ]] || { echo '::error::Missing required Supabase PG17 extensions'; exit 1; }
+          have="$(check "SELECT count(*) FROM pg_namespace WHERE nspname IN ('auth','storage','extensions')")"
+          [[ "$have" == 3 ]] || { echo '::error::Offline base image lacks required Supabase schemas'; exit 1; }
+          echo 'PASS [T034 synthetic] Supabase auth/storage/extensions schemas and PostgreSQL extension modules available.'
           echo 'NO LIVE CREDENTIALS, NO PUBLIC PORTS, NO JANTA BOL DATA, NO STORAGE WRITE.'
