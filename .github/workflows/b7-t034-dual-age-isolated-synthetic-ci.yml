@@ -131,5 +131,5 @@ jobs:
             exit 1
           fi
           echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
-          bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
+          JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
           echo 'SYNTHETIC ONLY: no live Supabase, no B2 upload, no Owner private key.'
