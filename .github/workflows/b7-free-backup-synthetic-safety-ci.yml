@@ -1,0 +1,111 @@
+name: B7 free backup encrypt restore synthetic CI — NO production secrets
+on:
+  push:
+    branches:
+      - review/b7-backup-only-20261014
+permissions:
+  contents: read
+jobs:
+  synthetic-snapshot-encrypt-restore:
+    name: Disposable PG17 + offline age + restored schema/data/roles evidence
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_only
+          POSTGRES_DB: fake_prod
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fake_prod"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: local_only
+      PGDATABASE: fake_prod
+    steps:
+      - uses: actions/checkout@v4
+      - name: Static scan of manual backup script (must not contain artifact uploader)
+        shell: bash
+        run: |
+          set -euo pipefail
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          if grep -E '(upload-artifact|gh release upload|git add|git push|curl .*-F)' ci/backup/jb-free-offsite-backup.sh; then
+            echo '::error::Backup script must NOT upload DB to public GitHub artifacts/repo'
+            exit 1
+          fi
+          grep -q -- '--immutable' ci/backup/jb-free-offsite-backup.sh
+          grep -q -- 'cmp -s' ci/backup/jb-free-offsite-backup.sh
+      - name: Check temporary Backblaze native configuration with synthetic keys
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          temp_dir="$(mktemp -d)"
+          trap 'rm -rf "$temp_dir"' EXIT
+          export JB_BACKUP_B2_KEY_ID=fakejantaonly123456789
+          export JB_BACKUP_B2_APPLICATION_KEY=FAKE_NO_ACCESS_AGE_B2_SECRET_123
+          python3 ci/backup/jb-b2-rclone-config.py "$temp_dir/config"
+          test "$(stat -c %a "$temp_dir/config")" = 600
+          grep -Fxq '[jbbackup]' "$temp_dir/config"
+          grep -Fxq 'type = b2' "$temp_dir/config"
+          if env -u JB_BACKUP_B2_APPLICATION_KEY python3 ci/backup/jb-b2-rclone-config.py "$temp_dir/denied"; then
+            echo 'FAIL missing key accepted'
+            exit 1
+          fi
+          test ! -e "$temp_dir/denied"
+          grep -q jantabol-backup-euc-2026 ci/backup/jb-free-offsite-backup.sh
+          grep -q refs/heads/main .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          echo 'PASS synthetic B2 configuration and missing-key denial'
+      - name: Install deterministic LOCAL encryption clients
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age zstd
+      - name: Synthetic offline AGE encrypt, DELETE plaintext, restore, verify row counts and RLS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          tmp="$(mktemp -d)"
+          trap 'rm -rf "$tmp"' EXIT
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE anon NOLOGIN;
+          CREATE TABLE public.jb_fake_articles(id bigint PRIMARY KEY, title text NOT NULL);
+          INSERT INTO public.jb_fake_articles VALUES (1,'SYNTHETIC NEWS ONLY'),(2,'SECOND SYNTHETIC NEWS');
+          ALTER TABLE public.jb_fake_articles ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY jb_fake_select ON public.jb_fake_articles
+            FOR SELECT TO anon USING (true);
+          SQL
+          docker run --rm --network=host -e PGPASSWORD="$PGPASSWORD" -v "$tmp:/backup" postgres:17 \
+            pg_dump --format=custom --no-owner --no-privileges --schema=public \
+            -h localhost -U postgres -d fake_prod -f /backup/fake.dump
+          docker run --rm -v "$tmp:/backup:ro" postgres:17 pg_restore --list /backup/fake.dump > "$tmp/inventory.txt"
+          test -s "$tmp/fake.dump"
+          age-keygen -o "$tmp/identity.txt" 2>"$tmp/keygen.log"
+          pub="$(age-keygen -y "$tmp/identity.txt")"
+          tar -C "$tmp" -cf - fake.dump inventory.txt | zstd -q |
+            age -r "$pub" -o "$tmp/backup.tar.zst.age"
+          test -s "$tmp/backup.tar.zst.age"
+          sha256sum "$tmp/backup.tar.zst.age" | cut -d' ' -f1 > "$tmp/hash"
+          rm "$tmp/fake.dump" "$tmp/inventory.txt"
+          age -d -i "$tmp/identity.txt" "$tmp/backup.tar.zst.age" |
+            zstd -d -q | tar -C "$tmp" -xf -
+          test "$(sha256sum "$tmp/backup.tar.zst.age" | cut -d' ' -f1)" = "$(cat "$tmp/hash")"
+          createdb --maintenance-db=postgres restored_synthetic
+          psql -X -v ON_ERROR_STOP=1 -d restored_synthetic -c 'DROP SCHEMA public CASCADE;'
+          docker run --rm --network=host -e PGPASSWORD="$PGPASSWORD" -v "$tmp:/backup:ro" postgres:17 \
+            pg_restore --exit-on-error --no-owner --no-privileges \
+              -h localhost -U postgres -d restored_synthetic /backup/fake.dump
+          count="$(psql -X -A -t -d restored_synthetic -c 'SELECT count(*) FROM public.jb_fake_articles')"
+          test "$count" = 2
+          has_rls="$(psql -X -A -t -d restored_synthetic -c "SELECT relrowsecurity FROM pg_class WHERE oid='public.jb_fake_articles'::regclass")"
+          test "$has_rls" = t
+          has_policy="$(psql -X -A -t -d restored_synthetic -c "SELECT count(*) FROM pg_policies WHERE schemaname='public' AND tablename='jb_fake_articles'")"
+          test "$has_policy" = 1
+          echo 'PASS [BACKUP SYNTHETIC] encrypted/recovered age archive, restored exact 2 fake rows, table RLS and policy in isolated PG17.'
+          echo 'NO LIVE BACKUP GENERATED. NO PRODUCTION DATA TO GITHUB.'
