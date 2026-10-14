@@ -41,4 +41,14 @@ WITH facts AS (
     COALESCE(md5(pg_get_functiondef(to_regprocedure('public.jb_ad_transition_internal(uuid,text,text)'))),'MISSING')
   UNION ALL SELECT '20_rpc_public_enquiry_MD5',
     COALESCE(md5(pg_get_functiondef(to_regprocedure('public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)'))),'MISSING')
+  UNION ALL SELECT '21_anon_articles_select',
+    has_table_privilege('anon','public.articles','SELECT')::text
+  UNION ALL SELECT '22_auth_ad_campaign_select',
+    has_table_privilege('authenticated','public.ad_campaigns','SELECT')::text
+  UNION ALL SELECT '23_anon_payment_rpc_execute',
+    has_function_privilege('anon','public.jb_ad_confirm_payment_internal(uuid,text,bigint)','EXECUTE')::text
+  UNION ALL SELECT '24_auth_payment_rpc_execute',
+    has_function_privilege('authenticated','public.jb_ad_confirm_payment_internal(uuid,text,bigint)','EXECUTE')::text
+  UNION ALL SELECT '25_anon_ad_payments_insert',
+    has_table_privilege('anon','public.ad_payments','INSERT')::text
 ) SELECT metric || '=' || result FROM facts ORDER BY metric;
