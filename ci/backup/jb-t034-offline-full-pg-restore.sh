@@ -28,6 +28,21 @@ for i in $(seq 1 70); do
   sleep 2
 done
 [[ "$ready" == 1 ]] || fail 'isolated Supabase PostgreSQL not ready'
+# Supabase PostgreSQL first starts a TEMP bootstrap postmaster, shuts it down,
+# then launches the final server. A single pg_isready may race the shutdown.
+# Require a stable, real SQL-serving postmaster for multiple consecutive probes.
+stable=0
+for i in $(seq 1 100); do
+  if docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+       -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+    stable=$((stable + 1))
+    [[ "$stable" -ge 6 ]] && break
+  else
+    stable=0
+  fi
+  sleep 2
+done
+[[ "$stable" -ge 6 ]] || fail 'Supabase PG bootstrap/final postmaster never stabilized'
 # Create a pristine database from template0; the built-in auth/storage base
 # schemas in the bootstrap DB MUST NOT contaminate the restored snapshot.
 docker exec -u postgres "$clone" createdb --template=template0 jb_restored_test_db \
