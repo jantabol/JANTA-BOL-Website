@@ -1,0 +1,150 @@
+# T034: synthetic-only double-recipient AGE + offsite-round-trip restore.
+# NO LIVE Supabase, no GitHub environment, no B2 credentials, no uploads/artifacts.
+name: T034 synthetic dual-key offsite restore hardgate (NO LIVE DATA)
+on:
+  push:
+    branches:
+      - review/t034-offsite-restore-hardgate-20261014
+permissions:
+  contents: read
+concurrency:
+  group: t034-synthetic-dual-age-restore
+  cancel-in-progress: false
+jobs:
+  synthetic-dual-key-restore:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic_password_only
+          POSTGRES_DB: synthetic_primary
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d synthetic_primary"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: synthetic_password_only
+      PGDATABASE: synthetic_primary
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Confirm no secrets or live connection have been injected
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          # Production exporter may run only for Founder on exact main/repo.
+          grep -Fq "github.actor == 'jantabol'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          grep -Fq "github.repository == 'jantabol/JANTA-BOL-Website'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          grep -Fq "github.ref == 'refs/heads/main'" .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          echo 'PASS: production backup manual Actor/Repository/Main branch fail-closed gate present.'
+          echo 'PASS: no production secrets requested; self-contained synthetic only.'
+      - name: Install offline tools for AGE, compression and PostgreSQL clients
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age zstd postgresql-client >/dev/null
+      - name: Install pinned Supabase CLI to verify actual backup command syntax
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
+        with:
+          version: 2.120.0
+      - name: Generate fake database; archive, encrypt for owner and ephemeral restore key
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          tmp="$(mktemp -d)"
+          trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM
+          mkdir -m 700 "$tmp/plain" "$tmp/remote" "$tmp/download" "$tmp/restore"
+          # Disposable local DB and synthetic role, never connect to a remote DB.
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE t034_reader NOLOGIN;
+          CREATE TABLE public.t034_synthetic_article(id int PRIMARY KEY, title text NOT NULL);
+          INSERT INTO public.t034_synthetic_article VALUES (1,'FAKE RECORD ONE'),(2,'FAKE RECORD TWO');
+          ALTER TABLE public.t034_synthetic_article ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY t034_public_read ON public.t034_synthetic_article FOR SELECT TO t034_reader USING (true);
+          SQL
+          # Exact production Supabase CLI command sequence, disposable FAKE source only.
+          # No Supabase service token, JANTA BOL password, or cloud project is used.
+          synthetic_uri='postgresql://postgres:synthetic_password_only@localhost:5432/synthetic_primary'
+          supabase db dump --db-url "$synthetic_uri" --role-only -f "$tmp/plain/roles.sql" >/dev/null
+          supabase db dump --db-url "$synthetic_uri" -f "$tmp/plain/schema.sql" >/dev/null
+          supabase db dump --db-url "$synthetic_uri" --use-copy --data-only -f "$tmp/plain/data.sql" >/dev/null
+          test -s "$tmp/plain/roles.sql"
+          test -s "$tmp/plain/schema.sql"
+          test -s "$tmp/plain/data.sql"
+          grep -q 't034_synthetic_article' "$tmp/plain/schema.sql"
+          grep -q 'FAKE RECORD ONE' "$tmp/plain/data.sql"
+          echo 'PASS [G2 synthetic] pinned official Supabase CLI role/schema/data SQL export flags executed.'
+          docker run --rm --network=host -v "$tmp/plain:/backup" -e PGPASSWORD=synthetic_password_only postgres:17 \
+            pg_dump -h localhost -U postgres -d synthetic_primary --format=custom --no-owner --no-privileges \
+            --schema=public -f /backup/synthetic.dump >/dev/null
+          docker run --rm -v "$tmp/plain:/backup:ro" postgres:17 \
+            pg_restore --list /backup/synthetic.dump > "$tmp/plain/inventory.txt"
+          test -s "$tmp/plain/synthetic.dump"
+          test -s "$tmp/plain/inventory.txt"
+          age-keygen -o "$tmp/owner-test-only.identity" 2>"$tmp/owner.keylog"
+          age-keygen -o "$tmp/runner-restore.identity" 2>"$tmp/runner.keylog"
+          owner_pub="$(age-keygen -y "$tmp/owner-test-only.identity")"
+          runner_pub="$(age-keygen -y "$tmp/runner-restore.identity")"
+          test "$owner_pub" != "$runner_pub"
+          # Exact production-ready envelope topology: owner paper pub + single-run private key.
+          tar -C "$tmp/plain" -cf - synthetic.dump inventory.txt | zstd -q | \
+            age -r "$owner_pub" -r "$runner_pub" -o "$tmp/backup.tar.zst.age"
+          test -s "$tmp/backup.tar.zst.age"
+          sha="$(sha256sum "$tmp/backup.tar.zst.age" | awk '{print $1}')"
+          # Simulated immutability and offsite roundtrip. Real B2 is separately proven READ-ONLY.
+          test ! -e "$tmp/remote/synthetic.tar.zst.age"
+          cp --no-clobber "$tmp/backup.tar.zst.age" "$tmp/remote/synthetic.tar.zst.age"
+          rm -rf "$tmp/plain"
+          cp "$tmp/remote/synthetic.tar.zst.age" "$tmp/download/roundtrip.age"
+          test "$sha" = "$(sha256sum "$tmp/download/roundtrip.age" | awk '{print $1}')"
+          echo 'PASS [G2 simulation] ciphertext-only offsite round-trip and exact SHA-256.'
+          # The owner private key NEVER belongs to Actions in production; this is fake test only.
+          age -d -i "$tmp/owner-test-only.identity" "$tmp/download/roundtrip.age" | \
+            zstd -dq | tar -C "$tmp/restore" -xf -
+          test -s "$tmp/restore/synthetic.dump"
+          test -s "$tmp/restore/inventory.txt"
+          echo 'PASS [G3 synthetic] independent synthetic OWNER recipient decrypts archive.'
+          rm -f "$tmp/restore/synthetic.dump" "$tmp/restore/inventory.txt"
+          age -d -i "$tmp/runner-restore.identity" "$tmp/download/roundtrip.age" | \
+            zstd -dq | tar -C "$tmp/restore" -xf -
+          test -s "$tmp/restore/synthetic.dump"
+          echo 'PASS [G3 synthetic] independent ephemeral restore recipient decrypts downloaded archive.'
+          # Detect tampering: authenticated cipher must refuse altered bytes.
+          cp "$tmp/download/roundtrip.age" "$tmp/download/tampered.age"
+          printf 'tampered' >> "$tmp/download/tampered.age"
+          if age -d -i "$tmp/runner-restore.identity" "$tmp/download/tampered.age" >/dev/null 2>&1; then
+            echo '::error::Tampered ciphertext accepted.'
+            exit 1
+          fi
+          echo 'PASS [G2 synthetic] ciphertext modification rejected.'
+          createdb --maintenance-db=postgres restored_only_fake_data
+          # A pg_dump custom archive contains public schema DDL; remove the
+          # auto-created EMPTY public schema in this disposable target first.
+          psql -X -v ON_ERROR_STOP=1 -d restored_only_fake_data -c 'DROP SCHEMA public CASCADE;' >/dev/null
+          docker run --rm --network=host -v "$tmp/restore:/backup:ro" -e PGPASSWORD=synthetic_password_only \
+            postgres:17 pg_restore -h localhost -U postgres -d restored_only_fake_data \
+              --exit-on-error --no-owner --no-privileges /backup/synthetic.dump >/dev/null
+          n="$(psql -X -At -d restored_only_fake_data -c 'SELECT count(*) FROM public.t034_synthetic_article')"
+          test "$n" = "2"
+          rls="$(psql -X -At -d restored_only_fake_data -c \
+            "SELECT relrowsecurity FROM pg_class WHERE oid='public.t034_synthetic_article'::regclass")"
+          test "$rls" = 't'
+          pol="$(psql -X -At -d restored_only_fake_data -c \
+            "SELECT count(*) FROM pg_policies WHERE schemaname='public' AND tablename='t034_synthetic_article' AND policyname='t034_public_read'")"
+          test "$pol" = '1'
+          echo 'PASS [G3 synthetic] fresh isolated PG17: decrypted 2/2 synthetic rows, RLS enabled, exact policy restored.'
+          echo 'NO JANTA BOL PRODUCTION DATA / NO B2 WRITE / NO FOUNDER PRIVATE AGE KEY / NO GH ARTIFACT.'

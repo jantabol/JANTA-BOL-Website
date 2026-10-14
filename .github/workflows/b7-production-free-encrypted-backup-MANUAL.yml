@@ -16,7 +16,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   backup:
-    if: ${{ github.event.inputs.confirmation == 'JANTA_BOL_BACKUP_ONLY' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.event.inputs.confirmation == 'JANTA_BOL_BACKUP_ONLY' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: janta-bol-production-backup
     timeout-minutes: 45
