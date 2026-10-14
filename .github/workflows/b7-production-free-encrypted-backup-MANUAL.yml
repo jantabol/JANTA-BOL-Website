@@ -1,5 +1,5 @@
-# REVIEW ONLY — manual backup storage + owner offline encryption key not yet provisioned.
-# Must be reviewed and copied to a protected default branch AFTER owner storage selection.
+# REVIEW ONLY — Owner B2 storage selected, public recipient entered; no full DB restore evidence yet.
+# Candidate requires security review and merge to protected main; NEVER run automatically.
 # Public GitHub repository: NEVER upload DB dump, plaintext or ciphertext as artifact.
 name: JANTA BOL FREE encrypted offsite DB backup (manual only)
 on:
@@ -23,7 +23,8 @@ jobs:
     env:
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
       JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
-      JB_BACKUP_RCLONE_CONFIG_B64: ${{ secrets.JB_BACKUP_RCLONE_CONFIG_B64 }}
+      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
       JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +34,8 @@ jobs:
           set -euo pipefail
           test -n "$SUPABASE_DB_PASSWORD" || { echo "::error::Missing production DB password"; exit 1; }
           test -n "$JB_BACKUP_AGE_RECIPIENT" || { echo "::error::Missing OWNER public age recipient"; exit 1; }
-          test -n "$JB_BACKUP_RCLONE_CONFIG_B64" || { echo "::error::Missing owner-controlled private offsite rclone config"; exit 1; }
+          test -n "$JB_BACKUP_B2_KEY_ID" || { echo "::error::Missing JANTA BOL-scoped Backblaze key ID"; exit 1; }
+          test -n "$JB_BACKUP_B2_APPLICATION_KEY" || { echo "::error::Missing JANTA BOL-scoped Backblaze application secret"; exit 1; }
           test -n "$JB_BACKUP_REMOTE_PREFIX" || { echo "::error::Missing approved private destination bucket/folder"; exit 1; }
           echo "Preflight present. No data was exported before this point."
       - name: Install backup and transfer clients (runner ephemeral)
