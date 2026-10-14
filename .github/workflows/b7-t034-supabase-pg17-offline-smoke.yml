@@ -1,0 +1,59 @@
+# T034 synthetic infrastructure compatibility. No access to PROD or B2.
+name: JANTA BOL T034 self-hosted Supabase PG17 offline smoke (FAKE ONLY)
+on:
+  push:
+    branches:
+      - review/t034-dual-recipient-real-restore-20261014
+    paths:
+      - '.github/workflows/b7-t034-supabase-pg17-offline-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  supabase-postgres-17-offline:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Pull matched Supabase PG17 image; NO SECRETS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          docker pull supabase/postgres:17.6.1.136 > /dev/null
+      - name: Start isolated self-hosted PG17 and inspect extensions and schemas
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          name=jb-t034-supabase-pg17-smoke
+          cleanup(){ docker rm -f "$name" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run -d --network none --memory 4g --pids-limit 200 --cpus 2 \
+             --name "$name" \
+             -e POSTGRES_PASSWORD=synthetic_ONLY \
+             supabase/postgres:17.6.1.136 >/dev/null
+          ready=0
+          for n in $(seq 1 70); do
+             if docker exec -u postgres "$name" pg_isready -q -d postgres >/dev/null 2>&1; then
+               ready=1; break
+             fi
+             sleep 2
+          done
+          if [[ "$ready" != 1 ]]; then
+             echo '::error::Offline supabase/postgres image could not start using minimal environment.'
+             # Show only bounded startup ERROR signatures; no secrets used.
+             docker logs "$name" 2>&1 | grep -E '(ERROR|FATAL|failed|error)' | head -n 12 || true
+             exit 1
+          fi
+          check(){ docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -d postgres -c "$1"; }
+          version="$(check 'SHOW server_version_num')"
+          [[ "$version" =~ ^17[0-9]+$ ]]
+          echo 'PASS [T034 synthetic] Offline Supabase PostgreSQL 17 boots with --network none.'
+          ext="$(check "SELECT count(*) FROM pg_available_extensions WHERE name IN ('pg_net','pg_cron','supabase_vault','pgcrypto')")"
+          [[ "$ext" -ge 3 ]] || { echo '::error::Missing required Supabase PG17 extensions'; exit 1; }
+          have="$(check "SELECT count(*) FROM pg_namespace WHERE nspname IN ('auth','storage','extensions')")"
+          [[ "$have" == 3 ]] || { echo '::error::Offline base image lacks required Supabase schemas'; exit 1; }
+          echo 'PASS [T034 synthetic] Supabase auth/storage/extensions schemas and PostgreSQL extension modules available.'
+          echo 'NO LIVE CREDENTIALS, NO PUBLIC PORTS, NO JANTA BOL DATA, NO STORAGE WRITE.'

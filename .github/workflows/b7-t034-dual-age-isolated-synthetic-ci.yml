@@ -1,0 +1,174 @@
+# JANTA BOL / T034: NO LIVE DATA, NO B2 KEYS, NO production Environment.
+# This must pass BEFORE Founder approves an entirely separate manual real run.
+name: JANTA BOL T034 dual recipient offline clone SYNTHETIC CI
+on:
+  push:
+    branches:
+      - review/t034-dual-recipient-real-restore-20261014
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ci/backup/**'
+      - '.github/workflows/b7-t034-dual-*.yml'
+      - '.github/workflows/b7-production-free-encrypted-backup-MANUAL.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-archive-b2-roundtrip-public-clone:
+    name: PG17 2-recipient AGE synthetic readback + offline public clone
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    services:
+      pg17:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: synthetic_only
+          POSTGRES_DB: fake_source
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d fake_source"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 12
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: synthetic_only
+      PGDATABASE: fake_source
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: No live credentials and manual-only execution lock
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-public-restore-probe.sh
+          grep -Fq 'GITHUB_WORKFLOW_REF' ci/backup/jb-free-offsite-backup.sh
+          grep -Fq "github.run_attempt == 1" .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          grep -Fq "github.actor == 'jantabol'" .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          grep -Fq "github.repository == 'jantabol/JANTA-BOL-Website'" .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          grep -Fq "github.ref == 'refs/heads/main'" .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          grep -Fq "github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY'" .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          echo 'PASS: syntax, manual authorization lock and no live credentials.'
+      - name: Install deterministic offline AGE and zstd clients
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age zstd postgresql-client >/dev/null
+      - name: Create fake Supabase-like data, AGE bundle, simulated B2 readback, offline clone
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          tmp="$(mktemp -d)"
+          trap 'rm -rf -- "$tmp"' EXIT HUP INT TERM
+          mkdir -m 700 "$tmp/plain" "$tmp/fake-b2" "$tmp/readback" "$tmp/recovered"
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          CREATE ROLE anon NOLOGIN;
+          CREATE ROLE authenticated NOLOGIN;
+          CREATE ROLE fake_t034_test NOLOGIN;
+          CREATE TABLE public.articles(id bigint PRIMARY KEY, title text NOT NULL);
+          CREATE TABLE public.ad_campaigns(id bigint PRIMARY KEY, status text NOT NULL);
+          CREATE TABLE public.advertisers(id bigint PRIMARY KEY);
+          CREATE TABLE public.ad_payments(id bigint PRIMARY KEY);
+          CREATE TABLE public.ad_history(id bigint PRIMARY KEY);
+          CREATE TABLE public.audit_logs(id bigint PRIMARY KEY);
+          CREATE FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
+          CREATE FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
+          CREATE FUNCTION public.jb_ad_transition_internal(uuid,text,text)
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
+          CREATE FUNCTION public.jb_ad_public_enquiry(text,text,boolean,text,uuid,text)
+            RETURNS boolean LANGUAGE sql AS 'SELECT true';
+          REVOKE EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) FROM PUBLIC;
+          GRANT EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint) TO authenticated;
+          GRANT SELECT ON public.articles TO anon;
+          GRANT SELECT ON public.ad_campaigns TO authenticated;
+          INSERT INTO public.articles VALUES (1,'SYNTHETIC ARTICLE'),(2,'ANOTHER FAKE ARTICLE');
+          INSERT INTO public.ad_campaigns VALUES (1,'requested');
+          ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.advertisers ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.ad_payments ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.ad_history ENABLE ROW LEVEL SECURITY;
+          ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY fake_articles_public ON public.articles FOR SELECT USING (true);
+          CREATE POLICY fake_ads_public ON public.ad_campaigns FOR SELECT USING (true);
+          CREATE SCHEMA private;
+          CREATE TABLE private.t034_admin_log(id bigint PRIMARY KEY);
+          INSERT INTO private.t034_admin_log VALUES (1);
+          ALTER TABLE private.t034_admin_log ENABLE ROW LEVEL SECURITY;
+          CREATE POLICY fake_admin ON private.t034_admin_log FOR SELECT USING (false);
+          CREATE SCHEMA auth;
+          CREATE TABLE auth.users(id uuid PRIMARY KEY);
+          INSERT INTO auth.users VALUES ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
+          CREATE SCHEMA storage;
+          CREATE TABLE storage.objects(id bigint PRIMARY KEY);
+          INSERT INTO storage.objects VALUES (1);
+          SQL
+          docker run --rm --network=host -v "$tmp/plain:/out" -e PGPASSWORD=synthetic_only postgres:17 \
+            pg_dump -h localhost -U postgres -d fake_source --format=custom \
+            -f /out/raw_full.dump >/dev/null
+          docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
+          docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
+            pg_dump -h localhost -U postgres -d fake_source --schema=public \
+            --schema-only --no-owner --no-privileges > "$tmp/plain/schema.sql"
+          docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
+            pg_dump -h localhost -U postgres -d fake_source --schema=public \
+            --data-only --no-owner --no-privileges > "$tmp/plain/data.sql"
+          printf 'CREATE ROLE fake_t034_test NOLOGIN;\n' > "$tmp/plain/roles.sql"
+          date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
+          printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-restore-baseline.sql > "$tmp/plain/expected_identity.txt"
+          [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 25 ]]
+          ! grep -q '=MISSING' "$tmp/plain/expected_identity.txt"
+          age-keygen -o "$tmp/fake-owner.identity" > /dev/null 2>&1
+          age-keygen -o "$tmp/runner-restore.identity" > /dev/null 2>&1
+          owner="$(age-keygen -y "$tmp/fake-owner.identity")"
+          runner="$(age-keygen -y "$tmp/runner-restore.identity")"
+          test "$owner" != "$runner"
+          tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
+            raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt | zstd -q | \
+            age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
+          test -s "$tmp/backup.tar.zst.age"
+          # Simulate immutable private B2 object. Real transfer is a separate test.
+          test ! -e "$tmp/fake-b2/test-run.tar.zst.age"
+          cp --no-clobber "$tmp/backup.tar.zst.age" "$tmp/fake-b2/test-run.tar.zst.age"
+          rm -rf -- "$tmp/plain"
+          cp "$tmp/fake-b2/test-run.tar.zst.age" "$tmp/readback/test-run.tar.zst.age"
+          cmp -s "$tmp/backup.tar.zst.age" "$tmp/readback/test-run.tar.zst.age"
+          echo 'PASS [G2 synthetic] fake immutable ciphertext offsite copy + exact readback.'
+          age -d -i "$tmp/runner-restore.identity" "$tmp/readback/test-run.tar.zst.age" |
+            zstd -dq | tar -C "$tmp/recovered" -xf -
+          test -s "$tmp/recovered/raw_full.dump"
+          test -s "$tmp/recovered/expected_identity.txt"
+          echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
+          age -d -i "$tmp/fake-owner.identity" "$tmp/readback/test-run.tar.zst.age" |
+            zstd -dq | tar -C "$tmp/readback" -xf -
+          cmp -s "$tmp/recovered/raw_full.dump" "$tmp/readback/raw_full.dump"
+          echo 'PASS [G3 synthetic] distinct fake owner recipient decrypts SAME archive.'
+          age-keygen -o "$tmp/wrong.identity" > /dev/null 2>&1
+          if age -d -i "$tmp/wrong.identity" "$tmp/readback/test-run.tar.zst.age" > /dev/null 2>&1; then
+            echo '::error::Wrong private key was accepted.'
+            exit 1
+          fi
+          cp "$tmp/readback/test-run.tar.zst.age" "$tmp/readback/tampered.age"
+          printf 'TAMPER' >> "$tmp/readback/tampered.age"
+          if age -d -i "$tmp/runner-restore.identity" "$tmp/readback/tampered.age" > /dev/null 2>&1; then
+            echo '::error::Altered ciphertext was accepted.'
+            exit 1
+          fi
+          echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
+          JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
+          JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
+          echo 'SYNTHETIC ONLY: no live Supabase, no B2 upload, no Owner private key.'

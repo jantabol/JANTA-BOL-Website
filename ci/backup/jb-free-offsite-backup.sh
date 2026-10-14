@@ -24,10 +24,39 @@ command -v supabase >/dev/null || fail "supabase CLI not installed"
 command -v docker >/dev/null || fail "Docker required for exact PostgreSQL 17 client"
 command -v zstd >/dev/null || fail "zstd not installed"
 
+# Existing manual backup remains the DEFAULT, unchanged path (mode=0).
+# A dual-identity real clone run requires distinct manual workflow authorization.
+dual="${JB_T034_DUAL_RESTORE_PROBE:-0}"
+[[ "$dual" == 0 || "$dual" == 1 ]] || fail 'invalid dual-restore mode'
+if [[ "$dual" == 1 ]]; then
+  [[ "${GITHUB_ACTIONS:-}" == true &&
+     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+     "${GITHUB_REF:-}" == refs/heads/main &&
+     "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
+     "${GITHUB_ACTOR:-}" == jantabol &&
+     "${GITHUB_RUN_ATTEMPT:-}" == 1 &&
+     "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
+    fail 'real isolated clone verification denied: manual Founder/main/exact workflow first attempt required'
+  command -v age-keygen >/dev/null || fail 'AGE key generator missing'
+fi
+
 work="$(mktemp -d)"
 cleanup() { rm -rf -- "$work"; }
 trap cleanup EXIT HUP INT TERM
 mkdir -m 700 "$work/plain"
+# Runner private identity never enters GitHub logs, artifact, B2, tar or chat.
+age_args=(-r "$JB_BACKUP_AGE_RECIPIENT")
+if [[ "$dual" == 1 ]]; then
+  age-keygen -o "$work/ephemeral-restore.identity" > /dev/null 2>&1 ||
+    fail 'cannot generate disposable AGE identity'
+  ephemeral_recipient="$(age-keygen -y "$work/ephemeral-restore.identity")" ||
+    fail 'cannot derive disposable AGE public recipient'
+  [[ "$ephemeral_recipient" =~ ^age1[0-9a-z]+$ &&
+     "$ephemeral_recipient" != "$JB_BACKUP_AGE_RECIPIENT" ]] ||
+    fail 'invalid or duplicate disposable AGE public recipient'
+  age_args+=(-r "$ephemeral_recipient")
+  unset ephemeral_recipient
+fi
 # Build b2 native config from owner-entered GitHub Environment secrets, NEVER in repo or logs.
 python3 ci/backup/jb-b2-rclone-config.py "$work/rclone.conf" || fail "JANTA BOL B2 config invalid"
 # Verify remote name and approved JANTA BOL private bucket BEFORE accessing database.
@@ -63,19 +92,40 @@ supabase db dump --db-url "$JB_DB_URI" -f "$work/plain/schema.sql" >/dev/null
 supabase db dump --db-url "$JB_DB_URI" --use-copy --data-only -f "$work/plain/data.sql" >/dev/null
 # Raw full DB archive, including auth/storage metadata omitted from filtered dump;
 # Supabase-specific roles/extensions may need manual reconciliation on restoration.
+# Default legacy manual backup path unchanged. New explicitly authorized
+# double-recipient DR mode preserves table/function owners and original ACLs.
+raw_dump_args=(--format=custom --file=/backup/raw_full.dump)
+if [[ "$dual" == 0 ]]; then raw_dump_args+=(--no-owner); fi
 docker run --rm --network=host -v "$work/plain:/backup" postgres:17 \
-  pg_dump --format=custom --no-owner --file=/backup/raw_full.dump "$JB_DB_URI" >/dev/null
+  pg_dump "${raw_dump_args[@]}" "$JB_DB_URI" >/dev/null
 docker run --rm -v "$work/plain:/backup:ro" postgres:17 \
   pg_restore --list /backup/raw_full.dump > "$work/plain/raw_inventory.txt"
 for fname in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt; do
   test -s "$work/plain/$fname" || fail "empty backup component $fname"
 done
+if [[ "$dual" == 1 ]]; then
+  # This deterministic read-only metadata query is the exact post-dump source
+  # identity to compare with a newly restored FULL isolated PostgreSQL database.
+  docker run --rm --network=host \
+    -v "$PWD/ci/backup:/jb-checks:ro" postgres:17 \
+    psql -X -v ON_ERROR_STOP=1 -At "$JB_DB_URI" \
+      -f /jb-checks/jb-t034-restore-baseline.sql > "$work/plain/expected_identity.txt" ||
+    fail 'cannot read harmless exact counts/fingerprints for post-dump baseline'
+  [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 25 ]] ||
+    fail 'invalid metric coverage in source baseline'
+  ! grep -q '=MISSING' "$work/plain/expected_identity.txt" ||
+    fail 'one of the four protected Ad RPCs is absent on live source'
+fi
 # SQL files contain personal/confidential data; never print their lines or hashes.
 date -u +%Y-%m-%dT%H:%M:%SZ > "$work/plain/backup_utc.txt"
 printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/source_project.txt"
 # Age secret identity never exists in Actions; owner retains it offline.
-tar -C "$work/plain" -cf - roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt |
- zstd -T0 -q | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/backup.age"
+bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
+if [[ "$dual" == 1 ]]; then
+  bundle+=(expected_identity.txt)
+fi
+tar -C "$work/plain" -cf - "${bundle[@]}" |
+ zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
@@ -92,4 +142,28 @@ cmp -s "$work/backup.age" "$work/remote.age" || fail "remote ciphertext does not
 sha="$(sha256sum "$work/backup.age" | cut -d' ' -f1)"
 bytes="$(wc -c < "$work/backup.age")"
 printf 'OFFSITE_ENCRYPTED_BACKUP_UPLOADED=true\nOBJECT_SUFFIX=%s\nSHA256_CIPHERTEXT=%s\nBYTES=%s\n' "$name" "$sha" "$bytes"
-printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
+if [[ "$dual" == 1 ]]; then
+  # Check that ciphertext was actually recovered from B2 before AGE decrypt.
+  # The owner private key is NOT available on this runner.
+  mkdir -m 700 "$work/recovered"
+  age -d -i "$work/ephemeral-restore.identity" "$work/remote.age" |
+    zstd -dq | tar --no-same-owner --no-same-permissions -C "$work/recovered" -xf - ||
+    fail 'B2 ciphertext could not be decrypted into local isolated runner'
+  for f in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt; do
+    [[ -s "$work/recovered/$f" ]] || fail "missing recovered archive component $f"
+    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
+      fail "recovered archive bytes differ from original component $f"
+  done
+  [[ -s "$work/recovered/expected_identity.txt" ]] ||
+    fail 'signed encrypted bundle lacks source snapshot-identity baseline'
+  cmp -s "$work/plain/expected_identity.txt" "$work/recovered/expected_identity.txt" ||
+    fail 'source baseline did not survive encrypted B2 round trip'
+  printf 'T034_ACTUAL_REMOTE_AGE_DECRYPT=PASS; OWNER_PRIVATE_KEY_NOT_USED=true\n'
+  # Disposable Docker has NO NETWORK. No real DB write is ever allowed.
+  # Fail closed if Supabase public functions require additional extensions/auth.
+  bash ci/backup/jb-t034-offline-full-pg-restore.sh "$work/recovered" ||
+    fail 'full isolated PG17 restore verification refused; B2 encrypted archive is preserved'
+  printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
+else
+  printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
+fi
