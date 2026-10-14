@@ -103,7 +103,7 @@ done
  fail 'not every restored public table has RLS'
 [[ -s "$src/expected_identity.txt" ]] ||
  fail 'source snapshot count/RPC identity manifest missing from archive'
-[[ "$(wc -l < "$src/expected_identity.txt")" == 20 ]] ||
+[[ "$(wc -l < "$src/expected_identity.txt")" == 25 ]] ||
  fail 'invalid source manifest metric coverage'
 # Queries are fixed code from THIS reviewed repo, not from archived user data.
 docker cp ci/backup/jb-t034-restore-baseline.sql "$clone:/tmp/t034-identity.sql" >/dev/null 2>&1 ||
