@@ -111,7 +111,7 @@ if [[ "$dual" == 1 ]]; then
     psql -X -v ON_ERROR_STOP=1 -At "$JB_DB_URI" \
       -f /jb-checks/jb-t034-restore-baseline.sql > "$work/plain/expected_identity.txt" ||
     fail 'cannot read harmless exact counts/fingerprints for post-dump baseline'
-  [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 25 ]] ||
+  [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 26 ]] ||
     fail 'invalid metric coverage in source baseline'
   ! grep -q '=MISSING' "$work/plain/expected_identity.txt" ||
     fail 'one of the four protected Ad RPCs is absent on live source'
