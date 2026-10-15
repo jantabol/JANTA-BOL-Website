@@ -88,6 +88,30 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','public','private'
 AS $paid$
 BEGIN
+  -- Old Owner RPC guards cover transitions, but privileged direct DML must
+  -- also fail closed for HIGH-risk approval/payment_pending/LIVE. Re-writing
+  -- an unchanged historical payment_pending row is not a NEW transition.
+  IF NEW.status IN ('approved','payment_pending','live')
+     AND (TG_OP='INSERT' OR OLD.status IS DISTINCT FROM NEW.status) THEN
+    IF NOT private.p4_owner_allowed()
+    THEN RAISE EXCEPTION 'OWNER_AAL2_REQUIRED' USING ERRCODE='42501'; END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.advertisers a
+      WHERE a.id=NEW.advertiser_id AND a.risk_level='high'
+        AND a.verification_state IS DISTINCT FROM 'verified'
+    ) THEN
+      RAISE EXCEPTION 'ENHANCED_VERIFICATION_REQUIRED'
+        USING ERRCODE='23514';
+    END IF;
+    IF NEW.status='live' AND NOT EXISTS (
+      SELECT 1 FROM public.ad_payments p
+      WHERE p.campaign_id=NEW.id AND p.status='confirmed' AND p.amount_minor>0
+    ) THEN
+      RAISE EXCEPTION 'B7_CONFIRMED_PAYMENT_REQUIRED_BEFORE_LIVE'
+        USING ERRCODE='23514';
+    END IF;
+  END IF;
+
   IF (NEW.status='paid' AND
         (TG_OP='INSERT' OR OLD.status IS DISTINCT FROM NEW.status
             OR OLD.paid_at IS DISTINCT FROM NEW.paid_at))
