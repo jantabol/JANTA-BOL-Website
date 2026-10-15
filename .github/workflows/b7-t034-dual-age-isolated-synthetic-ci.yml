@@ -152,6 +152,10 @@ jobs:
           jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql "$tmp/plain/source_db_identity.json"
           jb_t034_snapshot_query ci/backup/jb-t034-security-parity.sql "$tmp/plain/expected_security_identity.txt"
           [[ "$(wc -l < "$tmp/plain/expected_security_identity.txt")" == 16 ]]
+          jb_t034_snapshot_query ci/backup/jb-t034-metric10-components.sql "$tmp/plain/expected_metric10_components.txt"
+          python3 ci/backup/jb-t034-metric10-diagnostics.py \
+            "$tmp/plain/expected_metric10_components.txt" "$tmp/plain/expected_metric10_components.txt" > "$tmp/private-component-validation.log"
+          sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1 > "$tmp/plain/metric10_components_contract_sha256.txt"
           sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1 > "$tmp/plain/security_parity_contract_sha256.txt"
           printf '%s\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
           printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO\n' > "$tmp/plain/snapshot_scope.txt"
@@ -231,7 +235,8 @@ jobs:
           test "$owner" != "$runner"
           tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
             raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt source_db_identity.json \
-            raw_dump_snapshot_id.txt snapshot_scope.txt expected_security_identity.txt security_parity_contract_sha256.txt | zstd -q | \
+            raw_dump_snapshot_id.txt snapshot_scope.txt expected_security_identity.txt security_parity_contract_sha256.txt \
+            expected_metric10_components.txt metric10_components_contract_sha256.txt | zstd -q | \
             age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
           test -s "$tmp/backup.tar.zst.age"
           # Simulate immutable private B2 object. Real transfer is a separate test.
@@ -248,6 +253,8 @@ jobs:
           test -s "$tmp/recovered/source_db_identity.json"
           test -s "$tmp/recovered/expected_security_identity.txt"
           test -s "$tmp/recovered/security_parity_contract_sha256.txt"
+          test -s "$tmp/recovered/expected_metric10_components.txt"
+          test -s "$tmp/recovered/metric10_components_contract_sha256.txt"
           test -s "$tmp/recovered/raw_dump_snapshot_id.txt"
           test -s "$tmp/recovered/snapshot_scope.txt"
           echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
@@ -280,6 +287,17 @@ jobs:
             { echo 'FAIL [G3 FAKE] stale contract not rejected for correct reason'; exit 1; }
           mv "$tmp/good-contract" "$tmp/recovered/security_parity_contract_sha256.txt"
           echo 'PASS [G3 FAKE] stale parity contract rejected before any full-clone DB restore'
+          cp "$tmp/recovered/metric10_components_contract_sha256.txt" "$tmp/good-metric10-contract"
+          printf '%064d\n' 0 > "$tmp/recovered/metric10_components_contract_sha256.txt"
+          if bash ci/backup/jb-t034-offline-full-pg-restore.sh \
+             "$tmp/recovered" > "$tmp/metric10-contract-negative.log" 2>&1; then
+            echo 'FAIL [G3 FAKE] stale metric10 diagnostic contract was accepted'
+            exit 1
+          fi
+          grep -Fq 'source and clone component diagnostic revisions differ' "$tmp/metric10-contract-negative.log" ||
+            { echo 'FAIL [G3 FAKE] wrong metric10 contract error class'; exit 1; }
+          mv "$tmp/good-metric10-contract" "$tmp/recovered/metric10_components_contract_sha256.txt"
+          echo 'PASS [G3 FAKE] stale metric10 contract rejected before clone'
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
           if docker ps -a --format '{{.Names}}' | grep -q '^jb-t034-full-pg17-'; then
