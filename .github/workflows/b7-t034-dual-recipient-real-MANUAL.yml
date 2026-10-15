@@ -9,6 +9,10 @@ on:
         description: Type JANTA_BOL_DUAL_RESTORE_ONLY AFTER separate Founder approval
         type: string
         required: true
+      reviewed_sha:
+        description: Exact reviewed 40-character main commit SHA. Must match workflow run SHA.
+        type: string
+        required: true
 permissions:
   contents: read
 concurrency:
@@ -16,7 +20,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   dual-recipient-restore:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY' && github.event.inputs.reviewed_sha == github.sha }}
     runs-on: ubuntu-latest
     environment: janta-bol-production-backup
     timeout-minutes: 45
@@ -24,13 +28,20 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Fail closed before connecting to production
         shell: bash
+        env:
+          JB_REVIEWED_SHA: ${{ github.event.inputs.reviewed_sha }}
         run: |
           set -Eeuo pipefail
+          [[ "$JB_REVIEWED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$JB_REVIEWED_SHA" == "$GITHUB_SHA" ]]
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]
+          bash -n ci/backup/jb-t034-image-contract.sh
           bash -n ci/backup/jb-free-offsite-backup.sh
           bash -n ci/backup/jb-t034-offline-public-restore-probe.sh
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
           bash -n ci/backup/jb-t034-shared-snapshot.sh
           python3 -m py_compile ci/backup/jb-t034-db-identity.py
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
           echo 'PASS: dedicated, Founder-only authorized preflight. No DB operations.'
       - name: Install standard AGE, B2, compression and client tools
         shell: bash
