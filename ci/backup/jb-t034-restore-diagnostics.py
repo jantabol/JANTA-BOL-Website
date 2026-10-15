@@ -91,7 +91,7 @@ def postgres_first_error(folder):
                 continue
             stamp, session, seq = (
                 record.get("timestamp"), record.get("session_id"),
-                record.get("session_line_num"),
+                record.get("line_num"),
             )
             state = record.get("state_code")
             if not (isinstance(stamp, str) and len(stamp) <= 64 and
