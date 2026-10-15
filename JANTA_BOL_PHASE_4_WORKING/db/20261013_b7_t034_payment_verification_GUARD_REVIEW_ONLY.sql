@@ -98,10 +98,13 @@ BEGIN
   RETURN NEW;
 END $payment$;
 
--- Confirmed INSERT and future UPDATE/DELETE are guarded regardless of route.
--- BEFORE UPDATE covers every column, including receipt/amount/currency and ID.
+-- Confirmed INSERT and changes to financial/identity columns or DELETE
+-- are guarded. Deliberately OMIT updated_at from UPDATE OF: historical
+-- non-financial maintenance may not require Owner AAL2 and must still work.
+-- Any mutating UPDATE of a protected field invokes immutable checks.
 CREATE TRIGGER b7_t034_payment_verified_gate
-BEFORE INSERT OR UPDATE OR DELETE ON public.ad_payments
+BEFORE INSERT OR UPDATE OF id, campaign_id, provider_ref, status,
+  amount_minor, currency, created_at OR DELETE ON public.ad_payments
 FOR EACH ROW EXECUTE FUNCTION private.b7_t034_confirmed_payment_guard();
 
 CREATE FUNCTION private.b7_t034_paid_state_guard()
