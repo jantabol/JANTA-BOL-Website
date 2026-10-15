@@ -111,9 +111,16 @@ def compile_sql(data):
 
 
 def main():
-    if len(sys.argv) != 4 or sys.argv[1] not in ("plan", "compare"):
+    if len(sys.argv) not in (4, 5) or sys.argv[1] not in ("plan", "compare"):
         stop()
-    action, input_path, output_path = sys.argv[1:]
+    action, input_path, output_path = sys.argv[1:4]
+    cross_image_fake = (
+        len(sys.argv) == 5 and sys.argv[4] == "--legacy-fake-cross-image"
+    )
+    if len(sys.argv) == 5 and not cross_image_fake:
+        stop()
+    if cross_image_fake and action != "compare":
+        stop()
     data = require_schema(json.loads(pathlib.Path(input_path).read_text()))
     if action == "plan":
         dest = pathlib.Path(output_path)
@@ -136,6 +143,17 @@ def main():
         )
         return x
     left, right = normal(data), normal(target)
+    if cross_image_fake:
+        # ONLY caller's exact fake-only GitHub runner is permitted to request
+        # this exception: legacy fixture uses postgres:17 Debian as source,
+        # but the production-compatible clone uses Supabase image/ICU build.
+        # Actual production archive has no such exception; its source
+        # collation-version equality remains a HARD restore gate.
+        if not (left["provider"] == right["provider"] == "c"):
+            stop()
+        if left["collversion"] != right["collversion"]:
+            print("T034_LEGACY_FAKE_COLLATION_VERSION=NOT_PROVEN_DIFFERENT_SOURCE_IMAGE", file=sys.stderr)
+        left["collversion"] = right["collversion"]
     if left != right:
         names = sorted(k for k in ALLOWED_KEYS if left[k] != right[k])
         # Field names ONLY; never expose locale values, ACL rows or settings.
