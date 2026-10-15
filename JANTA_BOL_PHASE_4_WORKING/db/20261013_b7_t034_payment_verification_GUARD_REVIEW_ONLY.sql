@@ -88,6 +88,17 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','public','private'
 AS $paid$
 BEGIN
+  -- Financial identity is bound to the original advertiser once approved.
+  -- The trigger must cover advertiser_id even when paid/status is UNCHANGED:
+  -- otherwise direct DML reassigns an already-paid receipt to an unverified
+  -- advertiser without firing the original OF status,paid_at trigger.
+  -- A declined historical HIGH/payment_pending row remains untouched.
+  IF TG_OP='UPDATE'
+     AND OLD.status IN ('approved','payment_pending','paid','live')
+     AND NEW.advertiser_id IS DISTINCT FROM OLD.advertiser_id THEN
+    RAISE EXCEPTION 'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
+      USING ERRCODE='23514';
+  END IF;
   -- Old Owner RPC guards cover transitions, but privileged direct DML must
   -- also fail closed for HIGH-risk approval/payment_pending/LIVE. Re-writing
   -- an unchanged historical payment_pending row is not a NEW transition.
@@ -131,7 +142,7 @@ END $paid$;
 
 -- Covers direct Paid-state attempts that bypass the original payment RPC.
 CREATE TRIGGER b7_t034_paid_state_verified_gate
-BEFORE INSERT OR UPDATE OF status, paid_at ON public.ad_campaigns
+BEFORE INSERT OR UPDATE OF status, paid_at, advertiser_id ON public.ad_campaigns
 FOR EACH ROW EXECUTE FUNCTION private.b7_t034_paid_state_guard();
 
 REVOKE ALL ON FUNCTION private.b7_t034_assert_advertiser_verified(uuid)
