@@ -11,14 +11,18 @@ fail(){ echo "T034_FULL_DB_CLONE_HOLD: $1" >&2; exit 1; }
 src="$1"
 [[ -d "$src" && -s "$src/raw_full.dump" ]] || fail 'missing raw PostgreSQL custom archive'
 command -v docker >/dev/null || fail 'Docker unavailable'
+# Immutable PG17 image and from-first-start inert scheduler contract. No production connection.
+# Source is reviewed repo code, not a user-controlled archive file.
+source ci/backup/jb-t034-image-contract.sh
+[[ "$JB_T034_PLATFORM" == linux/amd64 ]] || fail 'unsupported offline clone platform'
 # The host MUST have PostgreSQL 17 compatible image prepared before this step.
 clone="jb-t034-full-pg17-$RANDOM-$RANDOM"
 temp="$(mktemp -d)"
 cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$temp"; }
 trap cleanup EXIT HUP INT TERM
-docker run -d --network none --memory 4g --cpus 2 --pids-limit 200 \
+docker run --platform "$JB_T034_PLATFORM" -d --network none --memory 4g --cpus 2 --pids-limit 200 \
   --name "$clone" -e POSTGRES_PASSWORD=ephemeral_internal_only \
-  supabase/postgres:17.6.1.136 > /dev/null ||
+  "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" > /dev/null ||
  fail 'isolated Supabase PostgreSQL image did not start'
 ready=0
 for i in $(seq 1 70); do
@@ -43,6 +47,21 @@ for i in $(seq 1 100); do
   sleep 2
 done
 [[ "$stable" -ge 6 ]] || fail 'Supabase PG bootstrap/final postmaster never stabilized'
+# The restored SQL must never execute cron jobs. Verify at first stable boot
+# and re-check at the end (not just a post-restore ALTER).
+boot_settings="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres \
+  -c "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs')" \
+  2> "$temp/settings.err")" || fail 'cannot prove offline cron startup isolation'
+[[ "$boot_settings" == 'postgres|off' ]] || fail 'offline cron scheduler not disabled at first boot'
+# Require ALL source-version extension artifacts on the actual running amd64 image.
+version_count="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres \
+  -c "SELECT count(*) FROM pg_available_extension_versions WHERE (name,version) IN
+  (('pg_net','0.20.4'),('pg_cron','1.6.4'),('supabase_vault','0.3.1'),
+   ('pg_stat_statements','1.11'),('pgcrypto','1.3'),('plpgsql','1.0'),('uuid-ossp','1.1'))" \
+  2> "$temp/ext.err")" || fail 'cannot inspect offline extension versions'
+[[ "$version_count" == 7 ]] || fail 'offline image missing exact required source extension versions'
 # ROOT CAUSE, proven by fake Supabase 17 CI:
 # (1) db role "postgres" is NOT SUPERUSER and cannot SET ROLE supabase_admin;
 # (2) pg_cron can only be created in cron.database_name=postgres.
@@ -81,9 +100,8 @@ if ! docker exec -u postgres "$clone" pg_restore -U supabase_admin -d postgres \
     --exit-on-error /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
   # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
-  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
-        -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]; then
-    grep -E '(pg_restore: error|ERROR:|Command was:)' "$temp/restore.log" | head -n 12 || true
+  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 ]]; then
+    echo 'T034_VERBOSE_RESTORE_DIAGNOSTICS=SUPPRESSED_ALWAYS (use dedicated fake forensic CI)'
   fi
   # Never disclose SQL command, PII, auth rows, or function definitions.
   # Fixed labels are enough for a safe new root-cause checkpoint.
@@ -141,6 +159,9 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
+post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs')")" ||
+ fail 'cannot recheck restored cron isolation'
+[[ "$post_settings" == 'postgres|off' ]] || fail 'restored cron scheduler unexpectedly active'
 printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
