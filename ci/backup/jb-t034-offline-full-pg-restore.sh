@@ -315,8 +315,15 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  -U supabase_admin -d postgres -f /tmp/t034-security.sql \
  > "$temp/clone_security_identity.txt" 2> "$temp/security.err" ||
  fail 'cannot run deep security/data parity inside networkless clone'
-cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt" ||
- fail 'restored full rows or security definitions differ from protected source snapshot'
+# On mismatch emit ONLY pre-approved literal metric names. Never output hashes,
+# raw SQL, object names, data or private manifest content to public Actions.
+if ! cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt"; then
+  if ! python3 ci/backup/jb-t034-deep-parity-diagnostics.py \
+      "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt"; then
+    : # Mismatch and parser-failure must both fail closed below.
+  fi
+  fail 'restored full rows or security definitions differ from protected source snapshot'
+fi
 printf 'T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH\n'
 
 # Prove real role-switch permissions on the OFFLINE, NO-NETWORK clone:
