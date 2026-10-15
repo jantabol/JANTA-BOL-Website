@@ -233,83 +233,51 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
 cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt" ||
  fail 'restored full rows or security definitions differ from protected source snapshot'
 printf 'T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH\n'
-# Actual role switch (NOT just superuser has_* introspection): anon may
-# SELECT the publicly RLS-filtered article table but MUST NOT read payments.
-# All operations occur only inside the NO-NETWORK disposable clone.
+
+# Prove real role-switch permissions on the OFFLINE, NO-NETWORK clone:
+# public article read is allowed by RLS; payment ledger reads are denied.
 if ! docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres -c \
     "SET ROLE anon; SELECT count(*) FROM public.articles" \
   > "$temp/anon-positive.log" 2> "$temp/anon-positive.err"; then
-  fail 'actual anonymous article read regression failed in isolated clone'
+  fail 'isolated anonymous article access fails expected public behavior'
 fi
-grep -Eq '^[0-9]+
-# Never print JSON grant/setting contents (keep inside ephemeral protected path).
-docker cp ci/backup/jb-t034-db-identity.sql "$clone:/tmp/t034-db-identity.sql" >/dev/null 2>&1 ||
- fail 'cannot send canonical DB identity query to offline clone'
-docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
-  -U supabase_admin -d postgres -f /tmp/t034-db-identity.sql \
-  > "$temp/actual_db_identity.json" 2> "$temp/dbidentity.err" ||
- fail 'cannot inspect isolated database owner, locale, ACL and settings'
-# Historical SYNTHETIC fixture uses Debian postgres:17 source and can have
-# a different libc collation-library version than pinned Supabase target.
-# Mark this limitation explicitly; NEVER exempt an actual production archive.
-identity_compare_extra=()
-if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-      "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
-      "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
-      "${SUPABASE_DB_PASSWORD:-}" == '' &&
-      "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
-  identity_compare_extra+=(--legacy-fake-cross-image)
-fi
-python3 ci/backup/jb-t034-db-identity.py compare \
-  "$src/source_db_identity.json" "$temp/actual_db_identity.json" "${identity_compare_extra[@]}" ||
- fail 'restored database owner, locale, ACL or settings drift'
-printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\n'
-post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
- fail 'cannot recheck restored cron isolation'
-[[ "$post_settings" == 'postgres|off|template1' ]] || fail 'restored cron/net workers may alter clone'
-printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
-printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
-printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
-  "$public_n" "$private_n" "$auth_n" "$storage_n"
-printf 'RLS_PUBLIC=%s RLS_PRIVATE=%s POLICIES_APP_STORAGE=%s\n' "$public_rls" "$private_rls" "$policies"
-printf 'ROWS_ARTICLES=%s ROWS_AD_CAMPAIGNS=%s ROWS_AUTH_USERS=%s ROWS_STORAGE_METADATA=%s\n' \
-  "$articles" "$ads" "$auth_users" "$storage_metadata"
-printf 'STORAGE_FILE_BYTES_RESTORED=false; PLATFORM_SETTINGS_RESTORED=false\n'
- "$temp/anon-positive.log" ||
-  fail 'unexpected isolated anonymous article read result'
+grep -Eq '^[0-9]+$' "$temp/anon-positive.log" ||
+  fail 'isolated anonymous article read did not return a count'
 if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres -c \
     "SET ROLE anon; SELECT count(*) FROM public.ad_payments" \
   > "$temp/anon-negative.log" 2> "$temp/anon-negative.err"; then
-  fail 'anonymous role can directly read private payment ledger after restore'
+  fail 'anonymous can directly read private payments after restore'
 fi
 grep -Eiq 'permission denied' "$temp/anon-negative.err" ||
-  fail 'anonymous payment negative was not a verified ACL denial'
+  fail 'anonymous negative was not a verified ACL rejection'
 printf 'T034_ANON_REAL_ROLE_ARTICLE_READ_AND_PAYMENT_DENIAL=PASS\n'
-# Validate sequence NEXT-VALUE SAFETY of the directly affected business
-# history/audit tables on the isolated clone, with zero sequence mutations.
+
+# Sequence values are not MVCC snapshot-bound. Preserve archive-captured
+# sequence state and assert it cannot collide with existing affected IDs.
 docker cp ci/backup/jb-t034-sequence-nextvalue-safety.sql \
   "$clone:/tmp/t034-sequence-safety.sql" >/dev/null 2>&1 ||
- fail 'cannot copy reviewed sequence safety query into isolated clone'
+  fail 'cannot copy reviewed sequence query to networkless clone'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres -f /tmp/t034-sequence-safety.sql \
   > "$temp/sequence-safety.log" 2>&1 ||
- fail 'restored app/audit sequence state may collide with existing rows'
+  fail 'restored affected sequence state may collide with existing rows'
 grep -Fq 'T034_AD_HISTORY_AUDIT_SEQUENCE_SAFETY=PASS' "$temp/sequence-safety.log" ||
- fail 'restored app/audit sequence safety proof missing'
+  fail 'missing affected sequence safety proof'
 printf 'T034_AFFECTED_HISTORY_AUDIT_SEQUENCE_NEXTVALUE=PASS\n'
-# Fetch target database's canonical identity via identical reviewed SELECT.
-# Never print JSON grant/setting contents (keep inside ephemeral protected path).
-docker cp ci/backup/jb-t034-db-identity.sql "$clone:/tmp/t034-db-identity.sql" >/dev/null 2>&1 ||
- fail 'cannot send canonical DB identity query to offline clone'
+
+# Verify exact restored DB-level owner, ACL, settings, locale.
+docker cp ci/backup/jb-t034-db-identity.sql \
+  "$clone:/tmp/t034-db-identity.sql" > /dev/null 2>&1 ||
+  fail 'cannot transfer reviewed DB identity reader'
 docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres -f /tmp/t034-db-identity.sql \
   > "$temp/actual_db_identity.json" 2> "$temp/dbidentity.err" ||
- fail 'cannot inspect isolated database owner, locale, ACL and settings'
-# Historical SYNTHETIC fixture uses Debian postgres:17 source and can have
-# a different libc collation-library version than pinned Supabase target.
-# Mark this limitation explicitly; NEVER exempt an actual production archive.
+  fail 'cannot inspect offline database identity'
+# The legacy FAKE source fixture uses Debian libc unlike the Supabase image.
+# This is a narrow FAKE-only comparison exception for collation library
+# version; actual encrypted JANTA BOL backups get NO exception.
 identity_compare_extra=()
 if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
@@ -319,17 +287,21 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
   identity_compare_extra+=(--legacy-fake-cross-image)
 fi
 python3 ci/backup/jb-t034-db-identity.py compare \
-  "$src/source_db_identity.json" "$temp/actual_db_identity.json" "${identity_compare_extra[@]}" ||
- fail 'restored database owner, locale, ACL or settings drift'
-printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\\n'
+  "$src/source_db_identity.json" "$temp/actual_db_identity.json" \
+  "${identity_compare_extra[@]}" ||
+  fail 'restored DB owner, locale, ACL or settings drift'
+printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\n'
+
 post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
- fail 'cannot recheck restored cron isolation'
-[[ "$post_settings" == 'postgres|off|template1' ]] || fail 'restored cron/net workers may alter clone'
+  fail 'cannot recheck restored background-worker isolation'
+[[ "$post_settings" == 'postgres|off|template1' ]] ||
+  fail 'restored cron or pg_net could modify offline clone'
 printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
   "$public_n" "$private_n" "$auth_n" "$storage_n"
-printf 'RLS_PUBLIC=%s RLS_PRIVATE=%s POLICIES_APP_STORAGE=%s\n' "$public_rls" "$private_rls" "$policies"
+printf 'RLS_PUBLIC=%s RLS_PRIVATE=%s POLICIES_APP_STORAGE=%s\n' \
+  "$public_rls" "$private_rls" "$policies"
 printf 'ROWS_ARTICLES=%s ROWS_AD_CAMPAIGNS=%s ROWS_AUTH_USERS=%s ROWS_STORAGE_METADATA=%s\n' \
   "$articles" "$ads" "$auth_users" "$storage_metadata"
 printf 'STORAGE_FILE_BYTES_RESTORED=false; PLATFORM_SETTINGS_RESTORED=false\n'
