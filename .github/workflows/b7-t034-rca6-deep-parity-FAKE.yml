@@ -1,0 +1,53 @@
+# 16 deep-security labels only. This job never accesses any real backup,
+# production DB, GitHub environment secrets, B2, or AGE owner identity.
+name: T034 RCA6 deep parity privacy FAKE CI
+on:
+  push:
+    branches: [review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/backup/jb-t034-deep-parity-diagnostics.py'
+      - 'ci/backup/test_jb_t034_deep_parity_diagnostics.py'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - '.github/workflows/b7-t034-rca6-deep-parity-FAKE.yml'
+permissions:
+  contents: read
+jobs:
+  metric-label-privacy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: No secrets and strict code / existing manual release guards
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          python3 -m py_compile ci/backup/jb-t034-deep-parity-diagnostics.py
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          echo 'PASS RCA6 FAKE source/preflight and unchanged Founder-only gate'
+      - name: Fake exact label list and malicious marker suppression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m unittest discover -s ci/backup -p 'test_jb_t034_deep_parity_diagnostics.py' -v
+          python3 - <<'PY'
+          import ast,re
+          from pathlib import Path
+          source=Path('ci/backup/jb-t034-security-parity.sql').read_text()
+          helper=Path('ci/backup/jb-t034-deep-parity-diagnostics.py').read_text()
+          tree=ast.parse(helper)
+          metrics=None
+          for node in tree.body:
+              if isinstance(node, ast.Assign) and any(isinstance(t, ast.Name) and t.id=='METRICS' for t in node.targets):
+                  metrics=ast.literal_eval(node.value)
+          sql_metrics=tuple(re.findall(r"SELECT '(\d{2}_[A-Za-z0-9_]+)'",source))
+          if metrics is None or metrics != sql_metrics or len(metrics)!=16:
+              raise SystemExit('HOLD RCA6 source SQL metric names do not match fixed allowed list')
+          print('PASS RCA6 FAKE 16 allowed metric names independently match reviewed source SQL')
+          PY
+          echo 'PASS RCA6 FAKE confidential-value and exception-marker suppression'
