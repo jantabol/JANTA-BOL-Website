@@ -164,6 +164,21 @@ BEGIN
   IF msg<>'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
   THEN RAISE EXCEPTION 'UNEXPECTED_PAID_REBIND_RESULT: %',msg;END IF;
  END;
+ -- A PAUSED campaign with a previous payment/approval MUST keep
+ -- the original advertiser identity even though status is not 'paid'.
+ UPDATE public.ad_campaigns SET status='paused'
+ WHERE id='20000000-0000-4000-8000-000000000003';
+ BEGIN
+  UPDATE public.ad_campaigns SET advertiser_id='10000000-0000-4000-8000-000000000002'
+  WHERE id='20000000-0000-4000-8000-000000000003';
+  RAISE EXCEPTION 'PAUSED_PAID_ADVERTISER_REBIND_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+  IF msg<>'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
+  THEN RAISE EXCEPTION 'UNEXPECTED_PAUSED_REBIND_RESULT: %',msg;END IF;
+ END;
+ UPDATE public.ad_campaigns SET status='paid'
+ WHERE id='20000000-0000-4000-8000-000000000003';
  -- Historical HIGH-risk payment_pending must also remain bound to the
  -- original identity, even if only advertiser_id is updated.
  BEGIN
