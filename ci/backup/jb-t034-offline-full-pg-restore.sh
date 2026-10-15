@@ -89,8 +89,17 @@ docker cp "$temp/prepare.sql" "$clone:/tmp/t034-prepare.sql" >/dev/null 2>&1 ||
   fail 'cannot transfer safe owner/ACL preparation into offline target'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -f /tmp/t034-prepare.sql \
-  > "$temp/create.log" 2>&1 ||
-  fail 'cannot recreate isolated postgres DB with source owner/locale/ACL'
+  > "$temp/create.log" 2>&1 || {
+    # Fake-data forensic output needs BOTH trusted exact workflow identity and
+    # a positive fake source tag; env secret absence alone is not sufficient.
+    if [[ "${GITHUB_WORKFLOW:-}" == 'JANTA BOL T034 dual recipient offline clone SYNTHETIC CI' &&
+          "${GITHUB_EVENT_NAME:-}" == pull_request &&
+          "${SUPABASE_DB_PASSWORD:-}" == '' &&
+          "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' ]]; then
+      grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
+    fi
+    fail 'cannot recreate isolated postgres DB with source owner/locale/ACL'
+  }
 # Public namespace ownership varies by PostgreSQL/Supabase dump origin:
 # some snapshots include CREATE SCHEMA public and some leave template0 public
 # as a built-in namespace. Do not guess; decide from actual archive TOC.
