@@ -147,7 +147,14 @@ jobs:
              "$(grep '^13_constraints_definitions_validation=' "$tmp/mut-fk")" ]] ||
             { echo 'HOLD RCA7 dropped FK hidden by canonicalizer'; exit 1; }
           # An added grant changes EFFECTIVE privileges, invalidates metric 10.
-          q "GRANT SELECT ON public.t034_rca7_fake_source TO anon" >/dev/null
+          # Supabase image may already grant anon SELECT via default ACLs:
+          # use a newly created NOLOGIN role to force a genuinely NEW grant.
+          before_acl="$(q "SELECT COALESCE(relacl::text,'<NULL>') FROM pg_class WHERE oid='public.t034_rca7_fake_source'::regclass")"
+          q "CREATE ROLE t034_rca7_acl_negative_role NOLOGIN" >/dev/null
+          q "GRANT SELECT ON public.t034_rca7_fake_source TO t034_rca7_acl_negative_role" >/dev/null
+          after_acl="$(q "SELECT COALESCE(relacl::text,'<NULL>') FROM pg_class WHERE oid='public.t034_rca7_fake_source'::regclass")"
+          [[ "$before_acl" != "$after_acl" ]] ||
+            { echo 'HOLD RCA7 fake attempted grant but catalog ACL did not change'; exit 1; }
           docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
             -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-acl" 2> "$tmp/mut.err" ||
             { echo 'HOLD RCA7 ACL-negative query execution'; exit 1; }
