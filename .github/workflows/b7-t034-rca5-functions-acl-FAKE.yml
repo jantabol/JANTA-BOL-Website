@@ -26,7 +26,7 @@ jobs:
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
           python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
           echo 'PASS RCA5 manual-only approval/security lock unchanged'
-      - name: Reproduce first failing pg_restore ACL 42704 and validate bounded role fix
+      - name: Reproduce source-matched SCHEMA ACL pg_restore 42704 then safe fix
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -54,12 +54,12 @@ jobs:
           [[ "$cfg" == 'off|template1' ]] || { echo 'HOLD RCA5 offline workers not inert'; exit 1; }
           [[ "$(q "SELECT count(*) FROM pg_roles WHERE rolname='supabase_functions_admin'")" == 0 ]] ||
             { echo 'HOLD RCA5 actual pinned target role unexpectedly exists'; exit 1; }
-          q "CREATE TABLE public.t034_rca5_fake_acl_table (id integer PRIMARY KEY);" >/dev/null
+          q "CREATE SCHEMA t034_rca5;" >/dev/null
           q "CREATE ROLE supabase_functions_admin WITH LOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD NULL;" >/dev/null
-          q "GRANT SELECT ON public.t034_rca5_fake_acl_table TO supabase_functions_admin;" >/dev/null
+          q "GRANT USAGE ON SCHEMA t034_rca5 TO supabase_functions_admin;" >/dev/null
           docker exec -u postgres "$clone" pg_dump -U supabase_admin -Fc \
-            -t public.t034_rca5_fake_acl_table -f /tmp/t034-rca5.dump -d postgres >/dev/null
-          q "DROP TABLE public.t034_rca5_fake_acl_table; DROP ROLE supabase_functions_admin;" >/dev/null
+            -n t034_rca5 -f /tmp/t034-rca5.dump -d postgres >/dev/null
+          q "DROP SCHEMA t034_rca5 CASCADE; DROP ROLE supabase_functions_admin;" >/dev/null
           if docker exec -u postgres "$clone" pg_restore --exit-on-error --verbose \
              -U supabase_admin -d postgres /tmp/t034-rca5.dump \
              > "$tmp/expected-missing.log" 2>&1; then
@@ -71,7 +71,7 @@ jobs:
           grep -Eq 'from TOC entry [0-9]+; .* ACL ' "$tmp/expected-missing.log" ||
             { echo 'HOLD RCA5 ACL TOC not linked to first error'; exit 1; }
           echo 'T034_RCA5_FAKE_ACL_ROLE_MISSING_42704_REPRO=PASS'
-          q "DROP TABLE IF EXISTS public.t034_rca5_fake_acl_table;" >/dev/null
+          q "DROP SCHEMA IF EXISTS t034_rca5 CASCADE;" >/dev/null
           docker cp ci/backup/jb-t034-disposable-functions-role.sql "$clone:/tmp/t034-role.sql" >/dev/null
           docker exec -u root "$clone" chown postgres:postgres /tmp/t034-role.sql >/dev/null
           docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
@@ -84,7 +84,7 @@ jobs:
              -U supabase_admin -d postgres /tmp/t034-rca5.dump \
              > "$tmp/fixed.log" 2>&1 ||
              { echo 'HOLD RCA5 same ACL archive failed after bounded fix'; exit 1; }
-          actual="$(q "SELECT has_table_privilege('supabase_functions_admin','public.t034_rca5_fake_acl_table','SELECT')")"
+          actual="$(q "SELECT has_schema_privilege('supabase_functions_admin','t034_rca5','USAGE')")"
           [[ "$actual" == 't' ]] || { echo 'HOLD RCA5 restored grant missing'; exit 1; }
           role="$(q "SELECT rolcanlogin||'|'||rolcreaterole||'|'||rolbypassrls||'|'||rolinherit FROM pg_roles WHERE rolname='supabase_functions_admin'")"
           [[ "$role" == 'true|true|false|false' || "$role" == 't|t|f|f' ]] ||
