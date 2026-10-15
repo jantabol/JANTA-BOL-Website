@@ -1,0 +1,72 @@
+# RCA-3 fake-image role/SQLSTATE 42704 provenance only.
+# NO live Supabase, owner key, B2, GitHub secrets or real archive.
+name: T034 RCA3 42704 TYPE owner-role FAKE audit
+on:
+  push:
+    branches: [review/t034-rca3-42704-types-role-audit-20261015]
+permissions:
+  contents: read
+jobs:
+  inspect-pinned-image-fake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Pinned offline Supabase PG17 target roles and synthetic 42704 reproduction
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          source ci/backup/jb-t034-image-contract.sh
+          name="t034-rca3-fake-$GITHUB_RUN_ID"
+          tmp="$(mktemp -d)"
+          cleanup(){ docker rm -f "$name" >/dev/null 2>&1 || true; rm -rf -- "$tmp"; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 --name "$name" \
+            -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else
+              stable=0
+            fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'HOLD RCA3 fake image startup'; exit 1; }
+          q(){ docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$1"; }
+          safety="$(q "SELECT current_setting('cron.database_name')||'|'||current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")"
+          [[ "$safety" == "postgres|off|template1" ]] ||
+            { echo 'HOLD RCA3 background worker isolation mismatch'; exit 1; }
+          q "SELECT rolname FROM pg_roles WHERE rolname IN
+           ('postgres','supabase_admin','supabase_auth_admin',
+            'supabase_storage_admin','supabase_realtime_admin','supabase_etl_admin')
+           ORDER BY 1" > "$tmp/target_roles"
+          missing=0
+          for role in postgres supabase_admin supabase_auth_admin \
+              supabase_storage_admin supabase_realtime_admin supabase_etl_admin; do
+            grep -Fxq "$role" "$tmp/target_roles" || missing=$((missing+1))
+          done
+          if (( missing == 0 )); then
+            echo 'T034_RCA3_FAKE_TARGET_SOURCE_ROLE_CANDIDATES=ALL_PRESENT'
+          else
+            echo "T034_RCA3_FAKE_TARGET_SOURCE_ROLE_CANDIDATES_MISSING_COUNT=$missing"
+          fi
+          # Check whether TYPE owner substitution can independently cause the
+          # same SQLSTATE 42704, without reproducing an actual production object.
+          q "CREATE TYPE public.t034_rca3_fake_enum AS ENUM ('FAKE')" >/dev/null
+          if docker exec -u postgres "$name" psql -X -At -v ON_ERROR_STOP=1 \
+             -v VERBOSITY=sqlstate -U supabase_admin -d postgres \
+             -c 'ALTER TYPE public.t034_rca3_fake_enum OWNER TO t034_rca3_intentionally_absent_role' \
+             > "$tmp/fake.out" 2> "$tmp/fake.err"; then
+            echo 'HOLD RCA3 missing synthetic owner unexpectedly accepted'
+            exit 1
+          fi
+          grep -Eq '42704' "$tmp/fake.err" ||
+            { echo 'HOLD RCA3 fake owner SQLSTATE does not match real error'; exit 1; }
+          echo 'T034_RCA3_FAKE_MISSING_TYPE_OWNER_SQLSTATE=42704'
+          echo 'NO REAL RESTORE, NO LIVE DATABASE, NO B2, NO OWNER PRIVATE KEY'
