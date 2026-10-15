@@ -93,7 +93,7 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
     # Fake-data forensic output needs BOTH trusted exact workflow identity and
     # a positive fake source tag; env secret absence alone is not sufficient.
     if [[ "${GITHUB_WORKFLOW:-}" == 'JANTA BOL T034 dual recipient offline clone SYNTHETIC CI' &&
-          "${GITHUB_EVENT_NAME:-}" == pull_request &&
+          ( "${GITHUB_EVENT_NAME:-}" == pull_request || ( "${GITHUB_EVENT_NAME:-}" == push && "${GITHUB_REF:-}" == 'refs/heads/review/t034-cp02-fix-20261015' ) ) &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' ]]; then
       grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
