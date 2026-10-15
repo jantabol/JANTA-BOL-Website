@@ -1,0 +1,56 @@
+# JANTA BOL T034: fake-data role-name parity investigation only.
+# Only exact reviewed role names, never source SQL/data, secrets or real archives.
+name: T034 RCA5 ACL known role parity FAKE
+on:
+  push:
+    branches: [review/t034-rca5-acl-role-audit-20261015]
+permissions:
+  contents: read
+jobs:
+  fake-known-roles:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check pinned networkless PG17 target for READ-ONLY verified source ACL role names
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]
+          source ci/backup/jb-t034-image-contract.sh
+          clone="t034-rca5-fake-$GITHUB_RUN_ID"
+          cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 --name "$clone" \
+            -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+             -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'HOLD RCA5 fake target boot'; exit 1; }
+          q(){ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$1"; }
+          state="$(q "SELECT current_setting('cron.database_name')||'|'||current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")"
+          [[ "$state" == 'postgres|off|template1' ]] || { echo 'HOLD RCA5 offline safety'; exit 1; }
+          # Roles derived ONLY from source pg_catalog ACL grantor/grantee aggregate,
+          # including fixed role names, never object names, rows, grants or SQL text.
+          source_acl_roles=(anon authenticated dashboard_user pg_database_owner pg_monitor
+            pg_read_all_stats pgbouncer postgres service_role supabase_admin
+            supabase_auth_admin supabase_etl_admin supabase_functions_admin
+            supabase_realtime_admin supabase_storage_admin)
+          missing=0
+          for role in "${source_acl_roles[@]}"; do
+            present="$(q "SELECT count(*) FROM pg_roles WHERE rolname='$role'")"
+            [[ "$present" == 0 || "$present" == 1 ]] || { echo 'HOLD RCA5 invalid role check'; exit 1; }
+            if [[ "$present" == 0 ]]; then
+              echo "T034_RCA5_FAKE_TARGET_MISSING_SOURCE_ACL_ROLE=$role"
+              missing=$((missing+1))
+            fi
+          done
+          echo "T034_RCA5_FAKE_MISSING_ACL_ROLE_COUNT=$missing"
+          echo 'T034_RCA5_OFFLINE_NO_LIVE_DATA=PASS'
