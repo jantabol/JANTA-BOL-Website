@@ -128,6 +128,11 @@ if [[ "$dual" == 1 ]]; then
   jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql \
     "$work/plain/source_db_identity.json" ||
     fail 'cannot read source owner/ACL/locale in exported snapshot'
+  jb_t034_snapshot_query ci/backup/jb-t034-security-parity.sql \
+    "$work/plain/expected_security_identity.txt" ||
+    fail 'cannot read protected full-row/security parity in exported snapshot'
+  [[ "$(wc -l < "$work/plain/expected_security_identity.txt")" == 16 ]] ||
+    fail 'security manifest coverage is incomplete'
   jb_t034_snapshot_finish
   printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
   [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
@@ -147,7 +152,7 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 # Age secret identity never exists in Actions; owner retains it offline.
 bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
 if [[ "$dual" == 1 ]]; then
-  bundle+=(expected_identity.txt source_db_identity.json raw_dump_snapshot_id.txt snapshot_scope.txt)
+  bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -184,6 +189,10 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/$f" "$work/recovered/$f" ||
       fail 'source snapshot evidence differs after AGE decrypt'
   done
+  [[ -s "$work/recovered/expected_security_identity.txt" ]] ||
+    fail 'protected security parity digest absent after decrypt'
+  cmp -s "$work/plain/expected_security_identity.txt" "$work/recovered/expected_security_identity.txt" ||
+    fail 'security parity manifest changed after encrypted roundtrip'
   [[ -s "$work/recovered/source_db_identity.json" ]] ||
     fail 'source DB owner/ACL manifest missing after encryption'
   cmp -s "$work/plain/source_db_identity.json" "$work/recovered/source_db_identity.json" ||
