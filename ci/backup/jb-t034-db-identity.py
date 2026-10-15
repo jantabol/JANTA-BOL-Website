@@ -123,7 +123,23 @@ def main():
     target = require_schema(json.loads(pathlib.Path(output_path).read_text()))
     # Provider/collation-version, grants, grantor, grant-options and settings
     # must match, not just count or successful SELECT as supabase_admin.
-    if data != target:
+    def normal(x):
+        x = dict(x)
+        # The source and disposable Supabase bootstrap do not share role OIDs.
+        # Canonical grants MUST be compared by names+privileges, not OID order.
+        x["acl"] = sorted(x["acl"], key=lambda a: (
+            a["grantee"], a["grantor"], a["privilege"], a["grantable"]
+        ))
+        x["database_settings"] = sorted(
+            x["database_settings"],
+            key=lambda a: (a["role"], json.dumps(a["options"], sort_keys=True))
+        )
+        return x
+    left, right = normal(data), normal(target)
+    if left != right:
+        names = sorted(k for k in ALLOWED_KEYS if left[k] != right[k])
+        # Field names ONLY; never expose locale values, ACL rows or settings.
+        print("T034_DB_IDENTITY_DIFFERENT_FIELDS=" + ",".join(names), file=sys.stderr)
         stop()
 
 
