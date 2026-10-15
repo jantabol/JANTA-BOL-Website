@@ -1,4 +1,4 @@
--- T034 PARITY V2: identical deparser context on source+clone.
+-- T034 PARITY V3: identical deparser context and effective ACLs on source+clone.
 -- psql-only; \gset deliberately suppresses SET output so manifest remains 16
 -- fixed metric rows. No ALTER ROLE/DATABASE/production configuration writes.
 -- pg_catalog-only ensures auth/public references receive consistent qualification.
@@ -34,8 +34,7 @@ WITH facts AS (
  UNION ALL SELECT '10_table_owner_acl_RLS',
    (SELECT md5(COALESCE(string_agg(md5(
       n.nspname||'.'||c.relname||'|'||pg_get_userbyid(c.relowner)||'|'||
-      CASE WHEN c.relacl IS NULL THEN '<ACL_NULL>'
-        ELSE COALESCE(
+      COALESCE(
           (SELECT string_agg(
               jsonb_build_array(
                 'GRANTOR:'||pg_get_userbyid(a.grantor),
@@ -48,8 +47,19 @@ WITH facts AS (
                      ELSE 'ROLE:'||pg_get_userbyid(a.grantee) END,
                 a.privilege_type,a.is_grantable
              )
-           FROM aclexplode(c.relacl) AS a),'<ACL_EMPTY>')
-      END||'|'||c.relrowsecurity::text||'|'||
+           -- ACL NULL means the object's implicit OWNER defaults, not
+           -- an ACL with zero privileges. pg_dump can recreate an explicit
+           -- owner-default ACL as NULL without changing any permission.
+           -- Only canonicalize that semantic equivalence; explicit EMPTY,
+           -- revoke, nonowner grantor, PUBLIC, privilege, grant-option and
+           -- both RLS flags MUST still be distinct and negative-detectable.
+           FROM aclexplode(COALESCE(
+             c.relacl,
+             pg_catalog.acldefault(
+               CASE WHEN c.relkind='S' THEN 's' ELSE 'r' END::"char",
+               c.relowner
+             )
+           )) AS a),'<ACL_EMPTY>')||'|'||c.relrowsecurity::text||'|'||
       c.relforcerowsecurity::text
    ),'|' ORDER BY n.nspname,c.relname),'EMPTY'))
    FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
