@@ -267,6 +267,19 @@ jobs:
             exit 1
           fi
           echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
+          # Old/mismatched manifest contract must be REFUSED before clone.
+          # No production data: this is a temporary FAKE recovered package.
+          cp "$tmp/recovered/security_parity_contract_sha256.txt" "$tmp/good-contract"
+          printf '%064d\n' 0 > "$tmp/recovered/security_parity_contract_sha256.txt"
+          if JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh \
+             "$tmp/recovered" > "$tmp/contract-negative.log" 2>&1; then
+            echo 'FAIL [G3 FAKE] stale/mismatched source parity contract was accepted'
+            exit 1
+          fi
+          grep -Fq 'source snapshot and clone security parity SQL versions differ' "$tmp/contract-negative.log" ||
+            { echo 'FAIL [G3 FAKE] stale contract not rejected for correct reason'; exit 1; }
+          mv "$tmp/good-contract" "$tmp/recovered/security_parity_contract_sha256.txt"
+          echo 'PASS [G3 FAKE] stale parity contract rejected before any full-clone DB restore'
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
           if docker ps -a --format '{{.Names}}' | grep -q '^jb-t034-full-pg17-'; then
