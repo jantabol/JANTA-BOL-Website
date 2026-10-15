@@ -51,9 +51,9 @@ done
 # and re-check at the end (not just a post-restore ALTER).
 boot_settings="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres \
-  -c "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs')" \
-  2> "$temp/settings.err")" || fail 'cannot prove offline cron startup isolation'
-[[ "$boot_settings" == 'postgres|off' ]] || fail 'offline cron scheduler not disabled at first boot'
+  -c "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name') || '|' || (SELECT count(*) FROM unnest(string_to_array(replace(current_setting('shared_preload_libraries'),' ',''),',')) AS x(name) WHERE name IN ('pg_cron','pg_net'))" \
+  2> "$temp/settings.err")" || fail 'cannot prove offline worker/scheduler startup isolation'
+[[ "$boot_settings" == 'postgres|off|template1|2' ]] || fail 'offline clone workers not isolated at boot'
 # Require ALL source-version extension artifacts on the actual running amd64 image.
 version_count="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres \
@@ -159,9 +159,9 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
-post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs')")" ||
+post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
  fail 'cannot recheck restored cron isolation'
-[[ "$post_settings" == 'postgres|off' ]] || fail 'restored cron scheduler unexpectedly active'
+[[ "$post_settings" == 'postgres|off|template1' ]] || fail 'restored cron/net workers may alter clone'
 printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
