@@ -98,6 +98,19 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' ]]; then
       grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
     fi
+    if grep -Eiq 'invalid locale|collation|locale provider|ICU' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=LOCALE_PROVIDER'
+    elif grep -Eiq 'syntax error|unrecognized option' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=SQL_SYNTAX'
+    elif grep -Eiq 'role .* does not exist|role .*cannot be assumed' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=MISSING_ROLE'
+    elif grep -Eiq 'permission denied|must be owner|insufficient privilege' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=PRIVILEGE'
+    elif grep -Eiq 'database .* already exists' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=TARGET_EXISTS'
+    else
+      echo 'T034_DB_SETUP_ERROR_CLASS=OTHER'
+    fi
     fail 'cannot recreate isolated postgres DB with source owner/locale/ACL'
   }
 # Public namespace ownership varies by PostgreSQL/Supabase dump origin:
