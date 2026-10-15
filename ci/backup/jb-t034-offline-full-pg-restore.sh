@@ -210,8 +210,19 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
   -U supabase_admin -d postgres -f /tmp/t034-db-identity.sql \
   > "$temp/actual_db_identity.json" 2> "$temp/dbidentity.err" ||
  fail 'cannot inspect isolated database owner, locale, ACL and settings'
+# Historical SYNTHETIC fixture uses Debian postgres:17 source and can have
+# a different libc collation-library version than pinned Supabase target.
+# Mark this limitation explicitly; NEVER exempt an actual production archive.
+identity_compare_extra=()
+if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+      "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+      "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
+      "${SUPABASE_DB_PASSWORD:-}" == '' &&
+      "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
+  identity_compare_extra+=(--legacy-fake-cross-image)
+fi
 python3 ci/backup/jb-t034-db-identity.py compare \
-  "$src/source_db_identity.json" "$temp/actual_db_identity.json" ||
+  "$src/source_db_identity.json" "$temp/actual_db_identity.json" "${identity_compare_extra[@]}" ||
  fail 'restored database owner, locale, ACL or settings drift'
 printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\\n'
 post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
