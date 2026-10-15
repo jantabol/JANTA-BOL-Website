@@ -1,5 +1,6 @@
 # JANTA BOL — Phase-4 P4-T034 — Post-Restore Final Gate (E2 + E3 + E5)
 
+> **UPDATE 2026-10-15 (CP07):** This file is an *earlier* pre-ADS008-deployment snapshot. The candidate Guard marked ABSENT below was subsequently Founder-approved, deployed and independently verified **12/12** in JANTA BOL LIVE; **zero historical ad/advertiser/payment/history rows changed**. Current authority for ADS008 state: [T034_CP07_ADS008_PRODUCTION_GUARD_APPLIED_20261015.md](T034_CP07_ADS008_PRODUCTION_GUARD_APPLIED_20261015.md). T034 FINAL PASS+LOCK remains HOLD for E2/E3/E5. Do not interpret the historic absence wording below as the live state today.\n\n
 **Evidence checkpoint:** 2026-10-15 | **Scope:** ADS-001…ADS-009 ONLY | **Decision:** **P4-T034 FINAL PASS + LOCK = HOLD**. This is a source/evidence register, **not** a database migration or permission to publish/approve an ad.
 
 ## Source of truth, revision and non-negotiable limits
