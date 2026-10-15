@@ -267,4 +267,9 @@ jobs:
           echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
+          if docker ps -a --format '{{.Names}}' | grep -q '^jb-t034-full-pg17-'; then
+            echo 'FAIL [G3 FAKE] disposable full clone leaked after restore'
+            exit 1
+          fi
+          echo 'PASS [G3 FAKE] full-clone Docker teardown confirmed after success'
           echo 'SYNTHETIC ONLY: no live Supabase, no B2 upload, no Owner private key.'
