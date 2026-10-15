@@ -87,6 +87,10 @@ python3 ci/backup/jb-t034-db-identity.py plan \
   fail 'source database identity rejected by explicit allowlist'
 docker cp "$temp/prepare.sql" "$clone:/tmp/t034-prepare.sql" >/dev/null 2>&1 ||
   fail 'cannot transfer safe owner/ACL preparation into offline target'
+# python compiler emits 0600 on host; docker cp preserves root ownership.
+# Explicitly hand to isolated postgres OS user, never relax to world-readable.
+docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/t034-prepare.sql && chmod 600 /tmp/t034-prepare.sql' \
+  >/dev/null 2>&1 || fail 'cannot secure isolated owner/ACL setup file'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -f /tmp/t034-prepare.sql \
   > "$temp/create.log" 2>&1 || {
