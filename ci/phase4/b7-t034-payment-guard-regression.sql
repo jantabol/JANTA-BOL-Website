@@ -2,7 +2,7 @@
 -- B7 T034 ADS-008 isolated rollback; fail-closed both legacy payment RPCs.
 BEGIN;
 DO $test$
-DECLARE msg text; before_pay int;before_history int; s text;
+DECLARE msg text; before_pay int;before_history int; s text; confirmed_payment_id uuid;
 BEGIN
  PERFORM set_config('b7.test_owner','enabled',true);
  SELECT count(*) INTO before_pay FROM public.ad_payments;
@@ -140,6 +140,75 @@ BEGIN
     WHERE id='20000000-0000-4000-8000-000000000001'
       AND (status<>'payment_pending' OR paid_at IS NOT NULL))
  THEN RAISE EXCEPTION 'HISTORICAL_HIGH_RISK_WAS_MUTATED';END IF;
+ -- LEDGER IMMUTABILITY RED tests: a previously confirmed receipt MUST NOT
+ -- be re-bound to ANOTHER VERIFIED campaign or silently changed/deleted.
+ -- This is more subtle than the existing unverified-advertiser guard:
+ -- both campaigns are valid, but moving the receipt launders payment evidence.
+ SELECT id INTO STRICT confirmed_payment_id
+ FROM public.ad_payments WHERE provider_ref='FAKE-VERIFIED-NORMAL';
+ BEGIN
+   UPDATE public.ad_payments
+     SET campaign_id='20000000-0000-4000-8000-000000000004'
+     WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_CAMPAIGN_REBIND_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_CONFIRMED_REBIND: %',msg;END IF;
+ END;
+ BEGIN
+   UPDATE public.ad_payments SET amount_minor=20000
+    WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_AMOUNT_MUTATION_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_CONFIRMED_AMOUNT_CHANGE: %',msg;END IF;
+ END;
+ BEGIN
+   UPDATE public.ad_payments SET status='failed'
+    WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_DOWNGRADE_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_CONFIRMED_DOWNGRADE: %',msg;END IF;
+ END;
+ BEGIN
+   UPDATE public.ad_payments SET provider_ref='FAKE-FORGED-RECEIPT'
+    WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_RECEIPT_REPLACEMENT_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_RECEIPT_MUTATION: %',msg;END IF;
+ END;
+ BEGIN
+   UPDATE public.ad_payments SET currency='USD'
+    WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_CURRENCY_MUTATION_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_CONFIRMED_CURRENCY_CHANGE: %',msg;END IF;
+ END;
+ BEGIN
+   DELETE FROM public.ad_payments WHERE id=confirmed_payment_id;
+   RAISE EXCEPTION 'CONFIRMED_LEDGER_DELETE_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+   IF msg<>'B7_CONFIRMED_LEDGER_IMMUTABLE'
+   THEN RAISE EXCEPTION 'UNEXPECTED_CONFIRMED_DELETE: %',msg;END IF;
+ END;
+ IF (SELECT count(*) FROM public.ad_payments WHERE status='confirmed')<>2
+ OR NOT EXISTS (
+   SELECT 1 FROM public.ad_payments p
+   WHERE p.id=confirmed_payment_id
+     AND p.campaign_id='20000000-0000-4000-8000-000000000003'
+     AND p.provider_ref='FAKE-VERIFIED-NORMAL'
+     AND p.amount_minor=10000 AND p.currency='INR'
+ ) THEN RAISE EXCEPTION 'LEDGER_IMMUTABILITY_NEGATIVE_CHANGED_PAYMENT';END IF;
+ RAISE NOTICE 'PASS [ADS-008] confirmed ledger campaign/status/amount/receipt/currency/delete mutation denied';
  -- Preserve normal business continuation: Owner+AAL2 can move verified
  -- campaign (with confirmed positive ledger) to LIVE and back to PAID.
  UPDATE public.ad_campaigns SET status='live'
