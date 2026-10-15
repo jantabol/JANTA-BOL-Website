@@ -189,7 +189,7 @@ restore_outer_rc=0
 if docker exec -u postgres -e PGAPPNAME=jb_t034_full_restore "$clone" sh -c '
   pg_restore --verbose -U supabase_admin -d postgres --exit-on-error /tmp/input.dump
   rc=$?
-  printf "%s\\n" "$rc" > /tmp/t034-pg-restore-exit
+  printf "%s\n" "$rc" > /tmp/t034-pg-restore-exit
   exit "$rc"
 ' > "$temp/restore.log" 2>&1; then
   :
