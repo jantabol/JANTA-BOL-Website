@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - codex/b7-t034-safe-guard-20261013
+      - review/t034-cp03-ads008-20261015
   workflow_dispatch:
 permissions:
   contents: read
@@ -31,7 +32,7 @@ jobs:
       PGPASSWORD: ci_local_only
       PGDATABASE: b7_t034_guard
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: Baseline fixture — exact previously observed OLD payment RPCs
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-fixture.sql
       - name: RED — demonstrate old historical high-risk pending path accepted on DISPOSABLE PG, then ROLLBACK
@@ -55,6 +56,42 @@ jobs:
             RAISE NOTICE 'RED REPRODUCED: legacy HIGH-risk pending was incorrectly marked paid (only in rolled-back fixture)';
           END $proof$;
           ROLLBACK;
+          SQL
+      - name: Verify atomicity — fake late-transaction SQL failure leaves no new guard objects
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]
+          src=JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          t="$(mktemp -d)"
+          trap 'rm -rf -- "$t"' EXIT
+          grep -Fxq 'BEGIN;' "$src"
+          grep -Fxq 'COMMIT;' "$src"
+          awk '/^COMMIT;$/ { print "SELECT 1 / 0;" } {print}' "$src" > "$t/fault.sql"
+          if psql -X -v ON_ERROR_STOP=1 -f "$t/fault.sql" > "$t/expected-error.log" 2>&1; then
+            echo 'FAIL [ADS008 fake] late migration failure unexpectedly succeeded'
+            exit 1
+          fi
+          grep -Fq 'division by zero' "$t/expected-error.log" || {
+            echo 'FAIL [ADS008 fake] wrong failure boundary'
+            exit 1
+          }
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $proof$
+          BEGIN
+            IF to_regprocedure('private.b7_t034_assert_advertiser_verified(uuid)') IS NOT NULL
+               OR to_regprocedure('private.b7_t034_confirmed_payment_guard()') IS NOT NULL
+               OR to_regprocedure('private.b7_t034_paid_state_guard()') IS NOT NULL
+               OR EXISTS (
+                 SELECT 1 FROM pg_trigger WHERE tgname IN (
+                   'b7_t034_payment_verified_gate','b7_t034_paid_state_verified_gate')
+                 AND NOT tgisinternal
+               )
+               OR (SELECT count(*) FROM public.ad_payments) <> 0
+            THEN RAISE EXCEPTION 'ADS008_PARTIAL_ATOMIC_MIGRATION_VISIBLE'; END IF;
+            RAISE NOTICE 'PASS [ADS008 fake atomicity] late DDL transaction failure reverted all guards and changed no payments';
+          END $proof$;
           SQL
       - name: Apply ADDITIVE payment guard in isolated database ONLY
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
@@ -141,7 +178,7 @@ jobs:
       PGPASSWORD: ci_local_only
       PGDATABASE: b7_t034_enquiry
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
       - name: ADS-006 Owner dashboard request date/time IST plus pending alert client regression
         run: node --test ci/phase4/b7-t034-owner-request-dashboard.test.cjs ci/phase4/b7-cp05-android-release-preflight.test.cjs ci/phase4/b7-public-ad-cta-android.test.cjs
       - name: Existing canonical synthetic enquiry fixture
