@@ -1,0 +1,30 @@
+# JANTA BOL — Phase-4 T034 CP-03: Confirmed Ledger Immutable / Live Drift Evidence
+
+**Date:** 15 Oct 2026. **Scope:** B7 ADS-008 guarded payments, source `jantabol/JANTA-BOL-Website`. **Verdict:** isolated FAKE CI code tests PASS; **real ADS-008 deployment NOT AUTHORIZED**. Phase-4 T034 remains HOLD. No Cricket access.
+
+## First divergence — original candidate had a financial-receipt bypass
+1. Existing additive trigger guarded `BEFORE INSERT OR UPDATE OF status,campaign_id` and checked whether the *destination* advertiser was verified. It did **not** bind a previously confirmed payment to its original campaign.
+2. New **RED** disposable PG17 regression deliberately changed the `campaign_id` of an already-confirmed payment from a VERIFIED-normal campaign to a different VERIFIED-high campaign (both valid businesses). Pre-fix it succeeded. **GitHub run 38695849535** failed specifically with `UNEXPECTED_CONFIRMED_REBIND: CONFIRMED_LEDGER_CAMPAIGN_REBIND_BYPASS`. The isolated rollback left original production and project payments untouched.
+3. First minimum-safe fix kept all old RPCs and B7 tables unchanged, and added `BEFORE UPDATE OR DELETE` on the same candidate trigger with fail-closed checks on confirmed ledger `id/campaign_id/provider_ref/status/amount_minor/currency/created_at`.
+4. A subsequent candidate CI run **38696073009** caught a **fixture drift**, not a real code execution or production error: the older fake table had omitted `created_at`, which LIVE `public.ad_payments` has. This fake-only source-compatibility error was transparently fixed by adding both `created_at` and `updated_at` to the synthetic fixture.
+5. **GREEN GitHub run 38696230658**, source `77245441e73e2cbd5f1249adc81d6fea31f327e9`: both jobs **SUCCESS**. Denies confirmed receipt cross-campaign reassignment, amount alteration, payment downgrade, provider receipt replacement, currency alteration, and deletion. Preserves 2 positive verified Owner payment flows, valid Owner LIVE transitions and reviewed rollback/reapply. Existing ADS-002/003/004/005/007/009 synthetic enquiry job also PASS. No real principal/JWT or production effect claimed.
+
+## LIVE JANTA BOL source parity (read-only, NO writes)
+- New **read-only SQL** `ci/phase4/b7-t034-predeploy-live-readonly-drift.sql` checks 15 exact conditions: PG17/DB owner, 3 RLS tables, 4 original function hashes (including real Owner+AAL2 check and p4 payment validation), old trigger enabled, proposed guards absent, 10 required columns and seven extension versions.
+- Independently executed *that exact SELECT-only file* on production JANTA BOL Supabase project `vrffsnkycvjithwtiylt`: **15/15 PASS**, result `SOURCE_SCHEMA_PARITY_ONLY_GO_NO_DEPLOY_PERMISSION`. This is code/source compatibility **only**, not restored-archive proof.
+- Negative control: deliberately corrupt **only** the expected old-confirm-payment RPC hash inside a temporary copy of the SELECT query. Actual LIVE returns **14/15, `SOURCE_SCHEMA_DRIFT_HOLD`, blocker `old_confirm_payment_rpc_hash`**. No objects/data changed.
+- Current LIVE has historical HIGH risk verification pending/payment_pending case; candidate `b7_t034_*` triggers are NOT present. Original two payment RPCs remain intact. Production payment guard is still absent.
+- Latest no-secret isolated candidate code CI for the read-only gate addition: **38696557754 SUCCESS**. Exact source `d34d33d496e635be4280ac2d97877fbb6480eec8`.
+- PR #15 is **DRAFT, UNMERGED**, targeting the existing B7 working branch rather than protected `main`; do not silently merge this whole tree into production.
+
+## Restrictive behavior / residual risks for Founder review
+- Financial identity attached to an already approved/paid campaign is immutable via trigger; after confirmation, financial fields of payment receipts cannot be edited/deleted. Legitimate corrections would need an independently approved append-only adjustment pathway: **not developed or claimed in CP03**.
+- Non-financial `updated_at` maintenance of a confirmed payment is still compatible, subject to original Owner controls.
+- A race with simultaneous advertiser verification changes cannot be ruled out by a single-instant synthetic test; public feed's high-risk verification gating is independent defense, but full real concurrency/APIs need their own evidence.
+- Current CI uses a deliberately mocked `private.p4_owner_allowed()` solely in disposable fixtures: **NOT real Owner JWT AAL2 or real revoked-session proof**.
+- Current rollback removes guard and would reopen the old bypass; require payment-stop operational containment before deploying/rolling back.
+- Protected `main` has backup code from merged PR #14; GitHub ruleset 25139594 active PR-only, **no required status checks**. UI Environment has 2 protection rules (required reviewer and main restriction), but review behavior was not demonstrated by dispatch.
+- No offline paper AGE G5 proof (user has Android phone+tablet only; previous Termux installation raised harmful-app warning; do not bypass or ask for secrets). Earlier real run `38602777423` decrypted by runner identity but failed full isolated PG17 restore. New actual encrypted backup/restore dispatch needs another specific Founder authorization.
+- ADS-008 production DDL requires separate post-recovery Founder authorization. No production DB write, GitHub real workflow_dispatch, or B2 upload here. Final Android E3, E5 real principal tests remain pending.
+
+**Strict conclusion:** CP03 isolated code/CI and source drift contract PASS, but production payment guard UNDEPLOYED, actual encrypted-backup restore NOT PROVEN, T034 HOLD, NO FAKE PASS.
