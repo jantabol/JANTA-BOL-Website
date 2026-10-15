@@ -1,0 +1,194 @@
+# T034 CP-RCA-7. Fake-only, disconnected PostgreSQL pinned image.
+# Source/clone representational equivalence may pass; real security changes must FAIL.
+name: T034 RCA7 searchpath ACL canonicalization FAKE
+on:
+  push:
+    branches: [review/t034-rca7-canonical-security-fake-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/backup/jb-t034-security-parity.sql'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - '.github/workflows/b7-t034-rca7-fake.yml'
+permissions:
+  contents: read
+jobs:
+  fake-pg17-cross-context:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Check independent security/parity and manual-only gates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          grep -Fq 'pg_catalog' ci/backup/jb-t034-security-parity.sql
+          grep -Fq 'aclexplode(c.relacl)' ci/backup/jb-t034-security-parity.sql
+          echo 'T034_RCA7_SAFE_MANUAL_GATE=PASS'
+      - name: Pinned PG17 real fake auth-policy/FK deparser and ACL-order equivalence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          source ci/backup/jb-t034-image-contract.sh
+          clone="jb-t034-rca7-fake-$GITHUB_RUN_ID"
+          tmp="$(mktemp -d)"
+          cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$tmp"; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 --name "$clone" \
+            -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+                -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'HOLD RCA7 fake PG startup'; exit 1; }
+          q(){ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$1"; }
+          state="$(q "SELECT current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")"
+          [[ "$state" == 'off|template1' ]] || { echo 'HOLD RCA7 fake workers'; exit 1; }
+          test "$(q "SELECT COUNT(*) FROM pg_roles WHERE rolname IN ('anon','authenticated','supabase_admin')")" = 3
+          q "CREATE SCHEMA IF NOT EXISTS auth;
+             CREATE TABLE auth.t034_rca7_fake_ref(id int PRIMARY KEY);
+             CREATE TABLE public.t034_rca7_fake_source(id int PRIMARY KEY, ref_id int);
+             ALTER TABLE public.t034_rca7_fake_source ADD CONSTRAINT t034_rca7_fake_fk
+               FOREIGN KEY (ref_id) REFERENCES auth.t034_rca7_fake_ref(id);
+             CREATE FUNCTION auth.t034_rca7_fake_predicate() RETURNS boolean
+               LANGUAGE sql AS 'SELECT true';
+             ALTER TABLE public.t034_rca7_fake_source ENABLE ROW LEVEL SECURITY;
+             CREATE POLICY t034_rca7_fake_select ON public.t034_rca7_fake_source
+               FOR SELECT USING (auth.t034_rca7_fake_predicate());" >/dev/null
+          raw_query="SELECT qual FROM pg_policies WHERE schemaname='public' AND tablename='t034_rca7_fake_source'"
+          fk_query="SELECT pg_get_constraintdef(co.oid) FROM pg_constraint co WHERE co.conname='t034_rca7_fake_fk'"
+          via(){
+            local sp="$1" sql="$2"
+            docker exec -u postgres -e "PGOPTIONS=-c search_path=$sp" "$clone" \
+              psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$sql"
+          }
+          raw_policy_a="$(via 'pg_catalog,public' "$raw_query")"
+          raw_policy_b="$(via 'pg_catalog,public,auth' "$raw_query")"
+          [[ -n "$raw_policy_a" && -n "$raw_policy_b" && "$raw_policy_a" != "$raw_policy_b" ]] ||
+            { echo 'HOLD RCA7 real fake policy deparser difference not reproduced'; exit 1; }
+          raw_fk_a="$(via 'pg_catalog,public' "$fk_query")"
+          raw_fk_b="$(via 'pg_catalog,public,auth' "$fk_query")"
+          [[ -n "$raw_fk_a" && -n "$raw_fk_b" && "$raw_fk_a" != "$raw_fk_b" ]] ||
+            { echo 'HOLD RCA7 real fake FK deparser difference not reproduced'; exit 1; }
+          [[ "$(via pg_catalog "$raw_query")" == "$(via pg_catalog "$raw_query")" ]] ||
+            { echo 'HOLD RCA7 canonical policy rendering unstable'; exit 1; }
+          [[ "$(via pg_catalog "$fk_query")" == "$(via pg_catalog "$fk_query")" ]] ||
+            { echo 'HOLD RCA7 canonical FK rendering unstable'; exit 1; }
+          echo 'T034_RCA7_FAKE_AUTH_POLICY_SEARCHPATH_DIFFERENCE=REPRODUCED'
+          echo 'T034_RCA7_FAKE_AUTH_FK_SEARCHPATH_DIFFERENCE=REPRODUCED'
+          # ACL array ordering is NOT a grant semantic. Compare grantor, grantee,
+          # PUBLIC, privilege and grantable; never discard an effective grant.
+          acl_a="ARRAY['anon=r/supabase_admin','authenticated=r/supabase_admin']::aclitem[]"
+          acl_b="ARRAY['authenticated=r/supabase_admin','anon=r/supabase_admin']::aclitem[]"
+          acl_changed="ARRAY['authenticated=r/supabase_admin','anon=rw/supabase_admin']::aclitem[]"
+          canon(){
+            local expr="$1"
+            q "SELECT COALESCE(string_agg(jsonb_build_array(
+              'GRANTOR:'||pg_get_userbyid(x.grantor),
+              CASE WHEN x.grantee=0 THEN 'PUBLIC' ELSE 'ROLE:'||pg_get_userbyid(x.grantee) END,
+              x.privilege_type,x.is_grantable)::text,'|' ORDER BY pg_get_userbyid(x.grantor),
+              CASE WHEN x.grantee=0 THEN 'PUBLIC' ELSE 'ROLE:'||pg_get_userbyid(x.grantee) END,
+              x.privilege_type,x.is_grantable),'<ACL_EMPTY>') FROM aclexplode($expr) x"
+          }
+          [[ "$(q "SELECT ($acl_a)::text")" != "$(q "SELECT ($acl_b)::text")" ]] ||
+            { echo 'HOLD RCA7 fake ACL order-only baseline not reproduced'; exit 1; }
+          [[ "$(canon "$acl_a")" == "$(canon "$acl_b")" ]] ||
+            { echo 'HOLD RCA7 same ACL permissions falsely rejected'; exit 1; }
+          [[ "$(canon "$acl_a")" != "$(canon "$acl_changed")" ]] ||
+            { echo 'HOLD RCA7 real privilege difference hidden'; exit 1; }
+          echo 'T034_RCA7_FAKE_ACL_ORDER_ONLY_EQUIVALENCE=PASS'
+          echo 'T034_RCA7_FAKE_ACTUAL_ACL_PRIVILEGE_CHANGE_REJECTED=PASS'
+          # Confirm same real V2 parity SQL produces EXACT 16 source/clone rows.
+          for sql in "CREATE TABLE public.articles(id bigint)" \
+                     "CREATE TABLE public.ad_campaigns(id bigint)" \
+                     "CREATE TABLE public.advertisers(id bigint)" \
+                     "CREATE TABLE public.ad_payments(id bigint)" \
+                     "CREATE TABLE public.ad_history(id bigint)" \
+                     "CREATE TABLE public.audit_logs(id bigint)" \
+                     "CREATE TABLE IF NOT EXISTS auth.users(id uuid)" \
+                     "CREATE SCHEMA IF NOT EXISTS storage" \
+                     "CREATE TABLE IF NOT EXISTS storage.objects(id bigint)"; do
+            q "$sql" >/dev/null
+          done
+          docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-rca7-parity.sql" >/dev/null
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/parity-source" 2> "$tmp/private-source.err" ||
+            { echo 'HOLD RCA7 reviewed SQL did not execute'; exit 1; }
+          [[ "$(wc -l < "$tmp/parity-source")" == 16 ]] ||
+            { echo 'HOLD RCA7 reviewed SQL manifest format drift'; exit 1; }
+          # Real opposite session defaults MUST yield the SAME entire 16
+          # metrics once the reviewed V2 SQL sets its own fixed catalog context.
+          docker exec -u postgres -e 'PGOPTIONS=-c search_path=pg_catalog,public,auth' "$clone" \
+            psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin -d postgres \
+            -f /tmp/t034-rca7-parity.sql > "$tmp/context-auth" 2> "$tmp/context-a.err" ||
+            { echo 'HOLD RCA7 context-a source SQL failed'; exit 1; }
+          docker exec -u postgres -e 'PGOPTIONS=-c search_path=pg_catalog,public' "$clone" \
+            psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin -d postgres \
+            -f /tmp/t034-rca7-parity.sql > "$tmp/context-public" 2> "$tmp/context-b.err" ||
+            { echo 'HOLD RCA7 context-b source SQL failed'; exit 1; }
+          cmp -s "$tmp/context-auth" "$tmp/context-public" ||
+            { echo 'HOLD RCA7 reviewed V2 SQL still sensitive to caller search_path'; exit 1; }
+          echo 'T034_RCA7_FAKE_FULL_MANIFEST_CONTEXT_INDEPENDENCE=PASS'
+          echo 'T034_RCA7_FAKE_REVIEWED_V2_16_METRIC_MANIFEST=PASS'
+          # Changing effective policy must still invalidate metric 09.
+          q "ALTER POLICY t034_rca7_fake_select ON public.t034_rca7_fake_source USING (false)" >/dev/null
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-policy" 2> "$tmp/mut.err" ||
+            { echo 'HOLD RCA7 policy-negative query execution'; exit 1; }
+          [[ "$(grep '^09_app_RLS_policy_definitions=' "$tmp/parity-source")" != \
+             "$(grep '^09_app_RLS_policy_definitions=' "$tmp/mut-policy")" ]] ||
+            { echo 'HOLD RCA7 real policy predicate change hidden by canonicalizer'; exit 1; }
+          # A deleted FK is a real integrity change, and MUST still fail 13.
+          q "ALTER TABLE public.t034_rca7_fake_source DROP CONSTRAINT t034_rca7_fake_fk" >/dev/null
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-fk" 2> "$tmp/mut.err" ||
+            { echo 'HOLD RCA7 FK-negative query execution'; exit 1; }
+          [[ "$(grep '^13_constraints_definitions_validation=' "$tmp/mut-policy")" != \
+             "$(grep '^13_constraints_definitions_validation=' "$tmp/mut-fk")" ]] ||
+            { echo 'HOLD RCA7 dropped FK hidden by canonicalizer'; exit 1; }
+          # An added grant changes EFFECTIVE privileges, invalidates metric 10.
+          # Supabase image may already grant anon SELECT via default ACLs:
+          # use a newly created NOLOGIN role to force a genuinely NEW grant.
+          before_acl="$(q "SELECT COALESCE(relacl::text,'<NULL>') FROM pg_class WHERE oid='public.t034_rca7_fake_source'::regclass")"
+          q "CREATE ROLE t034_rca7_acl_negative_role NOLOGIN" >/dev/null
+          q "GRANT SELECT ON public.t034_rca7_fake_source TO t034_rca7_acl_negative_role" >/dev/null
+          after_acl="$(q "SELECT COALESCE(relacl::text,'<NULL>') FROM pg_class WHERE oid='public.t034_rca7_fake_source'::regclass")"
+          [[ "$before_acl" != "$after_acl" ]] ||
+            { echo 'HOLD RCA7 fake attempted grant but catalog ACL did not change'; exit 1; }
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-acl" 2> "$tmp/mut.err" ||
+            { echo 'HOLD RCA7 ACL-negative query execution'; exit 1; }
+          [[ "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-fk")" != \
+             "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-acl")" ]] ||
+            { echo 'HOLD RCA7 added privilege hidden by canonicalizer'; exit 1; }
+          # Same table + extra grant OPTION must be noticed independently.
+          q "GRANT SELECT ON public.t034_rca7_fake_source TO t034_rca7_acl_negative_role WITH GRANT OPTION" >/dev/null
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-grantoption" 2> "$tmp/mut.err" ||
+            { echo 'HOLD RCA7 grant-option negative execution'; exit 1; }
+          [[ "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-acl")" != \
+             "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-grantoption")" ]] ||
+            { echo 'HOLD RCA7 added grant option hidden by canonicalizer'; exit 1; }
+          q "ALTER TABLE public.t034_rca7_fake_source FORCE ROW LEVEL SECURITY" >/dev/null
+          docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -f /tmp/t034-rca7-parity.sql > "$tmp/mut-force-rls" 2> "$tmp/mut.err" ||
+            { echo 'HOLD RCA7 RLS-force negative execution'; exit 1; }
+          [[ "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-grantoption")" != \
+             "$(grep '^10_table_owner_acl_RLS=' "$tmp/mut-force-rls")" ]] ||
+            { echo 'HOLD RCA7 RLS force-state change hidden by canonicalizer'; exit 1; }
+          echo 'T034_RCA7_FAKE_SECURITY_POLICY_FK_GRANT_NEGATIVES=PASS'
+          echo 'T034_RCA7_FAKE_GRANT_OPTION_AND_FORCE_RLS_NEGATIVES=PASS'
+          echo 'NO REAL DATABASE, B2, OWNER KEY, NETWORK OR PORT'

@@ -152,6 +152,7 @@ jobs:
           jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql "$tmp/plain/source_db_identity.json"
           jb_t034_snapshot_query ci/backup/jb-t034-security-parity.sql "$tmp/plain/expected_security_identity.txt"
           [[ "$(wc -l < "$tmp/plain/expected_security_identity.txt")" == 16 ]]
+          sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1 > "$tmp/plain/security_parity_contract_sha256.txt"
           printf '%s\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
           printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO\n' > "$tmp/plain/snapshot_scope.txt"
           jb_t034_snapshot_finish
@@ -230,7 +231,7 @@ jobs:
           test "$owner" != "$runner"
           tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
             raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt source_db_identity.json \
-            raw_dump_snapshot_id.txt snapshot_scope.txt expected_security_identity.txt | zstd -q | \
+            raw_dump_snapshot_id.txt snapshot_scope.txt expected_security_identity.txt security_parity_contract_sha256.txt | zstd -q | \
             age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
           test -s "$tmp/backup.tar.zst.age"
           # Simulate immutable private B2 object. Real transfer is a separate test.
@@ -246,6 +247,7 @@ jobs:
           test -s "$tmp/recovered/expected_identity.txt"
           test -s "$tmp/recovered/source_db_identity.json"
           test -s "$tmp/recovered/expected_security_identity.txt"
+          test -s "$tmp/recovered/security_parity_contract_sha256.txt"
           test -s "$tmp/recovered/raw_dump_snapshot_id.txt"
           test -s "$tmp/recovered/snapshot_scope.txt"
           echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
@@ -265,6 +267,19 @@ jobs:
             exit 1
           fi
           echo 'PASS [G3 synthetic] wrong identity and modified ciphertext were rejected.'
+          # Old/mismatched manifest contract must be REFUSED before clone.
+          # No production data: this is a temporary FAKE recovered package.
+          cp "$tmp/recovered/security_parity_contract_sha256.txt" "$tmp/good-contract"
+          printf '%064d\n' 0 > "$tmp/recovered/security_parity_contract_sha256.txt"
+          if JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh \
+             "$tmp/recovered" > "$tmp/contract-negative.log" 2>&1; then
+            echo 'FAIL [G3 FAKE] stale/mismatched source parity contract was accepted'
+            exit 1
+          fi
+          grep -Fq 'source snapshot and clone security parity SQL versions differ' "$tmp/contract-negative.log" ||
+            { echo 'FAIL [G3 FAKE] stale contract not rejected for correct reason'; exit 1; }
+          mv "$tmp/good-contract" "$tmp/recovered/security_parity_contract_sha256.txt"
+          echo 'PASS [G3 FAKE] stale parity contract rejected before any full-clone DB restore'
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-public-restore-probe.sh "$tmp/recovered"
           JB_T034_SYNTHETIC_DIAGNOSTICS=1 bash ci/backup/jb-t034-offline-full-pg-restore.sh "$tmp/recovered"
           if docker ps -a --format '{{.Names}}' | grep -q '^jb-t034-full-pg17-'; then
