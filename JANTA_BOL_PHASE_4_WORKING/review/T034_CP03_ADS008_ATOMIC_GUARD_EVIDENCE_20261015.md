@@ -1,16 +1,16 @@
 # JANTA BOL — T034 CP-03 ADS-008 candidate security regression checkpoint
 Date: 15 Oct 2026. Branch `review/t034-cp03-ads008-20261015`.
-Exact tested candidate code commit `68294866fbf2805e64f6390614ae505a5c63d2cf`.
+Latest independently tested code commit `b09485eb2a903ca087aa8166709b384bf6514a3d` (older scoped fake PASS also on `68294866fbf2805e64f6390614ae505a5c63d2cf`).
 **NO PRODUCTION SQL executed. NO DEPLOYMENT. T034 HOLD.**
 
 ## Real fake-only CI
-GitHub Actions run **38684890024**, **2/2 JOBS SUCCESS**:
+GitHub Actions runs **38684890024** and **38685120217**, each **2/2 JOBS SUCCESS**. Latest run tests the following:
 - ADS-008 RED old payment acceptance on disposable Postgres, inside ROLLBACK (vulnerability reproduced; no actual payment).
 - ADS-008 guard candidate applied inside explicit BEGIN/COMMIT (migration atomic).
 - Late intentional division-by-zero after all proposed new objects, before COMMIT, correctly rolls back **all** new triggers/functions; original data/payment counts unchanged. This is a fake-only fault-injection proof.
 - New guard blocks both old payment-confirmation RPCs for historical HIGH/pending and NORMAL/pending, direct confirmed payment DML, direct PAID-state DML.
 - Added security: direct SQL high-risk APPROVED/LIVE state transitions are rejected; verified normal LIVE without a positive confirmed payment is rejected; historical payment_pending fixture remains unchanged.
-- Owner/AAL2 fake-context negative, and verified normal/high original payment RPC positive paths pass without altered original RPC byte hashes.
+- Owner/AAL2 fake-context negative, and verified normal/high original payment RPC positive paths pass without altered original RPC byte hashes. Added verified normal/high Owner LIVE transition positives and reversion to PAID, plus historical high-risk pending same-status write preservation, all fake-only PASS.
 - Reviewed rollback script removes only newly introduced objects, original RPC hashes and historical fixture preserved. Guard can be reapplied successfully.
 - Existing ADS-002/003/004/005/007/009 enquiry + old overload synthetic tests pass (7 anon negative, 3 positive WhatsApp normalized, concurrent rate/cooldown, legacy 5/6/7 overloads).
 
