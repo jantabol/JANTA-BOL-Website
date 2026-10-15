@@ -1,0 +1,104 @@
+# P4-T034 RCA5: exact synthetic ACL missing-role pg_restore failure/recovery.
+# NO LIVE credentials, NO database backup, NO B2, NO Founder AGE key.
+name: T034 RCA5 missing functions ACL role FAKE restore
+on:
+  push:
+    branches: [review/t034-rca5-acl-role-audit-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/backup/jb-t034-disposable-functions-role.sql'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - '.github/workflows/b7-t034-rca5-functions-acl-FAKE.yml'
+permissions:
+  contents: read
+jobs:
+  fake-exact-acl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Locked startup and fake-only source checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          echo 'PASS RCA5 manual-only approval/security lock unchanged'
+      - name: Reproduce first failing pg_restore ACL 42704 and validate bounded role fix
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          source ci/backup/jb-t034-image-contract.sh
+          clone="t034-rca5-acl-$GITHUB_RUN_ID"
+          tmp="$(mktemp -d)"
+          cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$tmp"; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+             --memory 4g --cpus 2 --pids-limit 200 --name "$clone" \
+             -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'HOLD RCA5 fake container startup'; exit 1; }
+          q(){ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$1"; }
+          cfg="$(q "SELECT current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")"
+          [[ "$cfg" == 'off|template1' ]] || { echo 'HOLD RCA5 offline workers not inert'; exit 1; }
+          [[ "$(q "SELECT count(*) FROM pg_roles WHERE rolname='supabase_functions_admin'")" == 0 ]] ||
+            { echo 'HOLD RCA5 actual pinned target role unexpectedly exists'; exit 1; }
+          q "CREATE TABLE public.t034_rca5_fake_acl_table (id integer PRIMARY KEY);" >/dev/null
+          q "CREATE ROLE supabase_functions_admin WITH LOGIN NOSUPERUSER NOINHERIT NOCREATEDB CREATEROLE NOREPLICATION NOBYPASSRLS PASSWORD NULL;" >/dev/null
+          q "GRANT SELECT ON public.t034_rca5_fake_acl_table TO supabase_functions_admin;" >/dev/null
+          docker exec -u postgres "$clone" pg_dump -U supabase_admin -Fc \
+            -t public.t034_rca5_fake_acl_table -f /tmp/t034-rca5.dump -d postgres >/dev/null
+          q "DROP TABLE public.t034_rca5_fake_acl_table; DROP ROLE supabase_functions_admin;" >/dev/null
+          if docker exec -u postgres "$clone" pg_restore --exit-on-error --verbose \
+             -U supabase_admin -d postgres /tmp/t034-rca5.dump \
+             > "$tmp/expected-missing.log" 2>&1; then
+            echo 'HOLD RCA5 missing ACL grantee did not fail'
+            exit 1
+          fi
+          grep -Eq 'role "supabase_functions_admin" does not exist' "$tmp/expected-missing.log" ||
+            { echo 'HOLD RCA5 missing role evidence does not match'; exit 1; }
+          grep -Eq 'from TOC entry [0-9]+; .* ACL ' "$tmp/expected-missing.log" ||
+            { echo 'HOLD RCA5 ACL TOC not linked to first error'; exit 1; }
+          echo 'T034_RCA5_FAKE_ACL_ROLE_MISSING_42704_REPRO=PASS'
+          q "DROP TABLE IF EXISTS public.t034_rca5_fake_acl_table;" >/dev/null
+          docker cp ci/backup/jb-t034-disposable-functions-role.sql "$clone:/tmp/t034-role.sql" >/dev/null
+          docker exec -u root "$clone" chown postgres:postgres /tmp/t034-role.sql >/dev/null
+          docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+             -U supabase_admin -d template1 -f /tmp/t034-role.sql \
+             > "$tmp/role.log" 2>&1 ||
+             { echo 'HOLD RCA5 safe role contract rejected'; exit 1; }
+          grep -Fxq 'T034_DISPOSABLE_FUNCTIONS_ROLE_GRANTEE_READY=PASS' "$tmp/role.log" ||
+             { echo 'HOLD RCA5 role proof invalid'; exit 1; }
+          docker exec -u postgres "$clone" pg_restore --exit-on-error \
+             -U supabase_admin -d postgres /tmp/t034-rca5.dump \
+             > "$tmp/fixed.log" 2>&1 ||
+             { echo 'HOLD RCA5 same ACL archive failed after bounded fix'; exit 1; }
+          actual="$(q "SELECT has_table_privilege('supabase_functions_admin','public.t034_rca5_fake_acl_table','SELECT')")"
+          [[ "$actual" == 't' ]] || { echo 'HOLD RCA5 restored grant missing'; exit 1; }
+          role="$(q "SELECT rolcanlogin||'|'||rolcreaterole||'|'||rolbypassrls||'|'||rolinherit FROM pg_roles WHERE rolname='supabase_functions_admin'")"
+          [[ "$role" == 'true|true|false|false' || "$role" == 't|t|f|f' ]] ||
+             { echo 'HOLD RCA5 source role attributes drift'; exit 1; }
+          docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+             -U supabase_admin -d template1 -f /tmp/t034-role.sql > "$tmp/idempotent.log" 2>&1 ||
+             { echo 'HOLD RCA5 role contract not idempotent'; exit 1; }
+          q "ALTER ROLE supabase_functions_admin BYPASSRLS" >/dev/null
+          if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+             -U supabase_admin -d template1 -f /tmp/t034-role.sql \
+             > "$tmp/escalation.log" 2>&1; then
+            echo 'HOLD RCA5 escalation was accepted'
+            exit 1
+          fi
+          echo 'T034_RCA5_FAKE_SAME_ACL_RESTORE_AFTER_ROLE=PASS'
+          echo 'T034_RCA5_ROLE_FLAGS_IDEMPOTENCE_ESCALATION_NEGATIVE=PASS'
+          echo 'NO LIVE, NO REAL DATA, NO OWNER KEY, NO B2, NO PLAINTEXT ARTIFACT'
