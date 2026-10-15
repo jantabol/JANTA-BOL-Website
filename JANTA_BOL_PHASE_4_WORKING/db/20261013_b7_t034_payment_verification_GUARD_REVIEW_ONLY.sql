@@ -6,6 +6,8 @@
 -- is payment_pending, with old Owner/AAL2 payment RPCs lacking this guard.
 -- No auto-repair, update, deletion or verification of historical rows.
 
+-- Atomic: any preflight/DDL/GRANT failure must roll back ALL new objects.
+BEGIN;
 DO $preflight$
 DECLARE missing text;
 BEGIN
@@ -115,3 +117,4 @@ REVOKE ALL ON FUNCTION private.b7_t034_confirmed_payment_guard()
 REVOKE ALL ON FUNCTION private.b7_t034_paid_state_guard()
   FROM PUBLIC,anon,authenticated;
 -- Intentionally NO GRANT, NO public RPC, NO data modification, NO deployment.
+COMMIT;
