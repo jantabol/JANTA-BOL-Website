@@ -25,7 +25,8 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
   [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
      ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ) ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -137,6 +138,23 @@ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
 grep -Fxq 'T034_TARGET_REALTIME_ROLE_SECURITY_REPLAY=PASS' "$temp/realtime_role.log" ||
   fail 'no proof of exact disposable Supabase Realtime owner role'
 printf 'T034_DISPOSABLE_NOLOGIN_REALTIME_OWNER=PASS\n'
+# Hosted pg_dump is per-database; missing fixed global ACL grantees cannot
+# be recreated by restoring database objects. Source-only ACL-role audit
+# independently verified supabase_functions_admin is absent on this image.
+# Fixed role has NULL password, source flags, no memberships; clone only.
+docker cp ci/backup/jb-t034-disposable-functions-role.sql \
+  "$clone:/tmp/t034-disposable-functions-role.sql" >/dev/null 2>&1 ||
+  fail 'cannot deliver offline fixed functions ACL role contract'
+docker exec -u root "$clone" sh -c \
+  'chown postgres:postgres /tmp/t034-disposable-functions-role.sql && chmod 600 /tmp/t034-disposable-functions-role.sql' \
+  >/dev/null 2>&1 || fail 'cannot secure offline functions role contract'
+docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d template1 -f /tmp/t034-disposable-functions-role.sql \
+  > "$temp/functions_role.log" 2>&1 ||
+  fail 'offline functions ACL role contract failed'
+grep -Fxq 'T034_DISPOSABLE_FUNCTIONS_ROLE_GRANTEE_READY=PASS' "$temp/functions_role.log" ||
+  fail 'offline functions ACL role proof absent'
+printf 'T034_DISPOSABLE_FUNCTIONS_ACL_GRANTEE=PASS\n'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
   > "$temp/drop.log" 2>&1 ||
@@ -167,7 +185,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
     if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
           ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ) ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -348,7 +367,8 @@ identity_compare_extra=()
 if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ) ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
