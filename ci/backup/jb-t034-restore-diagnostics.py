@@ -13,7 +13,7 @@ from pathlib import Path
 
 APP = "jb_t034_full_restore"
 SQLSTATE = re.compile(r"^[A-Z0-9]{5}$")
-TOC_CONTEXT = re.compile(r"(?m)^pg_restore: error: from TOC entry ([1-9][0-9]{0,8});")
+TOC_CONTEXT = re.compile(r"(?m)^pg_restore: (?:error: )?from TOC entry ([1-9][0-9]{0,8});")
 TOC_LINE = re.compile(r"^([1-9][0-9]{0,8});\s+[0-9]+\s+[0-9]+\s+(.+)$")
 TYPES = (
     "PUBLICATION TABLE", "MATERIALIZED VIEW", "SEQUENCE OWNED BY",
