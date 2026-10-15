@@ -136,7 +136,7 @@ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
   fail 'exact source NOLOGIN Realtime owner role/permissions rejected on disposable target'
 grep -Fxq 'T034_TARGET_REALTIME_ROLE_SECURITY_REPLAY=PASS' "$temp/realtime_role.log" ||
   fail 'no proof of exact disposable Supabase Realtime owner role'
-printf 'T034_DISPOSABLE_NOLOGIN_REALTIME_OWNER=PASS\\n'
+printf 'T034_DISPOSABLE_NOLOGIN_REALTIME_OWNER=PASS\n'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
   > "$temp/drop.log" 2>&1 ||
