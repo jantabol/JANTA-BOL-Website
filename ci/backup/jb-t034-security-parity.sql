@@ -1,3 +1,8 @@
+-- T034 PARITY V2: identical deparser context on source+clone.
+-- psql-only; \gset deliberately suppresses SET output so manifest remains 16
+-- fixed metric rows. No ALTER ROLE/DATABASE/production configuration writes.
+-- pg_catalog-only ensures auth/public references receive consistent qualification.
+SELECT pg_catalog.set_config('search_path', 'pg_catalog', false) AS t034_context \gset
 -- P4-T034 B5 canonical protected DB restore integrity/security digest overlay.
 -- Output is fixed metric names + MD5 of full TABLE content/definition metadata.
 -- NO plaintext rows, personal values, function bodies or secrets in logs.
@@ -29,7 +34,22 @@ WITH facts AS (
  UNION ALL SELECT '10_table_owner_acl_RLS',
    (SELECT md5(COALESCE(string_agg(md5(
       n.nspname||'.'||c.relname||'|'||pg_get_userbyid(c.relowner)||'|'||
-      COALESCE(c.relacl::text,'<NULL>')||'|'||c.relrowsecurity::text||'|'||
+      CASE WHEN c.relacl IS NULL THEN '<ACL_NULL>'
+        ELSE COALESCE(
+          (SELECT string_agg(
+              jsonb_build_array(
+                'GRANTOR:'||pg_get_userbyid(a.grantor),
+                CASE WHEN a.grantee=0 THEN 'PUBLIC'
+                     ELSE 'ROLE:'||pg_get_userbyid(a.grantee) END,
+                a.privilege_type,a.is_grantable
+              )::text,
+              '|' ORDER BY pg_get_userbyid(a.grantor),
+                CASE WHEN a.grantee=0 THEN 'PUBLIC'
+                     ELSE 'ROLE:'||pg_get_userbyid(a.grantee) END,
+                a.privilege_type,a.is_grantable
+             )
+           FROM aclexplode(c.relacl) AS a),'<ACL_EMPTY>')
+      END||'|'||c.relrowsecurity::text||'|'||
       c.relforcerowsecurity::text
    ),'|' ORDER BY n.nspname,c.relname),'EMPTY'))
    FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
