@@ -12,6 +12,24 @@ src="$1"
 [[ -d "$src" && -s "$src/raw_full.dump" ]] || fail 'missing raw PostgreSQL custom archive'
 [[ -s "$src/source_db_identity.json" ]] ||
  fail 'missing protected database owner/ACL/locale/setting identity'
+[[ -s "$src/raw_dump_snapshot_id.txt" && -s "$src/snapshot_scope.txt" ]] ||
+ fail 'source manifest is NOT bound to an exported raw dump snapshot'
+source_snap="$(cat "$src/raw_dump_snapshot_id.txt")"
+[[ "$source_snap" =~ ^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9]+$ ]] ||
+ fail 'invalid or missing raw pg_dump shared-snapshot token'
+grep -Fxq 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO' \
+  "$src/snapshot_scope.txt" || fail 'non-authoritative snapshot scope declaration'
+[[ -s "$src/source_project.txt" ]] || fail 'missing source project identity'
+source_label="$(cat "$src/source_project.txt")"
+if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
+  [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+     "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+     "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
+   fail 'fake source identity not permitted outside fake CI'
+else
+  [[ "$source_label" == 'JANTA BOL production project vrffsnkycvjithwtiylt' ]] ||
+   fail 'wrong project identity inside decrypted archive'
+fi
 command -v docker >/dev/null || fail 'Docker unavailable'
 # Immutable PG17 image and from-first-start inert scheduler contract. No production connection.
 # Source is reviewed repo code, not a user-controlled archive file.
