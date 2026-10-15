@@ -2,7 +2,7 @@
 -- B7 T034 ADS-008 isolated rollback; fail-closed both legacy payment RPCs.
 BEGIN;
 DO $test$
-DECLARE msg text; before_pay int;before_history int; s text; confirmed_payment_id uuid;
+DECLARE msg text; before_pay int;before_history int; s text; confirmed_payment_id uuid; before_updated timestamptz;
 BEGIN
  PERFORM set_config('b7.test_owner','enabled',true);
  SELECT count(*) INTO before_pay FROM public.ad_payments;
@@ -146,6 +146,21 @@ BEGIN
  -- both campaigns are valid, but moving the receipt launders payment evidence.
  SELECT id INTO STRICT confirmed_payment_id
  FROM public.ad_payments WHERE provider_ref='FAKE-VERIFIED-NORMAL';
+ -- Existing LIVE schema has updated_at; it is NOT financial receipt
+ -- identity. Regression: service-side timestamp-only maintenance was not
+ -- subject to Owner AAL2 in the pre-existing trigger. Preserve behavior.
+ SELECT updated_at INTO STRICT before_updated
+ FROM public.ad_payments WHERE id=confirmed_payment_id;
+ PERFORM set_config('b7.test_owner','',true);
+ UPDATE public.ad_payments
+ SET updated_at=before_updated + interval '1 second'
+ WHERE id=confirmed_payment_id;
+ IF (SELECT updated_at FROM public.ad_payments
+     WHERE id=confirmed_payment_id) IS DISTINCT FROM
+        before_updated + interval '1 second'
+ THEN RAISE EXCEPTION 'NONFINANCIAL_UPDATED_AT_MAINTENANCE_BLOCKED';END IF;
+ PERFORM set_config('b7.test_owner','enabled',true);
+ RAISE NOTICE 'PASS [ADS-008] confirmed ledger updated_at-only legacy maintenance preserved';
  BEGIN
    UPDATE public.ad_payments
      SET campaign_id='20000000-0000-4000-8000-000000000004'
