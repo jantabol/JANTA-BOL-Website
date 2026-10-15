@@ -1,5 +1,17 @@
 # JANTA BOL — B7 ADS-008 encrypted backup release gates (14 Oct 2026)
 
+> **SUPERSEDED CURRENT-STATUS WARNING — 15 OCT 2026:** This document's
+> 14-Oct *planning snapshot* and the claim below that no real B2 export
+> exists are **outdated**. Real authorized encrypted B2 readback succeeded
+> in run `38583250674`; real run `38602777423` decrypted by a runner
+> ephemeral key but **FAILED** full isolated PostgreSQL restore. Neither run
+> proved Founder-paper-key G5 or T034. Matching PG17 synthetic repairs are
+> UNMERGED on PR #14. **Never re-run the historical workflow as a verified
+> real restore.** For authoritative current gate detail, read
+> `ci/backup/JB_T034_CP04_READINESS_20261015.md`. No new real dispatch
+> without separate Founder consent. T034 HOLD.
+>
+
 Scope: `jantabol/JANTA-BOL-Website` only. Never access or modify Cricket B2 bucket.
 This branch is isolated from main. Do **not** assume the production payment guard is deployed.
 
