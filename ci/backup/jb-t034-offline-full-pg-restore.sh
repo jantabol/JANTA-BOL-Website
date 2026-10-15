@@ -10,6 +10,8 @@ fail(){ echo "T034_FULL_DB_CLONE_HOLD: $1" >&2; exit 1; }
 [[ "$#" == 1 ]] || fail 'provide exactly one local recovered archive directory'
 src="$1"
 [[ -d "$src" && -s "$src/raw_full.dump" ]] || fail 'missing raw PostgreSQL custom archive'
+[[ -s "$src/source_db_identity.json" ]] ||
+ fail 'missing protected database owner/ACL/locale/setting identity'
 command -v docker >/dev/null || fail 'Docker unavailable'
 # Immutable PG17 image and from-first-start inert scheduler contract. No production connection.
 # Source is reviewed repo code, not a user-controlled archive file.
@@ -77,10 +79,18 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
   > "$temp/drop.log" 2>&1 ||
   fail 'cannot replace ONLY disposable postgres DB; no live database touched'
+# Source DB identity is a protected JSON manifest with STRICT allowlisted
+# owner/locale/ACL. It never contains SQL from the archive. The generated
+# statements touch the disconnected disposable Docker instance ONLY.
+python3 ci/backup/jb-t034-db-identity.py plan \
+  "$src/source_db_identity.json" "$temp/prepare.sql" ||
+  fail 'source database identity rejected by explicit allowlist'
+docker cp "$temp/prepare.sql" "$clone:/tmp/t034-prepare.sql" >/dev/null 2>&1 ||
+  fail 'cannot transfer safe owner/ACL preparation into offline target'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
-  -U supabase_admin -d template1 -c 'CREATE DATABASE postgres TEMPLATE template0;' \
+  -U supabase_admin -d template1 -f /tmp/t034-prepare.sql \
   > "$temp/create.log" 2>&1 ||
-  fail 'cannot recreate isolated postgres DB from template0'
+  fail 'cannot recreate isolated postgres DB with source owner/locale/ACL'
 # Public namespace ownership varies by PostgreSQL/Supabase dump origin:
 # some snapshots include CREATE SCHEMA public and some leave template0 public
 # as a built-in namespace. Do not guess; decide from actual archive TOC.
@@ -159,6 +169,18 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
+# Fetch target database's canonical identity via identical reviewed SELECT.
+# Never print JSON grant/setting contents (keep inside ephemeral protected path).
+docker cp ci/backup/jb-t034-db-identity.sql "$clone:/tmp/t034-db-identity.sql" >/dev/null 2>&1 ||
+ fail 'cannot send canonical DB identity query to offline clone'
+docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -f /tmp/t034-db-identity.sql \
+  > "$temp/actual_db_identity.json" 2> "$temp/dbidentity.err" ||
+ fail 'cannot inspect isolated database owner, locale, ACL and settings'
+python3 ci/backup/jb-t034-db-identity.py compare \
+  "$src/source_db_identity.json" "$temp/actual_db_identity.json" ||
+ fail 'restored database owner, locale, ACL or settings drift'
+printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\\n'
 post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
  fail 'cannot recheck restored cron isolation'
 [[ "$post_settings" == 'postgres|off|template1' ]] || fail 'restored cron/net workers may alter clone'
