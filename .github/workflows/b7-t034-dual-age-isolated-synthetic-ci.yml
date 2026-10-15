@@ -119,9 +119,18 @@ jobs:
           CREATE TABLE storage.objects(id bigint PRIMARY KEY);
           INSERT INTO storage.objects VALUES (1);
           SQL
-          docker run --rm --network=host -v "$tmp/plain:/out" -e PGPASSWORD=synthetic_only postgres:17 \
-            pg_dump -h localhost -U postgres -d postgres --format=custom \
-            -f /out/raw_full.dump >/dev/null
+          # Share one READ-ONLY exported snapshot across raw archive + both
+          # manifests, then deliberately perform a concurrent fake write.
+          # Correct archive and manifest must still both say ad_history=0.
+          export JB_DB_URI='postgresql://postgres:synthetic_only@localhost:5432/postgres?sslmode=disable'
+          JB_T034_SNAPSHOT_WORK="$tmp"
+          source ci/backup/jb-t034-shared-snapshot.sh
+          jb_t034_snapshot_start
+          psql -X -v ON_ERROR_STOP=1 -c 'INSERT INTO public.ad_history VALUES(987)' >/dev/null
+          test "$(psql -X -At -c 'SELECT count(*) FROM public.ad_history')" = 1
+          docker run --rm --network=host -v "$tmp/plain:/out" postgres:17 \
+            pg_dump --snapshot="$JB_T034_SNAPSHOT_ID" --format=custom \
+            --file=/out/raw_full.dump "$JB_DB_URI" >/dev/null
           docker run --rm -v "$tmp/plain:/out:ro" postgres:17 pg_restore --list /out/raw_full.dump > "$tmp/plain/raw_inventory.txt"
           docker run --rm --network=host -e PGPASSWORD=synthetic_only postgres:17 \
             pg_dump -h localhost -U postgres -d postgres --schema=public \
@@ -132,11 +141,18 @@ jobs:
           printf 'CREATE ROLE fake_t034_test NOLOGIN;\n' > "$tmp/plain/roles.sql"
           date -u +%Y-%m-%dT%H:%M:%SZ > "$tmp/plain/backup_utc.txt"
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
-          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-restore-baseline.sql > "$tmp/plain/expected_identity.txt"
-          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-db-identity.sql > "$tmp/plain/source_db_identity.json"
+          jb_t034_snapshot_query ci/backup/jb-t034-restore-baseline.sql "$tmp/plain/expected_identity.txt"
+          jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql "$tmp/plain/source_db_identity.json"
+          printf '%s\\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
+          printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES\\n' > "$tmp/plain/snapshot_scope.txt"
+          jb_t034_snapshot_finish
+          grep -Fxq '05_ad_history=0' "$tmp/plain/expected_identity.txt"
+          test "$(psql -X -At -c 'SELECT count(*) FROM public.ad_history')" = 1
+          echo 'PASS [B3 synthetic] AFTER snapshot source changed, captured archive/manifest stayed at same earlier read-only snapshot'
           [[ "$(wc -l < "$tmp/plain/source_db_identity.json")" == 1 ]]
           python3 ci/backup/jb-t034-db-identity.py plan "$tmp/plain/source_db_identity.json" "$tmp/db-plan-fake.sql"
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/backup/jb-t034-shared-snapshot.sh
           python3 -m py_compile ci/backup/jb-t034-db-identity.py
           [[ "$(wc -l < "$tmp/plain/expected_identity.txt")" == 26 ]]
           ! grep -q '=MISSING' "$tmp/plain/expected_identity.txt"
@@ -146,7 +162,8 @@ jobs:
           runner="$(age-keygen -y "$tmp/runner-restore.identity")"
           test "$owner" != "$runner"
           tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
-            raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt source_db_identity.json | zstd -q | \
+            raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt source_db_identity.json \
+            raw_dump_snapshot_id.txt snapshot_scope.txt | zstd -q | \
             age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
           test -s "$tmp/backup.tar.zst.age"
           # Simulate immutable private B2 object. Real transfer is a separate test.
@@ -161,6 +178,8 @@ jobs:
           test -s "$tmp/recovered/raw_full.dump"
           test -s "$tmp/recovered/expected_identity.txt"
           test -s "$tmp/recovered/source_db_identity.json"
+          test -s "$tmp/recovered/raw_dump_snapshot_id.txt"
+          test -s "$tmp/recovered/snapshot_scope.txt"
           echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
           age -d -i "$tmp/fake-owner.identity" "$tmp/readback/test-run.tar.zst.age" |
             zstd -dq | tar -C "$tmp/readback" -xf -
