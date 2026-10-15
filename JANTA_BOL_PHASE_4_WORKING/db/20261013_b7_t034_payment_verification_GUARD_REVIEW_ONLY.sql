@@ -69,6 +69,27 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','public','private'
 AS $payment$
 BEGIN
+  -- Confirmed payment evidence is append-only for its financial identity.
+  -- A privileged UPDATE must not rebind a valid receipt to a DIFFERENT
+  -- verified campaign, replace its reference, change amount/currency,
+  -- downgrade confirmed to failed, or delete the record entirely.
+  -- Non-financial updated_at maintenance is left compatible with old paths.
+  IF TG_OP='DELETE' THEN
+    IF OLD.status='confirmed'
+    THEN RAISE EXCEPTION 'B7_CONFIRMED_LEDGER_IMMUTABLE'
+      USING ERRCODE='23514'; END IF;
+    RETURN OLD;
+  END IF;
+  IF TG_OP='UPDATE' AND OLD.status='confirmed'
+     AND (NEW.id IS DISTINCT FROM OLD.id
+       OR NEW.campaign_id IS DISTINCT FROM OLD.campaign_id
+       OR NEW.provider_ref IS DISTINCT FROM OLD.provider_ref
+       OR NEW.status IS DISTINCT FROM OLD.status
+       OR NEW.amount_minor IS DISTINCT FROM OLD.amount_minor
+       OR NEW.currency IS DISTINCT FROM OLD.currency
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at)
+  THEN RAISE EXCEPTION 'B7_CONFIRMED_LEDGER_IMMUTABLE'
+    USING ERRCODE='23514'; END IF;
   IF NEW.status='confirmed' THEN
     IF NOT private.p4_owner_allowed()
     THEN RAISE EXCEPTION 'OWNER_AAL2_REQUIRED' USING ERRCODE='42501'; END IF;
@@ -77,10 +98,10 @@ BEGIN
   RETURN NEW;
 END $payment$;
 
--- Every original confirmed-payment INSERT/UPDATE passes this trigger,
--- regardless of which original Owner payment RPC, SDK or SQL route is used.
+-- Confirmed INSERT and future UPDATE/DELETE are guarded regardless of route.
+-- BEFORE UPDATE covers every column, including receipt/amount/currency and ID.
 CREATE TRIGGER b7_t034_payment_verified_gate
-BEFORE INSERT OR UPDATE OF status, campaign_id ON public.ad_payments
+BEFORE INSERT OR UPDATE OR DELETE ON public.ad_payments
 FOR EACH ROW EXECUTE FUNCTION private.b7_t034_confirmed_payment_guard();
 
 CREATE FUNCTION private.b7_t034_paid_state_guard()
