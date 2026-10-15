@@ -17,8 +17,8 @@ SELECT n.nspname,
        md5(COALESCE(a.grant_options, '<ACL_EMPTY>')),
        md5(CASE WHEN c.relacl IS NULL THEN '<ACL_NULL>'
                 ELSE COALESCE(a.exact_acl,'<ACL_EMPTY>') END),
-       c.relrowsecurity::text,
-       c.relforcerowsecurity::text
+       c.relrowsecurity,
+       c.relforcerowsecurity
 FROM pg_class c
 JOIN pg_namespace n ON n.oid=c.relnamespace
 CROSS JOIN LATERAL (
