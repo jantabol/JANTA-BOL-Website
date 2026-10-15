@@ -64,7 +64,7 @@ jobs:
              { echo 'HOLD RCA4 missing role expected by this exact pinned image'; exit 1; }
           docker cp ci/backup/jb-t034-disposable-realtime-role.sql "$clone:/tmp/role.sql" >/dev/null
           docker exec -u root "$clone" chown postgres:postgres /tmp/role.sql >/dev/null
-          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+          docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
             -f /tmp/role.sql > "$tmp/role1.log" 2>&1 ||
             { echo 'HOLD RCA4 safe role replay failed'; exit 1; }
           grep -Fxq 'T034_TARGET_REALTIME_ROLE_SECURITY_REPLAY=PASS' "$tmp/role1.log" ||
@@ -90,7 +90,7 @@ jobs:
             { echo 'HOLD RCA4 fake failure not correlated to TYPE TOC'; exit 1; }
           echo 'T034_RCA4_FAKE_PG_RESTORE_TYPE_OWNER_MISSING_REPRO=PASS'
           q 'DROP SCHEMA IF EXISTS t034_rca4 CASCADE' >/dev/null
-          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+          docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
             -f /tmp/role.sql > "$tmp/role2.log" 2>&1 ||
             { echo 'HOLD RCA4 corrected disposable role replay failed'; exit 1; }
           docker exec -u postgres "$clone" pg_restore --exit-on-error \
@@ -102,7 +102,7 @@ jobs:
           flags="$(q "SELECT rolcanlogin||'|'||rolinherit||'|'||rolcreaterole||'|'||rolbypassrls FROM pg_roles WHERE rolname='supabase_realtime_admin'")"
           [[ "$flags" == 'false|false|false|false' || "$flags" == 'f|f|f|f' ]] ||
             { echo 'HOLD RCA4 role unexpectedly privileged'; exit 1; }
-          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+          docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
             -f /tmp/role.sql > "$tmp/idempotent.log" 2>&1 ||
             { echo 'HOLD RCA4 role replay not idempotent'; exit 1; }
           q "ALTER ROLE supabase_realtime_admin CREATEROLE" >/dev/null
