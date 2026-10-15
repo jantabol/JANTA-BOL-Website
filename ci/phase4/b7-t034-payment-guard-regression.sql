@@ -140,6 +140,26 @@ BEGIN
     WHERE id='20000000-0000-4000-8000-000000000001'
       AND (status<>'payment_pending' OR paid_at IS NOT NULL))
  THEN RAISE EXCEPTION 'HISTORICAL_HIGH_RISK_WAS_MUTATED';END IF;
+ -- Preserve normal business continuation: Owner+AAL2 can move verified
+ -- campaign (with confirmed positive ledger) to LIVE and back to PAID.
+ UPDATE public.ad_campaigns SET status='live'
+ WHERE id IN ('20000000-0000-4000-8000-000000000003',
+              '20000000-0000-4000-8000-000000000004');
+ IF (SELECT count(*) FROM public.ad_campaigns WHERE status='live')<>2
+ THEN RAISE EXCEPTION 'VERIFIED_OWNER_VALID_LIVE_BLOCKED'; END IF;
+ UPDATE public.ad_campaigns SET status='paid'
+ WHERE id IN ('20000000-0000-4000-8000-000000000003',
+              '20000000-0000-4000-8000-000000000004');
+ IF (SELECT count(*) FROM public.ad_campaigns WHERE status='paid')<>2
+ THEN RAISE EXCEPTION 'VERIFIED_OWNER_PAID_REVERSION_BROKEN'; END IF;
+ -- A harmless same-status write of the historical high-risk pending record
+ -- is NOT an illegal new transition and must not corrupt its state.
+ UPDATE public.ad_campaigns SET status='payment_pending'
+ WHERE id='20000000-0000-4000-8000-000000000001';
+ IF (SELECT status FROM public.ad_campaigns
+     WHERE id='20000000-0000-4000-8000-000000000001') <> 'payment_pending'
+ THEN RAISE EXCEPTION 'HISTORICAL_SAME_STATUS_WAS_REJECTED'; END IF;
+ RAISE NOTICE 'PASS [ADS-008] verified Owner LIVE positive and historical unchanged-status preserved';
  RAISE NOTICE 'PASS [ADS-008] both verified old RPC positive, direct bypass denied, Owner AAL2 retained';
 END $test$;
 ROLLBACK;
