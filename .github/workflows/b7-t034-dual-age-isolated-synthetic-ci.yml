@@ -84,6 +84,13 @@ jobs:
           CREATE TABLE public.ad_payments(id bigint PRIMARY KEY);
           CREATE TABLE public.ad_history(id bigint PRIMARY KEY);
           CREATE TABLE public.audit_logs(id bigint PRIMARY KEY);
+          ALTER TABLE public.ad_campaigns ADD CONSTRAINT t034_fake_advertiser_fkey
+            FOREIGN KEY (advertiser_id) REFERENCES public.advertisers(id);
+          CREATE FUNCTION public.t034_fake_trigger_fn()
+            RETURNS trigger LANGUAGE plpgsql AS 'BEGIN RETURN NEW; END';
+          CREATE TRIGGER t034_fake_campaign_trigger BEFORE UPDATE
+            ON public.ad_campaigns FOR EACH ROW
+            EXECUTE FUNCTION public.t034_fake_trigger_fn();
           CREATE FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
             RETURNS boolean LANGUAGE sql AS 'SELECT true';
           CREATE FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
@@ -164,7 +171,22 @@ jobs:
           old_policy="$(grep '^09_app_RLS_policy_definitions=' "$tmp/plain/expected_security_identity.txt")"
           new_policy="$(grep '^09_app_RLS_policy_definitions=' "$tmp/policy_changed_security.txt")"
           [[ "$old_policy" != "$new_policy" ]] || { echo 'FAIL [B5 fake negative] policy predicate change missed'; exit 1; }
-          echo 'PASS [B5 fake negative] same-count data change and policy predicate mutation detected'
+          # Same row counts + same business rows, but trigger state and
+          # FK definition are independently corrupted AFTER the snapshot.
+          # 16-metric B5 must notice BOTH, not merely changes to counts.
+          psql -X -v ON_ERROR_STOP=1 -c \
+            'ALTER TABLE public.ad_campaigns DISABLE TRIGGER t034_fake_campaign_trigger' >/dev/null
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-security-parity.sql > "$tmp/trigger_changed_security.txt"
+          old_trigger="$(grep '^12_app_triggers_definitions=' "$tmp/plain/expected_security_identity.txt")"
+          new_trigger="$(grep '^12_app_triggers_definitions=' "$tmp/trigger_changed_security.txt")"
+          [[ "$old_trigger" != "$new_trigger" ]] || { echo 'FAIL [B5 fake negative] disabled trigger invisible'; exit 1; }
+          psql -X -v ON_ERROR_STOP=1 -c \
+            'ALTER TABLE public.ad_campaigns DROP CONSTRAINT t034_fake_advertiser_fkey' >/dev/null
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-security-parity.sql > "$tmp/fk_changed_security.txt"
+          old_fk="$(grep '^13_constraints_definitions_validation=' "$tmp/plain/expected_security_identity.txt")"
+          new_fk="$(grep '^13_constraints_definitions_validation=' "$tmp/fk_changed_security.txt")"
+          [[ "$old_fk" != "$new_fk" ]] || { echo 'FAIL [B5 fake negative] FK deletion invisible'; exit 1; }
+          echo 'PASS [B5 fake negative] same-count data, policy predicate, trigger-enabled and FK deletion detected'
           [[ "$(wc -l < "$tmp/plain/source_db_identity.json")" == 1 ]]
           python3 ci/backup/jb-t034-db-identity.py plan "$tmp/plain/source_db_identity.json" "$tmp/db-plan-fake.sql"
           python3 - "$tmp/plain/source_db_identity.json" "$tmp/extra-grant.json" "$tmp/wrong-owner.json" <<'PY'
