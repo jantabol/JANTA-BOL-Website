@@ -143,12 +143,28 @@ jobs:
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
           jb_t034_snapshot_query ci/backup/jb-t034-restore-baseline.sql "$tmp/plain/expected_identity.txt"
           jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql "$tmp/plain/source_db_identity.json"
+          jb_t034_snapshot_query ci/backup/jb-t034-security-parity.sql "$tmp/plain/expected_security_identity.txt"
+          [[ "$(wc -l < "$tmp/plain/expected_security_identity.txt")" == 16 ]]
           printf '%s\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
           printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES\n' > "$tmp/plain/snapshot_scope.txt"
           jb_t034_snapshot_finish
           grep -Fxq '05_ad_history=0' "$tmp/plain/expected_identity.txt"
           test "$(psql -X -At -c 'SELECT count(*) FROM public.ad_history')" = 1
           echo 'PASS [B3 synthetic] AFTER snapshot source changed, captured archive/manifest stayed at same earlier read-only snapshot'
+          # Same-count mutation: row hash must change even though count does not.
+          psql -X -v ON_ERROR_STOP=1 -c "UPDATE public.articles SET title='FAKE AFTER SNAPSHOT' WHERE id=1" >/dev/null
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-security-parity.sql > "$tmp/current_data_security.txt"
+          if cmp -s "$tmp/plain/expected_security_identity.txt" "$tmp/current_data_security.txt"; then
+            echo 'FAIL [B5 fake negative] same-count row mutation missed'
+            exit 1
+          fi
+          # Independent policy-body mutation must change its digest, not only count.
+          psql -X -v ON_ERROR_STOP=1 -c 'ALTER POLICY fake_articles_public ON public.articles USING (false)' >/dev/null
+          psql -X -At -v ON_ERROR_STOP=1 -f ci/backup/jb-t034-security-parity.sql > "$tmp/policy_changed_security.txt"
+          old_policy="$(grep '^09_app_RLS_policy_definitions=' "$tmp/plain/expected_security_identity.txt")"
+          new_policy="$(grep '^09_app_RLS_policy_definitions=' "$tmp/policy_changed_security.txt")"
+          [[ "$old_policy" != "$new_policy" ]] || { echo 'FAIL [B5 fake negative] policy predicate change missed'; exit 1; }
+          echo 'PASS [B5 fake negative] same-count data change and policy predicate mutation detected'
           [[ "$(wc -l < "$tmp/plain/source_db_identity.json")" == 1 ]]
           python3 ci/backup/jb-t034-db-identity.py plan "$tmp/plain/source_db_identity.json" "$tmp/db-plan-fake.sql"
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
@@ -163,7 +179,7 @@ jobs:
           test "$owner" != "$runner"
           tar -C "$tmp/plain" -cf - roles.sql schema.sql data.sql raw_full.dump \
             raw_inventory.txt backup_utc.txt source_project.txt expected_identity.txt source_db_identity.json \
-            raw_dump_snapshot_id.txt snapshot_scope.txt | zstd -q | \
+            raw_dump_snapshot_id.txt snapshot_scope.txt expected_security_identity.txt | zstd -q | \
             age -r "$owner" -r "$runner" -o "$tmp/backup.tar.zst.age"
           test -s "$tmp/backup.tar.zst.age"
           # Simulate immutable private B2 object. Real transfer is a separate test.
@@ -178,6 +194,7 @@ jobs:
           test -s "$tmp/recovered/raw_full.dump"
           test -s "$tmp/recovered/expected_identity.txt"
           test -s "$tmp/recovered/source_db_identity.json"
+          test -s "$tmp/recovered/expected_security_identity.txt"
           test -s "$tmp/recovered/raw_dump_snapshot_id.txt"
           test -s "$tmp/recovered/snapshot_scope.txt"
           echo 'PASS [G3 synthetic] temporary runner recipient decrypted full fake bundle.'
