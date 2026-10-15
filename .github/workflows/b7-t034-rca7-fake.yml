@@ -29,7 +29,7 @@ jobs:
           bash -n ci/backup/jb-free-offsite-backup.sh
           python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
           grep -Fq 'pg_catalog' ci/backup/jb-t034-security-parity.sql
-          grep -Fq 'aclexplode(c.relacl)' ci/backup/jb-t034-security-parity.sql
+          grep -Fq 'aclexplode(COALESCE(' ci/backup/jb-t034-security-parity.sql
           echo 'T034_RCA7_SAFE_MANUAL_GATE=PASS'
       - name: Pinned PG17 real fake auth-policy/FK deparser and ACL-order equivalence
         shell: bash

@@ -52,7 +52,8 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
-         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ) ) ) ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -215,7 +216,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
-         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ) ) ) ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -423,7 +425,8 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
-         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ) ) ) ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then

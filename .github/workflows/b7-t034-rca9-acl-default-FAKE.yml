@@ -1,0 +1,128 @@
+# Only FAKE disconnected PostgreSQL; no secrets, B2 or production.
+name: T034 RCA9 raw versus effective ACL pg_dump reproduction FAKE
+on:
+  push:
+    branches: [review/t034-rca9-null-vs-default-acl-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/b7-t034-rca9-acl-default-FAKE.yml'
+      - 'ci/backup/jb-t034-security-parity.sql'
+permissions:
+  contents: read
+jobs:
+  fake-pg17-null-vs-explicit-owner-default:
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Reproduce raw ACL representation across real PG17 pg_dump and pg_restore
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          source ci/backup/jb-t034-image-contract.sh
+          clone="t034-rca9-fake-$GITHUB_RUN_ID"
+          temp="$(mktemp -d)"
+          cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$temp"; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 --name "$clone" \
+            -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+                -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'T034_RCA9_PG17_BOOT=HOLD'; exit 1; }
+          q(){ docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin -d "$1" -c "$2" 2> "$temp/query.err"; }
+          [[ "$(q postgres "SELECT current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")" == 'off|template1' ]]
+          q template1 'CREATE DATABASE t034_rca9_source OWNER supabase_admin TEMPLATE template0;' >/dev/null
+          q template1 'CREATE DATABASE t034_rca9_clone OWNER supabase_admin TEMPLATE template0;' >/dev/null
+          q t034_rca9_source 'CREATE SCHEMA private;
+            CREATE TABLE private.rca9_one(id int);
+            CREATE TABLE private.rca9_two(id int);
+            CREATE TABLE private.rca9_three(id int);
+            GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA private TO supabase_admin;
+            ALTER TABLE private.rca9_one ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE private.rca9_two ENABLE ROW LEVEL SECURITY;
+            ALTER TABLE private.rca9_three ENABLE ROW LEVEL SECURITY;' > /dev/null
+          src="$(q t034_rca9_source "SELECT COUNT(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='private' AND c.relacl IS NOT NULL AND c.relacl=acldefault('r',c.relowner)")"
+          [[ "$src" == 3 ]] || { echo 'T034_RCA9_EXPLICIT_DEFAULT_FIXTURE=HOLD'; exit 1; }
+          docker exec -u postgres "$clone" pg_dump -U supabase_admin -Fc -d t034_rca9_source -f /tmp/t034-rca9-source.dump > "$temp/dump.log" 2>&1 ||
+            { echo 'T034_RCA9_DUMP=HOLD'; exit 1; }
+          docker exec -u postgres "$clone" pg_restore -U supabase_admin --exit-on-error \
+            -d t034_rca9_clone /tmp/t034-rca9-source.dump > "$temp/restore.log" 2>&1 ||
+            { echo 'T034_RCA9_RESTORE=HOLD'; exit 1; }
+          clone_null="$(q t034_rca9_clone "SELECT COUNT(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='private' AND c.relacl IS NULL")"
+          clone_default="$(q t034_rca9_clone "SELECT COUNT(*) FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+             WHERE n.nspname='private' AND c.relacl=acldefault('r',c.relowner)")"
+          # A faithful restore might store explicit default ACLs; report fixed
+          # safe summary before any permission canonicalization change.
+          echo "T034_RCA9_FAKE_SOURCE_EXPLICIT_OWNER_DEFAULT=$src"
+          echo "T034_RCA9_FAKE_CLONE_NULL_ACL=$clone_null"
+          echo "T034_RCA9_FAKE_CLONE_EXPLICIT_OWNER_DEFAULT=$clone_default"
+          [[ "$((clone_null+clone_default))" == 3 ]] ||
+            { echo 'T034_RCA9_UNEXPECTED_RESTORED_ACL_FORM=HOLD'; exit 1; }
+          echo 'T034_RCA9_REAL_PGDUMP_RESTORE_REPRESENTATION_REPRO=PASS'
+          # Complete reviewed 16-row manifest requires 8 synthetic protected
+          # tables. Add identical empty stand-ins to BOTH disconnected DBs.
+          # The original three relation ACLs remain untouched.
+          for db in t034_rca9_source t034_rca9_clone; do
+            q "$db" "CREATE TABLE public.articles(id bigint);
+               CREATE TABLE public.ad_campaigns(id bigint);
+               CREATE TABLE public.advertisers(id bigint);
+               CREATE TABLE public.ad_payments(id bigint);
+               CREATE TABLE public.ad_history(id bigint);
+               CREATE TABLE public.audit_logs(id bigint);
+               CREATE SCHEMA auth;
+               CREATE TABLE auth.users(id bigint);
+               CREATE SCHEMA storage;
+               CREATE TABLE storage.objects(id bigint);" > /dev/null
+          done
+          docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-rca9-parity.sql" >/dev/null
+          capture(){
+            docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d "$1" -f /tmp/t034-rca9-parity.sql > "$2" 2> "$temp/parity.err"
+          }
+          capture t034_rca9_source "$temp/security-source"
+          capture t034_rca9_clone "$temp/security-clone"
+          [[ "$(wc -l < "$temp/security-source")" == 16 &&
+             "$(wc -l < "$temp/security-clone")" == 16 ]] ||
+             { echo 'T034_RCA9_FULL_MANIFEST_COVERAGE=HOLD'; exit 1; }
+          cmp -s "$temp/security-source" "$temp/security-clone" ||
+            { echo 'T034_RCA9_EFFECTIVE_OWNER_DEFAULT_ACL_PARITY=HOLD'; exit 1; }
+          echo 'T034_RCA9_FAKE_16_METRIC_NULL_VS_EXPLICIT_DEFAULT=PASS'
+          # Every genuine privilege or security change must still fail.
+          changed10(){
+            capture t034_rca9_clone "$temp/mutated"
+            grep -q '^10_table_owner_acl_RLS=' "$temp/mutated" ||
+              { echo 'T034_RCA9_MISSING_METRIC10=HOLD'; exit 1; }
+            if cmp -s <(grep '^10_table_owner_acl_RLS=' "$temp/security-source") \
+               <(grep '^10_table_owner_acl_RLS=' "$temp/mutated"); then
+              echo 'T034_RCA9_GENUINE_SECURITY_MUTATION_MISSED=HOLD'
+              exit 1
+            fi
+          }
+          q postgres 'CREATE ROLE t034_rca9_negative NOLOGIN;' > /dev/null
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO t034_rca9_negative;' >/dev/null
+          changed10
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO t034_rca9_negative WITH GRANT OPTION;' >/dev/null
+          changed10
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_one FROM t034_rca9_negative;' >/dev/null
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO PUBLIC;' >/dev/null
+          changed10
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_one FROM PUBLIC;' >/dev/null
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_two FROM supabase_admin;' >/dev/null
+          changed10
+          q t034_rca9_clone 'ALTER TABLE private.rca9_three FORCE ROW LEVEL SECURITY;' >/dev/null
+          changed10
+          echo 'T034_RCA9_REAL_PRIVILEGE_GRANTOPTION_PUBLIC_REVOKE_FORCE_RLS_NEGATIVES=PASS'
+          echo 'T034_RCA9_NO_REAL_DB_NO_B2_NO_AGE=PASS'
