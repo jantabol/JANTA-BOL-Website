@@ -23,7 +23,8 @@ grep -Fxq 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARE
 source_label="$(cat "$src/source_project.txt")"
 if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
   [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-     "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+     ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -56,9 +57,18 @@ cleanup(){
 }
 trap cleanup EXIT
 trap 'exit 1' HUP INT TERM
-docker run --platform "$JB_T034_PLATFORM" -d --network none --memory 4g --cpus 2 --pids-limit 200 \
+# No Docker stdout/stderr logging: even bootstrap/server messages may hold private values.
+# PostgreSQL 17 JSON logs stay inside this networkless ephemeral container (0600).
+# Do not replace existing pinned preload/cron/pg_net options.
+docker run --platform "$JB_T034_PLATFORM" -d --network none --log-driver none \
+  --memory 4g --cpus 2 --pids-limit 200 \
   --name "$clone" -e POSTGRES_PASSWORD=ephemeral_internal_only \
-  "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" > /dev/null ||
+  "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" \
+  -c logging_collector=on -c log_destination=jsonlog \
+  -c log_directory=/tmp/t034-private-json -c log_filename=t034 \
+  -c log_file_mode=0600 -c log_min_error_statement=panic \
+  -c log_statement=none -c log_error_verbosity=terse \
+  -c log_parameter_max_length_on_error=0 > /dev/null ||
  fail 'isolated Supabase PostgreSQL image did not start'
 ready=0
 for i in $(seq 1 70); do
@@ -137,7 +147,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
       grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
     fi
     if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-          "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+          ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -173,25 +184,45 @@ if grep -Eq '^[0-9]+;.* SCHEMA - public ' "$temp/archive_toc.txt"; then
     -c 'DROP SCHEMA IF EXISTS public CASCADE;' > "$temp/reset.log" 2>&1 ||
     fail 'cannot prepare blank public schema for archive-owned namespace'
 fi
-if ! docker exec -u postgres "$clone" pg_restore -U supabase_admin -d postgres \
-    --exit-on-error /tmp/input.dump \
-    > "$temp/restore.log" 2>&1; then
-  # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
-  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 ]]; then
-    echo 'T034_VERBOSE_RESTORE_DIAGNOSTICS=SUPPRESSED_ALWAYS (use dedicated fake forensic CI)'
+# Preserve the ORIGINAL outer Docker status. The inner marker distinguishes
+# a completed pg_restore process from Docker exec/startup failure.
+# The client --verbose output stays in 0600 temporary files: NEVER to Actions.
+restore_outer_rc=0
+if docker exec -u postgres -e PGAPPNAME=jb_t034_full_restore "$clone" sh -c '
+  pg_restore --verbose -U supabase_admin -d postgres --exit-on-error /tmp/input.dump
+  rc=$?
+  printf "%s\n" "$rc" > /tmp/t034-pg-restore-exit
+  exit "$rc"
+' > "$temp/restore.log" 2>&1; then
+  :
+else
+  restore_outer_rc=$?
+fi
+if (( restore_outer_rc != 0 )); then
+  restore_inner_rc='UNKNOWN'
+  if docker cp "$clone:/tmp/t034-pg-restore-exit" "$temp/inner_rc" >/dev/null 2>&1; then
+    candidate="$(cat "$temp/inner_rc" 2>/dev/null || true)"
+    if [[ "$candidate" =~ ^([0-9]|[1-9][0-9]{1,2})$ ]] && (( candidate <= 255 )); then
+      restore_inner_rc="$candidate"
+    fi
   fi
-  # Never disclose SQL command, PII, auth rows, or function definitions.
-  # Fixed labels are enough for a safe new root-cause checkpoint.
-  if grep -Fq 'must be able to SET ROLE' "$temp/restore.log"; then
-    echo 'T034_RESTORE_ERROR_CLASS=TARGET_ROLE_PRIVILEGE'
-  elif grep -Fq 'can only create extension in database postgres' "$temp/restore.log"; then
-    echo 'T034_RESTORE_ERROR_CLASS=PG_CRON_DATABASE'
-  elif grep -Eiq 'extension .* is not available|extension .* version .* is not installed' "$temp/restore.log"; then
-    echo 'T034_RESTORE_ERROR_CLASS=EXTENSION_VERSION'
-  elif grep -Fq 'permission denied' "$temp/restore.log"; then
-    echo 'T034_RESTORE_ERROR_CLASS=PERMISSION_DENIED'
+  # Bounded container-state evidence; never call docker logs/inspect full JSON.
+  container_state="$(docker container inspect --format '{{.State.Running}}|{{.State.OOMKilled}}' "$clone" 2>/dev/null)" ||
+    container_state='unknown|unknown'
+  mkdir -m 700 "$temp/pg_json"
+  docker cp "$clone:/tmp/t034-private-json/." "$temp/pg_json/" >/dev/null 2>&1 || true
+  diag="$temp/diagnostics.json"
+  # Both stdout and stderr of the parser are private; validate a freshly
+  # constructed fixed-schema report before displaying ANY diagnostic field.
+  if python3 ci/backup/jb-t034-restore-diagnostics.py capture \
+      --client-log "$temp/restore.log" --json-dir "$temp/pg_json" \
+      --toc "$temp/archive_toc.txt" --outer-rc "$restore_outer_rc" \
+      --inner-rc "$restore_inner_rc" --container-state "$container_state" \
+      --out "$diag" > "$temp/parser.out" 2> "$temp/parser.err"; then
+    python3 ci/backup/jb-t034-restore-diagnostics.py emit \
+      --report "$diag" || echo 'T034_DIAGNOSTICS_INVALID=HOLD'
   else
-    echo 'T034_RESTORE_ERROR_CLASS=OTHER_FAIL_CLOSED'
+    echo 'T034_DIAGNOSTICS_INVALID=HOLD'
   fi
   fail 'FULL PG restore failed (NO production change). Exact Supabase dependency review required.'
 fi
@@ -296,7 +327,8 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
 # version; actual encrypted JANTA BOL backups get NO exception.
 identity_compare_extra=()
 if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-      "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+      ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then

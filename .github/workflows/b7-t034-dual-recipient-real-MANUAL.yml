@@ -41,6 +41,7 @@ jobs:
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
           bash -n ci/backup/jb-t034-shared-snapshot.sh
           python3 -m py_compile ci/backup/jb-t034-db-identity.py
+          python3 -m py_compile ci/backup/jb-t034-restore-diagnostics.py
           python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
           echo 'PASS: dedicated, Founder-only authorized preflight. No DB operations.'
       - name: Install standard AGE, B2, compression and client tools
