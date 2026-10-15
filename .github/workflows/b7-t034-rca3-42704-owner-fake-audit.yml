@@ -49,7 +49,14 @@ jobs:
           missing=0
           for role in postgres supabase_admin supabase_auth_admin \
               supabase_storage_admin supabase_realtime_admin supabase_etl_admin; do
-            grep -Fxq "$role" "$tmp/target_roles" || missing=$((missing+1))
+            if ! grep -Fxq "$role" "$tmp/target_roles"; then
+              missing=$((missing+1))
+              case "$role" in
+                postgres|supabase_admin|supabase_auth_admin|supabase_storage_admin|supabase_realtime_admin|supabase_etl_admin)
+                  echo "T034_RCA3_MISSING_ALLOWLISTED_BUILTIN_ROLE=$role" ;;
+                *) echo "HOLD RCA3 role outside known candidate set"; exit 1 ;;
+              esac
+            fi
           done
           if (( missing == 0 )); then
             echo 'T034_RCA3_FAKE_TARGET_SOURCE_ROLE_CANDIDATES=ALL_PRESENT'
