@@ -13,7 +13,7 @@ import sys
 SCHEMAS = ("public", "private", "auth", "storage")
 FIELDS = ("KIND", "OWNER", "ACL_FORM", "GRANTOR", "GRANTEE",
           "PUBLIC", "PRIVILEGE", "GRANT_OPTION", "ACL_EXACT", "RLS", "FORCE_RLS")
-HEX = re.compile(r"[a-f0-9]{32}\\Z", re.ASCII)
+HEX = re.compile(r"[a-f0-9]{32}\Z", re.ASCII)
 MAX_BYTES = 2_000_000
 MAX_ROWS = 20_000
 
@@ -27,7 +27,7 @@ def load(path: str) -> dict[tuple[str, str], tuple[str, ...]]:
     if p.is_symlink() or not p.is_file() or p.stat().st_size > MAX_BYTES:
         raise Hold()
     raw = p.read_bytes()
-    if not raw or not raw.endswith(b"\\n") or b"\\r" in raw or b"\\0" in raw:
+    if not raw or not raw.endswith(b"\n") or b"\r" in raw or b"\0" in raw:
         raise Hold()
     lines = raw.decode("ascii", errors="strict").splitlines()
     if len(lines) > MAX_ROWS:
