@@ -111,6 +111,21 @@ if [[ "$dual" == 1 ]]; then
     psql -X -v ON_ERROR_STOP=1 -At "$JB_DB_URI" \
       -f /jb-checks/jb-t034-restore-baseline.sql > "$work/plain/expected_identity.txt" ||
     fail 'cannot read harmless exact counts/fingerprints for post-dump baseline'
+  # B1 metadata capture is READ-ONLY and encrypted with the full archive.
+  # WARNING until B3: separate source metadata connection is NOT same-snapshot
+  # as the raw dump; no real restore release until exported snapshot is proven.
+  docker run --rm --network=host \
+    -v "$PWD/ci/backup:/jb-checks:ro" postgres:17 \
+    psql -X -At -v ON_ERROR_STOP=1 "$JB_DB_URI" \
+      -f /jb-checks/jb-t034-db-identity.sql \
+      > "$work/plain/source_db_identity.json" ||
+    fail 'cannot capture source database owner/ACL/locale metadata'
+  [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
+    fail 'invalid source database identity record'
+  python3 ci/backup/jb-t034-db-identity.py plan \
+      "$work/plain/source_db_identity.json" "$work/identity-preflight.sql" ||
+    fail 'source database identity outside reviewed owner/ACL allowlist'
+  rm -f "$work/identity-preflight.sql"
   [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 26 ]] ||
     fail 'invalid metric coverage in source baseline'
   ! grep -q '=MISSING' "$work/plain/expected_identity.txt" ||
@@ -122,7 +137,7 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 # Age secret identity never exists in Actions; owner retains it offline.
 bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
 if [[ "$dual" == 1 ]]; then
-  bundle+=(expected_identity.txt)
+  bundle+=(expected_identity.txt source_db_identity.json)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -154,6 +169,10 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/$f" "$work/recovered/$f" ||
       fail "recovered archive bytes differ from original component $f"
   done
+  [[ -s "$work/recovered/source_db_identity.json" ]] ||
+    fail 'source DB owner/ACL manifest missing after encryption'
+  cmp -s "$work/plain/source_db_identity.json" "$work/recovered/source_db_identity.json" ||
+    fail 'source DB identity differs after encrypted B2 readback'
   [[ -s "$work/recovered/expected_identity.txt" ]] ||
     fail 'signed encrypted bundle lacks source snapshot-identity baseline'
   cmp -s "$work/plain/expected_identity.txt" "$work/recovered/expected_identity.txt" ||
