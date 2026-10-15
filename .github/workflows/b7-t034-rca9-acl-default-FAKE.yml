@@ -72,4 +72,57 @@ jobs:
           [[ "$((clone_null+clone_default))" == 3 ]] ||
             { echo 'T034_RCA9_UNEXPECTED_RESTORED_ACL_FORM=HOLD'; exit 1; }
           echo 'T034_RCA9_REAL_PGDUMP_RESTORE_REPRESENTATION_REPRO=PASS'
+          # Complete reviewed 16-row manifest requires 8 synthetic protected
+          # tables. Add identical empty stand-ins to BOTH disconnected DBs.
+          # The original three relation ACLs remain untouched.
+          for db in t034_rca9_source t034_rca9_clone; do
+            q "$db" "CREATE TABLE public.articles(id bigint);
+               CREATE TABLE public.ad_campaigns(id bigint);
+               CREATE TABLE public.advertisers(id bigint);
+               CREATE TABLE public.ad_payments(id bigint);
+               CREATE TABLE public.ad_history(id bigint);
+               CREATE TABLE public.audit_logs(id bigint);
+               CREATE SCHEMA auth;
+               CREATE TABLE auth.users(id bigint);
+               CREATE SCHEMA storage;
+               CREATE TABLE storage.objects(id bigint);" > /dev/null
+          done
+          docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-rca9-parity.sql" >/dev/null
+          capture(){
+            docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d "$1" -f /tmp/t034-rca9-parity.sql > "$2" 2> "$temp/parity.err"
+          }
+          capture t034_rca9_source "$temp/security-source"
+          capture t034_rca9_clone "$temp/security-clone"
+          [[ "$(wc -l < "$temp/security-source")" == 16 &&
+             "$(wc -l < "$temp/security-clone")" == 16 ]] ||
+             { echo 'T034_RCA9_FULL_MANIFEST_COVERAGE=HOLD'; exit 1; }
+          cmp -s "$temp/security-source" "$temp/security-clone" ||
+            { echo 'T034_RCA9_EFFECTIVE_OWNER_DEFAULT_ACL_PARITY=HOLD'; exit 1; }
+          echo 'T034_RCA9_FAKE_16_METRIC_NULL_VS_EXPLICIT_DEFAULT=PASS'
+          # Every genuine privilege or security change must still fail.
+          changed10(){
+            capture t034_rca9_clone "$temp/mutated"
+            grep -q '^10_table_owner_acl_RLS=' "$temp/mutated" ||
+              { echo 'T034_RCA9_MISSING_METRIC10=HOLD'; exit 1; }
+            if cmp -s <(grep '^10_table_owner_acl_RLS=' "$temp/security-source") \
+               <(grep '^10_table_owner_acl_RLS=' "$temp/mutated"); then
+              echo 'T034_RCA9_GENUINE_SECURITY_MUTATION_MISSED=HOLD'
+              exit 1
+            fi
+          }
+          q postgres 'CREATE ROLE t034_rca9_negative NOLOGIN;' > /dev/null
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO t034_rca9_negative;' >/dev/null
+          changed10
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO t034_rca9_negative WITH GRANT OPTION;' >/dev/null
+          changed10
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_one FROM t034_rca9_negative;' >/dev/null
+          q t034_rca9_clone 'GRANT SELECT ON private.rca9_one TO PUBLIC;' >/dev/null
+          changed10
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_one FROM PUBLIC;' >/dev/null
+          q t034_rca9_clone 'REVOKE ALL ON private.rca9_two FROM supabase_admin;' >/dev/null
+          changed10
+          q t034_rca9_clone 'ALTER TABLE private.rca9_three FORCE ROW LEVEL SECURITY;' >/dev/null
+          changed10
+          echo 'T034_RCA9_REAL_PRIVILEGE_GRANTOPTION_PUBLIC_REVOKE_FORCE_RLS_NEGATIVES=PASS'
           echo 'T034_RCA9_NO_REAL_DB_NO_B2_NO_AGE=PASS'
