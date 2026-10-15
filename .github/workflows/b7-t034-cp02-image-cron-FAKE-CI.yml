@@ -90,10 +90,19 @@ jobs:
           echo 'PASS [CP02 image]: seven source extension versions available, pg_cron + pg_net load correct versions'
           q 'CREATE TABLE public.t034_fake_cron_marker (id integer)' >/dev/null
           q "SELECT cron.schedule('* * * * *', 'INSERT INTO public.t034_fake_cron_marker VALUES (1)')" > "$t/scheduled.txt"
+          # Completely fake loopback URL, networkless clone. The pg_net worker
+          # MUST NOT process restored-postgres queues when routed to template1.
+          net_before="$(q 'SELECT count(*) FROM net._http_response')"
+          net_id="$(q "SELECT net.http_get('http://127.0.0.1:9/t034-synthetic-only')")"
+          [[ "$net_id" =~ ^[0-9]+$ ]] || { echo 'FAIL: fake pg_net queue insert unavailable'; exit 1; }
           sleep 75
           [[ "$(q 'SELECT count(*) FROM public.t034_fake_cron_marker')" == 0 ]] || {
             echo 'FAIL: inert cron scheduling claim false'; exit 1;
           }
           [[ "$(q 'SHOW cron.launch_active_jobs')" == off ]] || exit 1
-          echo 'PASS [CP02 cron]: synthetic active schedule did NOT execute; schedule metadata preserved'
+          net_after="$(q 'SELECT count(*) FROM net._http_response')"
+          [[ "$net_after" == "$net_before" ]] || { echo 'FAIL: pg_net worker processed fake queue'; exit 1; }
+          [[ "$(q "SELECT count(*) FROM net.http_request_queue WHERE id=$net_id")" == 1 ]] ||
+            { echo 'FAIL: pg_net fake queue was unexpectedly consumed'; exit 1; }
+          echo 'PASS [CP02 cron/net]: active cron and pg_net fake requests stayed inert; metadata preserved'
           echo 'SYNTHETIC ONLY; NO LIVE DB, B2, owner key, GitHub data artifacts, port or network'
