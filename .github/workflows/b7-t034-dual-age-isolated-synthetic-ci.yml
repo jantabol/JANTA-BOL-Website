@@ -167,6 +167,24 @@ jobs:
           echo 'PASS [B5 fake negative] same-count data change and policy predicate mutation detected'
           [[ "$(wc -l < "$tmp/plain/source_db_identity.json")" == 1 ]]
           python3 ci/backup/jb-t034-db-identity.py plan "$tmp/plain/source_db_identity.json" "$tmp/db-plan-fake.sql"
+          python3 - "$tmp/plain/source_db_identity.json" "$tmp/extra-grant.json" "$tmp/wrong-owner.json" <<'PY'
+          import json,sys
+          src=json.load(open(sys.argv[1]))
+          bad_acl=dict(src)
+          bad_acl['acl']=list(src['acl'])+[dict(grantee='anon',grantor='postgres',privilege='CREATE',grantable=False)]
+          json.dump(bad_acl,open(sys.argv[2],'w'))
+          bad_owner=dict(src);bad_owner['owner']='supabase_admin'
+          json.dump(bad_owner,open(sys.argv[3],'w'))
+          PY
+          if python3 ci/backup/jb-t034-db-identity.py compare "$tmp/plain/source_db_identity.json" "$tmp/extra-grant.json" >/dev/null 2>&1; then
+            echo 'FAIL [B1 negative] added anon CREATE grant was not detected'
+            exit 1
+          fi
+          if python3 ci/backup/jb-t034-db-identity.py plan "$tmp/wrong-owner.json" "$tmp/invalid-plan.sql" >/dev/null 2>&1; then
+            echo 'FAIL [B1 negative] wrong database owner was allowed'
+            exit 1
+          fi
+          echo 'PASS [B1 negative] extra database grant and wrong owner rejected'
           bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
           bash -n ci/backup/jb-t034-shared-snapshot.sh
           python3 -m py_compile ci/backup/jb-t034-db-identity.py
