@@ -24,7 +24,8 @@ source_label="$(cat "$src/source_project.txt")"
 if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
   [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
      ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -119,6 +120,23 @@ super="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
   -c 'SELECT rolsuper FROM pg_roles WHERE rolname=current_user' 2>/dev/null)" ||
   fail 'isolated built-in supabase_admin superuser not available'
 [[ "$super" == t ]] || fail 'isolated restore cannot preserve Supabase role ownership'
+# Source pg_dump is per-DB: a hosted global NOLOGIN owner role may be absent
+# on the pinned target image. Replay only the independently verified missing
+# supabase_realtime_admin role+source memberships inside this NETWORKLESS clone.
+# Never connect to source DB; never weaken --owner/ACL or ignore failed objects.
+docker cp ci/backup/jb-t034-disposable-realtime-role.sql \
+  "$clone:/tmp/t034-disposable-realtime-role.sql" >/dev/null 2>&1 ||
+  fail 'cannot deliver fixed reviewed disposable target role contract'
+docker exec -u root "$clone" sh -c \
+  'chown postgres:postgres /tmp/t034-disposable-realtime-role.sql && chmod 600 /tmp/t034-disposable-realtime-role.sql' \
+  >/dev/null 2>&1 || fail 'cannot secure disposable owner role contract'
+docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d template1 -f /tmp/t034-disposable-realtime-role.sql \
+  > "$temp/realtime_role.log" 2>&1 ||
+  fail 'exact source NOLOGIN Realtime owner role/permissions rejected on disposable target'
+grep -Fxq 'T034_TARGET_REALTIME_ROLE_SECURITY_REPLAY=PASS' "$temp/realtime_role.log" ||
+  fail 'no proof of exact disposable Supabase Realtime owner role'
+printf 'T034_DISPOSABLE_NOLOGIN_REALTIME_OWNER=PASS\\n'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
   > "$temp/drop.log" 2>&1 ||
@@ -148,7 +166,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
     fi
     if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
           ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -328,7 +347,8 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
 identity_compare_extra=()
 if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
