@@ -202,6 +202,19 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
+[[ -s "$src/expected_security_identity.txt" ]] ||
+ fail 'deep app/auth/storage security manifest missing'
+[[ "$(wc -l < "$src/expected_security_identity.txt")" == 16 ]] ||
+ fail 'deep security manifest coverage incomplete'
+docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-security.sql" >/dev/null 2>&1 ||
+ fail 'cannot deliver reviewed deep parity SQL into networkless clone'
+docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+ -U supabase_admin -d postgres -f /tmp/t034-security.sql \
+ > "$temp/clone_security_identity.txt" 2> "$temp/security.err" ||
+ fail 'cannot run deep security/data parity inside networkless clone'
+cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt" ||
+ fail 'restored full rows or security definitions differ from protected source snapshot'
+printf 'T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH\n'
 # Fetch target database's canonical identity via identical reviewed SELECT.
 # Never print JSON grant/setting contents (keep inside ephemeral protected path).
 docker cp ci/backup/jb-t034-db-identity.sql "$clone:/tmp/t034-db-identity.sql" >/dev/null 2>&1 ||
