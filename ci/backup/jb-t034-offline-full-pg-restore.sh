@@ -38,8 +38,24 @@ source ci/backup/jb-t034-image-contract.sh
 # The host MUST have PostgreSQL 17 compatible image prepared before this step.
 clone="jb-t034-full-pg17-$RANDOM-$RANDOM"
 temp="$(mktemp -d)"
-cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$temp"; }
-trap cleanup EXIT HUP INT TERM
+cleanup(){
+  local status=$?
+  # Restore caller's failure status; do NOT silence failed teardown.
+  trap - EXIT HUP INT TERM
+  if docker container inspect "$clone" >/dev/null 2>&1; then
+    if ! docker rm -f "$clone" >/dev/null 2>&1; then
+      echo 'T034_OFFLINE_CLONE_CLEANUP=FAILED' >&2
+      status=1
+    fi
+  fi
+  if ! rm -rf -- "$temp"; then
+    echo 'T034_EPHEMERAL_PLAINTEXT_CLEANUP=FAILED' >&2
+    status=1
+  fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
 docker run --platform "$JB_T034_PLATFORM" -d --network none --memory 4g --cpus 2 --pids-limit 200 \
   --name "$clone" -e POSTGRES_PASSWORD=ephemeral_internal_only \
   "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" > /dev/null ||
