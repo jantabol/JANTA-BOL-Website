@@ -152,6 +152,37 @@ BEGIN
               '20000000-0000-4000-8000-000000000004');
  IF (SELECT count(*) FROM public.ad_campaigns WHERE status='paid')<>2
  THEN RAISE EXCEPTION 'VERIFIED_OWNER_PAID_REVERSION_BROKEN'; END IF;
+ -- A paid campaign binds payment/history to the original advertiser.
+ -- Changing advertiser_id with an unchanged paid status must not launder
+ -- approved ledger receipts onto an unverified advertiser (direct SQL).
+ BEGIN
+  UPDATE public.ad_campaigns SET advertiser_id='10000000-0000-4000-8000-000000000002'
+  WHERE id='20000000-0000-4000-8000-000000000003';
+  RAISE EXCEPTION 'PAID_CAMPAIGN_ADVERTISER_REBIND_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+  IF msg<>'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
+  THEN RAISE EXCEPTION 'UNEXPECTED_PAID_REBIND_RESULT: %',msg;END IF;
+ END;
+ -- Historical HIGH-risk payment_pending must also remain bound to the
+ -- original identity, even if only advertiser_id is updated.
+ BEGIN
+  UPDATE public.ad_campaigns SET advertiser_id='10000000-0000-4000-8000-000000000003'
+  WHERE id='20000000-0000-4000-8000-000000000001';
+  RAISE EXCEPTION 'HIGH_PENDING_ADVERTISER_REBIND_BYPASS';
+ EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+  IF msg<>'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
+  THEN RAISE EXCEPTION 'UNEXPECTED_HIGH_REBIND_RESULT: %',msg;END IF;
+ END;
+ IF (SELECT advertiser_id FROM public.ad_campaigns
+     WHERE id='20000000-0000-4000-8000-000000000003')
+      <> '10000000-0000-4000-8000-000000000003'
+ OR (SELECT advertiser_id FROM public.ad_campaigns
+     WHERE id='20000000-0000-4000-8000-000000000001')
+      <> '10000000-0000-4000-8000-000000000001'
+ THEN RAISE EXCEPTION 'ADVERTISER_REBIND_CHANGED_PAYMENT_IDENTITY'; END IF;
+ RAISE NOTICE 'PASS [ADS-008 reassignment] paid ledger and historical pending advertiser identity locked';
  -- A harmless same-status write of the historical high-risk pending record
  -- is NOT an illegal new transition and must not corrupt its state.
  UPDATE public.ad_campaigns SET status='payment_pending'
