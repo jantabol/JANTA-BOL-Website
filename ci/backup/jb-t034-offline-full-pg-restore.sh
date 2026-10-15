@@ -98,6 +98,13 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' ]]; then
       grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
     fi
+    if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+          "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+          "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
+          "${SUPABASE_DB_PASSWORD:-}" == '' &&
+          "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
+      grep -m 3 -E 'ERROR:|FATAL:' "$temp/create.log" || true
+    fi
     if grep -Eiq 'invalid locale|collation|locale provider|ICU' "$temp/create.log"; then
       echo 'T034_DB_SETUP_ERROR_CLASS=LOCALE_PROVIDER'
     elif grep -Eiq 'syntax error|unrecognized option' "$temp/create.log"; then
