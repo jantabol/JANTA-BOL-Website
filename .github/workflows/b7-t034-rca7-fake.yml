@@ -118,9 +118,9 @@ jobs:
                      "CREATE TABLE public.ad_payments(id bigint)" \
                      "CREATE TABLE public.ad_history(id bigint)" \
                      "CREATE TABLE public.audit_logs(id bigint)" \
-                     "CREATE TABLE auth.users(id uuid)" \
+                     "CREATE TABLE IF NOT EXISTS auth.users(id uuid)" \
                      "CREATE SCHEMA IF NOT EXISTS storage" \
-                     "CREATE TABLE storage.objects(id bigint)"; do
+                     "CREATE TABLE IF NOT EXISTS storage.objects(id bigint)"; do
             q "$sql" >/dev/null
           done
           docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-rca7-parity.sql" >/dev/null
