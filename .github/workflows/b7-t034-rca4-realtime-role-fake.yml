@@ -1,0 +1,117 @@
+# T034 RCA4 strict disposable-only ROLE/TYPE 42704 reproduction (FAKE DATA).
+# No production secrets, B2, real archive, owner key, external network or port.
+name: T034 RCA4 missing realtime owner FAKE restore
+on:
+  push:
+    branches: [review/t034-rca4-realtime-role-target-only-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - 'ci/backup/jb-t034-disposable-realtime-role.sql'
+      - '.github/workflows/b7-t034-rca4-realtime-role-fake.yml'
+permissions:
+  contents: read
+jobs:
+  synthetic-real-sqlstate-and-minimum-role:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Original source guards and no live credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          echo 'PASS RCA4 FAKE unmodified manual Founder approval and exact SHA gates'
+      - name: Reproduce missing TYPE owner then fix on pinned isolated PG17 clone
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          source ci/backup/jb-t034-image-contract.sh
+          clone="jb-t034-rca4-fake-$GITHUB_RUN_ID"
+          tmp="$(mktemp -d)"
+          cleanup(){
+            docker rm -f "$clone" >/dev/null 2>&1 || true
+            rm -rf -- "$tmp"
+          }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 \
+            --name "$clone" -e POSTGRES_PASSWORD=FAKE_ONLY \
+            "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" >/dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else
+              stable=0
+            fi
+            sleep 2
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'HOLD RCA4 fake PG bootstrap'; exit 1; }
+          q(){ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c "$1"; }
+          safe="$(q "SELECT current_setting('cron.database_name')||'|'||current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')")"
+          [[ "$safe" == 'postgres|off|template1' ]] || { echo 'HOLD RCA4 fake worker isolation'; exit 1; }
+          test "$(q "SELECT count(*) FROM pg_roles WHERE rolname='supabase_realtime_admin'")" = 0 ||
+             { echo 'HOLD RCA4 missing role expected by this exact pinned image'; exit 1; }
+          docker cp ci/backup/jb-t034-disposable-realtime-role.sql "$clone:/tmp/role.sql" >/dev/null
+          docker exec -u root "$clone" chown postgres:postgres /tmp/role.sql >/dev/null
+          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+            -f /tmp/role.sql > "$tmp/role1.log" 2>&1 ||
+            { echo 'HOLD RCA4 safe role replay failed'; exit 1; }
+          grep -Fxq 'T034_TARGET_REALTIME_ROLE_SECURITY_REPLAY=PASS' "$tmp/role1.log" ||
+            { echo 'HOLD RCA4 initial role proof'; exit 1; }
+          q "CREATE SCHEMA t034_rca4 AUTHORIZATION supabase_admin;
+             CREATE TYPE t034_rca4.fake_enum AS ENUM ('FAKE');
+             ALTER TYPE t034_rca4.fake_enum OWNER TO supabase_realtime_admin" > /dev/null
+          docker exec -u postgres "$clone" pg_dump -U supabase_admin -Fc -n t034_rca4 \
+            -f /tmp/t034-fake-owned-type.dump -d postgres >/dev/null
+          q 'DROP SCHEMA t034_rca4 CASCADE' > /dev/null
+          q 'REVOKE anon, authenticated, service_role FROM supabase_realtime_admin;
+             DROP ROLE supabase_realtime_admin' > /dev/null
+          test "$(q "SELECT count(*) FROM pg_roles WHERE rolname='supabase_realtime_admin'")" = 0
+          if docker exec -u postgres "$clone" pg_restore --exit-on-error --verbose \
+            -U supabase_admin -d postgres /tmp/t034-fake-owned-type.dump \
+            > "$tmp/fail.log" 2>&1; then
+            echo 'HOLD RCA4 deliberately absent fake TYPE owner did not fail'
+            exit 1
+          fi
+          grep -Eq 'role "supabase_realtime_admin" does not exist' "$tmp/fail.log" ||
+            { echo 'HOLD RCA4 fake failure did not prove missing role'; exit 1; }
+          grep -Eq 'from TOC entry [0-9]+; .* TYPE ' "$tmp/fail.log" ||
+            { echo 'HOLD RCA4 fake failure not correlated to TYPE TOC'; exit 1; }
+          echo 'T034_RCA4_FAKE_PG_RESTORE_TYPE_OWNER_MISSING_REPRO=PASS'
+          q 'DROP SCHEMA IF EXISTS t034_rca4 CASCADE' >/dev/null
+          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+            -f /tmp/role.sql > "$tmp/role2.log" 2>&1 ||
+            { echo 'HOLD RCA4 corrected disposable role replay failed'; exit 1; }
+          docker exec -u postgres "$clone" pg_restore --exit-on-error \
+            -U supabase_admin -d postgres /tmp/t034-fake-owned-type.dump \
+            > "$tmp/fixed.log" 2>&1 ||
+            { echo 'HOLD RCA4 same fake TYPE archive did not restore after safe role'; exit 1; }
+          owner="$(q "SELECT pg_get_userbyid(t.typowner) FROM pg_type t JOIN pg_namespace n ON n.oid=t.typnamespace WHERE n.nspname='t034_rca4' AND t.typname='fake_enum'")"
+          [[ "$owner" == supabase_realtime_admin ]] || { echo 'HOLD RCA4 owned TYPE changed'; exit 1; }
+          flags="$(q "SELECT rolcanlogin||'|'||rolinherit||'|'||rolcreaterole||'|'||rolbypassrls FROM pg_roles WHERE rolname='supabase_realtime_admin'")"
+          [[ "$flags" == 'false|false|false|false' || "$flags" == 'f|f|f|f' ]] ||
+            { echo 'HOLD RCA4 role unexpectedly privileged'; exit 1; }
+          docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 -U supabase_admin -d template1 \
+            -f /tmp/role.sql > "$tmp/idempotent.log" 2>&1 ||
+            { echo 'HOLD RCA4 role replay not idempotent'; exit 1; }
+          q "ALTER ROLE supabase_realtime_admin CREATEROLE" >/dev/null
+          if docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
+             -U supabase_admin -d template1 -f /tmp/role.sql \
+             > "$tmp/security-negative.log" 2>&1; then
+            echo 'HOLD RCA4 privilege escalation not rejected'
+            exit 1
+          fi
+          echo 'T034_RCA4_FAKE_TYPE_RESTORE_AFTER_EXACT_ROLE=PASS'
+          echo 'T034_RCA4_ROLE_IDEMPOTENCE_AND_ESCALATION_NEGATIVE=PASS'
+          echo 'NO LIVE SQL, B2, real archive, owner key, open Docker port or production change'
