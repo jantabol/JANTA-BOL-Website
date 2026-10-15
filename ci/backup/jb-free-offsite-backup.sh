@@ -41,7 +41,13 @@ if [[ "$dual" == 1 ]]; then
 fi
 
 work="$(mktemp -d)"
-cleanup() { rm -rf -- "$work"; }
+cleanup() {
+  # A crashed or interrupted export must release its PG snapshot transaction.
+  if declare -F jb_t034_snapshot_finish >/dev/null; then
+    jb_t034_snapshot_finish
+  fi
+  rm -rf -- "$work"
+}
 trap cleanup EXIT HUP INT TERM
 mkdir -m 700 "$work/plain"
 # Runner private identity never enters GitHub logs, artifact, B2, tar or chat.
@@ -95,7 +101,17 @@ supabase db dump --db-url "$JB_DB_URI" --use-copy --data-only -f "$work/plain/da
 # Default legacy manual backup path unchanged. New explicitly authorized
 # double-recipient DR mode preserves table/function owners and original ACLs.
 raw_dump_args=(--format=custom --file=/backup/raw_full.dump)
-if [[ "$dual" == 0 ]]; then raw_dump_args+=(--no-owner); fi
+if [[ "$dual" == 0 ]]; then
+  raw_dump_args+=(--no-owner)
+else
+  source ci/backup/jb-t034-shared-snapshot.sh
+  JB_T034_SNAPSHOT_WORK="$work"
+  jb_t034_snapshot_start || fail 'cannot maintain READ-ONLY exported source snapshot'
+  raw_dump_args+=(--snapshot="$JB_T034_SNAPSHOT_ID")
+  printf '%s\n' "$JB_T034_SNAPSHOT_ID" > "$work/plain/raw_dump_snapshot_id.txt"
+  printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO\n' \
+    > "$work/plain/snapshot_scope.txt"
+fi
 docker run --rm --network=host -v "$work/plain:/backup" postgres:17 \
   pg_dump "${raw_dump_args[@]}" "$JB_DB_URI" >/dev/null
 docker run --rm -v "$work/plain:/backup:ro" postgres:17 \
@@ -104,22 +120,16 @@ for fname in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt; do
   test -s "$work/plain/$fname" || fail "empty backup component $fname"
 done
 if [[ "$dual" == 1 ]]; then
-  # This deterministic read-only metadata query is the exact post-dump source
-  # identity to compare with a newly restored FULL isolated PostgreSQL database.
-  docker run --rm --network=host \
-    -v "$PWD/ci/backup:/jb-checks:ro" postgres:17 \
-    psql -X -v ON_ERROR_STOP=1 -At "$JB_DB_URI" \
-      -f /jb-checks/jb-t034-restore-baseline.sql > "$work/plain/expected_identity.txt" ||
-    fail 'cannot read harmless exact counts/fingerprints for post-dump baseline'
-  # B1 metadata capture is READ-ONLY and encrypted with the full archive.
-  # WARNING until B3: separate source metadata connection is NOT same-snapshot
-  # as the raw dump; no real restore release until exported snapshot is proven.
-  docker run --rm --network=host \
-    -v "$PWD/ci/backup:/jb-checks:ro" postgres:17 \
-    psql -X -At -v ON_ERROR_STOP=1 "$JB_DB_URI" \
-      -f /jb-checks/jb-t034-db-identity.sql \
-      > "$work/plain/source_db_identity.json" ||
-    fail 'cannot capture source database owner/ACL/locale metadata'
+  # Both manifests import the VERY SAME exported snapshot as raw pg_dump.
+  # No fresh-count fallback is allowed after concurrent production writes.
+  jb_t034_snapshot_query ci/backup/jb-t034-restore-baseline.sql \
+    "$work/plain/expected_identity.txt" ||
+    fail 'cannot read count/RPC manifest in exported snapshot'
+  jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql \
+    "$work/plain/source_db_identity.json" ||
+    fail 'cannot read source owner/ACL/locale in exported snapshot'
+  jb_t034_snapshot_finish
+  printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
   [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
     fail 'invalid source database identity record'
   python3 ci/backup/jb-t034-db-identity.py plan \
@@ -137,7 +147,7 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 # Age secret identity never exists in Actions; owner retains it offline.
 bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
 if [[ "$dual" == 1 ]]; then
-  bundle+=(expected_identity.txt source_db_identity.json)
+  bundle+=(expected_identity.txt source_db_identity.json raw_dump_snapshot_id.txt snapshot_scope.txt)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -168,6 +178,11 @@ if [[ "$dual" == 1 ]]; then
     [[ -s "$work/recovered/$f" ]] || fail "missing recovered archive component $f"
     cmp -s "$work/plain/$f" "$work/recovered/$f" ||
       fail "recovered archive bytes differ from original component $f"
+  done
+  for f in raw_dump_snapshot_id.txt snapshot_scope.txt; do
+    [[ -s "$work/recovered/$f" ]] || fail 'exported source snapshot metadata missing after AGE'
+    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
+      fail 'source snapshot evidence differs after AGE decrypt'
   done
   [[ -s "$work/recovered/source_db_identity.json" ]] ||
     fail 'source DB owner/ACL manifest missing after encryption'
