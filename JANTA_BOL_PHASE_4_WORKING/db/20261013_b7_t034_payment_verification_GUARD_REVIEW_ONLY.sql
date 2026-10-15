@@ -94,8 +94,13 @@ BEGIN
   -- advertiser without firing the original OF status,paid_at trigger.
   -- A declined historical HIGH/payment_pending row remains untouched.
   IF TG_OP='UPDATE'
-     AND OLD.status IN ('approved','payment_pending','paid','live')
-     AND NEW.advertiser_id IS DISTINCT FROM OLD.advertiser_id THEN
+     AND NEW.advertiser_id IS DISTINCT FROM OLD.advertiser_id
+     AND (
+       OLD.status IN ('approved','payment_pending','paid','live')
+       OR OLD.approved_at IS NOT NULL
+       OR OLD.paid_at IS NOT NULL
+       OR EXISTS(SELECT 1 FROM public.ad_payments p WHERE p.campaign_id=OLD.id)
+     ) THEN
     RAISE EXCEPTION 'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
       USING ERRCODE='23514';
   END IF;
