@@ -28,3 +28,13 @@ GitHub Actions runs **38684890024** and **38685120217**, each **2/2 JOBS SUCCESS
 - Any change in current LIVE hashes/ACL/DDL since source inspection requires fresh drift analysis before migration.
 
 **Verdict: CP-03 ADS-008 affected fake security regression = PASS scoped to isolated code+CI; full CP-03 and T034 remain HOLD pending real gates. NO FAKE PASS.**
+
+
+## CP-03 NEW FIRST-DIVERGENCE SECURITY PROOF — 15 Oct 2026
+- **RED run 38692324250 / source 0e4ab5c2cebf**: existing trigger guarded `status,paid_at` but NOT `advertiser_id`; a privileged direct UPDATE silently rebound an already-PAID campaign to a different unverified advertiser, without changing paid status. GitHub CI caught `UNEXPECTED_PAID_REBIND_RESULT: PAID_CAMPAIGN_ADVERTISER_REBIND_BYPASS`. Preserved intentional RED failure as evidence.
+- **Minimum Safe Fix**: trigger also watches `advertiser_id`; after approval, historical payment, paid_at or a binding status, campaign financial identity cannot be silently reassigned. Existing original functions and rows unchanged.
+- **GREEN run 38692426794 / b6cfd0b4db94**: exact same negative tests pass on disposable PG17, including historical high-risk `payment_pending` and paid normal campaign identity.
+- **Extended GREEN run 38692631084 / 84179cfc235d44b2e687c6aaec820da390355f78**: direct reassignment is rejected even after a PAID campaign becomes PAUSED, with unmodified prior approval/payment fields. Positive authorized LIVE→PAID and PAUSED→PAID flows still pass. Both ADS008 payment job and previous enquiry/overloads job **SUCCESS (2/2)**.
+- Read-only LIVE Supabase parity, after green CI: **7 campaigns, 0 payments, 0 `b7_t034_*` triggers**, 1 historical HIGH-risk pending case. This proves the proposed guard was **NOT DEPLOYED**; no LIVE DDL or payment writes.
+- Pending Founder-level business decision before any production deploy: approved/paid campaign advertiser reassignment is rejected and would require separate explicit controlled redesign; this is conservative financial-accountability behavior. No claim of deployed API/Android E2/E3/E5 testing.
+- **Android / AGE:** Founder does NOT have Termux; previous Android security warning must NOT be bypassed. No untrusted APK or web private-key paste. Offline OWNER paper AGE decrypt G5 **HOLD** until trusted owner-controlled environment is available.
