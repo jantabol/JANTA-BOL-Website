@@ -28,6 +28,14 @@ SELECT jsonb_build_object(
  'ctype',d.datctype,
  'locale',d.datlocale,
  'collversion',d.datcollversion,
- 'acl',g.acl
+ 'acl',g.acl,
+ 'database_settings',COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'role',CASE WHEN s.setrole=0 THEN 'ALL_ROLES'
+                  ELSE pg_get_userbyid(s.setrole) END,
+      'options',to_jsonb(s.setconfig)
+    ) ORDER BY s.setrole)
+    FROM pg_db_role_setting s WHERE s.setdatabase=d.oid
+ ),'[]'::jsonb)
 )::text
 FROM db d JOIN grants g USING(datname);
