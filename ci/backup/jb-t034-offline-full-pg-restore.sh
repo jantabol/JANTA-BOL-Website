@@ -287,6 +287,18 @@ fi
 grep -Eiq 'permission denied' "$temp/anon-negative.err" ||
   fail 'anonymous payment negative was not a verified ACL denial'
 printf 'T034_ANON_REAL_ROLE_ARTICLE_READ_AND_PAYMENT_DENIAL=PASS\n'
+# Validate sequence NEXT-VALUE SAFETY of the directly affected business
+# history/audit tables on the isolated clone, with zero sequence mutations.
+docker cp ci/backup/jb-t034-sequence-nextvalue-safety.sql \
+  "$clone:/tmp/t034-sequence-safety.sql" >/dev/null 2>&1 ||
+ fail 'cannot copy reviewed sequence safety query into isolated clone'
+docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -f /tmp/t034-sequence-safety.sql \
+  > "$temp/sequence-safety.log" 2>&1 ||
+ fail 'restored app/audit sequence state may collide with existing rows'
+grep -Fq 'T034_AD_HISTORY_AUDIT_SEQUENCE_SAFETY=PASS' "$temp/sequence-safety.log" ||
+ fail 'restored app/audit sequence safety proof missing'
+printf 'T034_AFFECTED_HISTORY_AUDIT_SEQUENCE_NEXTVALUE=PASS\n'
 # Fetch target database's canonical identity via identical reviewed SELECT.
 # Never print JSON grant/setting contents (keep inside ephemeral protected path).
 docker cp ci/backup/jb-t034-db-identity.sql "$clone:/tmp/t034-db-identity.sql" >/dev/null 2>&1 ||
