@@ -19,6 +19,15 @@ source_snap="$(cat "$src/raw_dump_snapshot_id.txt")"
  fail 'invalid or missing raw pg_dump shared-snapshot token'
 grep -Fxq 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO' \
   "$src/snapshot_scope.txt" || fail 'non-authoritative snapshot scope declaration'
+# V2 parity contract must be identical to the SQL which captured the SOURCE
+# digest; old archives are not silently reinterpreted under a new canonicalizer.
+[[ -s "$src/security_parity_contract_sha256.txt" ]] ||
+  fail 'reviewed source security parity contract fingerprint missing'
+archive_sql_sha="$(cat "$src/security_parity_contract_sha256.txt")"
+[[ "$archive_sql_sha" =~ ^[a-f0-9]{64}$ ]] ||
+  fail 'invalid source security parity contract fingerprint'
+[[ "$archive_sql_sha" == "$(sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1)" ]] ||
+  fail 'source snapshot and clone security parity SQL versions differ'
 [[ -s "$src/source_project.txt" ]] || fail 'missing source project identity'
 source_label="$(cat "$src/source_project.txt")"
 if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
@@ -27,7 +36,8 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ) ) ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -188,7 +198,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ) ) ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -378,7 +389,8 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
-       "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ) ) ) ) &&
+       ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
