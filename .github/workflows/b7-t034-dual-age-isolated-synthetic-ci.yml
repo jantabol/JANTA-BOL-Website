@@ -143,8 +143,8 @@ jobs:
           printf 'SYNTHETIC ONLY\n' > "$tmp/plain/source_project.txt"
           jb_t034_snapshot_query ci/backup/jb-t034-restore-baseline.sql "$tmp/plain/expected_identity.txt"
           jb_t034_snapshot_query ci/backup/jb-t034-db-identity.sql "$tmp/plain/source_db_identity.json"
-          printf '%s\\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
-          printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES\\n' > "$tmp/plain/snapshot_scope.txt"
+          printf '%s\n' "$JB_T034_SNAPSHOT_ID" > "$tmp/plain/raw_dump_snapshot_id.txt"
+          printf 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES\n' > "$tmp/plain/snapshot_scope.txt"
           jb_t034_snapshot_finish
           grep -Fxq '05_ad_history=0' "$tmp/plain/expected_identity.txt"
           test "$(psql -X -At -c 'SELECT count(*) FROM public.ad_history')" = 1
