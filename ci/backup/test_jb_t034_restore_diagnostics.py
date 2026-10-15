@@ -59,7 +59,7 @@ class SafeRestoreDiagnosticsTest(unittest.TestCase):
             "error_severity": "ERROR",
             "state_code": "XX001",
             "session_id": "bg.1",
-            "session_line_num": 1,
+            "line_num": 1,
             "message": SECRET,
         }, {
             "timestamp": "2026-10-15 12:00:02.000 UTC",
@@ -67,7 +67,7 @@ class SafeRestoreDiagnosticsTest(unittest.TestCase):
             "error_severity": severity,
             "state_code": code,
             "session_id": "actual.1",
-            "session_line_num": 6,
+            "line_num": 6,
             "message": SECRET,
             "detail": SECRET,
             "context": SECRET,
@@ -81,7 +81,7 @@ class SafeRestoreDiagnosticsTest(unittest.TestCase):
                 "error_severity": "ERROR",
                 "state_code": "23505",
                 "session_id": "actual.1",
-                "session_line_num": 7,
+                "line_num": 7,
                 "message": SECRET,
             })
         (self.logs / "fake.json").write_text(
