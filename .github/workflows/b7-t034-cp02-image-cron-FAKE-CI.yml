@@ -70,7 +70,11 @@ jobs:
           [[ "$cron_enabled" == off ]] || { echo 'FAIL: cron scheduler not disabled from first boot'; exit 1; }
           cron_db="$(q 'SHOW cron.database_name')"
           [[ "$cron_db" == postgres ]] || { echo 'FAIL: cron database not postgres'; exit 1; }
-          echo 'PASS [CP02 image]: matched amd64 immutable image, runtime PG17 and inert scheduler'
+          net_db="$(q 'SHOW pg_net.database_name')"
+          [[ "$net_db" == template1 ]] || { echo 'FAIL: pg_net worker may access restored postgres'; exit 1; }
+          loaded="$(q "SELECT count(*) FROM unnest(string_to_array(replace(current_setting('shared_preload_libraries'),' ',''),',')) AS x(name) WHERE name IN ('pg_cron','pg_net')")"
+          [[ "$loaded" == 2 ]] || { echo 'FAIL: shared preload missing cron or net'; exit 1; }
+          echo 'PASS [CP02 image]: matched amd64 immutable image, PG17 cron inert + net routed away from postgres'
           q "SELECT name,version FROM pg_available_extension_versions WHERE (name,version) IN
                (('pg_net','0.20.4'),('pg_cron','1.6.4'),('supabase_vault','0.3.1'),
                 ('pg_stat_statements','1.11'),('pgcrypto','1.3'),
