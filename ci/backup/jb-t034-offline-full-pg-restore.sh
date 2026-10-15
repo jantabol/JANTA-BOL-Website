@@ -10,15 +10,55 @@ fail(){ echo "T034_FULL_DB_CLONE_HOLD: $1" >&2; exit 1; }
 [[ "$#" == 1 ]] || fail 'provide exactly one local recovered archive directory'
 src="$1"
 [[ -d "$src" && -s "$src/raw_full.dump" ]] || fail 'missing raw PostgreSQL custom archive'
+[[ -s "$src/source_db_identity.json" ]] ||
+ fail 'missing protected database owner/ACL/locale/setting identity'
+[[ -s "$src/raw_dump_snapshot_id.txt" && -s "$src/snapshot_scope.txt" ]] ||
+ fail 'source manifest is NOT bound to an exported raw dump snapshot'
+source_snap="$(cat "$src/raw_dump_snapshot_id.txt")"
+[[ "$source_snap" =~ ^[0-9A-Fa-f]+-[0-9A-Fa-f]+-[0-9]+$ ]] ||
+ fail 'invalid or missing raw pg_dump shared-snapshot token'
+grep -Fxq 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARED_SNAPSHOT=NO' \
+  "$src/snapshot_scope.txt" || fail 'non-authoritative snapshot scope declaration'
+[[ -s "$src/source_project.txt" ]] || fail 'missing source project identity'
+source_label="$(cat "$src/source_project.txt")"
+if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
+  [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+     "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+     "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
+   fail 'fake source identity not permitted outside fake CI'
+else
+  [[ "$source_label" == 'JANTA BOL production project vrffsnkycvjithwtiylt' ]] ||
+   fail 'wrong project identity inside decrypted archive'
+fi
 command -v docker >/dev/null || fail 'Docker unavailable'
+# Immutable PG17 image and from-first-start inert scheduler contract. No production connection.
+# Source is reviewed repo code, not a user-controlled archive file.
+source ci/backup/jb-t034-image-contract.sh
+[[ "$JB_T034_PLATFORM" == linux/amd64 ]] || fail 'unsupported offline clone platform'
 # The host MUST have PostgreSQL 17 compatible image prepared before this step.
 clone="jb-t034-full-pg17-$RANDOM-$RANDOM"
 temp="$(mktemp -d)"
-cleanup(){ docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$temp"; }
-trap cleanup EXIT HUP INT TERM
-docker run -d --network none --memory 4g --cpus 2 --pids-limit 200 \
+cleanup(){
+  local status=$?
+  # Restore caller's failure status; do NOT silence failed teardown.
+  trap - EXIT HUP INT TERM
+  if docker container inspect "$clone" >/dev/null 2>&1; then
+    if ! docker rm -f "$clone" >/dev/null 2>&1; then
+      echo 'T034_OFFLINE_CLONE_CLEANUP=FAILED' >&2
+      status=1
+    fi
+  fi
+  if ! rm -rf -- "$temp"; then
+    echo 'T034_EPHEMERAL_PLAINTEXT_CLEANUP=FAILED' >&2
+    status=1
+  fi
+  exit "$status"
+}
+trap cleanup EXIT
+trap 'exit 1' HUP INT TERM
+docker run --platform "$JB_T034_PLATFORM" -d --network none --memory 4g --cpus 2 --pids-limit 200 \
   --name "$clone" -e POSTGRES_PASSWORD=ephemeral_internal_only \
-  supabase/postgres:17.6.1.136 > /dev/null ||
+  "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" > /dev/null ||
  fail 'isolated Supabase PostgreSQL image did not start'
 ready=0
 for i in $(seq 1 70); do
@@ -43,6 +83,21 @@ for i in $(seq 1 100); do
   sleep 2
 done
 [[ "$stable" -ge 6 ]] || fail 'Supabase PG bootstrap/final postmaster never stabilized'
+# The restored SQL must never execute cron jobs. Verify at first stable boot
+# and re-check at the end (not just a post-restore ALTER).
+boot_settings="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres \
+  -c "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name') || '|' || (SELECT count(*) FROM unnest(string_to_array(replace(current_setting('shared_preload_libraries'),' ',''),',')) AS x(name) WHERE name IN ('pg_cron','pg_net'))" \
+  2> "$temp/settings.err")" || fail 'cannot prove offline worker/scheduler startup isolation'
+[[ "$boot_settings" == 'postgres|off|template1|2' ]] || fail 'offline clone workers not isolated at boot'
+# Require ALL source-version extension artifacts on the actual running amd64 image.
+version_count="$(docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres \
+  -c "SELECT count(*) FROM pg_available_extension_versions WHERE (name,version) IN
+  (('pg_net','0.20.4'),('pg_cron','1.6.4'),('supabase_vault','0.3.1'),
+   ('pg_stat_statements','1.11'),('pgcrypto','1.3'),('plpgsql','1.0'),('uuid-ossp','1.1'))" \
+  2> "$temp/ext.err")" || fail 'cannot inspect offline extension versions'
+[[ "$version_count" == 7 ]] || fail 'offline image missing exact required source extension versions'
 # ROOT CAUSE, proven by fake Supabase 17 CI:
 # (1) db role "postgres" is NOT SUPERUSER and cannot SET ROLE supabase_admin;
 # (2) pg_cron can only be created in cron.database_name=postgres.
@@ -58,10 +113,51 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
   -U supabase_admin -d template1 -c 'DROP DATABASE postgres WITH (FORCE);' \
   > "$temp/drop.log" 2>&1 ||
   fail 'cannot replace ONLY disposable postgres DB; no live database touched'
+# Source DB identity is a protected JSON manifest with STRICT allowlisted
+# owner/locale/ACL. It never contains SQL from the archive. The generated
+# statements touch the disconnected disposable Docker instance ONLY.
+python3 ci/backup/jb-t034-db-identity.py plan \
+  "$src/source_db_identity.json" "$temp/prepare.sql" ||
+  fail 'source database identity rejected by explicit allowlist'
+docker cp "$temp/prepare.sql" "$clone:/tmp/t034-prepare.sql" >/dev/null 2>&1 ||
+  fail 'cannot transfer safe owner/ACL preparation into offline target'
+# python compiler emits 0600 on host; docker cp preserves root ownership.
+# Explicitly hand to isolated postgres OS user, never relax to world-readable.
+docker exec -u root "$clone" sh -c 'chown postgres:postgres /tmp/t034-prepare.sql && chmod 600 /tmp/t034-prepare.sql' \
+  >/dev/null 2>&1 || fail 'cannot secure isolated owner/ACL setup file'
 docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
-  -U supabase_admin -d template1 -c 'CREATE DATABASE postgres TEMPLATE template0;' \
-  > "$temp/create.log" 2>&1 ||
-  fail 'cannot recreate isolated postgres DB from template0'
+  -U supabase_admin -d template1 -f /tmp/t034-prepare.sql \
+  > "$temp/create.log" 2>&1 || {
+    # Fake-data forensic output needs BOTH trusted exact workflow identity and
+    # a positive fake source tag; env secret absence alone is not sufficient.
+    if [[ "${GITHUB_WORKFLOW:-}" == 'JANTA BOL T034 dual recipient offline clone SYNTHETIC CI' &&
+          ( "${GITHUB_EVENT_NAME:-}" == pull_request || ( "${GITHUB_EVENT_NAME:-}" == push && "${GITHUB_REF:-}" == 'refs/heads/review/t034-cp02-fix-20261015' ) ) &&
+          "${SUPABASE_DB_PASSWORD:-}" == '' &&
+          "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' ]]; then
+      grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
+    fi
+    if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+          "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+          "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
+          "${SUPABASE_DB_PASSWORD:-}" == '' &&
+          "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
+      grep -m 3 -E 'ERROR:|FATAL:' "$temp/create.log" || true
+    fi
+    if grep -Eiq 'invalid locale|collation|locale provider|ICU' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=LOCALE_PROVIDER'
+    elif grep -Eiq 'syntax error|unrecognized option' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=SQL_SYNTAX'
+    elif grep -Eiq 'role .* does not exist|role .*cannot be assumed' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=MISSING_ROLE'
+    elif grep -Eiq 'permission denied|must be owner|insufficient privilege' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=PRIVILEGE'
+    elif grep -Eiq 'database .* already exists' "$temp/create.log"; then
+      echo 'T034_DB_SETUP_ERROR_CLASS=TARGET_EXISTS'
+    else
+      echo 'T034_DB_SETUP_ERROR_CLASS=OTHER'
+    fi
+    fail 'cannot recreate isolated postgres DB with source owner/locale/ACL'
+  }
 # Public namespace ownership varies by PostgreSQL/Supabase dump origin:
 # some snapshots include CREATE SCHEMA public and some leave template0 public
 # as a built-in namespace. Do not guess; decide from actual archive TOC.
@@ -81,9 +177,8 @@ if ! docker exec -u postgres "$clone" pg_restore -U supabase_admin -d postgres \
     --exit-on-error /tmp/input.dump \
     > "$temp/restore.log" 2>&1; then
   # Only synthetic CI without LIVE secrets may expose bounded diagnostics.
-  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 &&
-        -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]; then
-    grep -E '(pg_restore: error|ERROR:|Command was:)' "$temp/restore.log" | head -n 12 || true
+  if [[ "${JB_T034_SYNTHETIC_DIAGNOSTICS:-0}" == 1 ]]; then
+    echo 'T034_VERBOSE_RESTORE_DIAGNOSTICS=SUPPRESSED_ALWAYS (use dedicated fake forensic CI)'
   fi
   # Never disclose SQL command, PII, auth rows, or function definitions.
   # Fixed labels are enough for a safe new root-cause checkpoint.
@@ -141,11 +236,88 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
  fail 'isolated restored full DB fingerprint query failed'
 cmp -s "$src/expected_identity.txt" "$temp/clone_identity.txt" ||
  fail 'isolated restore differs from source: app/auth/storage row counts, RLS or payment RPC MD5'
+[[ -s "$src/expected_security_identity.txt" ]] ||
+ fail 'deep app/auth/storage security manifest missing'
+[[ "$(wc -l < "$src/expected_security_identity.txt")" == 16 ]] ||
+ fail 'deep security manifest coverage incomplete'
+docker cp ci/backup/jb-t034-security-parity.sql "$clone:/tmp/t034-security.sql" >/dev/null 2>&1 ||
+ fail 'cannot deliver reviewed deep parity SQL into networkless clone'
+docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+ -U supabase_admin -d postgres -f /tmp/t034-security.sql \
+ > "$temp/clone_security_identity.txt" 2> "$temp/security.err" ||
+ fail 'cannot run deep security/data parity inside networkless clone'
+cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt" ||
+ fail 'restored full rows or security definitions differ from protected source snapshot'
+printf 'T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH\n'
+
+# Prove real role-switch permissions on the OFFLINE, NO-NETWORK clone:
+# public article read is allowed by RLS; payment ledger reads are denied.
+if ! docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -c \
+    "SET ROLE anon; SELECT count(*) FROM public.articles" \
+  > "$temp/anon-positive.log" 2> "$temp/anon-positive.err"; then
+  fail 'isolated anonymous article access fails expected public behavior'
+fi
+grep -Eq '^[0-9]+$' "$temp/anon-positive.log" ||
+  fail 'isolated anonymous article read did not return a count'
+if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -c \
+    "SET ROLE anon; SELECT count(*) FROM public.ad_payments" \
+  > "$temp/anon-negative.log" 2> "$temp/anon-negative.err"; then
+  fail 'anonymous can directly read private payments after restore'
+fi
+grep -Eiq 'permission denied' "$temp/anon-negative.err" ||
+  fail 'anonymous negative was not a verified ACL rejection'
+printf 'T034_ANON_REAL_ROLE_ARTICLE_READ_AND_PAYMENT_DENIAL=PASS\n'
+
+# Sequence values are not MVCC snapshot-bound. Preserve archive-captured
+# sequence state and assert it cannot collide with existing affected IDs.
+docker cp ci/backup/jb-t034-sequence-nextvalue-safety.sql \
+  "$clone:/tmp/t034-sequence-safety.sql" >/dev/null 2>&1 ||
+  fail 'cannot copy reviewed sequence query to networkless clone'
+docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -f /tmp/t034-sequence-safety.sql \
+  > "$temp/sequence-safety.log" 2>&1 ||
+  fail 'restored affected sequence state may collide with existing rows'
+grep -Fq 'T034_AD_HISTORY_AUDIT_SEQUENCE_SAFETY=PASS' "$temp/sequence-safety.log" ||
+  fail 'missing affected sequence safety proof'
+printf 'T034_AFFECTED_HISTORY_AUDIT_SEQUENCE_NEXTVALUE=PASS\n'
+
+# Verify exact restored DB-level owner, ACL, settings, locale.
+docker cp ci/backup/jb-t034-db-identity.sql \
+  "$clone:/tmp/t034-db-identity.sql" > /dev/null 2>&1 ||
+  fail 'cannot transfer reviewed DB identity reader'
+docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+  -U supabase_admin -d postgres -f /tmp/t034-db-identity.sql \
+  > "$temp/actual_db_identity.json" 2> "$temp/dbidentity.err" ||
+  fail 'cannot inspect offline database identity'
+# The legacy FAKE source fixture uses Debian libc unlike the Supabase image.
+# This is a narrow FAKE-only comparison exception for collation library
+# version; actual encrypted JANTA BOL backups get NO exception.
+identity_compare_extra=()
+if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
+      "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+      "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
+      "${SUPABASE_DB_PASSWORD:-}" == '' &&
+      "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
+  identity_compare_extra+=(--legacy-fake-cross-image)
+fi
+python3 ci/backup/jb-t034-db-identity.py compare \
+  "$src/source_db_identity.json" "$temp/actual_db_identity.json" \
+  "${identity_compare_extra[@]}" ||
+  fail 'restored DB owner, locale, ACL or settings drift'
+printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\n'
+
+post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
+  fail 'cannot recheck restored background-worker isolation'
+[[ "$post_settings" == 'postgres|off|template1' ]] ||
+  fail 'restored cron or pg_net could modify offline clone'
 printf 'T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH\n'
 printf 'T034_FULL_PG17_DATABASE_RESTORED=true\n'
 printf 'TABLES_PUBLIC=%s TABLES_PRIVATE=%s TABLES_AUTH=%s TABLES_STORAGE=%s\n' \
   "$public_n" "$private_n" "$auth_n" "$storage_n"
-printf 'RLS_PUBLIC=%s RLS_PRIVATE=%s POLICIES_APP_STORAGE=%s\n' "$public_rls" "$private_rls" "$policies"
+printf 'RLS_PUBLIC=%s RLS_PRIVATE=%s POLICIES_APP_STORAGE=%s\n' \
+  "$public_rls" "$private_rls" "$policies"
 printf 'ROWS_ARTICLES=%s ROWS_AD_CAMPAIGNS=%s ROWS_AUTH_USERS=%s ROWS_STORAGE_METADATA=%s\n' \
   "$articles" "$ads" "$auth_users" "$storage_metadata"
 printf 'STORAGE_FILE_BYTES_RESTORED=false; PLATFORM_SETTINGS_RESTORED=false\n'

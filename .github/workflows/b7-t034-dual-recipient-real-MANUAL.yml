@@ -9,6 +9,10 @@ on:
         description: Type JANTA_BOL_DUAL_RESTORE_ONLY AFTER separate Founder approval
         type: string
         required: true
+      reviewed_sha:
+        description: Exact reviewed 40-character main commit SHA. Must match workflow run SHA.
+        type: string
+        required: true
 permissions:
   contents: read
 concurrency:
@@ -16,30 +20,28 @@ concurrency:
   cancel-in-progress: false
 jobs:
   dual-recipient-restore:
-    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_DUAL_RESTORE_ONLY' && github.event.inputs.reviewed_sha == github.sha }}
     runs-on: ubuntu-latest
     environment: janta-bol-production-backup
     timeout-minutes: 45
-    env:
-      JB_T034_DUAL_RESTORE_PROBE: '1'
-      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
-      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
-      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
-      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
-      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       - name: Fail closed before connecting to production
         shell: bash
+        env:
+          JB_REVIEWED_SHA: ${{ github.event.inputs.reviewed_sha }}
         run: |
           set -Eeuo pipefail
-          test -n "$SUPABASE_DB_PASSWORD"
-          test -n "$JB_BACKUP_AGE_RECIPIENT"
-          test -n "$JB_BACKUP_B2_KEY_ID"
-          test -n "$JB_BACKUP_B2_APPLICATION_KEY"
-          test -n "$JB_BACKUP_REMOTE_PREFIX"
+          [[ "$JB_REVIEWED_SHA" =~ ^[a-f0-9]{40}$ ]]
+          [[ "$JB_REVIEWED_SHA" == "$GITHUB_SHA" ]]
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" && -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" ]]
+          bash -n ci/backup/jb-t034-image-contract.sh
           bash -n ci/backup/jb-free-offsite-backup.sh
           bash -n ci/backup/jb-t034-offline-public-restore-probe.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/backup/jb-t034-shared-snapshot.sh
+          python3 -m py_compile ci/backup/jb-t034-db-identity.py
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
           echo 'PASS: dedicated, Founder-only authorized preflight. No DB operations.'
       - name: Install standard AGE, B2, compression and client tools
         shell: bash
@@ -51,6 +53,13 @@ jobs:
         uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # v3.0.1
         with:
           version: 2.120.0
-      - name: ACTUAL encrypted B2 export, runner-only AGE decryption, offline public clone
+      - name: ACTUAL encrypted B2 export, runner-only AGE decryption, offline full clone
         shell: bash
+        env:
+          JB_T034_DUAL_RESTORE_PROBE: '1'
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+          JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+          JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+          JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
         run: bash ci/backup/jb-free-offsite-backup.sh

@@ -1,0 +1,39 @@
+# P4-T034 CP04 — never touches Supabase, B2, AGE or production secrets.
+name: T034 CP04 manual workflow authorization contract (FAKE ONLY)
+on:
+  push:
+    branches:
+      - review/t034-cp02-fix-20261015
+    paths:
+      - '.github/workflows/b7-t034-cp04-manual-gate-FAKE-CI.yml'
+      - '.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml'
+      - 'ci/backup/jb-t034-manual-release-static-gate.py'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/b7-t034-cp04-manual-gate-FAKE-CI.yml'
+      - '.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml'
+      - 'ci/backup/jb-t034-manual-release-static-gate.py'
+permissions:
+  contents: read
+jobs:
+  manual-safety-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Safe code-only checks (NO secrets, NO workflow dispatch)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          [[ -z "${SUPABASE_DB_PASSWORD:-}" &&
+             -z "${JB_BACKUP_B2_APPLICATION_KEY:-}" &&
+             -z "${JB_BACKUP_AGE_RECIPIENT:-}" ]]
+          python3 -m py_compile ci/backup/jb-t034-manual-release-static-gate.py
+          python3 ci/backup/jb-t034-manual-release-static-gate.py \
+            .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/backup/jb-t034-shared-snapshot.sh
+          echo 'PASS CP04: Reviewed manual workflow contract. No LIVE interactions.'
