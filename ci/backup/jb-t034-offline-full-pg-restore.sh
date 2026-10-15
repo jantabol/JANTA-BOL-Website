@@ -23,7 +23,8 @@ grep -Fxq 'SOURCE_RAW_DUMP_SHARED_SNAPSHOT=YES; AUXILIARY_FILTERED_EXPORTS_SHARE
 source_label="$(cat "$src/source_project.txt")"
 if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
   [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-     "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+     ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -146,7 +147,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
       grep -m 2 -E 'ERROR:|FATAL:' "$temp/create.log" || true
     fi
     if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-          "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+          ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -325,7 +327,8 @@ docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
 # version; actual encrypted JANTA BOL backups get NO exception.
 identity_compare_extra=()
 if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
-      "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' &&
+      ( "${GITHUB_HEAD_REF:-}" == 'review/t034-cp02-fix-20261015' ||
+       "${GITHUB_HEAD_REF:-}" == 'review/t034-cp-rca2-safe-diagnostics-20261015' ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
