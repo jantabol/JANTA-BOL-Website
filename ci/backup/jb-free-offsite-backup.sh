@@ -133,6 +133,16 @@ if [[ "$dual" == 1 ]]; then
     fail 'cannot read protected full-row/security parity in exported snapshot'
   [[ "$(wc -l < "$work/plain/expected_security_identity.txt")" == 16 ]] ||
     fail 'security manifest coverage is incomplete'
+  # Protected metric-10 per-relation evidence is snapshot-bound, encrypted,
+  # ephemeral and NEVER printed or uploaded unencrypted.
+  jb_t034_snapshot_query ci/backup/jb-t034-metric10-components.sql \
+    "$work/plain/expected_metric10_components.txt" ||
+    fail 'cannot capture private metric10 components'
+  python3 ci/backup/jb-t034-metric10-diagnostics.py \
+    "$work/plain/expected_metric10_components.txt" \
+    "$work/plain/expected_metric10_components.txt" > "$work/metric10-validation.log" 2>&1 ||
+    fail 'invalid private metric10 evidence'
+  sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1 > "$work/plain/metric10_components_contract_sha256.txt"
   sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1 > "$work/plain/security_parity_contract_sha256.txt"
   jb_t034_snapshot_finish
   printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
@@ -153,7 +163,7 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 # Age secret identity never exists in Actions; owner retains it offline.
 bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
 if [[ "$dual" == 1 ]]; then
-  bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt)
+  bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -194,6 +204,15 @@ if [[ "$dual" == 1 ]]; then
     fail 'protected security parity digest absent after decrypt'
   cmp -s "$work/plain/expected_security_identity.txt" "$work/recovered/expected_security_identity.txt" ||
     fail 'security parity manifest changed after encrypted roundtrip'
+  [[ -s "$work/recovered/expected_metric10_components.txt" &&
+      -s "$work/recovered/metric10_components_contract_sha256.txt" ]] ||
+    fail 'private metric10 component evidence missing after AGE'
+  for f in expected_metric10_components.txt metric10_components_contract_sha256.txt; do
+    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
+      fail 'private metric10 evidence altered during AGE roundtrip'
+  done
+  [[ "$(cat "$work/recovered/metric10_components_contract_sha256.txt")" == "$(sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1)" ]] ||
+    fail 'protected metric10 diagnostic contract changed'
   [[ -s "$work/recovered/security_parity_contract_sha256.txt" ]] ||
     fail 'encrypted parity contract SHA file absent'
   cmp -s "$work/plain/security_parity_contract_sha256.txt" "$work/recovered/security_parity_contract_sha256.txt" ||

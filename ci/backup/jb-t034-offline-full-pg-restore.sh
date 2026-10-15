@@ -28,6 +28,20 @@ archive_sql_sha="$(cat "$src/security_parity_contract_sha256.txt")"
   fail 'invalid source security parity contract fingerprint'
 [[ "$archive_sql_sha" == "$(sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1)" ]] ||
   fail 'source snapshot and clone security parity SQL versions differ'
+# Private component manifest is snapshotted and AGE-bound; no old archive
+# may silently be reinterpreted under a new diagnostic revision.
+[[ -s "$src/expected_metric10_components.txt" &&
+    -s "$src/metric10_components_contract_sha256.txt" ]] ||
+  fail 'private metric10 components or reviewed contract missing'
+comp_contract="$(cat "$src/metric10_components_contract_sha256.txt")"
+[[ "$comp_contract" =~ ^[a-f0-9]{64}$ &&
+   "$comp_contract" == "$(sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1)" ]] ||
+  fail 'source and clone component diagnostic revisions differ'
+# No diagnostic content is ever printed, even on unexpected malformed input.
+python3 ci/backup/jb-t034-metric10-diagnostics.py \
+  "$src/expected_metric10_components.txt" \
+  "$src/expected_metric10_components.txt" > /dev/null ||
+  fail 'private metric10 evidence malformed'
 [[ -s "$src/source_project.txt" ]] || fail 'missing source project identity'
 source_label="$(cat "$src/source_project.txt")"
 if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
@@ -37,7 +51,8 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
-        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
    fail 'fake source identity not permitted outside fake CI'
 else
@@ -199,7 +214,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
-        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
           "${SUPABASE_DB_PASSWORD:-}" == '' &&
           "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then
@@ -335,6 +351,22 @@ if ! cmp -s "$src/expected_security_identity.txt" "$temp/clone_security_identity
       "$src/expected_security_identity.txt" "$temp/clone_security_identity.txt"; then
     : # Mismatch and parser-failure must both fail closed below.
   fi
+  # Only metric10 requires per-relation component comparison; NEVER print
+  # protected relation tokens, hashes, grants, names or SQL on any error path.
+  source_10="$(grep '^10_table_owner_acl_RLS=' "$src/expected_security_identity.txt" || true)"
+  clone_10="$(grep '^10_table_owner_acl_RLS=' "$temp/clone_security_identity.txt" || true)"
+  if [[ -n "$source_10" && -n "$clone_10" && "$source_10" != "$clone_10" ]]; then
+    if docker cp ci/backup/jb-t034-metric10-components.sql "$clone:/tmp/t034-metric10-components.sql" >/dev/null 2>&1 &&
+       docker exec -u postgres "$clone" psql -X -At -v ON_ERROR_STOP=1 \
+         -U supabase_admin -d postgres -f /tmp/t034-metric10-components.sql \
+         > "$temp/clone_metric10_components.txt" 2> "$temp/metric10.err"; then
+      python3 ci/backup/jb-t034-metric10-diagnostics.py \
+        "$src/expected_metric10_components.txt" "$temp/clone_metric10_components.txt" ||
+        : # Actual differences and malformed evidence both retain HOLD.
+    else
+      echo 'T034_METRIC10_COMPONENT_DIAGNOSTICS_INVALID=HOLD'
+    fi
+  fi
   fail 'restored full rows or security definitions differ from protected source snapshot'
 fi
 printf 'T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH\n'
@@ -390,7 +422,8 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca4-realtime-role-target-only-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca5-acl-role-audit-20261015' ||
        ( "${GITHUB_HEAD_REF:-}" == 'review/t034-rca6-deep-parity-safe-metric-diagnostic-20261015' ||
-        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ) ) ) ) ) &&
+        "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
+         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ) ) ) ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
       "${SUPABASE_DB_PASSWORD:-}" == '' &&
       "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ]]; then

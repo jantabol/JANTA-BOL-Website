@@ -1,0 +1,107 @@
+# Fake-only RCA8: no real B2, production database, credential or Owner AGE key.
+name: T034 RCA8 private component diagnostics FAKE
+on:
+  push:
+    branches: [review/t034-rca8-metric10-private-diagnostics-20261015]
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/backup/jb-t034-metric10-*'
+      - 'ci/backup/jb-free-offsite-backup.sh'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - '.github/workflows/b7-t034-rca8-metric10-FAKE.yml'
+permissions:
+  contents: read
+jobs:
+  fake-component-diagnostics:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify no credentials and safe manual restore gates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          python3 -m py_compile ci/backup/jb-t034-metric10-diagnostics.py
+          python3 ci/backup/jb-t034-manual-release-static-gate.py .github/workflows/b7-t034-dual-recipient-real-MANUAL.yml
+          python3 ci/backup/jb-t034-metric10-selftest.py
+          echo 'T034_RCA8_FAKE_STATIC_PRIVACY_GATES=PASS'
+      - name: Verify real SQL in disconnected pinned PostgreSQL17 and genuine security mutations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          source ci/backup/jb-t034-image-contract.sh
+          clone="jb-t034-rca8-fake-$GITHUB_RUN_ID"
+          tmp="$(mktemp -d)"
+          cleanup() { docker rm -f "$clone" >/dev/null 2>&1 || true; rm -rf -- "$tmp"; }
+          trap cleanup EXIT HUP INT TERM
+          docker run -d --platform "$JB_T034_PLATFORM" --network none --log-driver none \
+            --memory 4g --cpus 2 --pids-limit 200 --name "$clone" \
+            -e POSTGRES_PASSWORD=FAKE_ONLY "$JB_T034_IMAGE" "${JB_T034_START_ARGS[@]}" > /dev/null
+          stable=0
+          for i in $(seq 1 100); do
+            if docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+              -U supabase_admin -d postgres -c 'SELECT 1' 2>/dev/null | grep -Fxq 1; then
+              stable=$((stable+1)); [[ "$stable" -ge 6 ]] && break
+            else stable=0; fi
+            sleep 1
+          done
+          [[ "$stable" -ge 6 ]] || { echo 'T034_RCA8_FAKE_PG_BOOT=HOLD'; exit 1; }
+          test "$(docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 -U supabase_admin \
+            -d postgres -c "SELECT current_setting('cron.launch_active_jobs')||'|'||current_setting('pg_net.database_name')" 2>/dev/null)" = 'off|template1'
+          q() { docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+            -U supabase_admin -d postgres -c "$1" > "$tmp/q.out" 2> "$tmp/q.err"; }
+          q 'CREATE ROLE t034_rca8_owner NOLOGIN; CREATE ROLE t034_rca8_receiver NOLOGIN;'
+          q 'CREATE TABLE public.t034_rca8_fixture(id integer);'
+          docker cp ci/backup/jb-t034-metric10-components.sql "$clone:/tmp/t034-rca8-components.sql" >/dev/null
+          capture() { docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+            -U supabase_admin -d postgres -f /tmp/t034-rca8-components.sql > "$1" 2> "$tmp/psql.err"; }
+          expect() {
+            local label="$1" left="$2" right="$3"
+            if python3 ci/backup/jb-t034-metric10-diagnostics.py "$left" "$right" > "$tmp/diff.log" 2>&1; then
+              echo 'T034_RCA8_FAKE_NEGATIVE=HOLD'; exit 1
+            fi
+            grep -Eq "^T034_METRIC10_${label}_DIFFERENCE_COUNT=[1-9][0-9]*$" "$tmp/diff.log" ||
+              { echo 'T034_RCA8_FAKE_MUTATION_DIAGNOSTIC=HOLD'; exit 1; }
+          }
+          capture "$tmp/before"
+          capture "$tmp/repeated"
+          cmp -s "$tmp/before" "$tmp/repeated" ||
+            { echo 'T034_RCA8_FAKE_SQL_DETERMINISM=HOLD'; exit 1; }
+          python3 ci/backup/jb-t034-metric10-diagnostics.py "$tmp/before" "$tmp/repeated" > "$tmp/pos.log" ||
+            { echo 'T034_RCA8_FAKE_POSITIVE=HOLD'; exit 1; }
+          echo 'T034_RCA8_FAKE_PG17_COMPONENT_POSITIVE=PASS'
+          q 'ALTER TABLE public.t034_rca8_fixture OWNER TO t034_rca8_owner;'
+          capture "$tmp/owner"
+          expect OWNER "$tmp/before" "$tmp/owner"
+          q 'GRANT SELECT ON public.t034_rca8_fixture TO t034_rca8_receiver;'
+          capture "$tmp/grantee"
+          expect GRANTEE "$tmp/owner" "$tmp/grantee"
+          q 'GRANT SELECT ON public.t034_rca8_fixture TO t034_rca8_receiver WITH GRANT OPTION;'
+          capture "$tmp/grant_option"
+          expect GRANT_OPTION "$tmp/grantee" "$tmp/grant_option"
+          q 'GRANT SELECT ON public.t034_rca8_fixture TO PUBLIC;'
+          capture "$tmp/public_grant"
+          expect PUBLIC "$tmp/grant_option" "$tmp/public_grant"
+          q 'ALTER TABLE public.t034_rca8_fixture ENABLE ROW LEVEL SECURITY;'
+          capture "$tmp/rls"
+          expect RLS "$tmp/public_grant" "$tmp/rls"
+          q 'ALTER TABLE public.t034_rca8_fixture FORCE ROW LEVEL SECURITY;'
+          capture "$tmp/force"
+          expect FORCE_RLS "$tmp/rls" "$tmp/force"
+          q 'CREATE TABLE public.t034_rca8_new(id integer);'
+          capture "$tmp/extra"
+          if python3 ci/backup/jb-t034-metric10-diagnostics.py "$tmp/force" "$tmp/extra" > "$tmp/extra.log"; then
+            echo 'T034_RCA8_FAKE_MISSING_EXTRA=HOLD'; exit 1
+          fi
+          grep -Fxq 'T034_METRIC10_EXTRA_RELATION_COUNT=1' "$tmp/extra.log" ||
+            { echo 'T034_RCA8_FAKE_MISSING_EXTRA=HOLD'; exit 1; }
+          echo 'T034_RCA8_FAKE_PG17_OWNER_GRANTEE_GRANTOPTION_PUBLIC_RLS_FORCE_EXTRA=PASS'
+          echo 'T034_RCA8_NO_REAL_DB_NO_B2_NO_AGE_NO_PORT=PASS'
