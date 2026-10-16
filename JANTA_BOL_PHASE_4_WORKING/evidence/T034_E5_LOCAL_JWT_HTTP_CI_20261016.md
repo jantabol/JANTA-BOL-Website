@@ -40,4 +40,12 @@ Founder's A option authorized safe test environment and identities, trying a no-
 4. Separate E3 Android evidence still needed only for those UI proof cells not previously passed. ADS001–009 final reconciliation and prior newsroom/security regressions remain due.
 5. No consent for paid Supabase branch ($0.01344/hour quoted), production write, approval, verification, payment, or LIVE advertising. No new charge consent given.
 
+
+## Independent CI flake RCA / successful final rerun
+- Original source SHA `f0e298e1` push run `#38885850408` PASS but **PR run #38885856246 FAILED**, precisely at expired-JWT test (HTTP 200). This was a **test boundary defect**, not a payment/security bypass: the test used `exp = now - 30 seconds`; PostgREST v12 explicitly tolerates **30 seconds clock skew**, making that exact threshold ambiguous. Official reference: https://postgrest.org/en/v12/references/auth.html.
+- Minimum safe isolated test-only repair: use `exp = now - 120 seconds` (clearly outside skew), and deterministically corrupt the **first signature character** rather than the last Base64URL character. No live application/SQL/production change.
+- **Final tested implementation SHA `5cae6c45a553fde97381bca1e62a2c6213fb685d`**: Push E5 [#38886177431](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/38886177431) **SUCCESS**, PR E5 [#38886182555](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/38886182555) **SUCCESS**. Pre-existing E7 Owner review [#38886182471](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/38886182471) **SUCCESS** and ADS002 UI [#38886182481](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/38886182481) **SUCCESS** at same implementation SHA.
+- Git compare vs unchanged canonical B7 `bd03084b`: **5 added files only**, zero modified/deleted old source files, 0 live DB writes. Production protected campaign data unchanged.
+- Genuine GoTrue-issued Auth session, independent staging credentials and real user lifecycle remain **NOT TESTED**. No broader ADS/T034 PASS allowed.
+
 **Current official status: E5 LOCAL SIGNED-JWT HTTP MATRIX PASS (27 negative + 3 positive), genuine Supabase Auth E5 HOLD; P4-T034 FINAL PASS + LOCK HOLD. Do not overwrite previous PASS or create a final ZIP.**
