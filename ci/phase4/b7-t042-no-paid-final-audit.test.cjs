@@ -72,7 +72,7 @@ test('ADS060 preserve ALL 9 original canonical tests and 60 ADS with no fake com
 test('ADS057/060 no unverified Owner/device proof passed by any CI mock/preview',()=>{
  const cp=read('JANTA_BOL_PHASE_4_WORKING/review/B7_CP06_ANDROID_E3_SAFE_HANDOFF_20261013.md');
  assert.match(cp,/NOT an Android PASS/);
- assert.match(cp,/EXACT source/);
+ assert.match(cp,/Exact source and evidence/i);
  assert.match(cp,/LOCAL|SPCK/i);
  assert.match(cp,/BLOCKED_E3/);
  assert.match(cp,/no production/i);
