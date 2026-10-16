@@ -72,18 +72,19 @@ end $setup$;
 -- and audit; actual single transition is handled by ORIGINAL Owner function.
 do $replay$
 declare cid uuid:='30000000-0000-0000-0000-000000000001';
- before_history integer;before_audit integer; id uuid;
+ before_history integer;before_audit integer;
 begin
  select count(*) into before_history from public.ad_history where campaign_id=cid;
  select count(*) into before_audit from public.audit_logs
  where record_id=cid::text and action='ad_status';
- select (public.jb_ad_safety_transition_idempotent_internal(cid,'hidden','CI hide')).id into id;
- if id is distinct from cid then raise exception 'HIDE_WRONG_CAMPAIGN';end if;
+ perform public.jb_ad_safety_transition_idempotent_internal(cid,'hidden','CI hide');
+ if (select status from public.ad_campaigns where id=cid)<>'hidden'
+ then raise exception 'HIDE_WRONG_CAMPAIGN';end if;
  if (select count(*) from public.ad_history where campaign_id=cid)<>before_history+1
  then raise exception 'HIDE_DID_NOT_APPEND_EXACTLY_ONE_HISTORY';end if;
  if (select count(*) from public.audit_logs where record_id=cid::text and action='ad_status')<>before_audit+1
  then raise exception 'HIDE_DID_NOT_APPEND_EXACTLY_ONE_AUDIT';end if;
- select (public.jb_ad_safety_transition_idempotent_internal(cid,'hidden','CI replay')).id into id;
+ perform public.jb_ad_safety_transition_idempotent_internal(cid,'hidden','CI replay');
  if (select count(*) from public.ad_history where campaign_id=cid)<>before_history+1
  or (select count(*) from public.audit_logs where record_id=cid::text and action='ad_status')<>before_audit+1
  then raise exception 'SAME_HIDDEN_STATUS_DUPLICATED_AUDIT';end if;
