@@ -1,0 +1,56 @@
+name: P4-T039 CP03 Owner downgrade reissue no token resurrection (ISOLATED)
+on:
+  push:
+    branches:
+      - review/t039-advertiser-isolation-20261016
+permissions:
+  contents: read
+jobs:
+  original-be10-and-revocation-monotonicity-pg17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t039_cp03}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t039_cp03"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t039_cp03}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Build original synthetic Owner verification/portal A,B,C schema only
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-enquiry-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_public_enquiry_review.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-verification-revocation-fixture.sql
+      - name: Apply EXISTING reviewed verification downgrade and token revoke SQL to disposable database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_verification_portal_revocation_REVIEW_ONLY.sql
+      - name: Original BE10 Owner/AAL2, high-risk, downgrade session and reissue regression (rollback)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-verification-revocation-regression.sql
+      - name: NEW direct OLD session-resurrection attempt AFTER verified credential reissue (rollback)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t039-cp03-revocation-monotonic-regression.sql
+  source-and-original-news-protection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: No live credentials, Owner sessions, advertiser accounts or payments
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo "T039_CP03_DISPOSABLE_ONLY_NO_LIVE_OWNER"
+      - name: Preserve reviewed portal browser/logout and original News regressions
+        run: |
+          node --test ci/phase4/b7-t039-cp02-server-logout-source.test.cjs
+          node --test ci/phase4/b7-t039-cp01-portal-authority.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit

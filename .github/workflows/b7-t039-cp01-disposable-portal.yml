@@ -1,0 +1,52 @@
+name: P4-T039 CP01 advertiser tenant isolation + one-time portal (ISOLATED)
+on:
+  push:
+    branches:
+      - review/t039-advertiser-isolation-20261016
+permissions:
+  contents: read
+jobs:
+  official-source-and-public-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Ensure no live secrets, account setup, payment or media upload
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo "T039_CP01_NO_LIVE_ACCOUNTS_NO_PROD_WRITES"
+      - name: Verify original Founder 7/7 mapping and reviewed text-only candidate source
+        run: |
+          node --test ci/phase4/b7-t039-cp01-portal-authority.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+  verified-isolated-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: jb_t039_cp01}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t039_cp01"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t039_cp01}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Populate disposable Advertiser A/B fixture and existing approved creative records
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-fixture.sql
+      - name: Apply original REVIEW ONLY text change, one-time login, renewal migration, not production
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
+      - name: Real SQL A/B isolation, revoked/session replay, no media/geo direct write, Owner decision, renewal and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-regression.sql
