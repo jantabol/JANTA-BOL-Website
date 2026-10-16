@@ -22,7 +22,7 @@ DECLARE c1 uuid:='30000000-0000-0000-0000-000000000001';
  original_history int;msg text;
 BEGIN
  PERFORM set_config('b7.test_owner','enabled',true);
- SELECT count(*) INTO original_history FROM public.ad_history;
+ SELECT count(*) INTO original_history FROM public.ad_history WHERE event_type ILIKE '%payment%';
  -- The two OLD actual LIVE function signatures must be stopped at one
  -- canonical receipt+consent trigger, despite Owner's valid AAL2.
  BEGIN
@@ -73,6 +73,13 @@ BEGIN
   IF msg<>'ADVERTISER_VERIFICATION_REQUIRED'
   THEN RAISE EXCEPTION 'HIGH_RISK_PAIRED_EVIDENCE_FIRST_DIVERGENCE: %',msg;END IF;
  END;
+ -- Legitimate synthetic Owner quote MUST add one immutable quote ledger event.
+ -- Invalid payment attempts MUST NOT add any *payment* event.
+ IF (SELECT count(*) FROM public.ad_history
+     WHERE campaign_id=c2 AND event_type='manual_quote_agreed')<>1
+ OR (SELECT count(*) FROM public.audit_logs
+     WHERE record_id=c2::text AND action='ad_quote_agreed')<>1
+ THEN RAISE EXCEPTION 'LEGITIMATE_QUOTE_AUDIT_MISSING_OR_DUPLICATED';END IF;
  -- Direct INSERT or later UPDATE cannot bypass the new receipt evidence.
  BEGIN
   INSERT INTO public.ad_payments(campaign_id,status,provider_ref,
@@ -96,7 +103,7 @@ BEGIN
  IF (SELECT count(*) FROM public.ad_payments)<>0
  OR (SELECT count(*) FROM public.ad_campaigns WHERE status IN('paid','live')
    OR paid_at IS NOT NULL)<>0
- OR (SELECT count(*) FROM public.ad_history)<>original_history
+ OR (SELECT count(*) FROM public.ad_history WHERE event_type ILIKE '%payment%')<>original_history
  THEN RAISE EXCEPTION 'FAILED_LEGACY_RECEIPT_ATTEMPTS_CHANGED_DATA';END IF;
  RAISE NOTICE 'CP02 T038 PASS Owner old 3-field+flagged 6-field confirmed denied, direct INSERT/DML denied, high-risk T034 preserved, zero mutations';
 END $negative$;
