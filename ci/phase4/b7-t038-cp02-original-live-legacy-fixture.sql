@@ -48,3 +48,13 @@ BEGIN
  'Payment state recorded; provider evidence required for confirmed.',auth.uid());
  RETURN v;
 END $old$;
+
+-- Real hosted API privileges were read-only inspected. Preserve deny anon.
+REVOKE ALL ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
+ FROM PUBLIC,anon;
+REVOKE ALL ON FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
+ FROM PUBLIC,anon;
+GRANT EXECUTE ON FUNCTION public.jb_ad_confirm_payment_internal(uuid,text,bigint)
+ TO authenticated;
+GRANT EXECUTE ON FUNCTION public.jb_ad_record_payment_internal(uuid,text,text,bigint,text,boolean)
+ TO authenticated;
