@@ -144,6 +144,16 @@ async function render(placement,scope='global'){
   if(link?.url){const a=node('a','jb-public-ad-cta',link.label);a.href=link.url;if(!link.url.startsWith('tel:'))a.target='_blank';a.rel='noopener noreferrer sponsored';box.append(a);ctaElement=a}
   if(current()){
    slot.append(box);
+   // T036 ADS-019: bridge is deliberately NOT loaded in current HTML.
+   // Pair ONLY with verified boolean same-card backend release + E2/E3/E5.
+   // Existing pinned Article never selects a second creative mid-open.
+   if(placement==='article'&&typeof g.JBAdRevocation?.watch==='function'){
+    const active=g.JBAdRevocation.watch({
+     slot,box,campaignId:ad.campaign_id,creativeId:ad.creative_id,
+     client:g.JBBackend.client
+    });
+    if(!active){slot.replaceChildren();return}
+   }
    // Staged/optional: only a server-bound Article UUID is eligible for a
    // protected view-ticket handshake. Current legacy articles still send
    // free-text scope and NO analytics JS is loaded: ZERO production change.

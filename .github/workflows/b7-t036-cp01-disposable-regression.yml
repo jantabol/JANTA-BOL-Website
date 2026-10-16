@@ -1,0 +1,93 @@
+name: P4-T036 CP01 schedule/lifecycle/retention DISPOSABLE evidence
+on:
+  push:
+    branches:
+      - review/t036-schedule-lifecycle-20261016
+permissions:
+  contents: read
+jobs:
+  source-client-governance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: NO privileged keys / NO production access
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'P4_T036_CP01_ONLY_LOCAL_AND_DISPOSABLE; NO_LIVE_WRITES'
+      - name: Exact canonical T036 8-test authority and no-fake-pass contract
+        run: node ci/phase4/b7-t036-source-contract.cjs
+      - name: Existing Owner AAL2 positive state fail-closed and India schedule conversion
+        run: |
+          node --test ci/phase4/b7-lifecycle-client-gate.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+      - name: Official closure manifest must stay blocked where E2 E5 DUE
+        run: node ci/phase4/b7-closure-gate.cjs --audit
+  lifecycle-state-disposable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: b7_t036_lifecycle}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t036_lifecycle"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_t036_lifecycle
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Init separate synthetic campaign and finance fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+      - name: Apply unchanged review-only existing financial state guard
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_lifecycle_state_guard_REVIEW_ONLY.sql
+      - name: Actual PG17 refused direct LIVE, Owner AAL2, verified receipt, PAUSE/HIDE, expiry and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-lifecycle-state-regression.sql
+  schedule-window-disposable:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: b7_t036_schedule}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t036_schedule"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_t036_schedule
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Init legacy schedule RPC and synthetic receipt
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-schedule-legacy-source-fixture.sql
+      - name: Apply unchanged protected payment/lifecycle + REVIEW ONLY time/Audit guard
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_lifecycle_state_guard_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_schedule_integrity_REVIEW_ONLY.sql
+      - name: Actual PG17 future/past/end-invalid/paid-history/Owner-only time guards and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-schedule-integrity-regression.sql

@@ -145,6 +145,19 @@ async function adTransition(id,status,note=''){
  }
  return rpc('jb_ad_transition_internal',{p_id:id,p_status:status,p_note:note});
 }
+/* T036 ADS-023 — DRAFT bridge only, NOT used by existing Admin UI.
+ * On missing backend RPC this fails closed; never fall back to an unsafe
+ * duplicate-write and NEVER treats LIVE as a safety-only transition. */
+async function adSafetyTransitionIdempotent(id,status,note=''){
+ await owner();
+ if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||'')))
+  throw Error('INVALID_CAMPAIGN_ID');
+ if(!['paused','hidden','expired','rejected','cancelled'].includes(status))
+  throw Error('T036_CP02_SAFETY_ONLY');
+ return rpc('jb_ad_safety_transition_idempotent_internal',{
+  p_id:id,p_status:status,p_note:String(note||'').slice(0,2000)
+ });
+}
 // B7 draft/approval MUST be deployed atomically with its reviewed backend.
  // The old LIVE creative-save RPC auto-approves; never call it when the
  // Owner-only backend capability sentinel is absent or wrong.
@@ -228,5 +241,5 @@ async function adSchedule(id,start,end){
  if(Date.parse(endsAt)<=Date.parse(startsAt))throw Error('INVALID_SCHEDULE');
  return rpc('jb_ad_schedule_internal',{p_campaign:id,p_starts_at:startsAt,p_ends_at:endsAt});
 }
-g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adNotificationFailures,adRetryNotification,adQualifiedAnalytics,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adCreative,adApproveCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
+g.JBPhase4={grievanceRows,grievanceTransition,grievanceReopen,grievanceDuplicate,grievanceIssueAdd,grievanceHistory,complianceRows,complianceMonth,complianceApproveMonth,complianceTransition,publicAdRequest,publicAdPackages,adPackages,adSavePackage,adRows,adVerifyAdvertiser,adNotificationFailures,adRetryNotification,adQualifiedAnalytics,adRenewalRequests,adChangeRequests,adDecideChange,adIssuePortal,adTransition,adSafetyTransitionIdempotent,adCreative,adApproveCreative,adConfirmPayment,adSetApprovedQuote,adConfirmManualPayment,adSchedule};
 })(window);
