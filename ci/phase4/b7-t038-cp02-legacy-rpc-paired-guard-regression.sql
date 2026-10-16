@@ -50,8 +50,28 @@ BEGIN
   RAISE EXCEPTION 'HIGH_RISK_VERIFICATION_BYPASS';
  EXCEPTION WHEN OTHERS THEN
   GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
-  IF msg<>'B7_ADVERTISER_VERIFICATION_REQUIRED_BEFORE_PAYMENT'
-  THEN RAISE EXCEPTION 'HIGH_RISK_T034_PRESERVATION_FAILED: %',msg;END IF;
+  IF msg<>'MANUAL_PAYMENT_EVIDENCE_REQUIRED'
+  THEN RAISE EXCEPTION 'HIGH_RISK_WEAK_LEGACY_PRECEDENCE_CHANGED: %',msg;END IF;
+ END;
+ -- Trigger names fire in PostgreSQL lexical order:
+ -- b7_guard_manual_payment_evidence BEFORE b7_t034_payment_verified_gate.
+ -- Thus a legacy high-risk RPC is stopped first by missing evidence.
+ -- To independently test HIGH-risk identity under the paired candidate,
+ -- give the disposable fixture structurally complete dummy evidence.
+ PERFORM public.jb_ad_set_approved_quote_internal(
+ c2,28000,'CI-HIGH-RISK-SIGNED-QUOTE');
+ BEGIN
+  INSERT INTO public.ad_payments(campaign_id,status,provider_ref,
+   amount_minor,currency,method,receipt_at,evidence_ref,acceptance_ref,
+   terms_accepted_at,verified_by,verified_at,verification_note)
+  VALUES(c2,'confirmed','CI-NO-REAL-HIGH-UTR',28000,'INR','upi',now(),
+   'CI-NO-REAL-LEDGER','CI-NO-REAL-ACCEPT',now(),auth.uid(),now(),
+   'CI synthetic evidence only, never bank');
+  RAISE EXCEPTION 'HIGH_RISK_WITH_SYNTHETIC_COMPLETE_FIELDS_ACCEPTED';
+ EXCEPTION WHEN OTHERS THEN
+  GET STACKED DIAGNOSTICS msg=MESSAGE_TEXT;
+  IF msg<>'ADVERTISER_VERIFICATION_REQUIRED'
+  THEN RAISE EXCEPTION 'HIGH_RISK_PAIRED_EVIDENCE_FIRST_DIVERGENCE: %',msg;END IF;
  END;
  -- Direct INSERT or later UPDATE cannot bypass the new receipt evidence.
  BEGIN
