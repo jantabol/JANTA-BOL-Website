@@ -158,7 +158,23 @@ el('renewalForm').addEventListener('submit',async event=>{
    'Renewal Request अभी दर्ज नहीं हो पाई। बाद में कोशिश करें।');
  }finally{button.disabled=false;}
 });
-el('logoutButton').addEventListener('click',()=>{clear();feedback('आप लॉगआउट हो गए हैं।');});
+// ADS-041: logout must revoke the SERVER token, not merely sessionStorage.
+ // Clear this browser immediately regardless of RPC outcome. A failed or
+ // undeployed server endpoint must NOT claim the remote token was revoked.
+el('logoutButton').addEventListener('click',async()=>{
+ const currentToken=token,button=el('logoutButton');
+ clear();button.disabled=true;
+ let serverRevoked=false;
+ try{
+  if(currentToken&&/^[0-9a-f]{48}$/.test(currentToken)){
+   serverRevoked=await rpc('jb_ad_portal_logout',{p_token:currentToken})===true;
+  }
+ }catch(_){}
+ finally{button.disabled=false;}
+ feedback(serverRevoked?
+  'इस डिवाइस और सर्वर दोनों पर विज्ञापन सत्र बंद हो गया है।':
+  'इस डिवाइस से लॉगआउट हुआ, लेकिन सर्वर पर सत्र बंद होने की पुष्टि नहीं मिली। Admin से पुराने सत्र निरस्त करवाएँ।');
+});
 try{
  const saved=JSON.parse(sessionStorage.getItem(key)||'null');
  if(saved&&typeof saved.token==='string'&&/^[0-9a-f]{48}$/.test(saved.token)
