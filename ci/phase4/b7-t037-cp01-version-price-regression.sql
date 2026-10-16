@@ -38,7 +38,27 @@ begin
   raise exception 'VERSION_ZERO_ACCEPTED';
  exception when check_violation then null;
  end;
- raise notice 'T037 CP01 PASS zero package and version price denied at database';
+ begin
+  insert into public.ad_packages(name,price_minor,placement,weight,duration_days)
+  values('Invalid weight',50000,'article',101,10);
+  raise exception 'WEIGHT_101_ACCEPTED';
+ exception when check_violation then null;
+ end;
+ begin
+  update public.ad_packages set weight=101 where
+  id='20000000-0000-0000-0000-000000000002';
+  raise exception 'WEIGHT_UPDATE_101_ACCEPTED';
+ exception when check_violation then null;
+ end;
+ begin
+  insert into public.ad_package_versions(package_id,version,name,
+   placement,price_minor,duration_days,weight)
+  values('20000000-0000-0000-0000-000000000002',4,
+   'Bad weight version','article',50000,10,101);
+  raise exception 'VERSION_WEIGHT_101_ACCEPTED';
+ exception when check_violation then null;
+ end;
+ raise notice 'T037 CP01 PASS zero price and weight>100 rejected for package and historical versions';
 end $reject_zero$;
 do $immutable_old$
 declare pkg uuid:='20000000-0000-0000-0000-000000000002';
