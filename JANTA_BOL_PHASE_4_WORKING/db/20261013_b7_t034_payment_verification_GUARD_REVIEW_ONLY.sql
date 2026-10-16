@@ -6,6 +6,8 @@
 -- is payment_pending, with old Owner/AAL2 payment RPCs lacking this guard.
 -- No auto-repair, update, deletion or verification of historical rows.
 
+-- Atomic: any preflight/DDL/GRANT failure must roll back ALL new objects.
+BEGIN;
 DO $preflight$
 DECLARE missing text;
 BEGIN
@@ -67,6 +69,27 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','public','private'
 AS $payment$
 BEGIN
+  -- Confirmed payment evidence is append-only for its financial identity.
+  -- A privileged UPDATE must not rebind a valid receipt to a DIFFERENT
+  -- verified campaign, replace its reference, change amount/currency,
+  -- downgrade confirmed to failed, or delete the record entirely.
+  -- Non-financial updated_at maintenance is left compatible with old paths.
+  IF TG_OP='DELETE' THEN
+    IF OLD.status='confirmed'
+    THEN RAISE EXCEPTION 'B7_CONFIRMED_LEDGER_IMMUTABLE'
+      USING ERRCODE='23514'; END IF;
+    RETURN OLD;
+  END IF;
+  IF TG_OP='UPDATE' AND OLD.status='confirmed'
+     AND (NEW.id IS DISTINCT FROM OLD.id
+       OR NEW.campaign_id IS DISTINCT FROM OLD.campaign_id
+       OR NEW.provider_ref IS DISTINCT FROM OLD.provider_ref
+       OR NEW.status IS DISTINCT FROM OLD.status
+       OR NEW.amount_minor IS DISTINCT FROM OLD.amount_minor
+       OR NEW.currency IS DISTINCT FROM OLD.currency
+       OR NEW.created_at IS DISTINCT FROM OLD.created_at)
+  THEN RAISE EXCEPTION 'B7_CONFIRMED_LEDGER_IMMUTABLE'
+    USING ERRCODE='23514'; END IF;
   IF NEW.status='confirmed' THEN
     IF NOT private.p4_owner_allowed()
     THEN RAISE EXCEPTION 'OWNER_AAL2_REQUIRED' USING ERRCODE='42501'; END IF;
@@ -75,10 +98,13 @@ BEGIN
   RETURN NEW;
 END $payment$;
 
--- Every original confirmed-payment INSERT/UPDATE passes this trigger,
--- regardless of which original Owner payment RPC, SDK or SQL route is used.
+-- Confirmed INSERT and changes to financial/identity columns or DELETE
+-- are guarded. Deliberately OMIT updated_at from UPDATE OF: historical
+-- non-financial maintenance may not require Owner AAL2 and must still work.
+-- Any mutating UPDATE of a protected field invokes immutable checks.
 CREATE TRIGGER b7_t034_payment_verified_gate
-BEFORE INSERT OR UPDATE OF status, campaign_id ON public.ad_payments
+BEFORE INSERT OR UPDATE OF id, campaign_id, provider_ref, status,
+  amount_minor, currency, created_at OR DELETE ON public.ad_payments
 FOR EACH ROW EXECUTE FUNCTION private.b7_t034_confirmed_payment_guard();
 
 CREATE FUNCTION private.b7_t034_paid_state_guard()
@@ -86,6 +112,46 @@ RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER
 SET search_path TO 'pg_catalog','public','private'
 AS $paid$
 BEGIN
+  -- Financial identity is bound to the original advertiser once approved.
+  -- The trigger must cover advertiser_id even when paid/status is UNCHANGED:
+  -- otherwise direct DML reassigns an already-paid receipt to an unverified
+  -- advertiser without firing the original OF status,paid_at trigger.
+  -- A declined historical HIGH/payment_pending row remains untouched.
+  IF TG_OP='UPDATE'
+     AND NEW.advertiser_id IS DISTINCT FROM OLD.advertiser_id
+     AND (
+       OLD.status IN ('approved','payment_pending','paid','live')
+       OR OLD.approved_at IS NOT NULL
+       OR OLD.paid_at IS NOT NULL
+       OR EXISTS(SELECT 1 FROM public.ad_payments p WHERE p.campaign_id=OLD.id)
+     ) THEN
+    RAISE EXCEPTION 'APPROVED_CAMPAIGN_ADVERTISER_REASSIGN_DENIED'
+      USING ERRCODE='23514';
+  END IF;
+  -- Old Owner RPC guards cover transitions, but privileged direct DML must
+  -- also fail closed for HIGH-risk approval/payment_pending/LIVE. Re-writing
+  -- an unchanged historical payment_pending row is not a NEW transition.
+  IF NEW.status IN ('approved','payment_pending','live')
+     AND (TG_OP='INSERT' OR OLD.status IS DISTINCT FROM NEW.status) THEN
+    IF NOT private.p4_owner_allowed()
+    THEN RAISE EXCEPTION 'OWNER_AAL2_REQUIRED' USING ERRCODE='42501'; END IF;
+    IF EXISTS (
+      SELECT 1 FROM public.advertisers a
+      WHERE a.id=NEW.advertiser_id AND a.risk_level='high'
+        AND a.verification_state IS DISTINCT FROM 'verified'
+    ) THEN
+      RAISE EXCEPTION 'ENHANCED_VERIFICATION_REQUIRED'
+        USING ERRCODE='23514';
+    END IF;
+    IF NEW.status='live' AND NOT EXISTS (
+      SELECT 1 FROM public.ad_payments p
+      WHERE p.campaign_id=NEW.id AND p.status='confirmed' AND p.amount_minor>0
+    ) THEN
+      RAISE EXCEPTION 'B7_CONFIRMED_PAYMENT_REQUIRED_BEFORE_LIVE'
+        USING ERRCODE='23514';
+    END IF;
+  END IF;
+
   IF (NEW.status='paid' AND
         (TG_OP='INSERT' OR OLD.status IS DISTINCT FROM NEW.status
             OR OLD.paid_at IS DISTINCT FROM NEW.paid_at))
@@ -105,7 +171,7 @@ END $paid$;
 
 -- Covers direct Paid-state attempts that bypass the original payment RPC.
 CREATE TRIGGER b7_t034_paid_state_verified_gate
-BEFORE INSERT OR UPDATE OF status, paid_at ON public.ad_campaigns
+BEFORE INSERT OR UPDATE OF status, paid_at, advertiser_id ON public.ad_campaigns
 FOR EACH ROW EXECUTE FUNCTION private.b7_t034_paid_state_guard();
 
 REVOKE ALL ON FUNCTION private.b7_t034_assert_advertiser_verified(uuid)
@@ -115,3 +181,4 @@ REVOKE ALL ON FUNCTION private.b7_t034_confirmed_payment_guard()
 REVOKE ALL ON FUNCTION private.b7_t034_paid_state_guard()
   FROM PUBLIC,anon,authenticated;
 -- Intentionally NO GRANT, NO public RPC, NO data modification, NO deployment.
+COMMIT;

@@ -27,7 +27,9 @@ CREATE TABLE public.ad_payments(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
  campaign_id uuid NOT NULL REFERENCES public.ad_campaigns(id),
  provider_ref text,status text,amount_minor bigint,
- currency text NOT NULL DEFAULT 'INR');
+ currency text NOT NULL DEFAULT 'INR',
+ created_at timestamptz NOT NULL DEFAULT now(),
+ updated_at timestamptz NOT NULL DEFAULT now());
 CREATE TABLE public.ad_history(
  id bigint GENERATED ALWAYS AS IDENTITY,
  campaign_id uuid NOT NULL,event_type text,note text,actor_user_id uuid);
