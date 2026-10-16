@@ -28,6 +28,13 @@ test('ADS024 zero/negative/float/malformed prices fail BEFORE Owner package RPC'
  }
  assert.equal(h.events.length,0,'no Owner RPC attempted for invalid price');
 });
+test('ADS024 invalid weight > 100 is rejected before Owner RPC, not saved as a broken list record',async()=>{
+ const h=client();
+ for(const weight of ['101','999','1.5','0','-1']){
+  await assert.rejects(()=>h.api.adSavePackage({...good,weight}),/INVALID_PACKAGE/);
+ }
+ assert.equal(h.events.length,0);
+});
 test('ADS024 valid integer paise/days/weight retains exact backend payload and Owner authority',async()=>{
  const h=client();
  await h.api.adSavePackage(good);
