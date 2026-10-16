@@ -1,0 +1,26 @@
+name: P4-T035 CP04 Deployed Vercel preview public GET-only preflight
+on:
+  push:
+    branches:
+      - review/t035-cp02-media-safe-20261016
+permissions:
+  contents: read
+jobs:
+  deployed-public-preview-readonly:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: No private auth/production credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          echo 'CP04_PUBLIC_HTTPS_GET_ONLY; NO_LOGIN; NO_DB_WRITE'
+      - name: Verify exact ready Vercel preview assets via public HTTP GET
+        run: |
+          node --check ci/phase4/b7-t035-cp04-preview-http-readonly.cjs
+          node ci/phase4/b7-t035-cp04-preview-http-readonly.cjs

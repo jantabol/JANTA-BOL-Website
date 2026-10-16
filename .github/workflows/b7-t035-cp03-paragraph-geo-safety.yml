@@ -1,0 +1,80 @@
+name: P4-T035 CP03 real DOM and isolated verified-geo evidence (NO PROD)
+on:
+  push:
+    branches:
+      - review/t035-cp02-media-safe-20261016
+permissions:
+  contents: read
+jobs:
+  article-chromium:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Enforce offline fixture source, block all privileged env
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          command -v google-chrome
+          echo 'CP03_FRONTEND_FIXTURE_ONLY; NO_REAL_ARTICLE_DATA; NO_LIVE_AD'
+      - name: Install pinned automation harness ONLY outside app package
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          npm install --prefix "$RUNNER_TEMP/cp03_playwright" --no-audit --no-fund --no-save playwright-core@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/cp03_playwright/node_modules" >> "$GITHUB_ENV"
+      - name: Real 360px Chromium DOM, original 0/1/2/3/10 editorial paragraphs, no GPS or geo spoof
+        run: |
+          node --check ci/phase4/b7-t035-cp03-real-article-browser.cjs
+          node ci/phase4/b7-t035-cp03-real-article-browser.cjs
+      - name: Preserve original article/geo/pinned/Article URL regressions
+        run: |
+          node --test ci/phase4/b7-client-regression.cjs
+          node --test ci/phase4/b7-lgd-source-preflight.test.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        if: always()
+        with:
+          name: T035-CP03-360-Chromium-E1-NOT-ANDROID
+          path: t035-cp03-article-browser-evidence/
+          retention-days: 7
+          if-no-files-found: warn
+  disposable-geo-sql:
+    name: Exact Article LGD Gwalior/Pichhore mismatch & Owner grant safety
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_local_only
+          POSTGRES_DB: b7_geo
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_geo"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_geo
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Bootstrap synthetic fixture (NOT real MP government directory)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-fixture.sql
+      - name: Apply review-only verified Article/location backend in isolated CI ONLY
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+      - name: Verify exact Article authority, Gwalior vs Pichhore, unauthenticated and Owner controls
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-geo-regression.sql
