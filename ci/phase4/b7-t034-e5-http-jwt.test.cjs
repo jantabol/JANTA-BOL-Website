@@ -95,9 +95,10 @@ async function negative(){
   payment,'OWNER_AAL2_REQUIRED');
  await deniedRpc('editor cannot verify',actors.editor,'/rpc/jb_ad_verify_advertiser_internal',
   verification,'OWNER_AAL2_REQUIRED');
- const tampered=actors.reporter.replace(/.$/,x=>x==='A'?'B':'A');
+ const tampered=actors.reporter.replace(/\.([A-Za-z0-9_-])/,(_m,ch)=>'.'+(ch==='A'?'B':'A'));
  denied(await api('GET','/ad_campaigns?select=id',tampered),'tampered JWT signature');
- const expired=sign(IDs.owner,IDs.ownerAal2,'aal2',{exp:Math.floor(Date.now()/1000)-30});
+ // PostgREST v12 accepts up to 30s clock skew; -30 is boundary-flaky.
+ const expired=sign(IDs.owner,IDs.ownerAal2,'aal2',{exp:Math.floor(Date.now()/1000)-120});
  denied(await api('GET','/ad_campaigns?select=id',expired),'expired signed JWT');
  for(const [name,tok] of Object.entries({reporter:actors.reporter,ownerAal1:actors.ownerAal1,ownerRevoked:actors.ownerRevoked})){
   denied(await api('PATCH','/ad_campaigns?id=eq.'+IDs.highUnverified,tok,
