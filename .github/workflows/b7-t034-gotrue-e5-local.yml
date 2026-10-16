@@ -33,6 +33,26 @@ jobs:
           mkdir -p /tmp/t034_e5_auth
           cd /tmp/t034_e5_auth
           supabase init --yes >/dev/null
+          # Independent RCA #38887672468: source-aligned ACL negatives passed,
+          # but MFA enroll returned 422 because CLI default TOTP is OFF.
+          # Official CLI config: [auth.mfa.totp] enroll_enabled=false /
+          # verify_enabled=false. Enable them ONLY in this ephemeral local config.
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path=Path("supabase/config.toml")
+          original=path.read_text()
+          m=re.search(r"(?ms)^\[auth\.mfa\.totp\]\s*\n(?P<sec>.*?)(?=^\[|\Z)",original)
+          if not m: raise SystemExit("E5_LOCAL_TOTP_SECTION_NOT_FOUND")
+          section=m.group("sec")
+          for key in ("enroll_enabled","verify_enabled"):
+              pattern=rf"(?m)^{key}\s*=\s*false\s*$"
+              replaced,n=re.subn(pattern,f"{key} = true",section,count=1)
+              if n!=1: raise SystemExit("E5_LOCAL_MFA_CONFIG_UNEXPECTED_"+key)
+              section=replaced
+          path.write_text(original[:m.start("sec")]+section+original[m.end("sec"):])
+          print("E5_DISPOSABLE_TOTP_ENROLL_AND_VERIFY_ENABLED=true")
+          PY
           # No supabase login, link, remote project or production keys.
           # Do not print disposable local keys, passwords or signing secrets.
           supabase start --exclude studio,realtime,storage,functions,mail,analytics,pooler >/tmp/t034-local-start.log 2>&1 || {
