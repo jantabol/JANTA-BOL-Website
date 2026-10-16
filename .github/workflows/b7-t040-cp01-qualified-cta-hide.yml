@@ -79,3 +79,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t040-cp01-hide-cta-boundary-regression.sql
       - name: Original ADS048-050 50percent server ticket full legacy test and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-regression.sql
+      - name: NEW T040 CP02: IST Today vs UTC date boundary, owner qualified 7d 30d no PII, real PG17 rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t040-cp02-ist-analytics-boundary.sql
