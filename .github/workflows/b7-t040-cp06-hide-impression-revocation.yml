@@ -1,0 +1,50 @@
+name: P4-T040 CP06 HIDE-view-ticket revocation disposable PG17
+on:
+  push:
+    branches:
+      - review/t040-cta-privacy-failure-20261016
+    paths:
+      - '.github/workflows/b7-t040-cp06-hide-impression-revocation.yml'
+      - 'ci/phase4/b7-t040-cp06-hide-view-token-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real-disposable-postgresql-revoked-view:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_ci_fixture_only
+          POSTGRES_DB: jb_t040_cp06
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t040_cp06"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: local_ci_fixture_only
+      PGDATABASE: jb_t040_cp06
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify no production tokens, only disposable PG fixture
+        run: echo 'T040_CP06_DISPOSABLE_DB_ONLY_NO_LIVE_SUPABASE_NO_BILLING'
+      - name: Build disposable original campaign/Article/ticket fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-fixture.sql
+      - name: Apply reviewed receipt, geo, shared eligibility, qualified ticket and CTA
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_cta_click_REVIEW_ONLY.sql
+      - name: HIDDEN old view token must not count, LIVE fresh view once, ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t040-cp06-hide-view-token-regression.sql
