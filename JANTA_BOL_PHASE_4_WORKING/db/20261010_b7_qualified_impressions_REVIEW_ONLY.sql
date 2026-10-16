@@ -103,9 +103,17 @@ begin
    or v_now>=v.expires_at then
   return false;
  end if;
- -- Intentionally do not reselect an already-open/previously-approved ad:
- -- emergency Hide must stop NEW openings, not alter a previously pinned
- -- rendered card or delete its legitimate qualified local observation.
+ -- P4-T040 CP06: post-HIDE/pre-qualification is NOT a paid view.
+ -- The emergency revocation bridge removes a previously pinned ad card;
+ -- a pre-issued ticket cannot report a fresh qualified impression for the
+ -- now-HIDDEN, unpaid, expired or withdrawn Article+creative pair.
+ -- Exactly reuse the existing private paid/Article/geo/approval authority,
+ -- matching the sibling 30-minute click guard. No ad re-selection, no
+ -- change to genuine impressions already recorded, no new table/PII.
+ if not exists(
+  select 1 from private.b7_eligible_article_creatives(v.article_id) e
+  where e.campaign_id=v.campaign_id and e.creative_id=v.creative_id
+ ) then return false;end if;
  update public.ad_view_tickets set impression_at=v_now
  where token_hash=v.token_hash;
  insert into public.ad_events(
