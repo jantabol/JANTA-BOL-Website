@@ -1,0 +1,30 @@
+name: P4-T040 CP04 hosted Supabase E2 READ-ONLY readiness / release hold
+on:
+  push:
+    branches:
+      - review/t040-cta-privacy-failure-20261016
+permissions:
+  contents: read
+jobs:
+  e2-readiness-source-and-closed-launch-gate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: No production Supabase secrets in CI; E2 positive and E3 are still due
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          echo 'P4_T040_CP04_IS_SOURCE_REVIEW_ONLY_NOT_HOSTED_E2_PASS'
+      - name: Official ADS048-050 release gates and safe hosted READ-ONLY preflight contract
+        run: node --test ci/phase4/b7-t040-cp04-hosted-readiness-source.test.cjs
+      - name: Preserve old qualified ad frontend failure and owner client negative checks
+        run: |
+          node --test ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs
+          node --test ci/phase4/b7-analytics-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
