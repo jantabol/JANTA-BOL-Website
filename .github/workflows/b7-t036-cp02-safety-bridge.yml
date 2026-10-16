@@ -1,0 +1,64 @@
+name: P4-T036 CP02 pinned Article revoke and Owner safety replay (ISOLATED)
+on:
+  push:
+    branches:
+      - review/t036-schedule-lifecycle-20261016
+permissions:
+  contents: read
+jobs:
+  viewer-bridge-and-regressions:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: No production/service credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'ADS019_ADS023_NO_REAL_PAYMENT_NO_PROD_WRITE=true'
+      - name: New revocation bridge and Owner safety opt-in E1 tests
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/b7-ad-revocation-bridge.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js
+          node --test ci/phase4/b7-t036-cp02-bridge-regression.test.cjs
+      - name: Existing T035/T036 protected legacy regression
+        run: |
+          node --test ci/phase4/b7-t035-cp02-renderer-poster-regression.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node --test ci/phase4/b7-lifecycle-client-gate.test.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+  real-pg17-revocation-idempotent:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: b7_t036_cp02}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t036_cp02"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_local_only
+      PGDATABASE: b7_t036_cp02
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Disposable exact legacy schema and transition source
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t036-legacy-transition-fixture.sql
+      - name: Apply candidate only to ephemeral database
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261016_b7_t036_revocation_replay_REVIEW_ONLY.sql
+      - name: Actual PG17 public same-card visibility, time/paid denial, safe Owner HIDE no duplicate replay, ACL, rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t036-revocation-replay-regression.sql
