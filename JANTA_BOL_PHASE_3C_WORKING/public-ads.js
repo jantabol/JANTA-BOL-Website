@@ -20,6 +20,30 @@ function safe(value){
  }catch(_){return ''}
 }
 function node(tag,cls,text){const e=document.createElement(tag);if(cls)e.className=cls;if(text)e.textContent=text;return e}
+/* ADS-011: an HTTPS string is not a decoded poster. A video must not
+ * appear with a blank/broken preview. Browser decoder is only a DISPLAY
+ * preflight, never the server's media-approval or malware authority.
+ * 6s timeout is fail closed; no second ad is selected as fallback. */
+function decodedPoster(url){
+ if(!url||typeof g.Image!=='function'||typeof g.setTimeout!=='function'||
+    typeof g.clearTimeout!=='function')return Promise.resolve(false);
+ return new Promise(resolve=>{
+  const probe=new g.Image();let finished=false;
+  const finish=ok=>{
+   if(finished)return;finished=true;
+   g.clearTimeout(timer);
+   probe.onload=null;probe.onerror=null;
+   if(!ok)probe.src='';
+   resolve(ok);
+  };
+  const timer=g.setTimeout(()=>finish(false),6000);
+  probe.referrerPolicy='no-referrer';
+  probe.onload=()=>finish(Number.isFinite(probe.naturalWidth)&&
+   probe.naturalWidth>0&&Number.isFinite(probe.naturalHeight)&&probe.naturalHeight>0);
+  probe.onerror=()=>finish(false);
+  probe.src=url;
+ });
+}
 function scopeForArticle(item){
  if(item?.geoLevel==='Local-Pichhore')return 'local';
  const district=String(item?.district||'').trim().toLowerCase();
@@ -103,10 +127,13 @@ async function render(placement,scope='global'){
    const img=node('img','jb-public-ad-image');mediaNode=img;img.src=safe(ad.media_url);img.alt='विज्ञापन';img.loading='lazy';img.referrerPolicy='no-referrer';
    img.addEventListener('error',()=>{if(current())slot.replaceChildren()},{once:true});box.append(img);
   }else if(ad.creative_type==='video'&&safe(ad.media_url)&&safe(ad.poster_url)){
-   // ADS-011: protected first-party poster MUST exist BEFORE playback;
-   // fake/dead poster = no paid video shown, news remains readable.
+   // Even a valid HTTPS string may be a 404 or an undecodable poster.
+   // Wait for a real image decode BEFORE exposing any paid video frame.
+   // If removed/pinned elsewhere while waiting, never reinsert stale media.
+   const posterUrl=safe(ad.poster_url),videoUrl=safe(ad.media_url);
+   if(!await decodedPoster(posterUrl)||!current())return;
    const video=node('video','jb-public-ad-video');mediaNode=video;
-   video.poster=safe(ad.poster_url);video.src=safe(ad.media_url);
+   video.poster=posterUrl;video.src=videoUrl;
    video.controls=true;video.preload='none';video.playsInline=true;
    video.autoplay=false;video.muted=true;
    video.setAttribute('aria-label','वीडियो विज्ञापन');
