@@ -36,7 +36,7 @@ function setup({visibility=true,bridge=true,adType='text',creativeId=K}={}){
    if(visibility==='throw')throw Error('network');
    if(typeof visibility==='function')return visibility();
    return {data:visibility,error:null};
-  }}}}
+  }}}
  };
  const c=vm.createContext({window:g,document:doc,URL,setTimeout,clearTimeout});
  vm.runInContext(fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/public-ads.js','utf8'),c);
