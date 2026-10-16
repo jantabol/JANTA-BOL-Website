@@ -40,11 +40,20 @@ const checks=[
    // Never print response bodies, Auth JWTs or private rows.
    const raw=await r.text();let obj=null;try{obj=JSON.parse(raw)}catch{}
    const code=String(obj?.code||obj?.error_code||obj?.error||'none');
-   if(r.status!==401){
-    console.error('CP13 FORGED_JWT_GATE_FAIL '+label+' http='+r.status+' code='+code);
+   // GoTrue 403 bad_jwt is a documented Auth invalid-JWT rejection.
+   // Preserve strict HTTP 401 for PostgREST. Do not accept arbitrary 403s.
+   const isAuthCheck=label.startsWith('GOTRUE_');
+   const msg=String(obj?.msg||obj?.message||obj?.error_description||'');
+   const invalidJWT=(obj?.error_code==='bad_jwt'||/invalid\s+jwt|jwt.*(invalid|signature|unverifiable)|invalid\s+token/i.test(msg));
+   const verifiedDenied=isAuthCheck
+     ?(r.status===401||(r.status===403&&invalidJWT))
+     :r.status===401;
+   if(!verifiedDenied){
+    console.error('CP13 FORGED_JWT_GATE_FAIL '+label+' http='+r.status+
+     ' code='+code+' error_code='+String(obj?.error_code||'none'));
     process.exitCode=1;
    }else{
-    console.log('PASS CP13 HOSTED '+label+' HTTP=401 authenticated=NO');
+    console.log('PASS CP13 HOSTED '+label+' HTTP='+r.status+' authenticated=NO');
     count++;
    }
  }
