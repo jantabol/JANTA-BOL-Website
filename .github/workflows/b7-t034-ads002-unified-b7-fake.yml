@@ -1,0 +1,34 @@
+name: T034 ADS002 unified B7 fake UI and E7 regression
+on:
+  push:
+    branches:
+      - review/t034-ads002-unify-b7-20261016
+  pull_request:
+    branches:
+      - codex/b7-t034-safe-guard-20261013
+permissions:
+  contents: read
+jobs:
+  b7-reviewed-ads002:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Reviewed WhatsApp and consent validation fake test
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b7-t034-india-whatsapp-ui.test.cjs
+          node ci/phase4/b7-t034-india-whatsapp-ui.test.cjs
+      - name: Existing ADS001 public CTA and E7 Owner review regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs ci/phase4/b7-t034-owner-request-dashboard.test.cjs ci/phase4/b7-client-regression.cjs
+      - name: Confirm no live Supabase or Backblaze execution
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'FAKE_ONLY_PASSED=true; NO_PRODUCTION_WRITES'
