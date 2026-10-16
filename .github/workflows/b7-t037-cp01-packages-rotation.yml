@@ -1,0 +1,132 @@
+name: P4-T037 CP01 original prices + weighted geo + capacity (ISOLATED)
+on:
+  push:
+    branches: [review/t037-packages-rotation-inventory-20261016]
+permissions:
+  contents: read
+jobs:
+  source-price-and-news-protection:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Guard private environment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'T037_CP01_NO_PAID_AD_NO_PROD_SQL_NO_LIVE_AUTH'
+      - name: Original PDF T037 map + client zero-price founder gate
+        run: node --test ci/phase4/b7-t037-cp01-source-price.test.cjs
+      - name: Protect existing client and Founder contact-only UI
+        run: |
+          node --test ci/phase4/b7-cp03-intake-inventory-feed.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+  weighted-disposable-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t037_weighted}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t037_weighted"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t037_weighted}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Build original synthetic fixture and reviewed guards (not production)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+      - name: Actual SQL 3200 random weighted/geo/one-ad/invalid exclusion + rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-regression.sql
+  inventory-disposable-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t037_inventory}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t037_inventory"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t037_inventory}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Original review-only locked inventory reservation schema in disposable DB
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-inventory-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_inventory_guard_REVIEW_ONLY.sql
+      - name: Actual 600+400 sold capacity, negative oversell, high-risk, terms, immutability rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-inventory-regression.sql
+  one-canonical-feed-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t037_feed}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t037_feed"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t037_feed}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Synthetic exact Article ID/geography/paid creative and original protected private pool
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_single_public_feed_cutover_REVIEW_ONLY.sql
+      - name: Exact single canonical Article/published+geo and homepage feed, safe labels and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-single-feed-regression.sql
+
+  versioned-package-price-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t037_price}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t037_price"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t037_price}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Original package version synthetic schema
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+      - name: REVIEW-ONLY greater-than-zero price and append-only historic version
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261016_b7_t037_positive_price_version_REVIEW_ONLY.sql
+      - name: Real PG17 zero reject, new version, prior frozen version and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t037-cp01-version-price-regression.sql
