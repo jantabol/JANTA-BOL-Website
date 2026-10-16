@@ -1,0 +1,50 @@
+name: P4-T042 CP03 No-Paid Main-vs-Candidate Source Authority (E7 HOLD)
+on:
+  push:
+    branches:
+      - review/t042-no-paid-final-audit-20261016
+    paths:
+      - 'ci/phase4/b7-t042-cp03-source-authority.test.cjs'
+      - '.github/workflows/b7-t042-cp03-free-authority-reconciliation.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  exact-git-source-reconciliation:
+    name: CP03 B6/News branch authority and original 9/60 hold — local git only
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+      - name: Record checked-out SHA, main SHA and exact existing News path state
+        run: |
+          set -euo pipefail
+          git rev-parse HEAD
+          git rev-parse refs/remotes/origin/main
+          echo "NEWS nested path on checkout:"
+          git cat-file -e HEAD:JANTA_BOL_PHASE_3C_WORKING/article.html
+          echo "This checks source drift only; it does NOT deploy, pay, or rewrite Production."
+      - name: Original canonical B6/News in candidate, Production main lacks same source E7 HOLD
+        run: node --test ci/phase4/b7-t042-cp03-source-authority.test.cjs
+      - name: Original B7 9/60 coverage evidence remains B7 ZIP blocked
+        run: |
+          node ci/phase4/b7-closure-gate.cjs --audit
+          node --test ci/phase4/b7-closure-regression.cjs
+  news-prelaunch-preservation:
+    name: Phase3 original News/Auth/security static + contact-only independent
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Existing protected Phase3 Source no-rebuild
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+      - name: Original public ad contact/readability and known secret guard
+        run: |
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+          node ci/phase4/b7-public-secret-scan.cjs
