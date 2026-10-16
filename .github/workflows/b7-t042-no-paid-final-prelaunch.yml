@@ -1,0 +1,84 @@
+name: P4-T042 No-Paid ADS057-060 E1 E7 preflight (NOT physical E3)
+on:
+  push:
+    branches:
+      - review/t042-no-paid-final-audit-20261016
+    paths:
+      - '.github/workflows/b7-t042-no-paid-final-prelaunch.yml'
+      - 'ci/phase4/b7-t042-no-paid-final-audit.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/B7_FINAL_ZIP_CLOSURE_MANIFEST.json'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ads057-060-source-evidence-hold:
+    name: Original B7 no-paid owner UI, one SOT, permanent Article, 60-check audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: T042 exact original source read and no-fake final ADS tests
+        run: node --test ci/phase4/b7-t042-no-paid-final-audit.test.cjs
+      - name: Original Android Owner source preflight and safe environment
+        run: |
+          node --test ci/phase4/b7-cp05-android-release-preflight.test.cjs
+          node --test ci/phase4/b7-cp06-android-environment.test.cjs
+      - name: Contact-only no-paid News UI, Secrets and Public Client
+        run: |
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+          node ci/phase4/b7-public-secret-scan.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+      - name: Original 9 canonical tests / 60 ADS cannot emit fake final ZIP
+        run: |
+          node ci/phase4/b7-closure-gate.cjs --audit
+          node --test ci/phase4/b7-closure-regression.cjs
+          node --test ci/phase4/b7-issue-coverage.test.cjs
+  protected-phase3-static:
+    name: Protected original Phase3 STATIC News/Auth/Owner and coverage only
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Original protected suites, not full live transactional DB
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p1-functional-regression.cjs
+          node ci/phase3-regression/static-p2-core-regression.cjs
+          node ci/phase3-regression/static-p2-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          node ci/phase4/static-b1-team-regression.cjs
+          node ci/phase4/static-b2-records-regression.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+  chromium-real-css-isolated-news:
+    name: Real Chromium 360px News/Article/Contact E1 (synthetic isolated backend)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Ensure runner Chrome installed
+        run: |
+          command -v google-chrome
+          google-chrome --version
+      - name: Install isolated Playwright runner only (no application package changes)
+        run: |
+          npm install --prefix "$RUNNER_TEMP/b7_t042_browser_only" --no-audit --no-fund --no-save playwright-core@1.56.1
+          echo "NODE_PATH=$RUNNER_TEMP/b7_t042_browser_only/node_modules" >> "$GITHUB_ENV"
+      - name: Actual Chromium CSS 360px News CTA and form, synthetic Article, no LIVE backend
+        run: node ci/phase4/b7-t034-ads001-360-browser.cjs
+      - name: Actual Chromium Article paragraphs/one ad slot/UUID/no GPS, no LIVE backend
+        run: node ci/phase4/b7-t035-cp03-real-article-browser.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: T042-NO-PAID-CHROMIUM-E1-NOT-ANDROID-E3
+          path: |
+            ads001-360-evidence/
+            t035-cp03-article-browser-evidence/
+          retention-days: 7
+          if-no-files-found: warn
