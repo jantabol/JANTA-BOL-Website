@@ -37,9 +37,9 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres -d jb_t038_cp01"
-          --health-interval: 5s
-          --health-timeout: 5s
-          --health-retries: 8
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
     env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t038_cp01}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -60,9 +60,9 @@ jobs:
         ports: ['5432:5432']
         options: >-
           --health-cmd "pg_isready -U postgres -d jb_t038_prior"
-          --health-interval: 5s
-          --health-timeout: 5s
-          --health-retries: 8
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
     env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t038_prior}
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
