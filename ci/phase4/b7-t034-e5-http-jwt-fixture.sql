@@ -10,6 +10,10 @@ CREATE TABLE public.user_roles (user_id uuid PRIMARY KEY,role public.app_role NO
 CREATE TABLE public.team_accounts (user_id uuid PRIMARY KEY,status text NOT NULL);
 CREATE TABLE auth.sessions (id uuid PRIMARY KEY,user_id uuid NOT NULL);
 CREATE TABLE public.advertiser_users (user_id uuid PRIMARY KEY,advertiser_id uuid NOT NULL);
+CREATE TABLE public.audit_logs (
+ id bigint GENERATED ALWAYS AS IDENTITY,
+ actor_user_id uuid,action text,record_type text,record_id text,
+ metadata jsonb DEFAULT '{}'::jsonb,created_at timestamptz DEFAULT now());
 
 -- Match LIVE authority lookup shape using the PostgREST verified request JWT.
 CREATE FUNCTION auth.jwt() RETURNS jsonb
@@ -129,6 +133,10 @@ BEGIN
  left(v_note||CASE WHEN v_ref='' THEN '' ELSE '; evidence reference='||v_ref END,1500),
  auth.uid()
  FROM public.ad_campaigns c WHERE c.advertiser_id=p_advertiser;
+ INSERT INTO public.audit_logs(actor_user_id,action,record_type,record_id,metadata,created_at)
+ VALUES(auth.uid(),'ad_verification','advertiser',p_advertiser::text,
+ jsonb_build_object('state',p_state,'high_risk',v.risk_level='high',
+  'evidence_provided',v_ref<>''),now());
 END $ver$;
 
 -- Explicit PostgreSQL authenticator for test-only PostgREST HTTP listener.
@@ -149,6 +157,7 @@ ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.advertisers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ad_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ad_payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
 GRANT SELECT ON public.ad_campaigns,public.advertisers,public.ad_history TO authenticated;
 CREATE POLICY ad_staff_campaigns ON public.ad_campaigns FOR SELECT TO authenticated
  USING(private.p4_staff_allowed());
@@ -166,7 +175,8 @@ BEGIN
  IF NOT has_function_privilege('authenticated','public.jb_ad_verify_advertiser_internal(uuid,text,text,text)','EXECUTE')
  THEN RAISE EXCEPTION 'E5_FIXTURE_OWNER_VERIFIER_UNREACHABLE';END IF;
  IF (SELECT COUNT(*) FROM public.ad_payments)<>0 OR
-    (SELECT COUNT(*) FROM public.ad_history)<>0 THEN
+    (SELECT COUNT(*) FROM public.ad_history)<>0 OR
+    (SELECT COUNT(*) FROM public.audit_logs)<>0 THEN
     RAISE EXCEPTION 'E5_FIXTURE_DIRTY_AUDIT';END IF;
  RAISE NOTICE 'E5 DISPOSABLE fixture prepared: signed-JWT role/session/AAL2 checks use real SQL functions and zero live identifiers';
 END $check$;
