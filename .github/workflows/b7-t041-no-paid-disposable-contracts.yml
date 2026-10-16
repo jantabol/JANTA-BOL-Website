@@ -1,0 +1,125 @@
+name: P4-T041 No-Paid B3 Notifications Retention Security (DISPOSABLE ONLY)
+on:
+  push:
+    branches:
+      - review/t041-no-paid-e1-20261016
+    paths:
+      - '.github/workflows/b7-t041-no-paid-disposable-contracts.yml'
+      - 'ci/phase4/b7-t041-no-paid-source-gate.test.cjs'
+      - 'ci/phase4/b7-notification-*.sql'
+      - 'ci/phase4/b7-b3-real-contract-*.sql'
+      - 'ci/phase4/b7-retention-*.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_retention_audit_REVIEW_ONLY.sql'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  exact-source-and-news-boundary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Existing B3 only, no external sent, no live payment or user secrets
+        run: node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
+      - name: Phase3 protected STATIC News/Auth/coverage baseline (not LIVE database)
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+  original-B3-real-contract-disposable:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_fixture_only
+          POSTGRES_DB: b7_t041_original_b3
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t041_original_b3"
+          --health-interval 3s --health-timeout 5s --health-retries 20
+    env: { PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: local_fixture_only, PGDATABASE: b7_t041_original_b3 }
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Original synthetic Article/ad and B3 tables (local-only)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-setup.sql
+      - name: Original existing B3 notification migrations verbatim
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000100_phase4_b3_unified_notifications_foundation.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000200_phase4_b3_notification_delivery_and_adapters.sql
+          psql -X -v ON_ERROR_STOP=1 -f CODEX_CURRENT_SUPABASE/migrations/20261003000500_phase4_b3_notification_privacy_priority_reminders.sql
+      - name: Only REVIEW-ONLY B7 adapter to existing B3 (local-only)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Actual B3 history, owner revocation, stale retry and secrets denied
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-b3-real-contract-regression.sql
+  commercial-retention-disposable:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_fixture_only
+          POSTGRES_DB: b7_t041_retention
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t041_retention"
+          --health-interval 3s --health-timeout 5s --health-retries 20
+    env: { PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: local_fixture_only, PGDATABASE: b7_t041_retention }
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Synthetic B3 payment/audit/history fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-fixture.sql
+      - name: Original REVIEW-ONLY append-only/retention guards, NOT Production
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_retention_audit_REVIEW_ONLY.sql
+      - name: Immutable audit/history/creative, HOLD and purge-negative, ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-retention-regression.sql
+  inapp-outage-retry-disposable:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_fixture_only
+          POSTGRES_DB: b7_t041_notifications
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t041_notifications"
+          --health-interval 3s --health-timeout 5s --health-retries 20
+    env: { PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: local_fixture_only, PGDATABASE: b7_t041_notifications }
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create disposable synthetic B3 notification contract fixture
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-fixture.sql
+      - name: Install original REVIEW-ONLY manual payment and unified Owner notices
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql
+      - name: Existing Owner request/verification/lifecycle/renewal notification outage and AAL2 retry
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-regression.sql
+      - name: Two-session concurrent Owner retry proves one in-app receipt
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-setup.sql
+          AUDIT_ID=$(psql -X -At -v ON_ERROR_STOP=1 -c "select id from public.audit_logs where action='ad_notification_failed' limit 1")
+          if [[ ! "$AUDIT_ID" =~ ^[0-9]+$ ]]; then echo "NO_LOCAL_AUDIT_REFERENCE"; exit 1; fi
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-a.log 2>&1 &
+          P1=$!
+          sleep 0.10
+          psql -X -v ON_ERROR_STOP=1 -c "begin; select set_config('b7.test_owner','enabled',true); select set_config('b7.test_notify_delay','yes',true); select public.jb_ad_notification_retry_internal($AUDIT_ID); commit;" > /tmp/b7-retry-b.log 2>&1 &
+          P2=$!
+          wait "$P1" || { cat /tmp/b7-retry-a.log; exit 1; }
+          wait "$P2" || { cat /tmp/b7-retry-b.log; exit 1; }
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-notification-concurrency-verify.sql
