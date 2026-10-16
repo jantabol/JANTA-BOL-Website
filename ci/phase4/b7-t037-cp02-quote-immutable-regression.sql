@@ -6,7 +6,7 @@
 -- after minimum-safe quote guard. NEVER runs against production.
 begin;
 do $nonowner$
-declare cid uuid:='30000000-0000-0000-0000-000000000003',msg text;
+declare cid uuid:='30000000-0000-0000-0000-000000000003'; msg text;
 begin
  begin
   perform public.jb_ad_set_approved_quote_internal(cid,68000,'SIGNED-MULTIDISTRICT-QUOTE-1');
