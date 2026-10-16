@@ -36,3 +36,10 @@ Actual live catalog (no dummy identities, no JWT/session impersonation, no datab
 - Independently reconcile ADS-001…009 E2/E3/E5 before **P4-T034 PASS+LOCK**. Preserve previously passed real DB backup/isolated restore G3 and deployed ADS008 guard (main evidence CP06/CP07). Do not rerun owner paper AGE key or real production restore only for E7.
 
 **No fake PASS; no old B7 rebuild; no production SQL writes in this evidence checkpoint.**
+
+## ADS-009 genuine Android logged-out UI test — 16 Oct 2026 (Founder)
+- Founder confirmed earlier Incognito attempts reused an **already-open Owner-authenticated Incognito session**; those were **not** anonymous evidence.
+- After closing all old Incognito tabs, Founder opened the JANTA BOL B7 Advertising link in a fresh Incognito session **without logging in**.
+- Founder tablet screenshot shows **Super Admin Login** screen (email/password form), **not** the Owner advertisement request queue; no advertiser contact or private campaign details observed in this fresh-session capture.
+- **ADS009 E3 anonymous UI routing/access gate: PASS (observed on Android).** Real HTTP/API/JWT unauthenticated attempt/response and complete Owner/reporter/advertiser/revoked/AAL1/AAL2 E5 permission matrix **NOT RUN / HOLD**. Do not upgrade ADS009 or T034 FINAL PASS from a login-screen screenshot alone.
+- No test data mutation, no additional login, credentials, private screenshots or payment steps required for this gate.
