@@ -65,6 +65,15 @@ returns trigger language plpgsql security definer
 set search_path to 'pg_catalog','public'
 as $session$
 begin
+ -- T039 ADS041/042: session revocation is irrevocable for the SAME token.
+ -- An Owner re-verification/fresh login secret may create a NEW session,
+ -- but UPDATE must never resurrect a previously revoked 12-hour bearer.
+ if tg_op='UPDATE' then
+  if old.revoked_at is not null and new.revoked_at is null then
+   raise exception 'B7_PORTAL_SESSION_REVOKED_FOREVER'
+     using errcode='42501';
+  end if;
+ end if;
  if new.revoked_at is null and not exists(
   select 1 from public.ad_campaigns c
   join public.advertisers a on a.id=c.advertiser_id
