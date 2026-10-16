@@ -26,6 +26,7 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/ad-analytics-client.js
           node --test ci/phase4/b7-viewability-regression.cjs
           node --test ci/phase4/b7-analytics-client-regression.cjs
+          node --test ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs
           node --test ci/phase4/b7-public-ad-cta-android.test.cjs
           node --test ci/phase4/b7-client-regression.cjs
           node ci/phase4/b7-closure-gate.cjs --audit
