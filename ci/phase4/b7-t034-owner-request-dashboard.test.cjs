@@ -171,10 +171,10 @@ test('E7 Owner status filter never issues mutations; fetch failure is fail-close
 
 test('E7 read remains owner-guarded and never restricts backend to requested only',()=>{
  const source=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js','utf8');
- const match=source.match(/async function adRows\(\)\{([^}]+)\}/);
- assert.ok(match,'existing canonical owner read must remain');
- assert.match(match[1],/await owner\(\)/);
- assert.match(match[1],/\.from\('ad_campaigns'\)/);
- assert.doesNotMatch(match[1],/\.eq\(['"]status['"],\s*['"]requested['"]\)/);
+ const body=source.split('async function adRows(){')[1]?.split('async function adVerifyAdvertiser')[0];
+ assert.ok(body,'existing canonical owner read must remain');
+ assert.match(body,/await owner\(\)/);
+ assert.match(body,/\.from\('ad_campaigns'\)/);
+ assert.doesNotMatch(body,/\.eq\(['"]status['"],\s*['"]requested['"]\)/);
  assert.ok(adsHtml.includes('id="adOwnerStatusFilter"'));
 });
