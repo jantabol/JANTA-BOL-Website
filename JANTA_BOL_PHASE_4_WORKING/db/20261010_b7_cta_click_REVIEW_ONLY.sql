@@ -38,6 +38,18 @@ begin
    return false;
  end if;
 
+ -- P4-T040 ADS-048/050: a 30-minute Article click token is NOT
+ -- permission to claim clicks after the exact approved ad was HIDDEN,
+ -- PAUSED, expired, unpaid, or withdrawn. The open Article stays pinned,
+ -- but a revoked/now-ineligible ad cannot create a fresh paid-click event.
+ -- Reuse the ORIGINAL shared private article+paid+geo eligibility;
+ -- never duplicate CTA/geography/receipt logic or select a replacement.
+ -- Keep the 21-minute STILL-LIVE reader's original CTA working.
+ if not exists(
+  select 1 from private.b7_eligible_article_creatives(v.article_id) e
+  where e.campaign_id=v.campaign_id and e.creative_id=v.creative_id
+ ) then return false;end if;
+
  -- Only an ALREADY-approved CTA from the precise ticket-bound creative.
  -- Browser cannot assert a URL, scheme, campaign, district or destination.
  if not exists(
@@ -84,7 +96,8 @@ begin
  if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
  select jsonb_build_object(
    'today',count(*) filter(where event_type='impression' and qualified=true
-     and created_at>=date_trunc('day',now())),
+     and created_at>=(date_trunc('day',now() AT TIME ZONE 'Asia/Kolkata')
+       AT TIME ZONE 'Asia/Kolkata')),
    'd7',count(*) filter(where event_type='impression' and qualified=true
      and created_at>=now()-interval '7 days'),
    'd30',count(*) filter(where event_type='impression' and qualified=true

@@ -388,9 +388,10 @@ begin
 end $owner_only$;
 reset role;
 
--- Existing pinned Article can still finish its legitimate view even if Owner
--- hid the campaign *after* its short-lived ticket was issued. New issuance
--- must be blocked for future openings by live eligibility.
+-- A previously opened Article may remain pinned, but Owner emergency HIDE
+-- revokes the displayed ad. No NEW view/impression should be counted AFTER
+-- HIDE, even from a previously issued unconsumed ticket (CP06 proves this).
+-- This original case checks issuance after HIDE plus expired-token rejection.
 select set_config('b7.test_owner','enabled',true);
 set local role anon;
 do $pin$

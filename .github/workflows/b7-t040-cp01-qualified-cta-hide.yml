@@ -1,0 +1,84 @@
+name: P4-T040 CP01 verified CTA HIDE vs pinned long-view (ISOLATED)
+on:
+  push:
+    branches:
+      - review/t040-cta-privacy-failure-20261016
+permissions:
+  contents: read
+jobs:
+  protected-public-cta-client:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: No live Supabase or account tokens
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'T040_CP01_NO_PROD_NO_LIVE_AD_NO_VIEWER_TRACKING'
+      - name: Existing real CTA source and 50-percent/1-second viewability client tests
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-analytics-client.js
+          node --test ci/phase4/b7-viewability-regression.cjs
+          node --test ci/phase4/b7-analytics-client-regression.cjs
+          node --test ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+      - name: Protected Phase-3 STATIC source/security/regression baseline (no LIVE DB)
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p1-functional-regression.cjs
+          node ci/phase3-regression/static-p2-core-regression.cjs
+          node ci/phase3-regression/static-p2-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          node ci/phase4/governance-b0.cjs
+          node ci/phase4/static-b1-team-regression.cjs
+          node ci/phase4/static-b2-records-regression.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+  real-disposable-postgresql-cta-hide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: jb_t040_cp01}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t040_cp01"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t040_cp01}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Build only synthetic campaign Article and view-ticket ledger
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-weighted-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-fixture.sql
+      - name: Apply existing reviewed receipt geo one-eligibility view and CTA SQL (isolated only)
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_geo_targeting_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_weighted_private_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_cta_click_REVIEW_ONLY.sql
+      - name: New HIDE/revoked CTA never billed; long-reading still-live CTA once; rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t040-cp01-hide-cta-boundary-regression.sql
+      - name: Original ADS048-050 50percent server ticket full legacy test and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-view-ticket-regression.sql
+      - name: "T040 CP02 IST Today vs UTC midnight, Owner privacy and PG17 rollback"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t040-cp02-ist-analytics-boundary.sql
