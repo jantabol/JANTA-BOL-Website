@@ -113,3 +113,68 @@ test('ADS006 genuine server-side notification gate stays DUE; client does not pr
  assert.doesNotMatch(adminScript,/new Notification\(|navigator\.serviceWorker|sendNotification|deliver[_A-Z]/);
  assert.match(adminScript,/separate/);
 });
+
+test('E7: Owner can retrieve reviewed request alongside all canonical campaign statuses',async()=>{
+ const rows=[
+  {id:'req1',created_at:'2026-10-16T03:00:00Z',status:'requested',advertisers:{name:'New A',verification_state:'pending'}},
+  {id:'req2',created_at:'2026-10-16T04:00:00Z',status:'requested',advertisers:{name:'New B',verification_state:'pending'}},
+  {id:'req3',created_at:'2026-10-16T05:00:00Z',status:'requested',advertisers:{name:'New C',verification_state:'pending'}},
+  {id:'req4',created_at:'2026-10-16T06:00:00Z',status:'requested',advertisers:{name:'New D',verification_state:'pending'}},
+  {id:'review1',created_at:'2026-10-13T09:25:34Z',status:'review',advertisers:{name:'E7 reviewed request',verification_state:'pending'}},
+  {id:'due1',created_at:'2026-10-10T09:00:00Z',status:'payment_pending',advertisers:{name:'Payment due A',verification_state:'verified'}},
+  {id:'due2',created_at:'2026-10-10T09:10:00Z',status:'payment_pending',advertisers:{name:'Payment due B',verification_state:'verified'}}
+ ];
+ let reads=0;
+ const {context,get}=adHarness(rows);
+ context.JBPhase4.adRows=async()=>{reads++;return rows};
+ await vm.runInContext('load()',context);
+ assert.equal(reads,1);
+ assert.equal(get('adPendingCount').textContent,'Pending 4');
+ assert.match(get('adOwnerQueueSummary').textContent,/All 7 · New 4 · Review 1 · Payment pending 2/);
+ const all=get('rows').innerHTML;
+ assert.match(all,/E7 reviewed request/);
+ assert.match(all,/id="s-review1"/);
+ assert.match(all,/Record verification/);
+ assert.match(all,/Payment due A/);
+ assert.ok(all.indexOf('New D')<all.indexOf('E7 reviewed request'),'requested first');
+ get('adOwnerStatusFilter').value='review';
+ await vm.runInContext('load()',context);
+ assert.equal(reads,2);
+ assert.equal(get('adPendingCount').textContent,'Pending 4','filter does not change pending count');
+ const onlyReview=get('rows').innerHTML;
+ assert.match(onlyReview,/E7 reviewed request/);
+ assert.match(onlyReview,/verification pending/);
+ assert.match(onlyReview,/id="s-review1"/);
+ assert.doesNotMatch(onlyReview,/New D|Payment due A|Payment due B/);
+ get('adOwnerStatusFilter').value='requested';
+ await vm.runInContext('load()',context);
+ assert.doesNotMatch(get('rows').innerHTML,/E7 reviewed request/);
+ assert.match(get('rows').innerHTML,/New D/);
+ get('adOwnerStatusFilter').value='all';
+ await vm.runInContext('load()',context);
+ assert.match(get('rows').innerHTML,/E7 reviewed request/);
+});
+
+test('E7 Owner status filter never issues mutations; fetch failure is fail-closed',async()=>{
+ const {context,get}=adHarness([{id:'review1',status:'review',advertisers:{name:'Reviewed E7'}}]);
+ context.JBPhase4.adMove=()=>{throw Error('UNEXPECTED_MUTATION')};
+ context.JBPhase4.adVerifyAdvertiser=()=>{throw Error('UNEXPECTED_VERIFICATION')};
+ get('adOwnerStatusFilter').value='review';
+ await vm.runInContext('load()',context);
+ assert.match(get('rows').innerHTML,/Reviewed E7/);
+ context.JBPhase4.adRows=async()=>{throw Error('SIMULATED_OWNER_RLS_FAILURE')};
+ await vm.runInContext('load()',context);
+ assert.equal(get('adPendingCount').textContent,'Queue unavailable');
+ assert.match(get('adOwnerQueueSummary').textContent,/Queue unavailable/);
+ assert.match(get('rows').textContent,/unavailable/i);
+});
+
+test('E7 read remains owner-guarded and never restricts backend to requested only',()=>{
+ const source=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js','utf8');
+ const body=source.split('async function adRows(){')[1]?.split('async function adVerifyAdvertiser')[0];
+ assert.ok(body,'existing canonical owner read must remain');
+ assert.match(body,/await owner\(\)/);
+ assert.match(body,/\.from\('ad_campaigns'\)/);
+ assert.doesNotMatch(body,/\.eq\(['"]status['"],\s*['"]requested['"]\)/);
+ assert.ok(adsHtml.includes('id="adOwnerStatusFilter"'));
+});

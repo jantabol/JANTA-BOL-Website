@@ -27,7 +27,21 @@
 <div class="notice backend">Vigyapan ke liye sampark — Request ≠ LIVE. Approval + confirmed payment ke bina LIVE nahi hoga. Payment/provider unavailable ho to status DUE/Pending hi rahega.</div>
 <section class="card" id="adPendingQueue" aria-labelledby="adPendingHeading">
 <h2 id="adPendingHeading">📬 Advertisement Requests — Owner Queue <span id="adPendingCount" class="badge" role="status" aria-live="polite">Loading…</span></h2>
-<p class="meta">सबसे नई Requests पहले दिखेंगी। तारीख और समय भारत के समय (IST) में हैं। Review/Approval केवल Owner करेगा।</p>
+<p class="meta">पहले Requested, फिर बाकी Campaigns दिखेंगी। Review में गई Request मिटती नहीं है। समय IST में है; Review/Approval केवल Owner करेगा।</p>
+<div class="row"><label for="adOwnerStatusFilter">Manage campaigns by status</label><select id="adOwnerStatusFilter" aria-label="Owner campaign status filter" onchange="load()">
+<option value="all">All requests and campaigns</option>
+<option value="requested">New requests</option>
+<option value="review">Under review</option>
+<option value="approved">Approved</option>
+<option value="payment_pending">Payment pending</option>
+<option value="live">LIVE</option>
+<option value="paused">Paused</option>
+<option value="hidden">Hidden</option>
+<option value="expired">Expired</option>
+<option value="rejected">Rejected</option>
+<option value="cancelled">Cancelled</option>
+</select></div>
+<p class="meta" id="adOwnerQueueSummary" role="status" aria-live="polite">Status overview loading…</p>
 <div id="rows"></div>
 </section>
 <div class="card"><h2>New advertiser request</h2>
@@ -181,12 +195,24 @@ async function load(){
   const a=await JBPhase4.adRows();
   const pending=a.filter(x=>x.status==='requested');
   counter.textContent='Pending '+pending.length;
-  // Always put requests needing action first; newest by actual immutable server timestamp.
+  // Owner status selector is DISPLAY ONLY. It never changes campaign state,
+  // bypasses Owner/AAL2, or writes to the database.
+  const filterElement=document.getElementById('adOwnerStatusFilter');
+  const allowedFilters=new Set(['all','requested','review','approved','payment_pending','live','paused','hidden','expired','rejected','cancelled']);
+  const filter=allowedFilters.has(filterElement?.value)?filterElement.value:'all';
+  const counts={};
+  for(const item of a)counts[item.status]=(counts[item.status]||0)+1;
+  document.getElementById('adOwnerQueueSummary').textContent=
+   'All '+a.length+' · New '+pending.length+' · Review '+(counts.review||0)+
+   ' · Payment pending '+(counts.payment_pending||0)+
+   ' — Choose Under review to reopen reviewed campaigns.';
+  // Keep old canonical order: requested first, then newest by backend timestamp.
   const ordered=a.slice().sort((x,y)=>{
    const xp=x.status==='requested'?0:1,yp=y.status==='requested'?0:1;
    return xp-yp||((Date.parse(y.created_at)||0)-(Date.parse(x.created_at)||0));
   });
-  document.getElementById('rows').innerHTML=ordered.map(x=>`
+  const visible=filter==='all'?ordered:ordered.filter(x=>x.status===filter);
+  document.getElementById('rows').innerHTML=visible.map(x=>`
 <section class="card"><b>${esc(x.advertisers?.name||'Advertiser')}</b><div class="meta">${esc(x.id)} · ${esc(x.status)} · ${esc(x.placement)} / ${esc(x.scope)} · ${esc(x.request_kind||'standard')} · verification ${esc(x.advertisers?.verification_state||'pending')}</div>
 <p class="meta"><strong>📅 Received: ${esc(adSubmittedIST(x.created_at))}</strong> · <strong>Type: ${esc(x.request_kind==='custom'?'CUSTOM':'Standard')}</strong> · Source: ${esc(x.enquiry_origin||'legacy/manual')}</p>
 <p class="meta">Owner queue · WhatsApp: ${esc(x.advertisers?.contact||'Not available')} · Article context: ${esc(x.enquiry_article_id||'—')} · WhatsApp consent: ${x.whatsapp_consent_at?'recorded':'not recorded (legacy)'}</p>
@@ -226,7 +252,7 @@ async function load(){
 <div class="row"><input id="paccept-${x.id}" placeholder="Advertiser acceptance evidence reference"><label>Acceptance timestamp<input id="pacceptedat-${x.id}" type="datetime-local"></label></div>
 <div class="row"><input id="pnote-${x.id}" placeholder="Owner receipt verification note"><input id="pconfirm-${x.id}" placeholder="Type CONFIRM"></div>
 <button class="btn" onclick="payment('${x.id}')">Record verified manual payment</button>
-<p class="meta">No confirmed payment without actual receipt, terms acceptance and Owner AAL2. Payment does not activate ads.</p></details></details></section>`).join('')||'<div class="card">No ad requests</div>';}catch(e){counter.textContent='Queue unavailable';document.getElementById('rows').textContent=b7OwnerReadFailure(e,'Owner request queue');}}
+<p class="meta">No confirmed payment without actual receipt, terms acceptance and Owner AAL2. Payment does not activate ads.</p></details></details></section>`).join('')||'<div class="card">No campaigns in this status</div>';}catch(e){counter.textContent='Queue unavailable';document.getElementById('adOwnerQueueSummary').textContent='Queue unavailable — do not infer zero requests';document.getElementById('rows').textContent=b7OwnerReadFailure(e,'Owner request queue');}}
 async function loadPackages(){
  const box=document.getElementById('packageRows'),chooser=document.getElementById('requestedPackage');
  try{

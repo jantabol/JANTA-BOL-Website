@@ -1,0 +1,33 @@
+name: T034 E7 Owner Review Visibility FAKE CI
+on:
+  push:
+    branches: [review/t034-e7-review-queue-visibility-20261016]
+  pull_request:
+    branches: [codex/b7-t034-safe-guard-20261013]
+permissions:
+  contents: read
+jobs:
+  e7-owner-queue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: E7 seven-campaign owner review and negative test
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-t034-owner-request-dashboard.test.cjs
+          echo 'PASS E7 FAKE request to review visibility and read-only status filter'
+      - name: Existing B7 owner and client fake regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-client-regression.cjs ci/phase4/b7-owner-readiness.test.cjs
+          echo 'PASS E7 existing B7 owner and client regressions'
+      - name: No real backend actions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'PASS E7 fake-only no Supabase or B2 connections'
