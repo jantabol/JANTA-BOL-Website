@@ -1,0 +1,28 @@
+name: T034 ADS002 India 10-digit WhatsApp FAKE UI
+on:
+  push:
+    branches:
+      - review/t034-ads002-india-ten-digit-whatsapp-20261016
+  pull_request:
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/advertise-request.html'
+      - 'ci/phase4/b7-t034-india-whatsapp-ui.test.cjs'
+      - '.github/workflows/b7-t034-ads002-india-whatsapp-fake.yml'
+permissions:
+  contents: read
+jobs:
+  t034-indian-whatsapp-fake:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Static HTML and real submit handler fake test
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --version
+          node --check ci/phase4/b7-t034-india-whatsapp-ui.test.cjs
+          node ci/phase4/b7-t034-india-whatsapp-ui.test.cjs
+          echo 'T034_ADS002_INDIAN_MOBILE_FAKE_CI_PASS=true'
