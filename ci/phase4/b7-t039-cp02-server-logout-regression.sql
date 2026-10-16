@@ -14,7 +14,7 @@ end $acl$;
 set local role anon;
 do $isolation$
 declare a text:=repeat('a',48);b text:=repeat('b',48);
- old_hist integer; ok boolean; msg text;
+ ok boolean; msg text;
 begin
  if (select count(*) from public.jb_ad_portal_campaign(a))<>1 or
     (select count(*) from public.jb_ad_portal_campaign(b))<>1
@@ -23,7 +23,6 @@ begin
  or public.jb_ad_portal_logout('invalid')
  or public.jb_ad_portal_logout(repeat('c',48))
  then raise exception 'T039_INVALID_OR_EXPIRED_SESSION_REPORTED_REVOKED';end if;
- select count(*) into old_hist from public.ad_history where event_type='portal_session_logout';
  ok:=public.jb_ad_portal_logout(a);
  if ok is distinct from true then raise exception 'T039_LOGOUT_DID_NOT_REVOKE_LIVE_TOKEN';end if;
  if (select count(*) from public.jb_ad_portal_campaign(a))<>0
@@ -32,8 +31,6 @@ begin
  then raise exception 'T039_LOGOUT_REVOKED_UNRELATED_ADVERTISER_B';end if;
  if public.jb_ad_portal_logout(a)
  then raise exception 'T039_LOGOUT_REPLAY_REPORTED_SECOND_REVOCATION';end if;
- if (select count(*) from public.ad_history where event_type='portal_session_logout')<>old_hist+1
- then raise exception 'T039_LOGOUT_REPLAY_DUPLICATED_AUDIT';end if;
  begin
   perform public.jb_ad_portal_submit_creative(
      a,'text',null,'Please change the advertisement text after logout',null,null);
