@@ -25,7 +25,7 @@ async function adPackages(){
    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(p.id||''))&&
    typeof p.name==='string'&&p.name.trim().length>=2&&
    ['homepage','article'].includes(p.placement)&&
-   Number.isSafeInteger(p.price_minor)&&p.price_minor>=0&&
+   Number.isSafeInteger(p.price_minor)&&p.price_minor>0&&
    p.currency==='INR'&&Number.isSafeInteger(p.duration_days)&&p.duration_days>=1&&
    Number.isSafeInteger(p.weight)&&p.weight>=1&&p.weight<=100&&
    Number.isSafeInteger(p.version)&&p.version>=1&&
@@ -38,7 +38,7 @@ async function adSavePackage(x){
  const name=String(x?.name||'').trim(),placement=String(x?.placement||'');
  if(x?.priceMinor===''||x?.durationDays===''||x?.weight==='')throw Error('INVALID_PACKAGE');
  const price=Number(x?.priceMinor),duration=Number(x?.durationDays),weight=Number(x?.weight);
- if(name.length<2||name.length>200||!['homepage','article'].includes(placement)||!Number.isSafeInteger(price)||price<0||!Number.isSafeInteger(duration)||duration<1||!Number.isSafeInteger(weight)||weight<1)throw Error('INVALID_PACKAGE');
+ if(name.length<2||name.length>200||!['homepage','article'].includes(placement)||!Number.isSafeInteger(price)||price<=0||!Number.isSafeInteger(duration)||duration<1||!Number.isSafeInteger(weight)||weight<1)throw Error('INVALID_PACKAGE');
  const id=x?.id||null;
  if(id!==null&&!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id))throw Error('INVALID_PACKAGE_ID');
  return rpc('jb_ad_save_package_internal',{p_id:id,p_name:name,p_placement:placement,p_price:price,p_duration:duration,p_weight:weight});
