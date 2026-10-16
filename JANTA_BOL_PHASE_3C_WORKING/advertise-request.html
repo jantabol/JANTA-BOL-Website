@@ -23,8 +23,9 @@ a{color:#ff9090}
 <form id="enquiry">
 <label for="adName">व्यक्ति / व्यवसाय का नाम *</label>
 <input id="adName" name="name" type="text" autocomplete="name" maxlength="160" minlength="2" required>
-<label for="adWhatsApp">WhatsApp नंबर (देश कोड सहित) *</label>
-<input id="adWhatsApp" name="whatsapp" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" placeholder="+91 98765 43210" required>
+<label for="adWhatsApp">WhatsApp मोबाइल नंबर (10 अंक) *</label>
+<input id="adWhatsApp" name="whatsapp" type="tel" autocomplete="tel-national" inputmode="numeric" minlength="10" maxlength="10" pattern="[6-9][0-9]{9}" title="कृपया 6, 7, 8 या 9 से शुरू होने वाला 10 अंकों का मोबाइल नंबर दर्ज करें।" placeholder="9876543210" required>
+<p class="notice">केवल 10 अंक लिखें। भारत का देश कोड (+91) सिस्टम अपने आप जोड़ देगा।</p>
 <label for="adNote">व्यवसाय का छोटा विवरण (वैकल्पिक)</label>
 <textarea id="adNote" name="note" maxlength="500" placeholder="आप क्या प्रचारित करना चाहते हैं?"></textarea>
 <label class="check" for="adConsent"><input id="adConsent" type="checkbox" required>
@@ -67,7 +68,7 @@ a{color:#ff9090}
   }catch(e){
    const code=String(e?.message||'');
    show(code.includes('ENQUIRY_COOLDOWN')?'इस नंबर से हाल में अनुरोध आया है। कृपया कुछ समय बाद प्रयास करें।':
-        code.includes('INVALID_WHATSAPP')?'कृपया सही देश कोड वाला WhatsApp नंबर लिखें।':
+        (code.includes('INVALID_WHATSAPP')||code.includes('INVALID_ENQUIRY_OR_CONSENT'))?'कृपया 10 अंकों का सही मोबाइल नंबर और आवश्यक जानकारी जाँचें।':
         code.includes('INVALID_ARTICLE_CONTEXT')?'समाचार लिंक बदल गया है। कृपया मुख्य पेज से अनुरोध भेजें।':
         'अभी अनुरोध दर्ज नहीं हो पाया। कृपया थोड़ी देर बाद प्रयास करें।',false);
   }finally{button.disabled=false}
