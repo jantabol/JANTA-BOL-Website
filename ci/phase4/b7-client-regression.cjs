@@ -532,6 +532,21 @@ test('ADS-014 cutover remains unlinked until signed-off LGD/E3 and backend pairi
 
 function adRenderFixture(){
  const {window,context}=client(),placed=[],slots=[];
+ // CP02: actual renderer waits for decoded video poster before insertion.
+ // This positive legacy analytics fixture now supplies a successful browser-
+ // decoded image. Separate CP02 regression proves error/timeout fail closed.
+ window.Image=class FakeGoodPoster{
+  constructor(){this.naturalWidth=0;this.naturalHeight=0;this.onload=null;this.onerror=null}
+  set src(value){
+   this._src=value;
+   if(value)queueMicrotask(()=>{
+    this.naturalWidth=480;this.naturalHeight=270;this.onload?.();
+   });
+  }
+  get src(){return this._src}
+ };
+ window.setTimeout=setTimeout;
+ window.clearTimeout=clearTimeout;
  const doc={
   querySelectorAll:()=>slots,
   createElement(tag){return {
