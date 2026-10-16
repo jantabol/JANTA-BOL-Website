@@ -1,0 +1,80 @@
+name: P4-T038 CP02 legacy routes pair-only bank receipt guard (ISOLATED)
+on:
+  push:
+    branches:
+      - review/t038-manual-payment-authority-20261016
+permissions:
+  contents: read
+jobs:
+  review-source-no-live-change:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Block accidental production credentials or paid calls
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo "T038_CP02_NO_REAL_OWNER_NO_PAYMENT_NO_PROD_WRITES"
+      - name: All new Owner client tests plus previous original regression
+        run: |
+          node --test ci/phase4/b7-t038-cp01-manual-payment-source.test.cjs
+          node --test ci/phase4/b7-legacy-payment-client-gate.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+  both-old-owner-payment-rpcs-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t038_cp02}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t038_cp02"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t038_cp02}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Bootstrap unchanged synthetic payment schema + exact old LIVE function bodies
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-payment-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t038-cp02-original-live-legacy-fixture.sql
+      - name: Pair ORIGINAL T034 verified advertiser guard + untouched manual receipt gate candidate
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql
+      - name: Real Owner OLD 3/6 field route negative and signed 10-field mock positive plus immutable history ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t038-cp02-legacy-rpc-paired-guard-regression.sql
+  preserve-separate-t034-protected-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_only, POSTGRES_DB: jb_t034_protected}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t034_protected"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_only, PGDATABASE: jb_t034_protected}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Existing historical T034 fixtures and guarded verified identity test unchanged
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-regression.sql
