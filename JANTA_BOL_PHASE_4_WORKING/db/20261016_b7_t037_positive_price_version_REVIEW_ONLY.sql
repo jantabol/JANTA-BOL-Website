@@ -12,6 +12,8 @@ begin
  then raise exception 'T037_PACKAGE_PRICE_LIVE_SCHEMA_NOT_RECONCILED';end if;
  if exists(select 1 from public.ad_packages where price_minor is null or price_minor<=0)
  or exists(select 1 from public.ad_package_versions where price_minor is null or price_minor<=0)
+ or exists(select 1 from public.ad_packages where weight is null or weight not between 1 and 100)
+ or exists(select 1 from public.ad_package_versions where weight is null or weight not between 1 and 100)
  then raise exception 'T037_EXISTING_ZERO_PRICE_NEEDS_OWNER_DISPOSITION';end if;
  if exists(select 1 from pg_constraint where conrelid='public.ad_packages'::regclass
  and conname='b7_package_positive_price')
@@ -26,6 +28,12 @@ alter table public.ad_packages
 alter table public.ad_package_versions
  add constraint b7_package_version_positive_price
  check (price_minor > 0);
+alter table public.ad_packages
+ add constraint b7_package_weight_range
+ check (weight between 1 and 100);
+alter table public.ad_package_versions
+ add constraint b7_package_version_weight_range
+ check (weight between 1 and 100);
 
 create function private.b7_package_version_append_only_guard()
 returns trigger language plpgsql security definer
