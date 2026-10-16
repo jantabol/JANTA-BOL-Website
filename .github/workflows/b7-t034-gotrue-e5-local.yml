@@ -1,0 +1,86 @@
+name: P4-T034 E5 real LOCAL Supabase Auth GoTrue + TOTP (NO PROD)
+on:
+  push:
+    branches:
+      - review/t034-e5-preflight-reconcile-20261016
+permissions:
+  contents: read
+jobs:
+  e5-gotrue-real-local:
+    name: T034 GoTrue real sessions, MFA AAL2, RLS/RPC and revocation (LOCAL)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # checkout v4.2.2
+        with:
+          persist-credentials: false
+      - name: Production environment fail-close
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv JB_BACKUP_B2_APPLICATION_KEY || true)"
+          echo "REAL_GOTRUE_TEST_NO_PRODUCTION_CREDENTIALS=true"
+      - uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359 # pinned official v3
+        with:
+          version: 2.84.2
+      - name: Start disposable official local GoTrue / REST / PostgreSQL (no hosted Supabase project)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          mkdir -p /tmp/t034_e5_auth
+          cd /tmp/t034_e5_auth
+          supabase init --yes >/dev/null
+          # Independent RCA #38887672468: source-aligned ACL negatives passed,
+          # but MFA enroll returned 422 because CLI default TOTP is OFF.
+          # Official CLI config: [auth.mfa.totp] enroll_enabled=false /
+          # verify_enabled=false. Enable them ONLY in this ephemeral local config.
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+          path=Path("supabase/config.toml")
+          original=path.read_text()
+          m=re.search(r"(?ms)^\[auth\.mfa\.totp\]\s*\n(?P<sec>.*?)(?=^\[|\Z)",original)
+          if not m: raise SystemExit("E5_LOCAL_TOTP_SECTION_NOT_FOUND")
+          section=m.group("sec")
+          for key in ("enroll_enabled","verify_enabled"):
+              pattern=rf"(?m)^{key}\s*=\s*false\s*$"
+              replaced,n=re.subn(pattern,f"{key} = true",section,count=1)
+              if n!=1: raise SystemExit("E5_LOCAL_MFA_CONFIG_UNEXPECTED_"+key)
+              section=replaced
+          path.write_text(original[:m.start("sec")]+section+original[m.end("sec"):])
+          print("E5_DISPOSABLE_TOTP_ENROLL_AND_VERIFY_ENABLED=true")
+          PY
+          # No supabase login, link, remote project or production keys.
+          # Do not print disposable local keys, passwords or signing secrets.
+          supabase start --exclude studio,realtime,storage,functions,mail,analytics,pooler >/tmp/t034-local-start.log 2>&1 || {
+            echo 'T034_LOCAL_SUPABASE_START_FAILED; NO LIVE FALLBACK';
+            exit 1;
+          }
+          echo 'T034_LOCAL_SUPABASE_GOTRUE_START=SUCCESS'
+      - name: Prepare source-aligned ad authority + existing verified ADS008 guard only inside local database
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PGHOST=127.0.0.1 PGPORT=54322 PGUSER=postgres PGPASSWORD=postgres PGDATABASE=postgres
+          psql -X -v ON_ERROR_STOP=1 -q -f ci/phase4/b7-t034-gotrue-auth-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -q -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          echo 'REAL_GOTRUE_LOCAL_ADS008_AND_PERMISSION_FIXTURE=READY'
+      - name: Genuine GoTrue Auth signup/real sessions -> MFA AAL2 -> RLS/Owner RPC -> revoke
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd /tmp/t034_e5_auth
+          node --check "$GITHUB_WORKSPACE/ci/phase4/b7-t034-gotrue-auth-http.test.cjs"
+          node "$GITHUB_WORKSPACE/ci/phase4/b7-t034-gotrue-auth-http.test.cjs"
+      - name: No hosted project, payment or Founder account modified
+        if: always()
+        shell: bash
+        run: |
+          echo "E5_HOSTED_SUPABASE_BRANCH_CREATED=NO"
+          echo "E5_PRODUCTION_DB_ACCESSED=NO"
+          echo "E5_REAL_FOUNDER_ACCOUNT_TOUCHED=NO"
+          echo "E5_GENUINE_HOSTED_E5_FINAL=HOLD"
+          echo "FINAL_P4_T034_LOCK=HOLD"

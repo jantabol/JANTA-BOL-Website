@@ -1,0 +1,116 @@
+name: P4-T034 E5 isolated signed-JWT HTTP permission matrix (NO LIVE)
+on:
+  push:
+    branches:
+      - review/t034-e5-preflight-reconcile-20261016
+  pull_request:
+    branches:
+      - codex/b7-t034-safe-guard-20261013
+permissions:
+  contents: read
+jobs:
+  t034-e5-offline-signed-jwt-http:
+    name: E5 PostgREST signed-JWT / session / AAL2 synthetic principals
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: ci_e5_disposable_only
+          POSTGRES_DB: b7_t034_e5
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d b7_t034_e5"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: ci_e5_disposable_only
+      PGDATABASE: b7_t034_e5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+
+      - name: Fail closed if any real JANTA BOL backup or live SQL credential is attached
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$PGHOST" = "127.0.0.1"
+          test "$PGDATABASE" = "b7_t034_e5"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv JB_BACKUP_B2_APPLICATION_KEY || true)"
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          echo 'E5_LOCAL_DATABASE_ONLY=true; NO_PRODUCTION_CREDENTIALS'
+
+      - name: Prepare existing OLD payment RPC fixture, additive guard, then JWT authority SQL
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-payment-guard-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261013_b7_t034_payment_verification_GUARD_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t034-e5-http-jwt-fixture.sql
+
+      - name: Verify signed HTTP JWT, roles, revoked session, AAL1/AAL2 and fixture-only positive
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          JWT_KEY="$(openssl rand -hex 32)"
+          echo "::add-mask::$JWT_KEY"
+          export B7_E5_LOCAL_JWT_SECRET="$JWT_KEY"
+          trap 'docker rm -f b7_t034_e5_postgrest >/dev/null 2>&1 || true' EXIT
+          docker run -d --rm --name b7_t034_e5_postgrest --network host \
+            -e PGRST_DB_URI='postgres://b7_e5_authenticator:e5_local_postgrest_only@127.0.0.1:5432/b7_t034_e5' \
+            -e PGRST_DB_SCHEMAS='public' \
+            -e PGRST_DB_ANON_ROLE='anon' \
+            -e PGRST_SERVER_HOST='127.0.0.1' \
+            -e PGRST_SERVER_PORT='3099' \
+            -e PGRST_LOG_LEVEL='error' \
+            -e PGRST_JWT_SECRET="$JWT_KEY" \
+            postgrest/postgrest@sha256:5f4ce744539bbba786b4e24dbbd95bdb2a956dcf568c5374995a0ff4a68f5bd2 >/dev/null
+          ready=0
+          for try in $(seq 1 40); do
+            if curl --silent --output /dev/null --max-time 2 'http://127.0.0.1:3099/'; then
+              ready=1
+              break
+            fi
+            sleep 2
+          done
+          test "$ready" -eq 1
+          node --check ci/phase4/b7-t034-e5-http-jwt.test.cjs
+          node ci/phase4/b7-t034-e5-http-jwt.test.cjs negative
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $no_mutation$
+          BEGIN
+            IF (SELECT count(*) FROM public.ad_payments)<>0 OR
+               (SELECT count(*) FROM public.ad_history)<>0 OR
+               (SELECT count(*) FROM public.audit_logs)<>0 OR
+               (SELECT count(*) FROM public.ad_campaigns WHERE paid_at IS NOT NULL OR status='paid')<>0 OR
+               (SELECT count(*) FROM public.advertisers WHERE verification_state<>'pending')<>2
+            THEN RAISE EXCEPTION 'E5_NEGATIVES_CHANGED_FINANCE_OR_AUDIT_STATE';END IF;
+            RAISE NOTICE 'PASS E5: negative HTTP/JWT/AAL1/revoked/reporter/advertiser no state change';
+          END $no_mutation$;
+          SQL
+          node ci/phase4/b7-t034-e5-http-jwt.test.cjs positive
+          psql -X -v ON_ERROR_STOP=1 <<'SQL'
+          DO $positive_only$
+          BEGIN
+            IF (SELECT count(*) FROM public.ad_payments WHERE status='confirmed')<>1 OR
+               (SELECT count(*) FROM public.ad_history WHERE event_type='verification_verified')<>1 OR
+               (SELECT count(*) FROM public.ad_history WHERE event_type='payment_confirmed')<>1 OR
+               (SELECT count(*) FROM public.audit_logs WHERE action='ad_verification')<>1 OR
+               (SELECT count(*) FROM public.ad_campaigns WHERE status='paid')<>1 OR
+               (SELECT count(*) FROM public.ad_campaigns WHERE id='20000000-0000-4000-8000-000000000001' AND status='payment_pending')<>1 OR
+               (SELECT count(*) FROM public.advertisers WHERE id='10000000-0000-4000-8000-000000000002' AND verification_state='verified')<>1
+            THEN RAISE EXCEPTION 'E5_OWNER_POSITIVE_OR_HISTORICAL_SAFETY_FAILED';END IF;
+            RAISE NOTICE 'PASS E5: synthetic Owner AAL2 verification/audit/payment allowed, HIGH protected';
+          END $positive_only$;
+          SQL
+          echo 'E5_POSTGREST_SIGNED_JWT_LOCAL=PASS; REAL_SUPABASE_AUTH_E5=HOLD'

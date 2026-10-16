@@ -1,0 +1,27 @@
+name: P4-T034 CP16 contact-only pre-softlaunch READ-ONLY
+on:
+  push:
+    branches:
+      - review/t034-e5-preflight-reconcile-20261016
+permissions:
+  contents: read
+jobs:
+  contact-only-preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Guard production credentials and paid ads
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'CP16_NO_PRIVILEGED_ENVIRONMENT=true'
+      - name: Live homepage/article public feed GET and static intake consent check
+        run: |
+          node --check ci/phase4/b7-t034-cp16-contact-only-softlaunch.test.cjs
+          node ci/phase4/b7-t034-cp16-contact-only-softlaunch.test.cjs

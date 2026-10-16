@@ -1,0 +1,30 @@
+name: P4-T034 CP13 hosted JWT forgery GET-only security
+on:
+  push:
+    branches:
+      - review/t034-e5-preflight-reconcile-20261016
+permissions:
+  contents: read
+jobs:
+  hosted-forged-jwt-negative:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Fail closed on privileged secrets or unexpected integration
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          test -z "$(printenv JB_BACKUP_B2_APPLICATION_KEY || true)"
+          echo 'CP13_NEGATIVE_GET_ONLY_NO_PRIVILEGED_TOKENS=true'
+      - name: Real LIVE GoTrue/PostgREST deny locally signed forged Owner AAL2
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b7-t034-cp13-hosted-jwt-negative.cjs
+          node ci/phase4/b7-t034-cp13-hosted-jwt-negative.cjs
