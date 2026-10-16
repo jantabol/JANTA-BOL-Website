@@ -134,7 +134,8 @@ begin
  if not private.p4_owner_allowed() then raise exception 'OWNER_AAL2_REQUIRED';end if;
  select jsonb_build_object(
    'today',count(*) filter(where event_type='impression' and qualified=true
-     and created_at>=date_trunc('day',now())),
+     and created_at>=(date_trunc('day',now() AT TIME ZONE 'Asia/Kolkata')
+       AT TIME ZONE 'Asia/Kolkata')),
    'd7',count(*) filter(where event_type='impression' and qualified=true
      and created_at>=now()-interval '7 days'),
    'd30',count(*) filter(where event_type='impression' and qualified=true
