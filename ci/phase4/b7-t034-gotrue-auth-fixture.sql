@@ -213,6 +213,13 @@ ALTER TABLE public.ad_campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ad_history ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.ad_payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.audit_logs ENABLE ROW LEVEL SECURITY;
+-- FIRST DIVERGENCE (run 38887406736): local Supabase automatically grants
+-- public table privileges to anon/authenticated; LIVE JANTA BOL does not.
+-- Match exact live catalog: anon none; authenticated SELECT on staff tables
+-- only, with RLS further filtering by private.p4_staff_allowed().
+REVOKE ALL ON public.advertisers,public.ad_campaigns,public.ad_history,
+ public.ad_payments,public.audit_logs,public.user_roles,public.team_accounts,
+ public.advertiser_users FROM anon,authenticated;
 GRANT SELECT ON public.advertisers,public.ad_campaigns,public.ad_history TO authenticated;
 CREATE POLICY ad_staff_campaigns ON public.ad_campaigns FOR SELECT TO authenticated
  USING(private.p4_staff_allowed());
