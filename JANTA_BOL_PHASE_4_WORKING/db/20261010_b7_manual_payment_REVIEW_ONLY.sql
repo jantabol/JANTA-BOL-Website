@@ -47,6 +47,13 @@ begin
  if v.package_id is not null and
     (v.package_snapshot->>'price_minor') is distinct from p_price_minor::text
  then raise exception 'PACKAGE_SNAPSHOT_PRICE_MISMATCH';end if;
+ -- T037 ADS026/027: signed Owner quote cannot silently change after
+ -- campaign approval, even BEFORE a payment is received.
+ -- Requested/review proposals remain negotiable; first approved quote allowed.
+ if v.status in ('approved','payment_pending')
+   and (v.agreed_price_minor is not null
+        or v.agreed_terms_recorded_at is not null)
+ then raise exception 'APPROVED_QUOTE_IMMUTABLE';end if;
  update public.ad_campaigns
  set agreed_price_minor=p_price_minor,agreed_terms_ref=v_ref,
      agreed_terms_recorded_at=now(),updated_at=now()
