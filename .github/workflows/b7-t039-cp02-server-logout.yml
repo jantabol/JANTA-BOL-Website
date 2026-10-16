@@ -1,0 +1,77 @@
+name: P4-T039 CP02 exact-session portal logout (DISPOSABLE, NO LIVE)
+on:
+  push:
+    branches:
+      - review/t039-advertiser-isolation-20261016
+permissions:
+  contents: read
+jobs:
+  client-portal-logout-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: No Supabase credentials and no REAL advertiser sessions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'P4_T039_CP02_SERVER_LOGOUT_DISPOSABLE_ONLY'
+      - name: Exact source contract for server logout and official E2 E3 E5 DUE
+        run: node --test ci/phase4/b7-t039-cp02-server-logout-source.test.cjs
+      - name: Preserve existing client and newsroom behavior
+        run: |
+          node --test ci/phase4/b7-t039-cp01-portal-authority.test.cjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
+  exact-session-revoke-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: jb_t039_cp02}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t039_cp02"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t039_cp02}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Original A/B isolated campaign/login and scoped reviewed portal SQL
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
+      - name: Add exact bearer-token logout guard only in disposable DB
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261016_b7_t039_portal_server_logout_REVIEW_ONLY.sql
+      - name: Real PG17 anon cannot read creds, A-only revoke, B unaffected, no mutable News, ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-t039-cp02-server-logout-regression.sql
+  preserve-existing-portal-postgres17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    services:
+      postgres:
+        image: postgres:17
+        env: {POSTGRES_USER: postgres, POSTGRES_PASSWORD: ci_local_only, POSTGRES_DB: jb_t039_original}
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t039_original"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 8
+    env: {PGHOST: localhost, PGPORT: '5432', PGUSER: postgres, PGPASSWORD: ci_local_only, PGDATABASE: jb_t039_original}
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with: {persist-credentials: false}
+      - name: Re-run old A/B source and review migration unchanged
+        run: |
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql
+      - name: Prove all original one-time/revoke, text change, renewal cases retained
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b7-portal-regression.sql
