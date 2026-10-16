@@ -43,3 +43,8 @@ Actual live catalog (no dummy identities, no JWT/session impersonation, no datab
 - Founder tablet screenshot shows **Super Admin Login** screen (email/password form), **not** the Owner advertisement request queue; no advertiser contact or private campaign details observed in this fresh-session capture.
 - **ADS009 E3 anonymous UI routing/access gate: PASS (observed on Android).** Real HTTP/API/JWT unauthenticated attempt/response and complete Owner/reporter/advertiser/revoked/AAL1/AAL2 E5 permission matrix **NOT RUN / HOLD**. Do not upgrade ADS009 or T034 FINAL PASS from a login-screen screenshot alone.
 - No test data mutation, no additional login, credentials, private screenshots or payment steps required for this gate.
+
+## ADS-002 real Android public request negative UI — 16 Oct 2026
+- Founder on logged-out tablet public advertising request page, Name populated and consent ticked, tried 5-digit `12345` and 10-digit but invalid-prefix `1234567890` numbers separately. Chrome native constraint validation reported `Please match the format requested` with required 6/7/8/9-prefix + 10 digits; screenshots captured in conversation. **Frontend invalid-number rejection PASS for both cases.**
+- Independent live Supabase SELECT-only immediately after latest screenshot: `public.ad_campaigns` total **7**, requested **4**, unchanged from prior baseline. **No added campaign record observed.** This is a count-level before/after read; not proof of every possible invalid RPC path.
+- Server-side direct-RPC forged payload negative, true JWT/RLS E5 principal matrix, valid positive request and no-consent negative **NOT VERIFIED by these screenshots**. ADS-002 final pending remaining backend gates. No changes to live tables, B7 code, or Cricket.
