@@ -5,11 +5,15 @@
 const assert=require('node:assert/strict');
 const host='shubham-pichhore-2028-mgj4krww4-shubhamshrivastava295-9848.vercel.app';
 const sha='a1f6135cc72e94dca1a2da9a610cfcdf2bd9f38d';
+// Exact GitHub tree has unrelated ROOT index.html (legacy landing page).
+// Real Android news app lives under JANTA_BOL_PHASE_3C_WORKING/, verified
+// from the existing file map. Never test the root landing page as the B7 app.
+const app='/JANTA_BOL_PHASE_3C_WORKING';
 const pages=[
- ['homepage','/index.html','data-jb-ad-placement="homepage"'],
- ['article','/article.html','data-jb-ad-placement="article"'],
- ['owner-adstudio-static','/ads.html','Local File Preview — NO UPLOAD'],
- ['poster-source','/public-ads.js','decodedPoster(']
+ ['homepage',app+'/index.html','data-jb-ad-placement="homepage"'],
+ ['article',app+'/article.html','data-jb-ad-placement="article"'],
+ ['owner-adstudio-static',app+'/ads.html','Local File Preview — NO UPLOAD'],
+ ['poster-source',app+'/public-ads.js','decodedPoster(']
 ];
 (async()=>{
  for(const [name,path,marker] of pages){
