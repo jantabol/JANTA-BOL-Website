@@ -113,7 +113,7 @@ BEGIN
  -- NOT a bank receipt or provider reconciliation.
  PERFORM public.jb_ad_confirm_manual_payment_internal(
  c1,'CI-UTR-Case-00001',50000,'upi',now(),
- 'CI-NO-REAL-BANK-REFERENCE','CI-NO-REAL-CONSENT',now()-interval '1 minute',
+ 'CI-NO-REAL-BANK-REFERENCE','CI-NO-REAL-CONSENT',now(),
  'Synthetic only - no bank was contacted','CONFIRM');
  IF (SELECT count(*) FROM public.ad_payments WHERE campaign_id=c1 AND status='confirmed')<>1
  OR (SELECT status FROM public.ad_campaigns WHERE id=c1)<>'paid'
@@ -123,7 +123,7 @@ BEGIN
  BEGIN
   PERFORM public.jb_ad_confirm_manual_payment_internal(
   c3,'ci-utr-case-00001',50000,'upi',now(),
-  'CI-NO-REAL-BANK-REFERENCE','CI-NO-REAL-CONSENT',now()-interval '1 minute',
+  'CI-NO-REAL-BANK-REFERENCE','CI-NO-REAL-CONSENT',now(),
   'Synthetic only - no bank was contacted','CONFIRM');
   RAISE EXCEPTION 'CASE_CHANGED_DUPLICATE_UTR_ACCEPTED';
  EXCEPTION WHEN unique_violation THEN NULL;
