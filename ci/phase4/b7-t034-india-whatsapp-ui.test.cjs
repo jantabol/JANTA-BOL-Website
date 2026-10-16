@@ -50,6 +50,9 @@ function fakePage({ name = 'T034 UI TEST', whatsapp = '9000000000', consent = tr
       ? {data:null,error:{message:backendError}}
       : {data:'11111111-1111-4111-8111-111111111111',error:null};}}}}
   };
+  // Browsers expose window.JBBackend as the global identifier JBBackend.
+  // vm sandboxes do not do this implicitly; bind both to the SAME fake object.
+  context.JBBackend=context.window.JBBackend;
   vm.runInNewContext(script,context,{timeout:1000});
   assert.equal(typeof callback,'function');
   return {submit:()=>callback({preventDefault(){}}),calls,feedback,button,getReset:()=>resetCount};
