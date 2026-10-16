@@ -1,0 +1,46 @@
+name: P4-T035 CP02 media safe poster preflight (NO PROD WRITES)
+on:
+  push:
+    branches:
+      - review/t035-cp02-media-safe-20261016
+permissions:
+  contents: read
+jobs:
+  cp02-browser-source-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: No privileged credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          echo 'T035_CP02_DISPOSABLE_ONLY; NO_UPLOADED_MEDIA; ZERO_PROD_WRITES'
+      - name: Exact source syntax and new CP02 poster gating regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/public-ads.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js
+          node --test ci/phase4/b7-t035-cp02-renderer-poster-regression.test.cjs
+      - name: Existing protected media and renderer regressions (NO FAKE ANDROID)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-media-preview-regression.cjs
+          node --test ci/phase4/b7-media-byte-policy.test.mjs
+          node --test ci/phase4/b7-client-regression.cjs
+          node --test ci/phase4/b7-spck-local-media-save-safety.test.cjs
+          node --test ci/phase4/b7-public-ad-cta-android.test.cjs
+      - name: Phase-3 old baseline and B7 closure must stay honest
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          node ci/phase4/b7-closure-gate.cjs --audit
