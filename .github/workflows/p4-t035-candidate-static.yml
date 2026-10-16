@@ -5,6 +5,7 @@ on:
       - codex/p4-t035-reviewed-fixes-20261009
       - codex/b7-reconcile-20261009
       - codex/b7-blueprint-20261010
+      - review/t042-no-paid-final-audit-20261016
   workflow_dispatch:
 permissions:
   contents: read
