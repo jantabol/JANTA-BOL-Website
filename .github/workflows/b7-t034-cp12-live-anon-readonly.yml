@@ -1,0 +1,29 @@
+name: P4-T034 CP12 LIVE anonymous REST GET-only permission evidence
+on:
+  push:
+    branches:
+      - review/t034-e5-preflight-reconcile-20261016
+permissions:
+  contents: read
+jobs:
+  live-anon-rest-denial:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Refuse privileged environment / exact project boundary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "$(printenv SUPABASE_ACCESS_TOKEN || true)"
+          test -z "$(printenv SUPABASE_SERVICE_ROLE_KEY || true)"
+          test -z "$(printenv SUPABASE_DB_PASSWORD || true)"
+          test -z "$(printenv B2_APPLICATION_KEY || true)"
+          test -z "$(printenv JB_BACKUP_B2_APPLICATION_KEY || true)"
+          echo 'P4_T034_CP12_PUBLIC_ANON_KEY_ONLY; NO_LIVE_OWNER_ACCOUNT_CREDENTIALS'
+      - name: Node built-in fetch — JANTA BOL FIVE private ad tables (GET only, no user JWT)
+        run: |
+          node --check ci/phase4/b7-t034-cp12-live-anon-readonly.cjs
+          node ci/phase4/b7-t034-cp12-live-anon-readonly.cjs
