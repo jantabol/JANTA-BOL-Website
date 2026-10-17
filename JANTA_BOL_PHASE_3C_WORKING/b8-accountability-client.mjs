@@ -219,6 +219,45 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
       return Object.freeze({replyClaimId:id(rid),accuracy:'REPORTER_CLAIM_UNVERIFIED',
         officiallyVerified:false});
     },
+    async ownerReleasePublicCase(caseId,action,topic,area,status,privacyReviewed){
+      requireRole(role,'owner');
+      if(!['PUBLISH','REVISE','HIDE'].includes(action))
+        deny('PUBLIC_RELEASE_ACTION_INVALID');
+      if(action!=='HIDE'&&privacyReviewed!==true)
+        deny('FOUNDER_PRIVACY_REVIEW_REQUIRED');
+      if(action!=='HIDE'&&(
+        !['PUBLIC_WORKS','PUBLIC_SERVICE','HEALTHCARE','EDUCATION','OTHER'].includes(topic)
+        ||!['PICHHORE','SHIVPURI','GUNA','ASHOKNAGAR','MADHYA_PRADESH'].includes(area)
+        ||!['UNDER_REVIEW','UPDATED'].includes(status)
+      ))deny('PUBLIC_ENUM_NOT_APPROVED');
+      if(action==='HIDE'&&(topic!==null||area!==null||status!==null))
+        deny('PUBLIC_HIDE_MUST_HAVE_NO_DETAILS');
+      const rev=await rpc('jb_b8_g4_owner_release_public_projection',{
+        p_case_id:id(caseId),p_action:action,
+        p_topic:action==='HIDE'?null:topic,
+        p_area_code:action==='HIDE'?null:area,
+        p_status:action==='HIDE'?null:status,
+        p_confirm_privacy_review:action==='HIDE'?false:privacyReviewed
+      });
+      if(!Number.isSafeInteger(Number(rev))||Number(rev)<1)
+        deny('PUBLIC_RELEASE_NOT_CONFIRMED');
+      return Object.freeze({revisionEventId:Number(rev),action,
+        publicApproval:action!=='HIDE',serverConfirmed:true});
+    },
+    async ownerAppendPublicMilestone(caseId,eventCode){
+      requireRole(role,'owner');
+      if(!['CASE_REVIEW_STARTED','PUBLIC_RECORDS_UNDER_REVIEW',
+        'QUESTION_DRAFT_PREPARED','EDITORIAL_REVIEW_UPDATED',
+        'RESPONSE_STATUS_NOT_VERIFIED','CASE_STATUS_UPDATED',
+        'FOLLOWUP_ARTICLE_LINKED','CASE_CLOSED'].includes(eventCode))
+        deny('PUBLIC_EVENT_NOT_APPROVED');
+      const ev=await rpc('jb_b8_g4_owner_add_public_milestone',{
+        p_case_id:id(caseId),p_event_code:eventCode
+      });
+      if(!Number.isSafeInteger(Number(ev))||Number(ev)<1)
+        deny('PUBLIC_EVENT_NOT_CONFIRMED');
+      return Object.freeze({eventId:Number(ev),eventCode,serverConfirmed:true});
+    },
     async ownerReplyClaimSummary(questionId){
       requireRole(role,'owner');
       const p=await rpc('jb_b8_g3_owner_reply_claim_summary',{
