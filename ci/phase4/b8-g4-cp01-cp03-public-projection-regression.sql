@@ -208,6 +208,8 @@ do $followups$
 declare v jsonb;
 begin
  v:=public.jb_b8_g4_public_case(current_setting('b8.fixture_public_case')::uuid);
+ raise notice 'B8 G4 TRACE revision=% articles=% timeline=% status=%',
+ v->>'public_revision', v->'articles', jsonb_array_length(v->'timeline'),v->>'public_status';
  if (v->>'public_revision')::int<>2
  or jsonb_array_length(v->'articles')<>2
  or v->'articles'->0->>'article_id'<>'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'
