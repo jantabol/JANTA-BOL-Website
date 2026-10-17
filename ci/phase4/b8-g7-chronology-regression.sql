@@ -137,7 +137,7 @@ select public.jb_b8_g7_owner_record_history(
 select public.jb_b8_g7_owner_record_history(
  :'other_case'::uuid,'SUMMARY_DRAFT',
  'Different private Case content must never cross into this Case chronology',
- null,null,null,null) as other_history \\gset
+ null,null,null,null) as other_history \gset
 reset role;
 select set_config('b8.g7_other_history',:'other_history',false);
 
