@@ -126,7 +126,9 @@ test('G3 Android source has Founder packet/R2, Reporter handoff, Editor screen a
  assert(!html.includes('service_role'));
  assert(!js.includes("window.open("));
  assert(!js.includes("location.href='mailto"));
- assert(js.includes('allowPrivateUpload:false'));
+ assert(js.includes("allowPrivateUpload:role==='reporter'"))&&
+ assert(js.includes('workflow.reporterPrivateUploadReadiness(c.id)'))&&
+ assert(js.includes('if(!gate.allowed)'));
  assert(js.includes("showJSON($('g3PacketData'),packet)"));
 });
 
