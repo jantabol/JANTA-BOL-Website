@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const CASE='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 function fixture(role='owner',out=[{
  case_id:CASE,deadline:'2026-10-01',days_overdue:16,
@@ -46,7 +46,7 @@ test('G9 private Owner dashboard uses textContent and clears on 15m lock',async(
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [html,js]=await Promise.all([
   readFile(new URL('b8-accountability.html',dir),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',dir),'utf8')
+  readFile(new URL('b8-accountability-ui.js',dir),'utf8')
  ]);
  assert(html.includes('id="g9Due"'));
  assert(html.includes('id="g9DueOutput"'));

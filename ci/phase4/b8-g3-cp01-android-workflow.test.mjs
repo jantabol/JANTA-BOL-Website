@@ -2,7 +2,7 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {createB8Workflow,NO_DISPATCH_STATUS,LANES,EDITOR_DECISIONS,validId}
-  from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+  from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const CASE='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const Q='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const REQ='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -163,7 +163,7 @@ test('Real private upload stays hard OFF without Founder-approved hosted gate',a
 test('Android UI static: exactly role-scoped private forms, no fake official SEND or uncontrolled upload',async()=>{
   const base=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
   const html=await readFile(new URL('b8-accountability.html',base),'utf8');
-  const ui=await readFile(new URL('b8-accountability-ui.mjs',base),'utf8');
+  const ui=await readFile(new URL('b8-accountability-ui.js',base),'utf8');
   assert(html.includes('id="owner"')&&html.includes('id="editor"')&&html.includes('id="reporter"'));
   assert(html.includes('id="uploadBtn" type="submit" disabled'));
   // G6 replaced permanent UX OFF with Founder server-default-OFF, not free upload.

@@ -24,8 +24,8 @@ on:
       - 'ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs'
       - 'ci/phase4/b8-g2-cp02-race-isolated-pg17.sh'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
-      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs'
-      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
       - 'ci/phase4/b8-g3-cp01-android-workflow.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp02_founder_proof_notifications_REVIEW_ONLY.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp03_manual_handoff_truth_REVIEW_ONLY.sql'
@@ -39,8 +39,8 @@ on:
       - 'ci/phase4/b8-g4-public-article-status-fixture.sql'
       - 'ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql'
       - 'JANTA_BOL_PHASE_3C_WORKING/accountability-public.html'
-      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs'
-      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.js'
       - 'ci/phase4/b8-g4-public-projection-contract.test.mjs'
       - 'ci/phase4/b8-g4-cp04-owner-hide-race-pg17.sh'
       - 'ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs'
@@ -62,6 +62,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g9_due_followup_safe_notifications_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g9-due-followup-notification-regression.sql'
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
+      - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/build_b0_b8_master_source_zip.py'
       - 'tools/jb_manual_test.py'
       - 'START_HERE_JANTA_BOL_MASTER_B0_TO_B8.md'
@@ -250,8 +251,8 @@ jobs:
         run: node --test ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs
       - name: B8 G3 CP01 browser-module syntax and no-fake-SENT role tests
         run: |
-          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs
-          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
           node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
           node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
@@ -259,10 +260,11 @@ jobs:
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
           node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
+          node --test ci/phase4/b8-spck-mime-regression.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
-          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs
-          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.js
           node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
           node --test ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
       - name: B8 G5 original E-class and Founder real-evidence release gate (audit only)

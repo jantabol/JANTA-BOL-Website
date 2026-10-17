@@ -2,8 +2,8 @@ import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {allowlistedCase,createPublicCaseReader,canonicalArticleHref,
- canonicalCaseHref} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+ canonicalCaseHref} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const ID='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const ARTICLE='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const APPROVED='2026-10-17T06:30:00.000Z';
@@ -152,11 +152,11 @@ test('Public pages have no server secret or raw input HTML, and independent Arti
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [html,ui,privateHtml,privateUi]=await Promise.all([
   readFile(new URL('accountability-public.html',dir),'utf8'),
-  readFile(new URL('b8-public-case-ui.mjs',dir),'utf8'),
+  readFile(new URL('b8-public-case-ui.js',dir),'utf8'),
   readFile(new URL('b8-accountability.html',dir),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',dir),'utf8')
+  readFile(new URL('b8-accountability-ui.js',dir),'utf8')
  ]);
- assert(html.includes('id="cases"')&&html.includes('b8-public-case-ui.mjs'));
+ assert(html.includes('id="cases"')&&html.includes('b8-public-case-ui.js'));
  assert(ui.includes('createPublicCaseReader(api)'));
  assert(ui.includes('root.replaceChildren()'));
  assert(ui.includes('document.createElement(tag)'));

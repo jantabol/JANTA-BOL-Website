@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const CASE='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const RECEIPT='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 function fixture(role='owner',override={},serverReject=false){
@@ -91,7 +91,7 @@ test('Android G5 private forms are behind existing owner/15-minute lock and safe
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [html,ui]=await Promise.all([
   readFile(new URL('b8-accountability.html',dir),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',dir),'utf8')]);
+  readFile(new URL('b8-accountability-ui.js',dir),'utf8')]);
  for(const id of ['g5Fact','g5Outcome','g5Reopen','g5Ledger','g5LedgerOutput'])
   assert(html.includes('id="'+id+'"'));
  const ownerEnd=html.indexOf('<section id="reporter"');

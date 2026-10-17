@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const CASE='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const RECEIPT='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee';
 function fixture(role,reply={},fail=false,allowPrivateUpload=false){
@@ -84,7 +84,7 @@ test('Review-only Android UI has Founder release switch, reporter case readiness
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [html,ui]=await Promise.all([
   readFile(new URL('b8-accountability.html',dir),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',dir),'utf8')]);
+  readFile(new URL('b8-accountability-ui.js',dir),'utf8')]);
  assert(html.includes('id="g6Release"'));
  assert(html.includes('id="g6ReleaseAck"'));
  assert(html.indexOf('id="g6Release"')<html.indexOf('<section id="reporter"'));

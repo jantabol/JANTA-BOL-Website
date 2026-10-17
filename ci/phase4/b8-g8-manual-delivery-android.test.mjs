@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const H='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const RECEIPT='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 function fixture(role='owner',rejected=false,value=41){
@@ -49,7 +49,7 @@ test('G8 Founder form is role scoped with positive check and no automatic dispat
  const base=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [h,ui]=await Promise.all([
   readFile(new URL('b8-accountability.html',base),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',base),'utf8')]);
+  readFile(new URL('b8-accountability-ui.js',base),'utf8')]);
  assert(h.indexOf('id="g8Delivery"')<h.indexOf('<section id="reporter"'));
  assert(h.includes('id="g8Ack" type="checkbox" required'));
  assert(ui.includes('workflow.ownerAttestManualDelivery'));

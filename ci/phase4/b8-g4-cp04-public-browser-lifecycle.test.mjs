@@ -55,7 +55,7 @@ test('G4 real browser-controller module: newer HIDE/empty response wins over slo
   globalThis.document=doc;
   globalThis.window=win;
   globalThis.history={replaceState(){}};
-  const url=new URL('../../JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs',
+  const url=new URL('../../JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.js',
     import.meta.url);
   url.searchParams.set('test','g4cp04_first_and_second');
   await import(url.href);

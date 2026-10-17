@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const A='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const B='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const C='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -117,7 +117,7 @@ test('Founder handoff status always rejects fake delivery',async()=>{
 test('G3 Android source has Founder packet/R2, Reporter handoff, Editor screen and no automatic send',async()=>{
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const html=await readFile(new URL('b8-accountability.html',dir),'utf8');
- const js=await readFile(new URL('b8-accountability-ui.mjs',dir),'utf8');
+ const js=await readFile(new URL('b8-accountability-ui.js',dir),'utf8');
  for(const id of ['g3Packet','g3R2Authorization','g3Truth','g3EvidenceLink','g3Handoff','g3Observation','g3Screen']){
   assert(html.includes('id="'+id+'"'));
   assert(js.includes("form('"+id+"',"));

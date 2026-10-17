@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs';
+import {createB8Workflow} from '../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js';
 const CASE='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 const Q='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
 const REC='cccccccc-cccc-4ccc-8ccc-cccccccccccc';
@@ -73,7 +73,7 @@ test('G7 Android Owner history, lock privacy and textContent rendering',async()=
  const dir=new URL('../../JANTA_BOL_PHASE_3C_WORKING/',import.meta.url);
  const [html,js]=await Promise.all([
   readFile(new URL('b8-accountability.html',dir),'utf8'),
-  readFile(new URL('b8-accountability-ui.mjs',dir),'utf8')
+  readFile(new URL('b8-accountability-ui.js',dir),'utf8')
  ]);
  for(const id of ['g7History','g7Case','g7Kind','g7Note','g7HistoryRead','g7HistoryOutput'])
   assert(html.includes('id="'+id+'"'));
