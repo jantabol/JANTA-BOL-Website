@@ -9,6 +9,8 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g1-disposable-fixture.sql'
       - 'ci/phase4/b8-g1-real-postgres-regression.sql'
+      - 'ci/phase4/b8-g1-owner-mobile-case-picker-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_owner_mobile_case_picker_REVIEW_ONLY.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_cp02_editor_immutable_review_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g1-cp02-editor-review-regression.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql'
@@ -118,6 +120,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g1-negative.sql
       - name: REAL PostgreSQL G1 role/ACL/revoke/expiry/session/rollback negative tests
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-real-postgres-regression.sql
+      - name: Apply Founder-only case selector RPC to isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_owner_mobile_case_picker_REVIEW_ONLY.sql
+      - name: PG17 AAL2 case picker, no anon/reporter/editor/private leakage
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-owner-mobile-case-picker-regression.sql
       - name: Apply G1 CP02 Editor/immutable review migration into the SAME disposable PG17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_cp02_editor_immutable_review_REVIEW_ONLY.sql
       - name: Real Editor R1/R2 negative/immutable/Founder EVIDENCE_GAP review & rollback
