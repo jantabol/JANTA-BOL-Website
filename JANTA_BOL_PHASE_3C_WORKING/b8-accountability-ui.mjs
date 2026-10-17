@@ -36,6 +36,7 @@ function lock(reason){
   $('reporterCard').textContent='Locked — Case details cleared.';
   $('g5LedgerOutput').textContent='Locked — G5 private case history cleared.';
   $('g7HistoryOutput').textContent='Locked — G7 reply/history claims cleared.';
+  $('g9DueOutput').textContent='Locked — G9 private overdue cases cleared.';
   guard.textContent=reason||'Security check required. Please reload this page.';
   guard.classList.remove('hide');
 }
@@ -292,6 +293,16 @@ form('g4Milestone',async()=>{
     v('g4MilestoneCase'),v('g4MilestoneCode'));
   return 'G4 Server-checked public milestone ID: '+x.eventId+
     '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
+});
+
+// G9: own due-case follow-up review only. No automatic official outreach.
+form('g9Due',async()=>{
+  const out=$('g9DueOutput');
+  out.textContent='Founder-only overdue cases loading…';
+  const due=await workflow.ownerDueG9Followups();
+  showJSON(out,due);
+  return 'Overdue cases requiring human review: '+due.length+
+    '. No claim about official motive or external delivery.';
 });
 
 // G8: manual proof intake is NOT an outbound official message.
