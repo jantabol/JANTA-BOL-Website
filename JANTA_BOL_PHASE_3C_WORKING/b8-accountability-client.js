@@ -35,6 +35,21 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
   }
   return Object.freeze({
     role,
+    async ownerCaseChoices(){
+      requireRole(role,'owner');
+      const rows=await rpc('jb_b8_g1_owner_case_choices',{});
+      if(!Array.isArray(rows)||rows.length>50||rows.some(r=>
+        !r||typeof r!=='object'||!validId(r.id)||
+        typeof r.title!=='string'||r.title.length<12||r.title.length>200||
+        typeof r.area!=='string'||r.area.length>120||
+        !LANES.includes(r.risk_lane)||
+        !['draft','investigating','monitoring','closed'].includes(r.state)))
+        deny('OWNER_CASE_CHOICES_INVALID');
+      return Object.freeze(rows.map(r=>Object.freeze({
+        id:r.id,title:r.title,area:r.area,
+        risk_lane:r.risk_lane,state:r.state
+      })));
+    },
     async ownerCreateCase(title,area,lane){
       requireRole(role,'owner');
       return id(await rpc('jb_b8_g1_owner_create_case',{
