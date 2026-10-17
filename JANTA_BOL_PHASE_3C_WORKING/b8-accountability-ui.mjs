@@ -213,6 +213,23 @@ form('g3Screen',async()=>{
     '\nQuestion NOT SENT: '+x.externalStatus;
 });
 
+
+form('g3ReplyClaim',async()=>{
+  const raw=v('g3ReplyReceivedAt'),d=new Date(raw);
+  if(!raw||Number.isNaN(+d))throw Error('B8_REPLY_DATE_INVALID');
+  const x=await workflow.reporterClaimOfficialReply(
+    v('g3ReplyIntent'),v('g3ReplyReceipt'),v('g3ReplyOffice'),
+    d.toISOString(),v('g3ReplySummary')
+  );
+  return 'Official Reply Claim UUID: '+x.replyClaimId+
+    '\n'+x.accuracy+'; स्वतंत्र आधिकारिक जवाब अभी सत्यापित नहीं।';
+});
+form('g3ReplyTruth',async()=>{
+  const x=await workflow.ownerReplyClaimSummary(v('g3ReplyTruthQ'));
+  showJSON($('g3ReplyTruthOutput'),x);
+  return 'Private reply claim summary loaded. Official reply/provider delivery remain unverified.';
+});
+
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
 // nor the real G1/G2 server role and case grants.
 boot();
