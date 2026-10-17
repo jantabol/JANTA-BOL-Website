@@ -23,7 +23,7 @@ PSQL
 if [[ ! "$case_id" =~ ^[0-9a-f-]{36}$ ]]; then
  echo 'B8_G4_INVALID_SYNTHETIC_CASE'; exit 1;
 fi
-test "$(psql -X -A -t -v caseid="$case_id" -c "select (public.jb_b8_g4_public_case(:'caseid'::uuid) is not null)::int" | tail -1)" = "1" || { echo 'B8_G4_PUBLIC_SETUP_FAILED'; exit 1; }
+test "$(psql -X -A -t -v caseid="$case_id" <<< "select (public.jb_b8_g4_public_case(:'caseid'::uuid) is not null)::int" | tail -1)" = "1" || { echo 'B8_G4_PUBLIC_SETUP_FAILED'; exit 1; }
 
 # Tx A acquires row lock, inserts Founder HIDE, pauses BEFORE rollback.
 psql -X -v ON_ERROR_STOP=1 -v caseid="$case_id" > "$tmp/hider" 2>&1 <<'PSQL' &
@@ -71,7 +71,7 @@ if test "$code" -eq 0 || ! grep -q 'canceling statement due to lock timeout' "$t
  echo 'B8_G4_HIDDEN_CASE_REVISION_NOT_SERIALIZED';exit 1;
 fi
 # HIDE rolled back so original approved public snapshot must still be visible.
-test "$(psql -X -A -t -v caseid="$case_id" -c "select (public.jb_b8_g4_public_case(:'caseid'::uuid)->>'public_revision')" | tail -1)" = "1" || { echo 'B8_G4_REVISE_HAPPENED_UNDER_RACE';exit 1; }
+test "$(psql -X -A -t -v caseid="$case_id" <<< "select (public.jb_b8_g4_public_case(:'caseid'::uuid)->>'public_revision')" | tail -1)" = "1" || { echo 'B8_G4_REVISE_HAPPENED_UNDER_RACE';exit 1; }
 # Then explicitly COMMIT Founder HIDE and re-read as anon in ANOTHER session.
 psql -X -v ON_ERROR_STOP=1 -v caseid="$case_id" > "$tmp/hidecommit" 2>&1 <<'PSQL'
 begin;
@@ -83,6 +83,6 @@ select public.jb_b8_g4_owner_release_public_projection(
  :'caseid'::uuid,'HIDE',null,null,null,false);
 commit;
 PSQL
-test "$(psql -X -A -t -v caseid="$case_id" -c "set role anon;select (public.jb_b8_g4_public_case(:'caseid'::uuid) is null)::int" | tail -1)" = "1" || { echo 'B8_G4_COMMITTED_HIDE_LEAKED_ANON';exit 1; }
+test "$(psql -X -A -t -v caseid="$case_id" <<< "set role anon;select (public.jb_b8_g4_public_case(:'caseid'::uuid) is null)::int" | tail -1)" = "1" || { echo 'B8_G4_COMMITTED_HIDE_LEAKED_ANON';exit 1; }
 test "$(psql -X -A -t -c "set role anon;select public.jb_b8_g4_public_feed(24)::text" | tail -1)" = "[]" || { echo 'B8_G4_HIDDEN_CASE_STILL_IN_ANON_FEED';exit 1; }
 echo 'B8 G4 CP04 PASS: real two-session Owner HIDE/REVISE lock serialization, rollback, separate-session committed anon NULL and feed []'
