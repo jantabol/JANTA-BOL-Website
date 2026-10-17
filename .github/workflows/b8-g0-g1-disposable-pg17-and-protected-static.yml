@@ -26,6 +26,11 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs'
       - 'ci/phase4/b8-g3-cp01-android-workflow.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp02_founder_proof_notifications_REVIEW_ONLY.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp03_manual_handoff_truth_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g3-cp02-notification-fixture.sql'
+      - 'ci/phase4/b8-g3-cp02-evidence-founder-notifications-regression.sql'
+      - 'ci/phase4/b8-g3-cp03-handoff-truth-regression.sql'
   workflow_dispatch:
 permissions:
   contents: read
@@ -89,6 +94,16 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-private-upload-scope-regression.sql
       - name: REAL two-session PG17 concurrent Article-link vs old hard-delete transaction race
         run: bash ci/phase4/b8-g2-cp02-race-isolated-pg17.sh
+      - name: Build synthetic B3 notification authority fixture (NO LIVE writes)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp02-notification-fixture.sql
+      - name: Apply G3 CP02 Founder evidence and review-proof notification schema
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp02_founder_proof_notifications_REVIEW_ONLY.sql
+      - name: PG17 G3 CP02 real R1 Editor R2 Founder and in-app truthful notice
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp02-evidence-founder-notifications-regression.sql
+      - name: Apply G3 CP03 manual handoff truth, review gates and idempotency
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp03_manual_handoff_truth_REVIEW_ONLY.sql
+      - name: PG17 G3 CP03 real R0/R1/R2 question handoff and no false delivery
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp03-handoff-truth-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
