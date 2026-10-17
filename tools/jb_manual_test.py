@@ -15,7 +15,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 REG = ROOT / "JANTA_BOL_PHASE_4_WORKING" / "TEST-REGISTER.md"
 B8 = ROOT / "JANTA_BOL_PHASE_4_WORKING" / "review" / "B8_G5_OFFICIAL_EVIDENCE_MANIFEST_20261017.json"
 OUT = ROOT / "MANUAL_EVIDENCE_LOCAL"
-NORMAL = re.compile(r"^(?:P4[- ]?T?)?0*(\d{1,3})$", re.I)
+NORMAL = re.compile(r"^(?:(?:P4[- ]?)?T)?0*(\d{1,3})$", re.I)
 ROW = re.compile(r"^\|\s*(P4-T\d{3})\s*\|(.+)\|\s*$")
 B8_REQUIRED = {
     "P4-T092": "E7,E9", "P4-T093": "E2,E9",
