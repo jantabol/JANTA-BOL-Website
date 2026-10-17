@@ -56,6 +56,9 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g7_accountability_chronology_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g7-chronology-regression.sql'
       - 'ci/phase4/b8-g7-chronology-android.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g8_manual_delivery_public_status_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g8-manual-delivery-public-status-regression.sql'
+      - 'ci/phase4/b8-g8-manual-delivery-android.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -153,6 +156,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g7_accountability_chronology_REVIEW_ONLY.sql
       - name: REAL PG17 G7 unauthorized reply, no-reply, late reply, corrected summaries, original versions, cross-case, rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g7-chronology-regression.sql
+      - name: Apply G8 Founder private manual evidence verification and bounded public delivery-status guard
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g8_manual_delivery_public_status_REVIEW_ONLY.sql
+      - name: REAL PG17 G8 Founder AAL2 manual evidence, cross-case/anon privacy, no false prior sent, published safe enums and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g8-manual-delivery-public-status-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
@@ -188,6 +195,7 @@ jobs:
           node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
           node --test ci/phase4/b8-g6-release-ready-android.test.mjs
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs
