@@ -49,6 +49,21 @@ values (
  '88888888-8888-4888-8888-888888888882',:'g5_other'::uuid,
  repeat('b',64),100,'application/pdf');
 
+-- Distinct, same-case private receipt *not consumed* in closure, for genuinely
+-- newly considered material after closure (no false "new evidence" reusing close receipt).
+insert into public.b8_private_upload_intents
+(id,case_id,reporter_user_id,reporter_session_id,object_key,original_label,expected_mime,expected_bytes)
+values ('88888888-8888-4888-8888-888888888883',:'g5_case'::uuid,
+ '22222222-2222-2222-2222-222222222222',
+ '99999999-9999-4999-8999-999999999993','g5/isolated/receipt-new',
+ 'Synthetic newly considered source','application/pdf',100);
+insert into public.b8_private_upload_receipts
+(id,intent_id,case_id,server_sha256,byte_count,mime_type)
+values ('77777777-7777-4777-8777-777777777773',
+ '88888888-8888-4888-8888-888888888883',:'g5_case'::uuid,
+ repeat('c',64),100,'application/pdf');
+
+
 -- Anonymous can't read or write ledger via exposed RPC.
 set role anon;
 do $b8$
@@ -234,9 +249,21 @@ begin
  exception when others then denied:=sqlerrm='B8_G5_REOPEN_REQUIRES_SAME_CASE_BYTES';end;
  if not denied then raise exception 'B8_G5_REOPEN_CROSS_CASE';end if;
 end $b8$;
+-- Negative: reopening with the evidence receipt already used to CLOSE must fail.
+do $b8$
+declare denied boolean:=false;
+begin
+ begin
+ perform public.jb_b8_g5_owner_reopen_case(
+  current_setting('b8.g5_case')::uuid,
+  '77777777-7777-4777-8777-777777777771'::uuid,
+  'Do not reuse closing receipt pretending the material is newly considered');
+ exception when others then denied:=sqlerrm='B8_G5_REOPEN_RECEIPT_ALREADY_USED';end;
+ if not denied then raise exception 'B8_G5_FAKE_NEW_MATERIAL_REOPEN_ACCEPTED';end if;
+end $b8$;
 select public.jb_b8_g5_owner_reopen_case(
- :'g5_case'::uuid,'77777777-7777-4777-8777-777777777771'::uuid,
- 'New material evidence claim requires further checks, no conclusion assumed');
+ :'g5_case'::uuid,'77777777-7777-4777-8777-777777777773'::uuid,
+ 'Separate material receipt newly considered on reopening; authenticity still unverified');
 reset role;
 
 -- Sealed history and proof statuses cannot be rewritten by application OR migration fixture.
