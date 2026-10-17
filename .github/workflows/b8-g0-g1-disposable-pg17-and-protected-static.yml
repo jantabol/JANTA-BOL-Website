@@ -45,6 +45,7 @@ on:
       - 'ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g5-original-accountability-regression.sql'
+      - 'ci/phase4/b8-g5-android-owner-contract.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -155,6 +156,7 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
           node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs
