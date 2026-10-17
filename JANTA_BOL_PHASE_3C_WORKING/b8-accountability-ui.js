@@ -38,6 +38,7 @@ const B8_FIELD_HI=Object.freeze({
  ORIGINAL:'मूल समयसीमा',
  AUTHORITY_COMPLETION_CLAIM:'अधिकारी का काम पूरा होने का दावा',
  FIELD_OBSERVATION_REPORTED:'दर्ज जमीनी जानकारी',
+ DOCUMENTED_PROJECTED:'ऐतिहासिक दस्तावेज में अनुमानित/संभावित प्रभाव (वास्तविक नुकसान साबित नहीं)',
  AUTHORITY_STATED:'अधिकारी द्वारा बताया गया प्रभाव',
  GROUND_REPORTED:'दर्ज जमीनी प्रभाव',
  DOCUMENTED_PROPOSAL:'दस्तावेज में दर्ज प्रस्ताव',
