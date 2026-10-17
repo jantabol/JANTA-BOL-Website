@@ -3,7 +3,7 @@
  * B0–B7 old frontend untouched. NO dispatch button, no local evidence storage.
  * Server RPC guards remain the final role/session/Case authority.
  */
-import {createB8Workflow,validId} from './b8-accountability-client.mjs';
+import {createB8Workflow,validId} from './b8-accountability-client.js';
 
 const $=id=>document.getElementById(id);
 const status=$('status'),guard=$('guard'),app=$('app');

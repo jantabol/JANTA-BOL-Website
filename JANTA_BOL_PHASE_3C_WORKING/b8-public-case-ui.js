@@ -1,6 +1,6 @@
 /** B8 G4: PUBLIC browser UI. Displays only strict server-approved enum translations. */
 import {createPublicCaseReader,isUuid,canonicalArticleHref,canonicalCaseHref}
- from './b8-public-case-client.mjs';
+ from './b8-public-case-client.js';
 const $=id=>document.getElementById(id);
 const statusLabels=Object.freeze({
  UNDER_REVIEW:'जाँच जारी है',RECORDS_REQUESTED:'रिकॉर्ड माँगे गए हैं',
