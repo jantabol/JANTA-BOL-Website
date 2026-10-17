@@ -5,7 +5,7 @@
  * Byte-integrity != authenticity of documentary/source assertions.
  */
 const MAX=8_388_608;
-const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{12}$/i;
+const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const fail=code=>{throw Error('B8_PRIVATE_UPLOAD_'+code)};
 const digest=async bytes=>{
  const b=await crypto.subtle.digest('SHA-256',bytes);
