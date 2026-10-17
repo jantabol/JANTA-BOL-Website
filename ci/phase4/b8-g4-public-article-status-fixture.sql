@@ -1,6 +1,8 @@
 \set ON_ERROR_STOP on
 -- Disposable Postgres17 ONLY: old production enum casting, no original LIVE mutation.
-create type public.article_status as enum ('draft','published','unpublished');
+-- Exact five-label LIVE public.article_status observed by read-only pg_catalog (17 Oct 2026).
+-- Previous synthetic 3-label enum missed 'review' and 'deleted' states.
+create type public.article_status as enum ('draft','published','review','unpublished','deleted');
 alter table public.articles
  alter column status type public.article_status
  using status::public.article_status;

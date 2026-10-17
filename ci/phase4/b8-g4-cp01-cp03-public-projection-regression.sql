@@ -187,6 +187,22 @@ begin
   raise exception 'B8_G4_UNPUBLISHED_ARTICLE_STILL_PUBLIC_LINKED';end if;
 end $unpublished$;
 reset role;
+-- REAL-SCHEMA PARITY: existing LIVE enum also includes review and deleted.
+-- Neither non-published state may expose canonical Article UUID through B8.
+do $b8_statuses$
+declare st text; v jsonb;
+begin
+ foreach st in array ARRAY['review','deleted'] loop
+   update public.articles set status=st::public.article_status
+    where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
+   select public.jb_b8_g4_public_case(current_setting('b8.fixture_public_case')::uuid)
+     into v;
+   if jsonb_array_length(v->'articles')<>0 then
+    raise exception 'B8_G4_LIVE_ENUM_NONPUBLISHED_ARTICLE_EXPOSED %',st;
+   end if;
+ end loop;
+ raise notice 'B8 G4 LIVE exact five-label enum review/deleted public-link negatives PASS (isolated PG17)';
+end $b8_statuses$;
 update public.articles set status='published'::public.article_status,version=version+1
  where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa';
 

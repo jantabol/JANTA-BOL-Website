@@ -64,6 +64,10 @@ on:
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
+      - 'ci/phase4/b8-live-parity-static.test.mjs'
+      - 'ci/phase4/b8-predeploy-live-catalog-READ_ONLY.sql'
+      - 'ci/phase4/b8-g4-public-article-status-fixture.sql'
+      - 'ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql'
       - 'ci/phase4/b8-runtime-readiness-g1-negative.sql'
       - 'ci/phase4/b8-runtime-readiness-g9-positive.sql'
       - 'ci/phase4/build_b0_b8_master_source_zip.py'
@@ -269,6 +273,7 @@ jobs:
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
           node --test ci/phase4/b8-spck-mime-regression.test.mjs
           node --test ci/phase4/b8-database-readiness-android.test.mjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js
