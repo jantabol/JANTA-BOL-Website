@@ -24,7 +24,8 @@ const make=(opt={})=>{
    calls.push('upload');assert.equal(upsert,false);
    if(opt.failUpload)throw Error('storage API down');
    assert(!storage.has(key));
-   storage.set(key,new Uint8Array(bytes));},
+   storage.set(key,new Uint8Array(bytes));
+   if(opt.writeThenFail)throw Error('ambiguous gateway timeout after commit');},
   readback:async({key})=>{
    calls.push('readback');const bytes=storage.get(key);
    if(opt.mismatch)return new Uint8Array([0,1,2,3,4,5,6,7]);
@@ -108,5 +109,14 @@ test('Failed cleanup is a loud reconciliation blocker, not a fake PASS',async()=
 test('Storage write error never finalizes or claims upload succeeded',async()=>{
  const {f,calls}=make({failUpload:true});
  await assert.rejects(send(f),/SAFE_PRIVATE_INGRESS_FAILED/);
+ assert(!calls.includes('finalize'));
+});
+
+test('Ambiguous storage timeout AFTER bytes saved must scrub orphan rather than leaving unknown private object',async()=>{
+ const {f,calls,storage}=make({writeThenFail:true});
+ await assert.rejects(send(f),/SAFE_PRIVATE_INGRESS_FAILED/);
+ assert.equal(storage.size,0);
+ assert(calls.includes('remove'));
+ assert(calls.includes('orphan:FINALIZE_REJECTED'));
  assert(!calls.includes('finalize'));
 });
