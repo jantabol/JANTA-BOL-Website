@@ -161,7 +161,8 @@ update public.team_accounts set status='active'
 where user_id='22222222-2222-2222-2222-222222222222';
 
 -- Expired grant blocks. Restored only by a deliberate Owner grant.
-update public.b8_case_reporter_grants set expires_at=now()-interval '2 minutes'
+update public.b8_case_reporter_grants
+set granted_at=now()-interval '3 days',expires_at=now()-interval '2 minutes'
 where case_id=current_setting('b8.fixture_case')::uuid;
 set role authenticated;
 do $$
