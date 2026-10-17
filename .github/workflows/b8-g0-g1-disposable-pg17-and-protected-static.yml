@@ -13,6 +13,8 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g2-cp01-cascade-fixture.sql'
       - 'ci/phase4/b8-g2-cp01-provenance-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp02_article_hold_GUARD_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g2-cp02-legal-hold-regression.sql'
   workflow_dispatch:
 permissions:
   contents: read
@@ -64,6 +66,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql
       - name: Verify owner/reporter privacy, unverified SHA receipts, immutable links and ROLLBACK
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp01-provenance-regression.sql
+      - name: Apply G2 CP02 linked Article hard-delete guard and append-only hold to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp02_article_hold_GUARD_REVIEW_ONLY.sql
+      - name: Real PG17 linked hard-delete rejection, original sources survive, ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp02-legal-hold-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
