@@ -9,6 +9,12 @@ const $=id=>document.getElementById(id);
 const status=$('status'),guard=$('guard'),app=$('app');
 const LOCK_MS=15*60*1000;
 let workflow=null,role=null,lastActivity=Date.now(),busy=false,locked=false;
+let uploadReadyCase=null;
+function updateUploadAvailability(){
+  const enabled=role==='reporter'&&!locked&&!busy&&
+    uploadReadyCase!==null&&$('uploadCase').value.trim()===uploadReadyCase;
+  $('uploadBtn').disabled=!enabled;
+}
 const ALL_FORMS=['createCase','assignStaff','linkArticle','legalHold','packetForm',
   'caseLookup','draftForm','requestReview','reporterClaim','uploadForm','editorRead','editorDecision'];
 function showStatus(text,kind='warn'){
@@ -20,7 +26,9 @@ function showJSON(node,value){
   node.textContent=JSON.stringify(value,null,2);
 }
 function lock(reason){
-  locked=true;workflow=null;role=null;busy=false;
+  locked=true;workflow=null;role=null;busy=false;uploadReadyCase=null;
+  $('uploadBtn').disabled=true;
+  $('uploadFile').value='';
   app.classList.add('hide');
   for(const section of ['owner','reporter','editor'])$(section).classList.add('hide');
   $('founderPacket').textContent='Locked — Private Packet cleared.';
@@ -58,8 +66,8 @@ async function execute(form,action){
       '\nकिसी Draft, Review, Upload या SEND को सफलता नहीं माना गया।','bad');
   }finally{
     busy=false;if(button&&!locked)button.disabled=false;
-    // Uploaded file path remains disabled until reviewed hosted release.
-    $('uploadBtn').disabled=true;
+    // Restore only if still scoped to an independently checked live backend gate.
+    updateUploadAvailability();
   }
 }
 function form(id,fn){$(id).addEventListener('submit',e=>{
@@ -78,12 +86,16 @@ async function boot(){
     if(!['owner','editor','reporter'].includes(currentRole))throw Error('B8_STAFF_ROLE_REQUIRED');
     if(currentRole==='owner')await window.JBBackend.requireOwner();
     role=currentRole;
-    // Upload is deliberately OFF until paired SQL/Edge deployment receives H1 E2.
-    workflow=createB8Workflow({client:window.JBBackend.client,role,allowPrivateUpload:false});
+    // Upload UI remains initially OFF. Paired SQL G6 is server authority, not DOM.
+    // Standalone JS never enables a bypass; server default is OFF.
+    workflow=createB8Workflow({client:window.JBBackend.client,role,
+      allowPrivateUpload:role==='reporter'});
+    uploadReadyCase=null;
     locked=false;lastActivity=Date.now();
     $('roleName').textContent='Verified Session Role: '+role.toUpperCase();
     guard.classList.add('hide');app.classList.remove('hide');
     $(role).classList.remove('hide');
+    updateUploadAvailability();
     showStatus('Role verified for this page. केवल नए B8 RPCs की वास्तविक Server पुष्टि स्वीकार होगी; SEND अभी नहीं।');
   }catch(e){
     lock('B8 PRIVATE ACCESS STOP: '+String(e?.message||'BACKEND_UNAVAILABLE')+
@@ -137,7 +149,13 @@ form('caseLookup',async()=>{
   $('questionCase').value=c.id;
   $('claimCase').value=c.id;
   $('uploadCase').value=c.id;
-  return 'Case Permission Server द्वारा जाँची गई। Risk '+c.risk_lane+'. कोई संदेश नहीं भेजा गया।';
+  uploadReadyCase=null;
+  const release=await workflow.reporterPrivateUploadReadiness(c.id);
+  if(release.allowed)uploadReadyCase=c.id;
+  updateUploadAvailability();
+  return 'Case Permission Server द्वारा जाँची गई। Risk '+c.risk_lane+
+    '. Private Upload: '+(release.allowed?'OWNER-RELEASED + SERVER-SCOPED':'BLOCKED, DEFAULT OFF')+
+    '. कोई संदेश नहीं भेजा गया।';
 });
 form('draftForm',async()=>{
   const result=await workflow.reporterCreateDraft(v('questionCase'),v('questionText'),v('recipient'));
@@ -156,9 +174,31 @@ form('reporterClaim',async()=>{
   return 'Evidence Claim ID: '+r.claimId+'\n'+r.state+
     ' — कोई PDF/फोटो वास्तव में Upload या सत्यापित होने का दावा नहीं।';
 });
+$('uploadCase').addEventListener('input',()=>{
+  uploadReadyCase=null;
+  updateUploadAvailability();
+});
 form('uploadForm',async()=>{
-  // Hard-disabled until deployment and physical E2/E3; never silently enable.
-  throw Error('B8_PRIVATE_UPLOAD_WAIT_HOSTED_E2_AND_G3_ANDROID_RELEASE');
+  const c=v('uploadCase'),file=$('uploadFile').files?.[0];
+  if(!uploadReadyCase||uploadReadyCase!==c)
+    throw Error('B8_PRIVATE_UPLOAD_REVERIFY_REPORTER_CASE');
+  // Every request reconfirms server state (Founder may emergency disable).
+  const gate=await workflow.reporterPrivateUploadReadiness(c);
+  if(!gate.allowed){uploadReadyCase=null;updateUploadAvailability();
+    throw Error('B8_PRIVATE_UPLOAD_OWNER_RELEASE_OFF');}
+  const result=await workflow.reporterUploadCaseEvidence(c,file);
+  $('uploadFile').value='';
+  // Never display a private Storage URL, object key, identity or uploaded bytes.
+  return 'सुरक्षित Private Byte Receipt: '+result.receiptId+
+    '\\n'+result.proof+' — केवल byte/hash readback सत्यापित, आधिकारिक दस्तावेज की सच्चाई नहीं।';
+});
+form('g6Release',async()=>{
+  if(!$('g6ReleaseAck').checked)throw Error('B8_G6_FOUNDER_RELEASE_ACK_REQUIRED');
+  const target=v('g6ReleaseAction')==='ON';
+  const x=await workflow.ownerSetPrivateUploadRelease(target,v('g6ReleaseReason'));
+  $('g6ReleaseAck').checked=false;
+  return 'Founder AAL2 Server Release Gate: '+(x.enabled?'ON':'OFF')+
+    '. Immutable audit saved; old News/Ads unaffected.';
 });
 form('editorRead',async()=>{
   const data=await workflow.editorReviewCard(v('editorRequest'));
