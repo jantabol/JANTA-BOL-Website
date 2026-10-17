@@ -208,6 +208,29 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
       return Object.freeze({observationId:id(x),externalStatus:'NOT_VERIFIED',
         delivered:false});
     },
+    async reporterClaimOfficialReply(handoffId,privateReceiptId,office,receivedAt,summary){
+      requireRole(role,'reporter');
+      const rid=await rpc('jb_b8_g3_reporter_claim_official_reply',{
+        p_handoff_id:id(handoffId),p_receipt_id:id(privateReceiptId),
+        p_claimed_office:bounded(office,3,160,'REPLY_OFFICE_REQUIRED'),
+        p_claimed_received_at:validDate(receivedAt),
+        p_reply_summary:bounded(summary,12,1400,'REPLY_SUMMARY_REQUIRED')
+      });
+      return Object.freeze({replyClaimId:id(rid),accuracy:'REPORTER_CLAIM_UNVERIFIED',
+        officiallyVerified:false});
+    },
+    async ownerReplyClaimSummary(questionId){
+      requireRole(role,'owner');
+      const p=await rpc('jb_b8_g3_owner_reply_claim_summary',{
+        p_question_id:id(questionId)
+      });
+      if(!p||p.question_id!==questionId||
+        p.official_reply_independently_verified!==false||
+        p.provider_external_delivery_verified!==false||
+        p.accuracy_class!=='REPORTER_CLAIM_UNVERIFIED')
+        deny('FALSE_OFFICIAL_REPLY_STATUS');
+      return Object.freeze(p);
+    },
     async reporterUploadCaseEvidence(caseId,file){
       requireRole(role,'reporter');
       if(!allowPrivateUpload)deny('UPLOAD_HOSTED_GATE_NOT_APPROVED');
