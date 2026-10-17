@@ -164,6 +164,41 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <div id="g5LedgerOutput" class="output" aria-live="polite">सिर्फ Founder AAL2; कोई Public / Verified Reply नहीं।</div>
 </fieldset></form>
 </div>
+<div class="card" aria-label="G7 accountable reply chronology">
+<h2>G7 — Right-to-Reply / Unanswered / Corrections Timeline (Private)</h2>
+<p class="hint">यह केवल Founder AAL2 के निजी तथ्यात्मक Records हैं। वास्तविक आधिकारिक Delivery/Reply E9 के बिना कोई सार्वजनिक Verified दावा नहीं बनेगा।</p>
+<form id="g7History"><fieldset><legend>Immutable Chronology Event</legend>
+<label for="g7Case">Case UUID</label><input id="g7Case" required autocomplete="off">
+<label for="g7Kind">History Event</label><select id="g7Kind">
+<option value="NO_REPLY_AS_OF_CLAIM">No Reply as of (UNVERIFIED)</option>
+<option value="PARTIAL_REPLY_CLAIM">Partial Reply Claim</option>
+<option value="FULL_REPLY_CLAIM">Full Reply Claim</option>
+<option value="LATE_REPLY_CLAIM">Late Reply Claim</option>
+<option value="URGENT_EXCEPTION_ESCALATED">Urgent exception escalated privately</option>
+<option value="DEADLINE_FOLLOWUP">Original/Revised Deadline Follow-up</option>
+<option value="SUMMARY_DRAFT">Summary Draft record</option>
+<option value="SUMMARY_CORRECTION">Material Summary Correction (private)</option>
+<option value="EVIDENCE_VERSION">Versioned private document reference</option>
+</select>
+<label for="g7Note">Source Attribution / factual reason (12–1000)</label>
+<textarea id="g7Note" required minlength="12" maxlength="1000"></textarea>
+<label for="g7Question">Question UUID (Reply/No-Reply/Urgent में जरूरी)</label>
+<input id="g7Question" autocomplete="off">
+<label for="g7Receipt">Same-case PRIVATE file receipt UUID (Reply/Version में जरूरी)</label>
+<input id="g7Receipt" autocomplete="off">
+<label for="g7Prior">Previous Event ID (Summary Correction / Revised Evidence Version)</label>
+<input id="g7Prior" inputmode="numeric" autocomplete="off">
+<label for="g7AsOf">As of Date (No-Reply / Deadline Follow-up)</label>
+<input id="g7AsOf" type="date">
+<button type="submit">Founder AAL2 — Append Private Event</button>
+<p class="hint">"No Reply" से पहले actual manual handoff attempt का रिकॉर्ड जरूरी है; attempt भी official delivery proof नहीं है।</p>
+</fieldset></form>
+<form id="g7HistoryRead"><fieldset><legend>Owner-only Case Chronology</legend>
+<label for="g7ReadCase">Case UUID</label><input id="g7ReadCase" required autocomplete="off">
+<button type="submit" class="secondary">Private Append-only History देखें</button>
+<div id="g7HistoryOutput" class="output">Founder AAL2 के बाद ही निजी Timeline दिखेगी।</div>
+</fieldset></form>
+</div>
 <form id="g6Release" class="card">
 <fieldset><legend>🔐 Founder G6 — Private Evidence Upload Release (default OFF)</legend>
 <p class="hint">यह switch केवल B8 private upload को नियंत्रित करेगा। News / B7 / public Storage कभी नहीं। ON करने से पहले वास्तविक Backend, RLS, Edge और Backup समीक्षा Founder द्वारा पूरी होनी चाहिए।</p>
