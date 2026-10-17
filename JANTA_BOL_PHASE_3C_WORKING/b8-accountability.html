@@ -27,231 +27,231 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 .b8-phone-active input,.b8-phone-active select,.b8-phone-active textarea{font-size:16px;min-width:0}
 @media(max-width:600px){header{position:static;padding:9px 12px}header h1{font-size:17px}header .muted{font-size:12px}main{padding:8px}.card{padding:11px;margin:8px 0}fieldset{padding:9px}h2{font-size:17px}}
 </style></head>
-<body><header><h1>JANTA BOL — B8 Accountability</h1>
-<div class="muted">B8 • Mobile Workflow • केवल वास्तविक Server पुष्टि पर कार्रवाई</div></header>
+<body><header><h1>जनता बोल — जवाबदेही कार्यक्षेत्र</h1>
+<div class="muted">B8 • मोबाइल पर काम • सर्वर की पुष्टि के बाद ही कार्रवाई</div></header>
 <main>
 <div class="card warn" role="note">
-<strong>⚠️ सवाल अभी अधिकारी को नहीं भेजे जा रहे हैं।</strong>
-<p>यह Review-only कार्यक्षेत्र है। केवल Backend का असली जवाब मिलने पर Draft/Review रिकॉर्ड होगा। EVIDENCE_GAP का मतलब प्रमाण अभी सत्यापित नहीं हैं। कोई नकली SENT या पूर्ण प्रमाण नहीं दिखेगा।</p>
+<strong>⚠️ अभी कोई सवाल अधिकारी को नहीं भेजा जा रहा है।</strong>
+<p>यह निजी जाँच का कार्यक्षेत्र है। सवाल का मसौदा और उसकी समीक्षा तभी दर्ज होगी, जब सर्वर पुष्टि करेगा। प्रमाण अधूरे हों तो उन्हें सत्यापित नहीं माना जाएगा। कोई सवाल भेजे जाने का झूठा दावा नहीं होगा।</p>
 </div>
 <div id="guard" class="card" role="status" aria-live="polite">Staff Login और Backend की स्थिति जाँची जा रही है…</div>
 <div id="app" class="hide">
-<div class="card"><div class="row"><strong id="roleName">—</strong><button id="refreshLogin" class="secondary" type="button">Security Recheck</button></div>
-<p class="hint">15 मिनट निष्क्रिय रहने पर B8 Screen दोबारा सत्यापन तक लॉक होगी। सभी अधिकार Server पर जाँचे जाएँगे।</p>
+<div class="card"><div class="row"><strong id="roleName">—</strong><button id="refreshLogin" class="secondary" type="button">सुरक्षा दोबारा जाँचें</button></div>
+<p class="hint">15 मिनट तक काम न करने पर यह स्क्रीन लॉक हो जाएगी। सभी अनुमतियों की जाँच सर्वर पर होगी।</p>
 <div id="status" class="status" role="status" aria-live="polite">Ready. कोई सवाल नहीं भेजा गया है।</div>
 </div>
 <section id="owner" class="hide card" aria-label="Founder private case actions">
-<h2>🔐 Founder — Case और Evidence नियंत्रण</h2>
-<form id="createCase"><fieldset><legend>नया Private Case</legend>
+<h2>🔐 संस्थापक — मामला और प्रमाण प्रबंधन</h2>
+<form id="createCase"><fieldset><legend>नया निजी मामला</legend>
 <label for="caseTitle">मामले का शीर्षक</label><input id="caseTitle" required minlength="12" maxlength="200" autocomplete="off">
 <label for="caseArea">क्षेत्र</label><input id="caseArea" required minlength="2" maxlength="120" autocomplete="off">
-<label for="caseRisk">जोखिम</label><select id="caseRisk"><option value="R0">R0 — सामान्य</option><option value="R1">R1 — गंभीर, Editor Review</option><option value="R2">R2 — Founder restricted</option></select>
-<button type="submit">Private Case बनाएँ</button></fieldset></form>
-<form id="assignStaff"><fieldset><legend>Staff को किसी Case की अनुमति</legend>
+<label for="caseRisk">जोखिम</label><select id="caseRisk"><option value="R0">R0 — सामान्य</option><option value="R1">R1 — गंभीर, संपादक की समीक्षा</option><option value="R2">R2 — केवल संस्थापक की अनुमति से</option></select>
+<button type="submit">निजी मामला बनाएँ</button></fieldset></form>
+<form id="assignStaff"><fieldset><legend>कर्मचारी को किसी मामले की अनुमति दें</legend>
 <label for="assignCase">Case UUID</label><input id="assignCase" required autocomplete="off">
-<label for="staffRole">Role</label><select id="staffRole"><option value="reporter">Reporter</option><option value="editor">Editor</option></select>
+<label for="staffRole">भूमिका</label><select id="staffRole"><option value="reporter">संवाददाता</option><option value="editor">संपादक</option></select>
 <label for="staffId">Staff User UUID (सत्यापित)</label><input id="staffId" required autocomplete="off">
 <label for="grantUntil">अनुमति समाप्ति (Local Time)</label><input id="grantUntil" type="datetime-local" required>
-<button type="submit">Case-specific Permission दें</button></fieldset></form>
-<form id="linkArticle"><fieldset><legend>पुराने Article की पहचान जोड़ें</legend>
+<button type="submit">इस मामले के लिए अनुमति दें</button></fieldset></form>
+<form id="linkArticle"><fieldset><legend>पुरानी खबर की पहचान जोड़ें</legend>
 <label for="linkCase">Case UUID</label><input id="linkCase" required autocomplete="off">
 <label for="articleUuid">Original Article UUID</label><input id="articleUuid" required autocomplete="off">
-<button type="submit">Original Article Link</button></fieldset></form>
-<form id="legalHold"><fieldset><legend>महत्वपूर्ण रिकॉर्ड की Legal Hold</legend>
+<button type="submit">मूल खबर से जोड़ें</button></fieldset></form>
+<form id="legalHold"><fieldset><legend>महत्वपूर्ण रिकॉर्ड को हटाने से सुरक्षित रखें</legend>
 <label for="holdCase">Case UUID</label><input id="holdCase" required autocomplete="off">
 <label for="holdReason">वजह</label><textarea id="holdReason" required minlength="12" maxlength="500"></textarea>
-<button type="submit">Hold Reaffirm</button></fieldset></form>
-<form id="packetForm"><fieldset><legend>Founder का प्रारंभिक Review Packet</legend>
+<button type="submit">रिकॉर्ड सुरक्षा की पुनः पुष्टि करें</button></fieldset></form>
+<form id="packetForm"><fieldset><legend>संस्थापक के लिए प्रारंभिक समीक्षा सामग्री</legend>
 <label for="packetId">Review Request UUID</label><input id="packetId" required autocomplete="off">
-<button type="submit">वास्तविक Backend Packet देखें</button>
-<p class="hint">यह पूर्ण Verified Proof Pack नहीं है। अधूरे प्रमाण EVIDENCE_GAP दिखेंगे।</p>
+<button type="submit">सर्वर से निजी समीक्षा सामग्री देखें</button>
+<p class="hint">यह पूरा सत्यापित प्रमाण नहीं है। अधूरे प्रमाणों की कमी अलग दिखाई जाएगी।</p>
 <div id="founderPacket" class="output" aria-live="polite">अभी कोई Packet नहीं देखा गया।</div></fieldset></form>
 
-<form id="g3Packet"><fieldset><legend>G3 Private Evidence Packet — IN-APP ONLY</legend>
+<form id="g3Packet"><fieldset><legend>G3 — निजी प्रमाण सामग्री (केवल ऐप के भीतर)</legend>
 <label for="g3PacketReq">Review Request UUID</label><input id="g3PacketReq" required autocomplete="off">
-<button type="submit">Private Evidence Pack देखना</button>
+<button type="submit">निजी प्रमाण सामग्री देखें</button>
 <div id="g3PacketData" class="output" aria-live="polite">फाइलों की Byte Integrity मिल सकती है; Official Truth अभी नहीं।</div></fieldset></form>
-<form id="g3R2Authorization"><fieldset><legend>R2 Restricted — पहले Founder की AAL2 अनुमति</legend>
+<form id="g3R2Authorization"><fieldset><legend>R2 गंभीर मामला — पहले संस्थापक की दो-चरणीय अनुमति</legend>
 <label for="g3R2Req">R2 Review Request UUID</label><input id="g3R2Req" required autocomplete="off">
-<label for="g3R2Reason">Founder Approval Reason</label><textarea id="g3R2Reason" required minlength="12" maxlength="500"></textarea>
-<button type="submit">Restricted Question Review को अनुमति</button>
-<p class="hint">यह News Publish या अधिकारी को SENT नहीं है।</p></fieldset></form>
-<form id="g3Truth"><fieldset><legend>प्रश्न के वास्तविक Handoff Status</legend>
+<label for="g3R2Reason">संस्थापक की अनुमति का कारण</label><textarea id="g3R2Reason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">गंभीर सवाल की समीक्षा की अनुमति दें</button>
+<p class="hint">इससे खबर प्रकाशित नहीं होगी और सवाल अधिकारी को नहीं भेजा जाएगा।</p></fieldset></form>
+<form id="g3Truth"><fieldset><legend>सवाल भेजे जाने की वास्तविक स्थिति</legend>
 <label for="g3TruthQ">Question Draft UUID</label><input id="g3TruthQ" required autocomplete="off">
-<button type="submit">Truth Status जाँचें</button>
+<button type="submit">वास्तविक स्थिति जाँचें</button>
 <div id="g3TruthData" class="output" aria-live="polite">कोई Delivered दावा नहीं।</div></fieldset></form>
 
-<form id="g3ReplyTruth"><fieldset><legend>Founder — अधिकारी के जवाब का दावा (अभी अप्रमाणित)</legend>
+<form id="g3ReplyTruth"><fieldset><legend>संस्थापक — अधिकारी के जवाब का दावा (अभी अप्रमाणित)</legend>
 <label for="g3ReplyTruthQ">Question UUID</label><input id="g3ReplyTruthQ" required autocomplete="off">
-<button type="submit">Reply Claim की स्थिति देखें</button>
+<button type="submit">जवाब के दावे की स्थिति देखें</button>
 <div id="g3ReplyTruthOutput" class="output" aria-live="polite">यह वास्तविक अधिकारी के जवाब की पुष्टि नहीं है।</div>
 </fieldset></form>
 
-<form id="g4PublicRelease"><fieldset><legend>G4 — Founder Public Projection Approval (सिर्फ सुरक्षित Enum)</legend>
+<form id="g4PublicRelease"><fieldset><legend>G4 — संस्थापक की सार्वजनिक जानकारी की अनुमति (केवल तय विकल्प)</legend>
 <label for="g4Case">Private Case UUID</label><input id="g4Case" required autocomplete="off">
-<label for="g4Action">Founder action</label><select id="g4Action" required><option value="" disabled selected>Founder Action चुनें</option>
-<option value="PUBLISH">PUBLISH — पहली बार सार्वजनिक करें</option>
-<option value="REVISE">REVISE — स्वीकृत Summary बदलें</option>
-<option value="HIDE">HIDE — तुरंत सार्वजनिक दृश्य हटाएँ</option>
+<label for="g4Action">संस्थापक की कार्रवाई</label><select id="g4Action" required><option value="" disabled selected>कार्रवाई चुनें — अपने आप कुछ प्रकाशित नहीं होगा</option>
+<option value="PUBLISH">पहली बार सार्वजनिक करें</option>
+<option value="REVISE">पहले से स्वीकृत विवरण बदलें</option>
+<option value="HIDE">तुरंत सार्वजनिक जानकारी छिपाएँ</option>
 </select>
-<label for="g4Topic">Public विषय (व्यक्तियों/आरोपों के नाम नहीं)</label><select id="g4Topic">
+<label for="g4Topic">सार्वजनिक विषय (किसी व्यक्ति या आरोप का नाम नहीं)</label><select id="g4Topic">
 <option value="PUBLIC_WORKS">सार्वजनिक कार्य</option><option value="PUBLIC_SERVICE">जनसेवा</option>
 <option value="HEALTHCARE">स्वास्थ्य</option><option value="EDUCATION">शिक्षा</option>
 <option value="OTHER">अन्य जनहित</option></select>
-<label for="g4Area">Public क्षेत्र</label><select id="g4Area">
+<label for="g4Area">सार्वजनिक क्षेत्र</label><select id="g4Area">
 <option value="PICHHORE">पिछोर</option><option value="SHIVPURI">शिवपुरी</option>
 <option value="GUNA">गुना</option><option value="ASHOKNAGAR">अशोकनगर</option>
 <option value="MADHYA_PRADESH">मध्य प्रदेश</option></select>
-<label for="g4Status">सत्यापित Public स्थिति</label><select id="g4Status">
+<label for="g4Status">सार्वजनिक स्थिति (सिर्फ स्वीकृत जानकारी)</label><select id="g4Status">
 <option value="UNDER_REVIEW">समीक्षा जारी</option><option value="UPDATED">अपडेट हुआ</option>
 </select>
 <label><input id="g4Privacy" type="checkbox" style="width:auto;min-height:auto">
  मैंने निजी स्रोत/व्यक्ति/आरोप के Public Disclosure जोखिम की समीक्षा की है। R2 Restricted मामले अभी सार्वजनिक नहीं होंगे।</label>
-<button type="submit">Founder AAL2 — Public Revision रिकॉर्ड करें</button>
-<p class="hint">Server HIDE पर Topic/Area/Status को खाली करेगा। Publication केवल Owner/AAL2 और Server Enum से।</p>
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — सार्वजनिक जानकारी बदलें</button>
+<p class="hint">जानकारी छिपाने पर सर्वर विषय, क्षेत्र और स्थिति को सार्वजनिक दृश्य से हटा देगा। प्रकाशित करना केवल संस्थापक की दो-चरणीय अनुमति से संभव है।</p>
 </fieldset></form>
-<form id="g4Milestone"><fieldset><legend>G4 — Server-checked Public Timeline Milestone</legend>
-<label for="g4MilestoneCase">Public Case UUID</label><input id="g4MilestoneCase" required autocomplete="off">
+<form id="g4Milestone"><fieldset><legend>G4 — सर्वर द्वारा जाँचा गया सार्वजनिक घटनाक्रम</legend>
+<label for="g4MilestoneCase">सार्वजनिक मामले की पहचान (UUID)</label><input id="g4MilestoneCase" required autocomplete="off">
 <label for="g4MilestoneCode">घटनाक्रम</label><select id="g4MilestoneCode" required><option value="" disabled selected>घटना चुनें</option>
 <option value="CASE_REVIEW_STARTED">समीक्षा शुरू</option>
 <option value="PUBLIC_RECORDS_UNDER_REVIEW">दस्तावेज समीक्षा में</option>
-<option value="QUESTION_DRAFT_PREPARED">सवाल का Draft तैयार हुआ (भेजा नहीं)</option>
-<option value="EDITORIAL_REVIEW_UPDATED">Editor Review दर्ज हुआ</option>
-<option value="RESPONSE_STATUS_NOT_VERIFIED">अधिकारी का जवाब स्वतंत्र रूप से Verified नहीं</option>
-<option value="CASE_STATUS_UPDATED">स्वीकृत Status बदला</option>
-<option value="FOLLOWUP_ARTICLE_LINKED">दूसरी प्रकाशित Follow-up खबर जोड़ी</option>
-<option value="CASE_CLOSED">Case बंद किया गया</option>
+<option value="QUESTION_DRAFT_PREPARED">सवाल का मसौदा तैयार हुआ (भेजा नहीं)</option>
+<option value="EDITORIAL_REVIEW_UPDATED">संपादक की समीक्षा दर्ज हुई</option>
+<option value="RESPONSE_STATUS_NOT_VERIFIED">अधिकारी का जवाब स्वतंत्र रूप से सत्यापित नहीं</option>
+<option value="CASE_STATUS_UPDATED">स्वीकृत स्थिति बदली</option>
+<option value="FOLLOWUP_ARTICLE_LINKED">दूसरी प्रकाशित अनुवर्ती खबर जोड़ी</option>
+<option value="CASE_CLOSED">मामला बंद किया गया</option>
 </select>
-<button type="submit">Public Timeline में संपादकीय घटना दर्ज करें</button>
-<p class="hint">Fake event रोकने के लिए Backend original Draft/Review/Article Case Record जाँचता है।</p>
+<button type="submit">सार्वजनिक घटनाक्रम में संपादकीय गतिविधि दर्ज करें</button>
+<p class="hint">झूठी घटना रोकने के लिए सर्वर असली मसौदे, समीक्षा और खबर के रिकॉर्ड की जाँच करता है।</p>
 </fieldset></form>
 
 <div class="card" aria-label="G5 private accountability facts">
-<h2>G5 — Founder Private Facts, Cost, Ground और History (Review Only)</h2>
-<p class="hint">ये सारे रिकॉर्ड निजी और NOT_INDEPENDENTLY_VERIFIED रहेंगे। Cost को Actual Spend न मानें; आधिकारिक Reply / Delivery यहाँ से सत्यापित नहीं होती।</p>
-<form id="g5Fact"><fieldset><legend>Cost / Ground / Deadline / Conflict का नया अपरिवर्तनीय रिकॉर्ड</legend>
+<h2>G5 — संस्थापक के निजी तथ्य, लागत, जमीनी स्थिति और इतिहास</h2>
+<p class="hint">ये रिकॉर्ड निजी रहेंगे। इनमें दर्ज दावे अभी स्वतंत्र रूप से सत्यापित नहीं हैं। अनुमानित लागत को वास्तविक खर्च न मानें; यहाँ से सरकारी जवाब मिलने या सवाल पहुँचने की पुष्टि भी नहीं होती।</p>
+<form id="g5Fact"><fieldset><legend>लागत / जमीनी स्थिति / समयसीमा / हितों के टकराव का नया स्थायी रिकॉर्ड</legend>
 <label for="g5FactCase">Case UUID</label><input id="g5FactCase" required autocomplete="off">
 <label for="g5Kind">प्रकार</label><select id="g5Kind" required><option value="" disabled selected>रिकॉर्ड प्रकार चुनें</option>
-<option value="COST">Cost Stage</option><option value="DEADLINE">Deadline</option>
-<option value="GROUND">Ground vs Official</option><option value="IMPACT">Impact</option>
-<option value="ALTERNATIVE">Alternative (Attribution)</option><option value="RESPONSIBILITY">Responsibility Role</option>
-<option value="CONFLICT">Founder/JANTA BOL Conflict — flag</option>
+<option value="COST">लागत का चरण</option><option value="DEADLINE">Deadline</option>
+<option value="GROUND">जमीनी स्थिति बनाम सरकारी दावा</option><option value="IMPACT">Impact</option>
+<option value="ALTERNATIVE">विकल्प (स्रोत के अनुसार)</option><option value="RESPONSIBILITY">जिम्मेदार पद / भूमिका</option>
+<option value="CONFLICT">संस्थापक / जनता बोल का हितों का टकराव</option>
 </select>
-<label for="g5Field">Record classification (उसी प्रकार का मान चुनें)</label>
+<label for="g5Field">रिकॉर्ड का वर्ग (चुने हुए प्रकार के अनुसार)</label>
 <select id="g5Field" required>
 <option value="" disabled selected>रिकॉर्ड का सही वर्ग चुनें — अनुमान ≠ स्वीकृत ≠ खर्च</option>
-<optgroup label="Cost"><option value="ESTIMATED_PROPOSED">Estimated / Proposed Cost (NOT sanctioned or spent)</option><option value="SANCTIONED">Sanctioned</option><option value="TENDER">Tender</option><option value="REVISED">Revised Cost</option><option value="ACTUAL">Reported Actual</option></optgroup>
-<optgroup label="Deadline"><option value="ORIGINAL">Original deadline</option><option value="REVISED">Revised deadline</option></optgroup>
-<optgroup label="Ground"><option value="AUTHORITY_COMPLETION_CLAIM">Authority completion claim</option><option value="FIELD_OBSERVATION_REPORTED">Reported ground visit</option></optgroup>
-<optgroup label="Impact"><option value="AUTHORITY_STATED">Authority-stated impact</option><option value="GROUND_REPORTED">Reported field impact</option></optgroup>
-<optgroup label="Alternative"><option value="DOCUMENTED_PROPOSAL">Documented proposal</option><option value="UNVERIFIED_PROPOSAL">Unverified proposal</option></optgroup>
-<optgroup label="Other"><option value="ROLE_MAP">Responsible role, not guilt</option><option value="FLAG_RAISED">Conflict flag: do not publish</option></optgroup>
+<optgroup label="Cost"><option value="ESTIMATED_PROPOSED">अनुमानित / प्रस्तावित लागत (स्वीकृत बजट या खर्च नहीं)</option><option value="SANCTIONED">स्वीकृत बजट</option><option value="TENDER">निविदा राशि</option><option value="REVISED">संशोधित लागत</option><option value="ACTUAL">बताया गया वास्तविक खर्च (अभी अप्रमाणित)</option></optgroup>
+<optgroup label="Deadline"><option value="ORIGINAL">मूल समयसीमा</option><option value="REVISED">संशोधित समयसीमा</option></optgroup>
+<optgroup label="Ground"><option value="AUTHORITY_COMPLETION_CLAIM">अधिकारी का काम पूरा होने का दावा</option><option value="FIELD_OBSERVATION_REPORTED">जमीनी दौरे का दर्ज विवरण</option></optgroup>
+<optgroup label="Impact"><option value="AUTHORITY_STATED">अधिकारी द्वारा बताया गया प्रभाव</option><option value="GROUND_REPORTED">जमीन से दर्ज प्रभाव</option></optgroup>
+<optgroup label="Alternative"><option value="DOCUMENTED_PROPOSAL">दस्तावेज में दर्ज प्रस्ताव</option><option value="UNVERIFIED_PROPOSAL">अप्रमाणित प्रस्ताव</option></optgroup>
+<optgroup label="Other"><option value="ROLE_MAP">जिम्मेदार पद / भूमिका (दोष साबित नहीं)</option><option value="FLAG_RAISED">हितों का टकराव — प्रकाशित न करें</option></optgroup>
 </select>
-<label for="g5Detail">Source attribution / factual uncertainty / reason (12–500)</label>
+<label for="g5Detail">जानकारी का स्रोत / क्या अप्रमाणित है / कारण (12–500 अक्षर)</label>
 <textarea id="g5Detail" required minlength="12" maxlength="500"></textarea>
-<label for="g5Cost">Cost in INR as exact decimal (केवल Cost में)</label><input id="g5Cost" inputmode="decimal" autocomplete="off" placeholder="120000.00">
-<label for="g5Date">Original / Revised deadline date (केवल Deadline में)</label><input id="g5Date" type="date">
-<label for="g5Receipt">Optional PRIVATE same-case byte receipt UUID — authenticity still unverified</label><input id="g5Receipt" autocomplete="off">
-<button type="submit">Founder AAL2 — Private Fact दर्ज करें</button>
-<p class="hint">Conflict flag लगाने से पहले किसी मौजूदा Public Case को HIDE करना जरूरी है।</p>
+<label for="g5Cost">लागत रुपये में दर्ज करें (केवल लागत के लिए)</label><input id="g5Cost" inputmode="decimal" autocomplete="off" placeholder="120000.00">
+<label for="g5Date">Original / संशोधित समयसीमा date (केवल Deadline में)</label><input id="g5Date" type="date">
+<label for="g5Receipt">वैकल्पिक निजी प्रमाण रसीद की पहचान (दस्तावेज की असलियत अभी अप्रमाणित)</label><input id="g5Receipt" autocomplete="off">
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — निजी तथ्य दर्ज करें</button>
+<p class="hint">हितों का टकराव दर्ज करने से पहले संबंधित सार्वजनिक मामले को छिपाना जरूरी है।</p>
 </fieldset></form>
-<form id="g5Outcome"><fieldset><legend>Case Editorial Outcome (न्यायिक निष्कर्ष नहीं)</legend>
+<form id="g5Outcome"><fieldset><legend>मामले का संपादकीय निष्कर्ष (अदालत का निर्णय नहीं)</legend>
 <label for="g5OutcomeCase">Case UUID</label><input id="g5OutcomeCase" required autocomplete="off">
-<label for="g5OutcomeState">State</label><select id="g5OutcomeState"><option value="monitoring">Monitoring</option><option value="closed">Closed with reasons</option></select>
-<label for="g5OutcomeReason">Editorial reason</label><textarea id="g5OutcomeReason" required minlength="12" maxlength="500"></textarea>
-<label for="g5OutcomeReceipt">Private Receipt UUID (Closing के लिए जरूरी)</label><input id="g5OutcomeReceipt" autocomplete="off">
-<button type="submit">Founder AAL2 — Recorded Outcome</button></fieldset></form>
-<form id="g5Reopen"><fieldset><legend>New Material Evidence के आधार पर Reopen</legend>
-<label for="g5ReopenCase">Closed Case UUID</label><input id="g5ReopenCase" required autocomplete="off">
-<label for="g5ReopenReceipt">New material की उसी Case की Private Receipt UUID</label><input id="g5ReopenReceipt" required autocomplete="off">
+<label for="g5OutcomeState">State</label><select id="g5OutcomeState"><option value="monitoring">निगरानी जारी</option><option value="closed">कारण सहित बंद</option></select>
+<label for="g5OutcomeReason">संपादकीय कारण</label><textarea id="g5OutcomeReason" required minlength="12" maxlength="500"></textarea>
+<label for="g5OutcomeReceipt">निजी प्रमाण रसीद की पहचान (बंद करने के लिए जरूरी)</label><input id="g5OutcomeReceipt" autocomplete="off">
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — निष्कर्ष दर्ज करें</button></fieldset></form>
+<form id="g5Reopen"><fieldset><legend>नए महत्वपूर्ण प्रमाण के आधार पर दोबारा खोलें</legend>
+<label for="g5ReopenCase">बंद मामले की पहचान (UUID)</label><input id="g5ReopenCase" required autocomplete="off">
+<label for="g5ReopenReceipt">नए प्रमाण की उसी मामले वाली निजी रसीद पहचान</label><input id="g5ReopenReceipt" required autocomplete="off">
 <label for="g5ReopenReason">क्यों दोबारा जाँच?</label><textarea id="g5ReopenReason" required minlength="12" maxlength="500"></textarea>
-<button type="submit">Founder AAL2 — Reopen Case</button></fieldset></form>
-<form id="g5Ledger"><fieldset><legend>Owner-only Private Event History</legend>
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — मामला दोबारा खोलें</button></fieldset></form>
+<form id="g5Ledger"><fieldset><legend>केवल संस्थापक के लिए निजी रिकॉर्ड इतिहास</legend>
 <label for="g5LedgerCase">Case UUID</label><input id="g5LedgerCase" required autocomplete="off">
-<button type="submit" class="secondary">Private Ledger देखें</button>
-<div id="g5LedgerOutput" class="output" aria-live="polite">सिर्फ Founder AAL2; कोई Public / Verified Reply नहीं।</div>
+<button type="submit" class="secondary">निजी रिकॉर्ड इतिहास देखें</button>
+<div id="g5LedgerOutput" class="output" aria-live="polite">केवल संस्थापक की दो-चरणीय पुष्टि के बाद। यहाँ कोई सार्वजनिक या सत्यापित सरकारी जवाब नहीं है।</div>
 </fieldset></form>
 </div>
 <form id="g9Due" class="card"><fieldset>
-<legend>G9 — Founder Follow-up Due Dashboard</legend>
-<p class="hint">समयसीमा पार होने पर केवल Internal Owner Review Task दिखता है। किसी अधिकारी की नीयत/दोष या वास्तविक जवाब के बारे में कोई दावा नहीं।</p>
-<button type="submit" class="secondary">सुरक्षित Server से Due Cases देखें</button>
+<legend>G9 — लंबित मामलों की अगली कार्रवाई</legend>
+<p class="hint">समयसीमा बीतने पर केवल संस्थापक को निजी समीक्षा के लिए याद दिलाया जाएगा। अधिकारी की नीयत, दोष या जवाब के बारे में कोई दावा नहीं होगा।</p>
+<button type="submit" class="secondary">सर्वर से समयसीमा पार वाले मामले देखें</button>
 <div id="g9DueOutput" class="output">Founder AAL2 के बाद ही निजी Overdue List दिखाई जाएगी।</div>
-<p class="hint">Follow-up दर्ज करने पर B3 में Safe In-App Notification मिलेगी; किसी External Provider को संदेश नहीं जाएगा।</p>
+<p class="hint">अगली कार्रवाई दर्ज होने पर ऐप में निजी सूचना मिलेगी। किसी बाहरी सेवा या अधिकारी को संदेश नहीं भेजा जाएगा।</p>
 </fieldset></form>
 <form id="g8Delivery" class="card">
-<fieldset><legend>G8 — Founder Real Manual Delivery Evidence Review (Private)</legend>
+<fieldset><legend>G8 — संस्थापक द्वारा वास्तव में पहुँचे सवाल का प्रमाण जाँचना (निजी)</legend>
 <p class="hint">आधिकारिक ईमेल/पोर्टल वास्तव में पहुँचा है, इसका वास्तविक बाहरी प्रमाण स्वयं देखकर ही Founder पुष्टि करें। ऐप कोई संदेश नहीं भेजता, और अप्रमाणित Screenshot अपने-आप E9 PASS नहीं है।</p>
-<label for="g8Handoff">Manual Handoff UUID</label><input id="g8Handoff" required autocomplete="off">
-<label for="g8Receipt">उसी Case की Private External Acknowledgement Receipt UUID</label><input id="g8Receipt" required autocomplete="off">
+<label for="g8Handoff">खुद भेजे गए सवाल की पहचान (UUID)</label><input id="g8Handoff" required autocomplete="off">
+<label for="g8Receipt">उसी मामले की बाहरी प्राप्ति रसीद की निजी पहचान (UUID)</label><input id="g8Receipt" required autocomplete="off">
 <label for="g8Basis">कैसे और किस वास्तविक रिकॉर्ड से सत्यापित किया (12–500)</label>
 <textarea id="g8Basis" required minlength="12" maxlength="500"></textarea>
-<label for="g8Ack" class="row"><input id="g8Ack" type="checkbox" required style="width:auto;min-height:22px"> मैंने केवल वास्तविक बाहरी Delivery / Portal Acceptance प्रमाण की व्यक्तिगत समीक्षा की है।</label>
-<button type="submit">Founder AAL2 — Manual External Evidence Attest</button>
-<p class="hint">सफल Private Attestation के बाद ही Public Records Requested / Awaiting Response status की अनुमति मिल सकती है। Original News Article/PURL इस बटन से नहीं बदलता।</p>
+<label for="g8Ack" class="row"><input id="g8Ack" type="checkbox" required style="width:auto;min-height:22px"> मैंने सवाल वास्तव में पहुँचने या सरकारी पोर्टल द्वारा स्वीकार किए जाने का बाहरी प्रमाण स्वयं जाँचा है।</label>
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — बाहरी प्रमाण की समीक्षा दर्ज करें</button>
+<p class="hint">निजी जाँच के बाद ही सार्वजनिक रूप से 'रिकॉर्ड माँगे गए' या 'जवाब की प्रतीक्षा' लिखा जा सकेगा। इससे मूल खबर का स्थायी लिंक नहीं बदलेगा।</p>
 </fieldset></form>
 <div class="card" aria-label="G7 accountable reply chronology">
-<h2>G7 — Right-to-Reply / Unanswered / Corrections Timeline (Private)</h2>
-<p class="hint">यह केवल Founder AAL2 के निजी तथ्यात्मक Records हैं। वास्तविक आधिकारिक Delivery/Reply E9 के बिना कोई सार्वजनिक Verified दावा नहीं बनेगा।</p>
-<form id="g7History"><fieldset><legend>Immutable Chronology Event</legend>
+<h2>G7 — जवाब का अधिकार / लंबित जवाब / सुधार का निजी घटनाक्रम</h2>
+<p class="hint">ये केवल संस्थापक के निजी तथ्यात्मक रिकॉर्ड हैं। सवाल पहुँचने और सरकारी जवाब का वास्तविक प्रमाण मिले बिना कोई दावा सत्यापित नहीं माना जाएगा।</p>
+<form id="g7History"><fieldset><legend>निजी घटनाक्रम में स्थायी प्रविष्टि</legend>
 <label for="g7Case">Case UUID</label><input id="g7Case" required autocomplete="off">
-<label for="g7Kind">History Event</label><select id="g7Kind">
-<option value="NO_REPLY_AS_OF_CLAIM">No Reply as of (UNVERIFIED)</option>
-<option value="PARTIAL_REPLY_CLAIM">Partial Reply Claim</option>
-<option value="FULL_REPLY_CLAIM">Full Reply Claim</option>
-<option value="LATE_REPLY_CLAIM">Late Reply Claim</option>
-<option value="URGENT_EXCEPTION_ESCALATED">Urgent exception escalated privately</option>
-<option value="DEADLINE_FOLLOWUP">Original/Revised Deadline Follow-up</option>
-<option value="SUMMARY_DRAFT">Summary Draft record</option>
-<option value="SUMMARY_CORRECTION">Material Summary Correction (private)</option>
-<option value="EVIDENCE_VERSION">Versioned private document reference</option>
+<label for="g7Kind">घटना का प्रकार</label><select id="g7Kind">
+<option value="NO_REPLY_AS_OF_CLAIM">निर्धारित तारीख तक जवाब न मिलने का दावा (अप्रमाणित)</option>
+<option value="PARTIAL_REPLY_CLAIM">आंशिक जवाब मिलने का दावा</option>
+<option value="FULL_REPLY_CLAIM">पूरा जवाब मिलने का दावा</option>
+<option value="LATE_REPLY_CLAIM">देरी से जवाब मिलने का दावा</option>
+<option value="URGENT_EXCEPTION_ESCALATED">विशेष जरूरी मामला निजी तौर पर आगे बढ़ाया</option>
+<option value="DEADLINE_FOLLOWUP">मूल / बदली समयसीमा पर अगली कार्रवाई</option>
+<option value="SUMMARY_DRAFT">सारांश का मसौदा दर्ज किया</option>
+<option value="SUMMARY_CORRECTION">महत्वपूर्ण सारांश सुधार (निजी)</option>
+<option value="EVIDENCE_VERSION">निजी दस्तावेज के नए संस्करण का संदर्भ</option>
 </select>
-<label for="g7Note">Source Attribution / factual reason (12–1000)</label>
+<label for="g7Note">स्रोत / तथ्यात्मक कारण (12–1000 अक्षर)</label>
 <textarea id="g7Note" required minlength="12" maxlength="1000"></textarea>
-<label for="g7Question">Question UUID (Reply/No-Reply/Urgent में जरूरी)</label>
+<label for="g7Question">सवाल की पहचान (जवाब / जवाब नहीं / जरूरी मामले में आवश्यक)</label>
 <input id="g7Question" autocomplete="off">
-<label for="g7Receipt">Same-case PRIVATE file receipt UUID (Reply/Version में जरूरी)</label>
+<label for="g7Receipt">इसी मामले की निजी फाइल रसीद (जवाब / नया संस्करण दर्ज करने में जरूरी)</label>
 <input id="g7Receipt" autocomplete="off">
-<label for="g7Prior">Previous Event ID (Summary Correction / Revised Evidence Version)</label>
+<label for="g7Prior">पिछली प्रविष्टि का नंबर (सुधार / नए प्रमाण के लिए)</label>
 <input id="g7Prior" inputmode="numeric" autocomplete="off">
-<label for="g7AsOf">As of Date (No-Reply / Deadline Follow-up)</label>
+<label for="g7AsOf">संबंधित तारीख (जवाब न मिलने / समयसीमा के लिए)</label>
 <input id="g7AsOf" type="date">
-<button type="submit">Founder AAL2 — Append Private Event</button>
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — निजी घटना जोड़ें</button>
 <p class="hint">"No Reply" से पहले actual manual handoff attempt का रिकॉर्ड जरूरी है; attempt भी official delivery proof नहीं है।</p>
 </fieldset></form>
-<form id="g7HistoryRead"><fieldset><legend>Owner-only Case Chronology</legend>
+<form id="g7HistoryRead"><fieldset><legend>केवल संस्थापक के लिए मामले का घटनाक्रम</legend>
 <label for="g7ReadCase">Case UUID</label><input id="g7ReadCase" required autocomplete="off">
-<button type="submit" class="secondary">Private Append-only History देखें</button>
+<button type="submit" class="secondary">निजी स्थायी इतिहास देखें</button>
 <div id="g7HistoryOutput" class="output">Founder AAL2 के बाद ही निजी Timeline दिखेगी।</div>
 </fieldset></form>
 </div>
 <form id="g6Release" class="card">
-<fieldset><legend>🔐 Founder G6 — Private Evidence Upload Release (default OFF)</legend>
+<fieldset><legend>🔐 G6 — निजी प्रमाण अपलोड करने की संस्थापक अनुमति (शुरुआत में बंद)</legend>
 <p class="hint">यह switch केवल B8 private upload को नियंत्रित करेगा। News / B7 / public Storage कभी नहीं। ON करने से पहले वास्तविक Backend, RLS, Edge और Backup समीक्षा Founder द्वारा पूरी होनी चाहिए।</p>
-<label for="g6ReleaseAction">Secure Private Upload Gate</label>
-<select id="g6ReleaseAction"><option value="OFF">OFF — सुरक्षित रोकें</option><option value="ON">ON — केवल अधिकृत Case Reporters</option></select>
+<label for="g6ReleaseAction">निजी प्रमाण अपलोड की अनुमति</label>
+<select id="g6ReleaseAction"><option value="OFF">बंद — सुरक्षित रखें</option><option value="ON">चालू — केवल अधिकृत संवाददाताओं के लिए</option></select>
 <label for="g6ReleaseReason">सुरक्षा और निर्णय का कारण (12–500 अक्षर)</label>
 <textarea id="g6ReleaseReason" required minlength="12" maxlength="500"></textarea>
 <label for="g6ReleaseAck" class="row"><input id="g6ReleaseAck" type="checkbox" required style="width:auto;min-height:22px"> मैंने Backend/Storage की वास्तविक समीक्षा की और स्पष्ट निर्णय ले रहा हूँ।</label>
-<button type="submit">Founder AAL2 — Immutable Gate Decision दर्ज करें</button>
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — अनुमति का निर्णय दर्ज करें</button>
 <p class="hint">Backend का default OFF है। ON/OFF हर बदलाव immutable audit में होगा। पुराने Upload को emergency OFF के बाद finalize नहीं किया जा सकता।</p>
 </fieldset></form>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
-<h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
-<form id="caseLookup"><fieldset><legend>मुझे सौंपा गया Case</legend>
+<h2>🎤 संवाददाता — अधिकारी से पूछे जाने वाले सवाल</h2>
+<form id="caseLookup"><fieldset><legend>मुझे सौंपा गया मामला</legend>
 <label for="reporterCase">Case UUID</label><input id="reporterCase" required autocomplete="off">
-<button type="submit" class="secondary">Case Permission और Risk सत्यापित करें</button>
+<button type="submit" class="secondary">मामले की अनुमति और जोखिम जाँचें</button>
 <div id="reporterCard" class="output">केवल Assigned Case की जानकारी दिखाई जाएगी।</div></fieldset></form>
 <form id="draftForm"><fieldset><legend>सवाल (अभी नहीं भेजा जाएगा)</legend>
 <label for="questionCase">Case UUID</label><input id="questionCase" required autocomplete="off">
 <label for="questionText">तथ्यात्मक, निष्पक्ष सवाल</label><textarea id="questionText" required minlength="20" maxlength="2000"></textarea>
 <label for="recipient">अधिकारी का पद/कार्यालय (Private)</label><input id="recipient" required minlength="3" maxlength="160" autocomplete="off">
-<button type="submit">Draft Server पर सुरक्षित करें</button>
-<p class="hint">R0 का Draft भी SENT नहीं है। R1/R2 में Editor समीक्षा की अलग व्यवस्था है।</p></fieldset></form>
-<form id="requestReview"><fieldset><legend>गंभीर सवाल Editor को Review के लिए</legend>
+<button type="submit">सवाल का मसौदा सर्वर पर सुरक्षित करें</button>
+<p class="hint">R0 का Draft भी SENT नहीं है। R1/R2 में संपादक समीक्षा की अलग व्यवस्था है।</p></fieldset></form>
+<form id="requestReview"><fieldset><legend>गंभीर सवाल संपादक को Review के लिए</legend>
 <label for="reviewDraftId">Draft Question UUID</label><input id="reviewDraftId" required autocomplete="off">
-<button type="submit">Editor Review Request दर्ज करें</button>
+<button type="submit">संपादकीय समीक्षा का अनुरोध दर्ज करें</button>
 <p class="hint">R0 Draft के लिए यह प्रक्रिया लागू नहीं होगी; R2 में Founder escalation अनिवार्य है।</p></fieldset></form>
 <form id="reporterClaim"><fieldset><legend>प्रमाण की जानकारी — अभी केवल Unverified Claim</legend>
 <label for="claimCase">Case UUID</label><input id="claimCase" required autocomplete="off">
@@ -263,10 +263,10 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <label for="uploadCase">Assigned Case UUID</label><input id="uploadCase" required autocomplete="off">
 <label for="uploadFile">एक फोटो या PDF (अधिकतम 8 MiB)</label><input id="uploadFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
 <button id="uploadBtn" type="submit" disabled>Owner AAL2 + Server Readiness सत्यापित होने पर सक्रिय</button>
-<p class="hint" id="uploadNotice">Owner AAL2 का release gate default OFF है। Reporter Case Permission + Server Readiness के बाद ही Upload संभव है। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
+<p class="hint" id="uploadNotice">Owner AAL2 का release gate default OFF है। संवाददाता Case Permission + Server Readiness के बाद ही Upload संभव है। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
 </fieldset></form>
 
-<form id="g3EvidenceLink"><fieldset><legend>Evidence को गंभीर सवाल की समीक्षा में जोड़ें</legend>
+<form id="g3EvidenceLink"><fieldset><legend>गंभीर सवाल की समीक्षा में प्रमाण जोड़ें</legend>
 <label for="g3LinkReq">Review Request UUID</label><input id="g3LinkReq" required autocomplete="off">
 <label for="g3LinkReceipt">Private Byte-Integrity Receipt UUID</label><input id="g3LinkReceipt" required autocomplete="off">
 <button type="submit">उसी Case का Evidence Link करें</button>
@@ -278,7 +278,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <option value="OFFICIAL_PORTAL">Official Portal</option><option value="HAND_DELIVERY">हाथ से पहुँचाना</option>
 </select>
 <button type="submit">सुरक्षित Handoff Token तैयार करें (SEND नहीं)</button>
-<p class="hint">R0 Reporter स्वयं तैयार कर सकता है; R1 में Editor Screening, R2 में Founder Approval चाहिए।</p></fieldset></form>
+<p class="hint">R0 संवाददाता स्वयं तैयार कर सकता है; R1 में संपादक Screening, R2 में Founder Approval चाहिए।</p></fieldset></form>
 <form id="g3Observation"><fieldset><legend>Handoff प्रयास दर्ज करें, Delivered नहीं</legend>
 <label for="g3ObsIntent">Handoff UUID</label><input id="g3ObsIntent" required autocomplete="off">
 <label for="g3ObsType">वास्तविक घटना</label><select id="g3ObsType">
@@ -290,7 +290,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button type="submit">वास्तविक प्रयास दर्ज करें</button>
 <p class="hint">सफलतापूर्वक अधिकारी तक पहुँचना स्वतंत्र प्रमाण के बिना Confirm नहीं होगा।</p></fieldset></form>
 
-<form id="g3ReplyClaim"><fieldset><legend>Reporter — अधिकारी के जवाब का Evidence Claim</legend>
+<form id="g3ReplyClaim"><fieldset><legend>संवाददाता — अधिकारी के जवाब का Evidence Claim</legend>
 <label for="g3ReplyIntent">Handoff UUID</label><input id="g3ReplyIntent" required autocomplete="off">
 <label for="g3ReplyReceipt">उस Case की Private File Receipt UUID</label><input id="g3ReplyReceipt" required autocomplete="off">
 <label for="g3ReplyOffice">कार्यालय/पद</label><input id="g3ReplyOffice" required minlength="3" maxlength="160" autocomplete="off">
@@ -302,11 +302,11 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 </fieldset></form>
 </section>
 <section id="editor" class="hide card" aria-label="Editor case review">
-<h2>🛡 Editor — प्रमाण की Review</h2>
+<h2>🛡 संपादक — प्रमाण की समीक्षा</h2>
 <form id="editorRead"><fieldset><legend>Assigned Review Request देखें</legend>
 <label for="editorRequest">Review Request UUID</label><input id="editorRequest" required autocomplete="off">
 <button type="submit">Server से Review पढ़ें</button>
-<div id="editorCard" class="output">Private Review केवल Assigned Editor पढ़ सकेगा।</div></fieldset></form>
+<div id="editorCard" class="output">Private Review केवल Assigned संपादक पढ़ सकेगा।</div></fieldset></form>
 <form id="editorDecision"><fieldset><legend>समीक्षा का निर्णय — SEND Approval नहीं</legend>
 <label for="decisionRequest">Review Request UUID</label><input id="decisionRequest" required autocomplete="off">
 <label for="decision">Decision</label><select id="decision">
@@ -315,9 +315,9 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <option value="ESCALATE_TO_FOUNDER">Founder तक गंभीर मामला पहुँचाएँ (अभी notification नहीं)</option>
 </select>
 <label for="decisionReason">कारण (12 से 500 अक्षर)</label><textarea id="decisionReason" required minlength="12" maxlength="500"></textarea>
-<button type="submit">Editor Decision सुरक्षित करें</button></fieldset></form>
+<button type="submit">संपादक Decision सुरक्षित करें</button></fieldset></form>
 
-<form id="g3Screen"><fieldset><legend>R1 गंभीर सवाल: Evidence के साथ Editor Screening</legend>
+<form id="g3Screen"><fieldset><legend>R1 गंभीर सवाल: Evidence के साथ संपादक Screening</legend>
 <label for="g3ScreenReq">Review Request UUID</label><input id="g3ScreenReq" required autocomplete="off">
 <label for="g3ScreenReason">समीक्षा का स्पष्ट कारण</label><textarea id="g3ScreenReason" required minlength="12" maxlength="500"></textarea>
 <button type="submit">R1 Evidence Screening Confirm</button>
