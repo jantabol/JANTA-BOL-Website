@@ -92,6 +92,7 @@ end $b8$;
 select public.jb_b8_g2_reporter_prepare_private_upload(
  :'case_id'::uuid,'Synthetic uploaded bytes claim','application/pdf',500) as intent \gset
 reset role;
+select set_config('b8.g6_intent',:'intent',false);
 -- OFF after PREPARE must block late Edge service-role FINALIZE.
 select set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
 select set_config('b8.fixture_aal','aal2',false);
@@ -105,7 +106,7 @@ declare denied boolean:=false;
 begin
  begin
  perform public.jb_b8_g2_server_finalize_private_upload(
-  :'intent'::uuid,repeat('a',64),500,'application/pdf');
+  current_setting('b8.g6_intent')::uuid,repeat('a',64),500,'application/pdf');
  exception when others then denied:=sqlerrm='B8_G6_PRIVATE_UPLOAD_FOUNDER_RELEASE_DISABLED';end;
  if not denied then raise exception 'B8_G6_DISABLED_FINALIZE_BYPASS';end if;
 end $b8$;
@@ -117,7 +118,7 @@ select public.jb_b8_g6_owner_set_private_upload(
 reset role;
 set role service_role;
 select public.jb_b8_g2_server_finalize_private_upload(
- :'intent'::uuid,repeat('a',64),500,'application/pdf') as receipt \gset
+ current_setting('b8.g6_intent')::uuid,repeat('a',64),500,'application/pdf') as receipt \gset
 reset role;
 do $b8$
 declare denied boolean:=false;
@@ -128,7 +129,7 @@ begin
  if not denied then raise exception 'B8_G6_RELEASE_HISTORY_WAS_DELETED';end if;
  if (select count(*) from public.b8_g6_release_events)<>3
  or (select count(*) from public.b8_private_upload_receipts r
-      where r.intent_id=:'intent'::uuid)<>1
+      where r.intent_id=current_setting('b8.g6_intent')::uuid)<>1
  or (select enabled from public.b8_g6_release_controls
       where feature='PRIVATE_EVIDENCE_UPLOAD') is distinct from true
  then raise exception 'B8_G6_RELEASE_TRANSITION_DRIFT';end if;
