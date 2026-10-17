@@ -73,6 +73,12 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <label for="g3TruthQ">Question Draft UUID</label><input id="g3TruthQ" required autocomplete="off">
 <button type="submit">Truth Status जाँचें</button>
 <div id="g3TruthData" class="output" aria-live="polite">कोई Delivered दावा नहीं।</div></fieldset></form>
+
+<form id="g3ReplyTruth"><fieldset><legend>Founder — अधिकारी के जवाब का दावा (अभी अप्रमाणित)</legend>
+<label for="g3ReplyTruthQ">Question UUID</label><input id="g3ReplyTruthQ" required autocomplete="off">
+<button type="submit">Reply Claim की स्थिति देखें</button>
+<div id="g3ReplyTruthOutput" class="output" aria-live="polite">यह वास्तविक अधिकारी के जवाब की पुष्टि नहीं है।</div>
+</fieldset></form>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
 <h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
@@ -126,6 +132,17 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <label for="g3ObsReceipt">Receipt UUID (केवल तीसरे विकल्प में)</label><input id="g3ObsReceipt" autocomplete="off">
 <button type="submit">वास्तविक प्रयास दर्ज करें</button>
 <p class="hint">सफलतापूर्वक अधिकारी तक पहुँचना स्वतंत्र प्रमाण के बिना Confirm नहीं होगा।</p></fieldset></form>
+
+<form id="g3ReplyClaim"><fieldset><legend>Reporter — अधिकारी के जवाब का Evidence Claim</legend>
+<label for="g3ReplyIntent">Handoff UUID</label><input id="g3ReplyIntent" required autocomplete="off">
+<label for="g3ReplyReceipt">उस Case की Private File Receipt UUID</label><input id="g3ReplyReceipt" required autocomplete="off">
+<label for="g3ReplyOffice">कार्यालय/पद</label><input id="g3ReplyOffice" required minlength="3" maxlength="160" autocomplete="off">
+<label for="g3ReplyReceivedAt">दावा किया गया जवाब मिलने का समय</label><input id="g3ReplyReceivedAt" type="datetime-local" required>
+<label for="g3ReplySummary">संक्षिप्त सार (अभी सत्यापन बाकी)</label>
+<textarea id="g3ReplySummary" required minlength="12" maxlength="1400"></textarea>
+<button type="submit">Unverified Reply Claim सुरक्षित करें</button>
+<p class="hint">किसी के Reply, समय या Delivery को स्वतंत्र प्रमाण के बिना Confirm नहीं किया जाएगा।</p>
+</fieldset></form>
 </section>
 <section id="editor" class="hide card" aria-label="Editor case review">
 <h2>🛡 Editor — प्रमाण की Review</h2>
