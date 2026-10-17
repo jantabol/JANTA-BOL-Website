@@ -34,6 +34,13 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp04_reply_claim_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g3-cp04-reply-claim-regression.sql'
       - 'ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g4_cp01_cp03_public_projection_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g4-public-article-status-fixture.sql'
+      - 'ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql'
+      - 'JANTA_BOL_PHASE_3C_WORKING/accountability-public.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs'
+      - 'ci/phase4/b8-g4-public-projection-contract.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -111,6 +118,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp04_reply_claim_REVIEW_ONLY.sql
       - name: REAL PG17 G3 CP04 private evidence reply ownership and Founder truth
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp04-reply-claim-regression.sql
+      - name: Prepare G4 exact public Article status enum / followup synthetic fixtures
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g4-public-article-status-fixture.sql
+      - name: Apply G4 Founder-approved public projection, safe milestone and original Article UUID SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g4_cp01_cp03_public_projection_REVIEW_ONLY.sql
+      - name: REAL PG17 G4 anon privacy, Founder AAL2/hidden/revise/republication and old News PURL ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
@@ -132,6 +145,11 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
           node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
+      - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
       - name: B7 canonical 9/60 never fake PASS or paid activation
         run: |
           node ci/phase4/b7-closure-gate.cjs --audit
