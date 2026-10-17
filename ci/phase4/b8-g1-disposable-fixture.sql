@@ -44,11 +44,13 @@ insert into public.user_roles(user_id,role) values
 ('11111111-1111-1111-1111-111111111111','owner'),
 ('22222222-2222-2222-2222-222222222222','reporter'),
 ('33333333-3333-3333-3333-333333333333','reporter'),
-('44444444-4444-4444-4444-444444444444','editor');
+('44444444-4444-4444-4444-444444444444','editor'),
+('55555555-5555-5555-5555-555555555555','editor');
 insert into public.team_accounts(user_id,assigned_role,status) values
 ('22222222-2222-2222-2222-222222222222','reporter','active'),
 ('33333333-3333-3333-3333-333333333333','reporter','active'),
-('44444444-4444-4444-4444-444444444444','editor','active');
+('44444444-4444-4444-4444-444444444444','editor','active'),
+('55555555-5555-5555-5555-555555555555','editor','active');
 
 -- B8 must not modify originals even by importing candidate DDL.
 create table public.articles (
