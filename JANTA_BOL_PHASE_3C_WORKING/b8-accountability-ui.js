@@ -211,8 +211,8 @@ function enablePhoneWorkflow(forRole){
 }
 function updateG5Classification(){
  const kind=v('g5Kind'),field=$('g5Field');
- const labels={COST:'Cost',DEADLINE:'Deadline',GROUND:'Ground',IMPACT:'Impact',
-  ALTERNATIVE:'Alternative',RESPONSIBILITY:'Other',CONFLICT:'Other'};
+ const labels={COST:'लागत',DEADLINE:'समयसीमा',GROUND:'जमीनी स्थिति',IMPACT:'जनता पर प्रभाव',
+  ALTERNATIVE:'विकल्प',RESPONSIBILITY:'अन्य',CONFLICT:'अन्य'};
  for(const group of field.querySelectorAll('optgroup'))
   for(const option of group.querySelectorAll('option')){
    option.disabled=group.label!==labels[kind]||
