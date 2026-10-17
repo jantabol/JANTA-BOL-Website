@@ -235,7 +235,7 @@ begin
    '[]'::jsonb),
   'articles',coalesce((
    select jsonb_agg(jsonb_build_object('article_id',x.article_id)
-     order by x.linked_at,x.id)
+     order by x.linked_order)
    from public.b8_case_article_links x
    join public.articles a on a.id=x.article_id
    where x.case_id=v_case.id and a.status='published'::public.article_status
