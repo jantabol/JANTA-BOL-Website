@@ -1,6 +1,8 @@
 \set ON_ERROR_STOP on
 -- JANTA BOL B8 G5 original T093/T095/T096/T097 — actual disposable PostgreSQL17 test.
 -- Only authority/SOURCE checks; NOT live E2, Android E3, Founder E5 or external official E9.
+-- Earlier G4 CP04 explicitly commits an isolated HIDE case. Preserve that baseline; do not assert zero pre-existing cases.
+select set_config('b8.g5_baseline_cases',(select count(*)::text from public.b8_cases),false);
 begin;
 do $b8$
 begin
@@ -276,7 +278,7 @@ rollback;
 do $b8$
 begin
  if exists(select 1 from public.b8_g5_fact_events)
- or exists(select 1 from public.b8_cases) then
+ or (select count(*) from public.b8_cases) <> current_setting('b8.g5_baseline_cases')::integer then
  raise exception 'B8_G5_DISPOSABLE_FIXTURE_ROLLBACK_FAILED';end if;
  raise notice 'B8 G5 ROLLBACK complete; no LIVE data; T092–099 still NOT FINAL PASS';
 end $b8$;
