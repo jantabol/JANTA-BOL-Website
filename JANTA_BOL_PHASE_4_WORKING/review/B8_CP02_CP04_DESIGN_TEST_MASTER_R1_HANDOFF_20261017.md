@@ -23,7 +23,7 @@
 | P4-T099 | 045–051 | E1+E2+E5+E7+E9 |
 
 ## Artifact / delivery
-Full independently generated **14-page** `JANTA_BOL_B8_DESIGN_AND_TEST_EXECUTION_MASTER_R1_2026-10-17.pdf` and its **50,634-character Markdown** companion are delivered to Founder in the ChatGPT conversation as sandbox artifacts. This GitHub file records the immutable planning checkpoint and **does not impersonate** an uploaded complete R1 document; the complete files stay as attached conversation artifacts until Founder instructs an archive upload. Exact E9 and detailed 51-row test matrix live in the companion.
+Full independently generated **13-page** `JANTA_BOL_B8_DESIGN_AND_TEST_EXECUTION_MASTER_R1_2026-10-17.pdf` and its **50,634-character Markdown** companion are delivered to Founder in the ChatGPT conversation as sandbox artifacts. This GitHub file records the immutable planning checkpoint and **does not impersonate** an uploaded complete R1 document; the complete files stay as attached conversation artifacts until Founder instructs an archive upload. Exact E9 and detailed 51-row test matrix live in the companion.
 
 ## STOP before coding
 **Next CP05:** independent threat and test cross-check, source-parity/B6 locked-regression plan, Founder grouped FD-B8-01..06 decision, freeze only with approval. After CP05, separate authorization is required to begin B8 feature coding. Do not label synthetic E2 proof as actual owner/Android/documentary E3/E9; do not claim B8 PASS.
