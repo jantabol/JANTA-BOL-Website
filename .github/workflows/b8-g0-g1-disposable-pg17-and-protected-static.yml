@@ -43,6 +43,8 @@ on:
       - 'ci/phase4/b8-g4-public-projection-contract.test.mjs'
       - 'ci/phase4/b8-g4-cp04-owner-hide-race-pg17.sh'
       - 'ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g5-original-accountability-regression.sql'
   workflow_dispatch:
 permissions:
   contents: read
@@ -128,6 +130,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql
       - name: REAL PG17 G4 CP04 concurrent Founder HIDE versus stale REVISE, fresh anon reads
         run: bash ci/phase4/b8-g4-cp04-owner-hide-race-pg17.sh
+      - name: Apply G5 minimal original Topic13 private Fact/Deadline/Conflict/Reopen ledger (no LIVE)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql
+      - name: REAL PG17 G5 original cost stage, ground, deadline, Founder conflict, closure/reopen ACL and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-original-accountability-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
