@@ -332,6 +332,51 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('FALSE_OFFICIAL_REPLY_STATUS');
       return Object.freeze(p);
     },
+    // G7 original RUN-12 private chronology: late/partial/no reply remain claims
+    // until genuine E9 evidence is independently reviewed on physical device.
+    async ownerRecordG7History(caseId,kind,note,question='',receipt='',prior='',asOf=''){
+      requireRole(role,'owner');
+      const kinds=new Set([
+        'NO_REPLY_AS_OF_CLAIM','PARTIAL_REPLY_CLAIM','FULL_REPLY_CLAIM',
+        'LATE_REPLY_CLAIM','URGENT_EXCEPTION_ESCALATED','DEADLINE_FOLLOWUP',
+        'SUMMARY_DRAFT','SUMMARY_CORRECTION','EVIDENCE_VERSION'
+      ]);
+      if(!kinds.has(kind))deny('G7_KIND_NOT_ALLOWED');
+      const pQuestion=question?id(question):null,pReceipt=receipt?id(receipt):null;
+      const pPrior=prior?Number(prior):null;
+      if(pPrior!==null&&(!Number.isSafeInteger(pPrior)||pPrior<1))
+        deny('G7_PRIOR_HISTORY_ID_REQUIRED');
+      const pDate=asOf||null;
+      if(pDate!==null&&(!/^\d{4}-\d{2}-\d{2}$/.test(pDate)||
+        Number.isNaN(Date.parse(pDate))))deny('G7_AS_OF_DATE_INVALID');
+      if(['NO_REPLY_AS_OF_CLAIM','PARTIAL_REPLY_CLAIM','FULL_REPLY_CLAIM',
+           'LATE_REPLY_CLAIM','URGENT_EXCEPTION_ESCALATED'].includes(kind)&&!pQuestion)
+        deny('G7_QUESTION_REQUIRED');
+      if(['PARTIAL_REPLY_CLAIM','FULL_REPLY_CLAIM','LATE_REPLY_CLAIM',
+           'EVIDENCE_VERSION'].includes(kind)&&!pReceipt)
+        deny('G7_PRIVATE_RECEIPT_REQUIRED');
+      if(kind==='SUMMARY_CORRECTION'&&!pPrior)
+        deny('G7_ORIGINAL_SUMMARY_REQUIRED');
+      if(['NO_REPLY_AS_OF_CLAIM','DEADLINE_FOLLOWUP'].includes(kind)&&!pDate)
+        deny('G7_DATE_REQUIRED');
+      const n=await rpc('jb_b8_g7_owner_record_history',{
+        p_case_id:id(caseId),p_kind:kind,
+        p_note:bounded(note,12,1000,'G7_ATTRIBUTED_NOTE_REQUIRED'),
+        p_question_id:pQuestion,p_receipt_id:pReceipt,
+        p_prior_event_id:pPrior,p_as_of_date:pDate
+      });
+      if(!Number.isSafeInteger(Number(n))||Number(n)<1)
+        deny('G7_HISTORY_NOT_COMMITTED');
+      return Object.freeze({eventId:String(n),truth:'FOUNDER_ATTRIBUTED_UNVERIFIED'});
+    },
+    async ownerG7PrivateHistory(caseId){
+      requireRole(role,'owner');
+      const events=await rpc('jb_b8_g7_owner_private_history',{p_case_id:id(caseId)});
+      if(!Array.isArray(events)||
+        events.some(v=>v?.truth!=='FOUNDER_ATTRIBUTED_UNVERIFIED'))
+        deny('G7_FALSE_OFFICIAL_HISTORY');
+      return events;
+    },
     // G6 private release is Founder AAL2; public JS flag alone never authorizes upload.
     async ownerSetPrivateUploadRelease(enabled,reason){
       requireRole(role,'owner');
