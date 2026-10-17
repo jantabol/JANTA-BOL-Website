@@ -164,6 +164,17 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <div id="g5LedgerOutput" class="output" aria-live="polite">सिर्फ Founder AAL2; कोई Public / Verified Reply नहीं।</div>
 </fieldset></form>
 </div>
+<form id="g6Release" class="card">
+<fieldset><legend>🔐 Founder G6 — Private Evidence Upload Release (default OFF)</legend>
+<p class="hint">यह switch केवल B8 private upload को नियंत्रित करेगा। News / B7 / public Storage कभी नहीं। ON करने से पहले वास्तविक Backend, RLS, Edge और Backup समीक्षा Founder द्वारा पूरी होनी चाहिए।</p>
+<label for="g6ReleaseAction">Secure Private Upload Gate</label>
+<select id="g6ReleaseAction"><option value="OFF">OFF — सुरक्षित रोकें</option><option value="ON">ON — केवल अधिकृत Case Reporters</option></select>
+<label for="g6ReleaseReason">सुरक्षा और निर्णय का कारण (12–500 अक्षर)</label>
+<textarea id="g6ReleaseReason" required minlength="12" maxlength="500"></textarea>
+<label for="g6ReleaseAck" class="row"><input id="g6ReleaseAck" type="checkbox" required style="width:auto;min-height:22px"> मैंने Backend/Storage की वास्तविक समीक्षा की और स्पष्ट निर्णय ले रहा हूँ।</label>
+<button type="submit">Founder AAL2 — Immutable Gate Decision दर्ज करें</button>
+<p class="hint">Backend का default OFF है। ON/OFF हर बदलाव immutable audit में होगा। पुराने Upload को emergency OFF के बाद finalize नहीं किया जा सकता।</p>
+</fieldset></form>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
 <h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
@@ -190,8 +201,8 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <form id="uploadForm"><fieldset><legend>Private फोटो/PDF Upload — Deployment Gate</legend>
 <label for="uploadCase">Assigned Case UUID</label><input id="uploadCase" required autocomplete="off">
 <label for="uploadFile">एक फोटो या PDF (अधिकतम 8 MiB)</label><input id="uploadFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
-<button id="uploadBtn" type="submit" disabled>Hosted E2 तैयार होने पर सक्रिय होगा</button>
-<p class="hint" id="uploadNotice">अभी सुरक्षित Backend Deployment की पुष्टि नहीं हुई। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
+<button id="uploadBtn" type="submit" disabled>Owner AAL2 + Server Readiness सत्यापित होने पर सक्रिय</button>
+<p class="hint" id="uploadNotice">Owner AAL2 का release gate default OFF है। Reporter Case Permission + Server Readiness के बाद ही Upload संभव है। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
 </fieldset></form>
 
 <form id="g3EvidenceLink"><fieldset><legend>Evidence को गंभीर सवाल की समीक्षा में जोड़ें</legend>
