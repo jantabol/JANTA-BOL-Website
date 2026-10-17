@@ -17,7 +17,7 @@ create table public.b8_g5_fact_events (
  recorded_by uuid not null,
  recorded_at timestamptz not null default now(),
  check(
-  (kind='COST' and field_code in('SANCTIONED','TENDER','REVISED','ACTUAL')
+  (kind='COST' and field_code in('ESTIMATED_PROPOSED','SANCTIONED','TENDER','REVISED','ACTUAL')
    and cost_inr is not null and target_date is null)
   or (kind='IMPACT' and field_code in('AUTHORITY_STATED','GROUND_REPORTED')
    and cost_inr is null and target_date is null)

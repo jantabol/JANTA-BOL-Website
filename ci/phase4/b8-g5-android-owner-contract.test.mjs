@@ -19,16 +19,32 @@ function fixture(role='owner',override={},serverReject=false){
     {data:Object.hasOwn(override,name)?override[name]:results[name],error:null};
  }}}),calls};
 }
-test('Owner exact cost decimal transport; sanctioned/tender/revised/actual distinct',async()=>{
+test('Owner exact cost decimal transport; proposed/sanctioned/tender/revised/actual distinct',async()=>{
  const {api,calls}=fixture();
- for(const code of ['SANCTIONED','TENDER','REVISED','ACTUAL']){
+ for(const code of ['ESTIMATED_PROPOSED','SANCTIONED','TENDER','REVISED','ACTUAL']){
   const x=await api.ownerRecordG5Fact(CASE,'COST',code,
    'Official attributed cost claim (unverified)','9007199254740993.01');
   assert.equal(x.authenticity,'NOT_INDEPENDENTLY_VERIFIED');
  }
- assert.equal(calls.length,4);
+ assert.equal(calls.length,5);
  assert(calls.every(({name,args})=>name==='jb_b8_g5_owner_record_fact'&&
    args.p_cost_inr==='9007199254740993.01'&&args.p_case_id===CASE));
+});
+test('Cost classification is explicit and not confused with sanctioned/actual',async()=>{
+ const {api,calls}=fixture();
+ await assert.rejects(api.ownerRecordG5Fact(CASE,'COST','',
+  'Never default an estimated budget to SANCTIONED','23864600000.00'),
+  /G5_FACT_KIND_OR_FIELD_INVALID/);
+ const result=await api.ownerRecordG5Fact(CASE,'COST','ESTIMATED_PROPOSED',
+  'Old MPPCB executive summary estimate; NOT proof of spending','23864600000.00');
+ assert.equal(result.authenticity,'NOT_INDEPENDENTLY_VERIFIED');
+ assert.equal(calls.length,1);
+ assert.equal(calls[0].args.p_field_code,'ESTIMATED_PROPOSED');
+ assert.equal(calls[0].args.p_cost_inr,'23864600000.00');
+ const html=await readFile(new URL('../../JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html',import.meta.url),'utf8');
+ assert.match(html,/<select id="g5Field" required>/);
+ assert.match(html,/<option value="" disabled selected>/);
+ assert.match(html,/value="ESTIMATED_PROPOSED"/);
 });
 test('Original and revised deadline calendar strings preserved, no timestamp coercion',async()=>{
  const {api,calls}=fixture();

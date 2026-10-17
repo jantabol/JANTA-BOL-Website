@@ -262,7 +262,7 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
     async ownerRecordG5Fact(caseId,kind,field,detail,cost='',targetDate='',receipt=''){
       requireRole(role,'owner');
       const fields={
-        COST:['SANCTIONED','TENDER','REVISED','ACTUAL'],
+        COST:['ESTIMATED_PROPOSED','SANCTIONED','TENDER','REVISED','ACTUAL'],
         IMPACT:['AUTHORITY_STATED','GROUND_REPORTED'],
         ALTERNATIVE:['DOCUMENTED_PROPOSAL','UNVERIFIED_PROPOSAL'],
         GROUND:['AUTHORITY_COMPLETION_CLAIM','FIELD_OBSERVATION_REPORTED'],

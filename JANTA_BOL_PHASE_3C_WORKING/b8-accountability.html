@@ -131,8 +131,9 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <option value="CONFLICT">Founder/JANTA BOL Conflict — flag</option>
 </select>
 <label for="g5Field">Record classification (उसी प्रकार का मान चुनें)</label>
-<select id="g5Field">
-<optgroup label="Cost"><option value="SANCTIONED">Sanctioned</option><option value="TENDER">Tender</option><option value="REVISED">Revised Cost</option><option value="ACTUAL">Reported Actual</option></optgroup>
+<select id="g5Field" required>
+<option value="" disabled selected>रिकॉर्ड का सही वर्ग चुनें — अनुमान ≠ स्वीकृत ≠ खर्च</option>
+<optgroup label="Cost"><option value="ESTIMATED_PROPOSED">Estimated / Proposed Cost (NOT sanctioned or spent)</option><option value="SANCTIONED">Sanctioned</option><option value="TENDER">Tender</option><option value="REVISED">Revised Cost</option><option value="ACTUAL">Reported Actual</option></optgroup>
 <optgroup label="Deadline"><option value="ORIGINAL">Original deadline</option><option value="REVISED">Revised deadline</option></optgroup>
 <optgroup label="Ground"><option value="AUTHORITY_COMPLETION_CLAIM">Authority completion claim</option><option value="FIELD_OBSERVATION_REPORTED">Reported ground visit</option></optgroup>
 <optgroup label="Impact"><option value="AUTHORITY_STATED">Authority-stated impact</option><option value="GROUND_REPORTED">Reported field impact</option></optgroup>

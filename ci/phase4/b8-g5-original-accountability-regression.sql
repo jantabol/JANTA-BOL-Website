@@ -135,7 +135,9 @@ begin
  if not denied then raise exception 'B8_G5_ORIGINAL_DEADLINE_DUPLICATED';end if;
 end $b8$;
 
--- Costs are four distinct attributed stages; no silent numeric replacement/estimate=actual.
+-- Costs are five distinct attributed stages, including estimated/proposed. NO source estimate becomes sanctioned or actual.
+select public.jb_b8_g5_owner_record_fact(
+ :'g5_case'::uuid,'COST','ESTIMATED_PROPOSED','Historical consultant estimate only; approval or actual expenditure NOT proved',23864600000,null,null);
 select public.jb_b8_g5_owner_record_fact(
  :'g5_case'::uuid,'COST','SANCTIONED','Sanctioned amount is a reported official figure',120000,null,null);
 select public.jb_b8_g5_owner_record_fact(
@@ -277,26 +279,29 @@ begin
  if not blocked then raise exception 'B8_G5_APPEND_ONLY_HISTORY_MUTABLE';end if;
  select count(*) into v_cnt from public.b8_g5_fact_events
  where case_id=current_setting('b8.g5_case')::uuid;
- if v_cnt<>16 then raise exception 'B8_G5_UNEXPECTED_EVENT_COUNT: %',v_cnt;end if;
+ if v_cnt<>17 then raise exception 'B8_G5_UNEXPECTED_EVENT_COUNT: %',v_cnt;end if;
  if (select case_state from public.b8_cases where id=current_setting('b8.g5_case')::uuid)<>'investigating'
  or (select count(*) from public.b8_g5_fact_events
  where case_id=current_setting('b8.g5_case')::uuid and kind='DEADLINE')<>2
  or (select count(*) from public.b8_g5_fact_events
- where case_id=current_setting('b8.g5_case')::uuid and kind='COST')<>4
+ where case_id=current_setting('b8.g5_case')::uuid and kind='COST')<>5
  or exists(select 1 from public.b8_g5_fact_events
  where authenticity<>'NOT_INDEPENDENTLY_VERIFIED')
  then raise exception 'B8_G5_HISTORY_OR_REAL_TRUTH_LABEL_DRIFT';end if;
  if (select count(*) from public.articles where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa')<>1
  or (select count(*) from public.ad_campaigns where id='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb')<>1
  then raise exception 'B8_G5_OLD_NEWS_B7_MODIFIED';end if;
- raise notice 'B8 G5 real disposable PG17: cost4, deadline original/revised, ground/impact split, conflicting public RLS, Owner MFA, cross-case bytes, closure/reopen, immutable and original News/Ad sentinels PASS';
+ raise notice 'B8 G5 real disposable PG17: cost5 with isolated estimated proposal, deadline original/revised, ground/impact split, conflicting public RLS, Owner MFA, cross-case bytes, closure/reopen, immutable and original News/Ad sentinels PASS';
 end $b8$;
 set role authenticated;
 do $b8$
 declare v jsonb;
 begin
  v:=public.jb_b8_g5_owner_private_ledger(current_setting('b8.g5_case')::uuid);
- if jsonb_array_length(v)<>16
+ if jsonb_array_length(v)<>17
+ or not exists(select 1 from jsonb_array_elements(v) e
+   where e->>'kind'='COST' and e->>'field_code'='ESTIMATED_PROPOSED'
+      and e->>'authenticity'='NOT_INDEPENDENTLY_VERIFIED')
  or exists(select 1 from jsonb_array_elements(v) e where e->>'authenticity'<>'NOT_INDEPENDENTLY_VERIFIED')
  then raise exception 'B8_G5_PRIVATE_LEDGER_TRUTH';end if;
 end $b8$;
