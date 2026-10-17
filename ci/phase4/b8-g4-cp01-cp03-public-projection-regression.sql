@@ -196,6 +196,26 @@ select set_config('b8.fixture_aal','aal2',false);
 set role authenticated;
 select public.jb_b8_g2_owner_link_article(
  :'c_public'::uuid,'cccccccc-cccc-4ccc-8ccc-cccccccccccc') as followup_link \gset
+-- Explicit regression for original flake: all three links in this transaction share
+-- now() but must sort by new monotonic linked_order, never random UUID.
+reset role;
+do $link_order$
+declare ids uuid[];
+begin
+ if (select count(distinct linked_at) from public.b8_case_article_links
+     where case_id=current_setting('b8.fixture_public_case')::uuid)<>1 then
+  raise exception 'B8_G4_EXPECTED_SAME_TRANSACTION_NOW_TIE_NOT_REPRODUCED';end if;
+ select array_agg(article_id order by linked_order) into ids
+ from public.b8_case_article_links
+ where case_id=current_setting('b8.fixture_public_case')::uuid;
+ if ids is distinct from array[
+  'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa'::uuid,
+  'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'::uuid,
+  'cccccccc-cccc-4ccc-8ccc-cccccccccccc'::uuid] then
+  raise exception 'B8_G4_LINKED_ORDER_NONDETERMINISTIC';end if;
+ raise notice 'B8 G4 verified three same-transaction linked_at TIES, monotonic append linked_order preserved';
+end $link_order$;
+set role authenticated;
 select public.jb_b8_g4_owner_add_public_milestone(
  :'c_public'::uuid,'FOLLOWUP_ARTICLE_LINKED') as follow_event \gset
 select public.jb_b8_g4_owner_release_public_projection(
