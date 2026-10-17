@@ -252,6 +252,8 @@ function onOwnerCreatedCase(id){
  ownerKnownCases=[item,...ownerKnownCases.filter(c=>c.id!==id)].slice(0,50);
  drawOwnerCaseChoices(id);
  applyOwnerCaseSelection(id,false);
+ // Do not permit a second tap to create a duplicate TEST case with stale fields.
+ $('createCase').reset();
 }
 
 const PHONE_GROUPS={
