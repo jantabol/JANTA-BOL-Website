@@ -19,7 +19,11 @@ function make(role,override={}){
   jb_b8_g3_reporter_link_verified_bytes:D,
   jb_b8_g3_editor_screen_r1:D,
   jb_b8_g3_reporter_prepare_manual_handoff:C,
-  jb_b8_g3_reporter_record_handoff_observation:D
+  jb_b8_g3_reporter_record_handoff_observation:D,
+  jb_b8_g3_reporter_claim_official_reply:D,
+  jb_b8_g3_owner_reply_claim_summary:{question_id:B,case_id:A,
+   claimed_official_reply_count:1,official_reply_independently_verified:false,
+   provider_external_delivery_verified:false,accuracy_class:'REPORTER_CLAIM_UNVERIFIED'}
  };
  const client={rpc:async(name,args)=>{
     calls.push({name,args});
@@ -124,4 +128,24 @@ test('G3 Android source has Founder packet/R2, Reporter handoff, Editor screen a
  assert(!js.includes("location.href='mailto"));
  assert(js.includes('allowPrivateUpload:false'));
  assert(js.includes("showJSON($('g3PacketData'),packet)"));
+});
+
+test('Reporter claim of official reply stays UNVERIFIED and uses scoped server RPC',async()=>{
+ const {api,calls}=make('reporter');
+ const x=await api.reporterClaimOfficialReply(C,D,'District Public Works Office',
+  '2026-10-17T05:00:00.000Z',
+  'An office attachment is claimed and awaits independent verification.');
+ assert.equal(x.accuracy,'REPORTER_CLAIM_UNVERIFIED');
+ assert.equal(x.officiallyVerified,false);
+ assert.deepEqual(calls.map(x=>x.name),['jb_b8_g3_reporter_claim_official_reply']);
+});
+test('Founder truth-check rejects forged independently verified official reply',async()=>{
+ const {api}=make('owner');
+ const x=await api.ownerReplyClaimSummary(B);
+ assert.equal(x.official_reply_independently_verified,false);
+ const {api:bad}=make('owner',{jb_b8_g3_owner_reply_claim_summary:{
+  question_id:B,official_reply_independently_verified:true,
+  provider_external_delivery_verified:true,accuracy_class:'OFFICIAL_VERIFIED'
+ }});
+ await assert.rejects(bad.ownerReplyClaimSummary(B),/B8_FALSE_OFFICIAL_REPLY_STATUS/);
 });
