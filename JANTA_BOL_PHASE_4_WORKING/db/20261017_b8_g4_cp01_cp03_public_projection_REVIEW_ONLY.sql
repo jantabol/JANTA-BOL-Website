@@ -105,7 +105,7 @@ begin
  end if;
  if p_action not in('PUBLISH','REVISE') or p_confirm_privacy_review is distinct from true
  then raise exception 'B8_G4_FOUNDER_PRIVACY_ATTESTATION_REQUIRED';end if;
- if (p_action='PUBLISH' and v_prev.id is not null)
+ if (p_action='PUBLISH' and v_prev.id is not null and v_prev.action<>'HIDE')
  or (p_action='REVISE' and (v_prev.id is null or v_prev.action='HIDE')) then
   raise exception 'B8_G4_INVALID_PUBLIC_LIFECYCLE';end if;
  if p_topic is null or p_topic not in
@@ -115,6 +115,11 @@ begin
  or p_status is null or p_status not in
   ('UNDER_REVIEW','RECORDS_REQUESTED','AWAITING_RESPONSE','UPDATED','CLOSED')
  then raise exception 'B8_G4_INVALID_PUBLIC_ENUM';end if;
+ -- No response-request status without independent external delivery proof.
+ if p_status in('RECORDS_REQUESTED','AWAITING_RESPONSE') then
+  raise exception 'B8_G4_NO_REAL_OFFICIAL_DISPATCH_PROOF';end if;
+ if p_status='CLOSED' and v_case.case_state<>'closed' then
+  raise exception 'B8_G4_CLOSED_STATUS_REQUIRES_CLOSED_CASE';end if;
  insert into public.b8_g4_public_revisions(
   case_id,revision_no,action,public_topic,public_area_code,
   public_status,approval_basis,approved_by)
@@ -149,13 +154,32 @@ begin
   'EDITORIAL_REVIEW_UPDATED','RESPONSE_STATUS_NOT_VERIFIED',
   'CASE_STATUS_UPDATED','FOLLOWUP_ARTICLE_LINKED','CASE_CLOSED')
  then raise exception 'B8_G4_EVENT_CODE_NOT_APPROVED';end if;
+ if p_event_code='QUESTION_DRAFT_PREPARED' and not exists(
+  select 1 from public.b8_question_drafts d where d.case_id=p_case_id) then
+  raise exception 'B8_G4_QUESTION_DRAFT_NOT_RECORDED';end if;
+ if p_event_code='EDITORIAL_REVIEW_UPDATED' and not exists(
+  select 1 from public.b8_question_review_decisions d
+  join public.b8_question_review_requests r on r.id=d.request_id
+  where r.case_id=p_case_id) then
+  raise exception 'B8_G4_EDITOR_REVIEW_NOT_RECORDED';end if;
+ if p_event_code='RESPONSE_STATUS_NOT_VERIFIED' and not exists(
+  select 1 from public.b8_g3_handoff_intents h where h.case_id=p_case_id) then
+  raise exception 'B8_G4_HANDOFF_NOT_RECORDED';end if;
+ if p_event_code='PUBLIC_RECORDS_UNDER_REVIEW' and not exists(
+  select 1 from public.b8_case_evidence_claims e where e.case_id=p_case_id) and not exists(
+  select 1 from public.b8_private_upload_receipts r where r.case_id=p_case_id) then
+  raise exception 'B8_G4_NO_RECORDS_TO_REVIEW';end if;
+ if p_event_code='CASE_STATUS_UPDATED' and not exists(
+  select 1 from public.b8_g4_public_revisions r
+  where r.case_id=p_case_id and r.revision_no>1) then
+  raise exception 'B8_G4_NO_APPROVED_STATUS_REVISION';end if;
  if p_event_code='CASE_CLOSED' and v_case.case_state<>'closed' then
   raise exception 'B8_G4_CASE_NOT_CLOSED';end if;
- if p_event_code='FOLLOWUP_ARTICLE_LINKED' and not exists(
-  select 1 from public.b8_case_article_links l join public.articles a
+ if p_event_code='FOLLOWUP_ARTICLE_LINKED' and (
+  select count(*) from public.b8_case_article_links l join public.articles a
    on a.id=l.article_id where l.case_id=p_case_id
    and a.status='published'::public.article_status and a.deleted_at is null
- ) then raise exception 'B8_G4_NO_PUBLISHED_ARTICLE';end if;
+ ) < 2 then raise exception 'B8_G4_SECOND_PUBLISHED_ARTICLE_REQUIRED';end if;
  -- No backdating, explicit recorded_at ensures immutable event chronology.
  insert into public.b8_g4_public_milestones(case_id,event_code,recorded_by)
  values(p_case_id,p_event_code,auth.uid()) returning id into v_id;
