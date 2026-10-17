@@ -230,6 +230,28 @@ form('g3ReplyTruth',async()=>{
   return 'Private reply claim summary loaded. Official reply/provider delivery remain unverified.';
 });
 
+
+form('g4PublicRelease',async()=>{
+  const action=v('g4Action'),caseId=v('g4Case');
+  if(action!=='HIDE'&&!$('g4Privacy').checked)
+    throw Error('B8_FOUNDER_PUBLIC_PRIVACY_REVIEW_REQUIRED');
+  const safe=action==='HIDE';
+  const result=await workflow.ownerReleasePublicCase(
+    caseId,action,safe?null:v('g4Topic'),safe?null:v('g4Area'),
+    safe?null:v('g4Status'),safe?false:$('g4Privacy').checked
+  );
+  $('g4MilestoneCase').value=caseId;
+  return 'G4 immutable public revision record: '+result.revisionEventId+
+   '\nAction: '+result.action+
+   '\nयह केवल Owner-AAL2 Server-confirmed public approval है; स्वतंत्र तथ्य सत्यापन और Live Release अलग हैं।';
+});
+form('g4Milestone',async()=>{
+  const x=await workflow.ownerAppendPublicMilestone(
+    v('g4MilestoneCase'),v('g4MilestoneCode'));
+  return 'G4 Server-checked public milestone ID: '+x.eventId+
+    '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
+});
+
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
 // nor the real G1/G2 server role and case grants.
 boot();
