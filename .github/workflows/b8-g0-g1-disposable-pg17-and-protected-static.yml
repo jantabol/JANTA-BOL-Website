@@ -10,6 +10,9 @@ on:
       - 'ci/phase4/b8-g1-real-postgres-regression.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_cp02_editor_immutable_review_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g1-cp02-editor-review-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g2-cp01-cascade-fixture.sql'
+      - 'ci/phase4/b8-g2-cp01-provenance-regression.sql'
   workflow_dispatch:
 permissions:
   contents: read
@@ -55,6 +58,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_cp02_editor_immutable_review_REVIEW_ONLY.sql
       - name: Real Editor R1/R2 negative/immutable/Founder EVIDENCE_GAP review & rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-cp02-editor-review-regression.sql
+      - name: Prepare synthetic original Article/source/version/verification FK CASCADE metadata
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp01-cascade-fixture.sql
+      - name: Apply B8 G2 CP01 independent provenance + unverified evidence claims to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql
+      - name: Verify owner/reporter privacy, unverified SHA receipts, immutable links and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp01-provenance-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
