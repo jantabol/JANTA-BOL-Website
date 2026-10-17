@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - codex/b8-g0-g1-accountability-20261017
+      - codex/b8-g5-main-based-integration-20261017
     paths:
       - '.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql'
@@ -142,6 +143,17 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with: {persist-credentials: false}
+      - name: E7 candidate preserve protected production-main root and free backup artifacts
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "e82e88aee6e953f0eb0f817361cb87c3a5194aae"
+          test "$(git hash-object script.js)" = "8c3b52874b95fb84749c68654f385c76c7a6e1e8"
+          test "$(git hash-object style.css)" = "760f1bd96441f4717618b8b025c20228100191d8"
+          test "$(git hash-object ci/backup/jb-free-offsite-backup.sh)" = "70568709e83c7caddecd64bd170de90ea9c55d35"
+          test "$(git hash-object .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml)" = "07e06024f8c6e543f3f8340a65e95f4914fa5a6b"
+          test -f JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html
+          test -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql
+          echo 'B8 main-derived E7 additive candidate: root/backup original byte-identical, no LIVE changes'
       - name: Original protected Phase3 STATIC News/Auth/Security
         run: |
           node ci/phase3-regression/static-regression.cjs
