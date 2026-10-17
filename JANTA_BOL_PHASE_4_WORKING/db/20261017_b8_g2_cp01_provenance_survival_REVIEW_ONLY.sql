@@ -7,6 +7,8 @@
 
 create table public.b8_case_article_links (
   id uuid primary key default gen_random_uuid(),
+  -- Stable creation order across multiple links in one transaction: now() timestamps tie.
+  linked_order bigint generated always as identity unique,
   case_id uuid not null references public.b8_cases(id) on delete restrict,
   article_id uuid not null,
   article_title_at_link text not null,
@@ -140,7 +142,7 @@ begin
      'article_id',x.article_id,'title_at_link',x.article_title_at_link,
      'version_at_link',x.article_version_at_link,
      'article_status_at_link',x.article_status_at_link)
-    order by x.linked_at,x.id)
+    order by x.linked_order)
     from public.b8_case_article_links x where x.case_id=p_case_id),'[]'::jsonb),
   'evidence_claim_count',
      (select count(*) from public.b8_case_evidence_claims c where c.case_id=p_case_id),
