@@ -166,7 +166,12 @@ test('Android UI static: exactly role-scoped private forms, no fake official SEN
   const ui=await readFile(new URL('b8-accountability-ui.mjs',base),'utf8');
   assert(html.includes('id="owner"')&&html.includes('id="editor"')&&html.includes('id="reporter"'));
   assert(html.includes('id="uploadBtn" type="submit" disabled'));
-  assert(ui.includes('allowPrivateUpload:false'));
+  // G6 replaced permanent UX OFF with Founder server-default-OFF, not free upload.
+  assert(ui.includes("allowPrivateUpload:role==='reporter'"));
+  assert(ui.includes('workflow.reporterPrivateUploadReadiness(c.id)'));
+  assert(ui.includes("if(!gate.allowed)"));
+  assert(ui.includes("uploadReadyCase=null"));
+  assert(html.includes('id="uploadBtn" type="submit" disabled'));
   assert(ui.includes('LOCK_MS=15*60*1000'));
   assert(ui.includes('auth.getUser()'));
   assert(ui.includes("node.textContent=JSON.stringify(value,null,2)"));
