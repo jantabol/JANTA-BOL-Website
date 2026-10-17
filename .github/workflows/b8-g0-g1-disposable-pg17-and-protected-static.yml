@@ -213,7 +213,7 @@ jobs:
           test "$(stat -c %s dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip)" -gt 200000
           echo "Full tracked Git commit pinned: $GITHUB_SHA"
           ls -lh dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip dist/MASTER_ZIP_SHA256.txt
-      - name: Upload user-saveable FULL master ZIP (artifact: first save it locally)
+      - name: Upload user-saveable FULL master ZIP artifact for local backup
         uses: actions/upload-artifact@v4
         with:
           name: JANTA_BOL_B0_TO_B8_MASTER_SOURCE
