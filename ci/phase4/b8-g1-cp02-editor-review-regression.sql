@@ -116,6 +116,38 @@ reset role;
 select set_config('b8.fixture_actor','44444444-4444-4444-4444-444444444444',false);
 set role authenticated;
 select public.jb_b8_g1_editor_review_card(:'review_r1'::uuid) as private_card \gset
+-- Server refuses a fake dispatch approval / absent reason even from the legitimate Editor.
+do $nosend$
+declare bogus_denied boolean:=false; reason_denied boolean:=false;
+begin
+ begin
+  perform public.jb_b8_g1_editor_review(
+   current_setting('b8.fixture_req_r1')::uuid,
+   'APPROVE_FOR_SEND','An attempted premature dispatch approval must fail.');
+ exception when others then bogus_denied:=sqlerrm='B8_EDITOR_DECISION_NOT_ALLOWED';end;
+ begin
+  perform public.jb_b8_g1_editor_review(
+   current_setting('b8.fixture_req_r1')::uuid,
+   'EVIDENCE_REVIEW_PENDING',null);
+ exception when others then reason_denied:=sqlerrm='B8_EDITOR_REASON_REQUIRED';end;
+ if not (bogus_denied and reason_denied) then
+  raise exception 'B8_CP02_EDITOR_FALSE_SEND_OR_NO_REASON_ACCEPTED';end if;
+end $nosend$;
+-- Session revoked while the old Editor page remains open: no case access.
+reset role;
+select set_config('b8.fixture_session','off',false);
+set role authenticated;
+do $editor_session$
+declare denied boolean:=false;
+begin
+ begin
+  perform public.jb_b8_g1_editor_review_card(current_setting('b8.fixture_req_r1')::uuid);
+ exception when others then denied:=sqlerrm='B8_ASSIGNED_ACTIVE_EDITOR_REQUIRED';end;
+ if not denied then raise exception 'B8_CP02_EDITOR_REVOKED_SESSION_READ';end if;
+end $editor_session$;
+reset role;
+select set_config('b8.fixture_session','on',false);
+set role authenticated;
 -- Serious question allowed only for evidence review pending, not automatic "SENT".
 select public.jb_b8_g1_editor_review(
   :'review_r1'::uuid,'EVIDENCE_REVIEW_PENDING',
@@ -178,6 +210,17 @@ select set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',fals
 select set_config('b8.fixture_aal','aal2',false);
 set role authenticated;
 select public.jb_b8_g1_owner_preliminary_review_packet(:'review_r2'::uuid) as founder_packet \gset
+do $proofpack$
+declare v jsonb;
+begin
+ v:=public.jb_b8_g1_owner_preliminary_review_packet(
+  current_setting('b8.fixture_req_r2')::uuid);
+ if v->>'evidence_status'<>'EVIDENCE_GAP'
+ or v->>'delivery_status'<>'NOT_SENT'
+ or v->>'editor_decision'<>'ESCALATE_TO_FOUNDER'
+ or v->>'complete_proof_pack'<>'false'
+ then raise exception 'B8_CP02_FOUNDER_RECEIVED_FALSE_COMPLETE_PROOF_OR_SENT';end if;
+end $proofpack$;
 reset role;
 select set_config('b8.fixture_aal','aal1',false);
 set role authenticated;
