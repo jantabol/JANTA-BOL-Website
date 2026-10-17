@@ -129,12 +129,17 @@ select public.jb_b8_g7_owner_record_history(
 select public.jb_b8_g5_owner_record_fact(
  :'case_id'::uuid,'DEADLINE','ORIGINAL',
  'Original project delivery date supplied as attributed source',
- null,current_date-interval '10 days',null);
+ null,current_date-10,null);
 select public.jb_b8_g7_owner_record_history(
  :'case_id'::uuid,'DEADLINE_FOLLOWUP',
  'Scheduled completion date passed; follow-up warranted without inventing intent',
  null,null,null,current_date);
+select public.jb_b8_g7_owner_record_history(
+ :'other_case'::uuid,'SUMMARY_DRAFT',
+ 'Different private Case content must never cross into this Case chronology',
+ null,null,null,null) as other_history \\gset
 reset role;
+select set_config('b8.g7_other_history',:'other_history',false);
 
 -- Cross-case version/receipt bypass and unjustified revision must FAIL.
 set role authenticated;
@@ -151,7 +156,7 @@ begin
  perform public.jb_b8_g7_owner_record_history(
  current_setting('b8.g7_case')::uuid,'SUMMARY_CORRECTION',
  'Wrong prior history event must not be allowed',
- null,null,1,null);
+ null,null,current_setting('b8.g7_other_history')::bigint,null);
  exception when others then bad_prior:=sqlerrm='B8_G7_PRIOR_CROSS_CASE_DENIED';end;
  if not (bad_receipt and bad_prior) then
   raise exception 'B8_G7_PRIVACY_OR_CORRECTION_BYPASS';end if;
