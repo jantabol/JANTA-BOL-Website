@@ -87,6 +87,15 @@ async function boot(){
     const currentRole=await window.JBBackend.role();
     if(!['owner','editor','reporter'].includes(currentRole))throw Error('B8_STAFF_ROLE_REQUIRED');
     if(currentRole==='owner')await window.JBBackend.requireOwner();
+    // FIRST DIVERGENCE T092: the existing owner login is NOT proof B8 tables/RPCs
+    // exist. Do not show a clickable "Create Case" on a source-only installation.
+    // This is a read-only RPC, never an INSERT/SQL migration and not a fake PASS.
+    const {data:ready,error:readyError}=await window.JBBackend.client.rpc(
+      'jb_b8_g1_runtime_readiness');
+    if(readyError||ready?.component!=='JANTA_BOL_B8'||
+        ready?.contract!=='G0_G9_20261017'||ready?.db_ready!==true){
+      throw Error('B8_DATABASE_NOT_DEPLOYED_OR_PARTIAL_G0_G9');
+    }
     role=currentRole;
     // Upload UI remains initially OFF. Paired SQL G6 is server authority, not DOM.
     // Standalone JS never enables a bypass; server default is OFF.

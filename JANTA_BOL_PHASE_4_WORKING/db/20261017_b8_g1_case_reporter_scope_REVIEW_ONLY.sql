@@ -195,3 +195,34 @@ grant execute on function public.jb_b8_g1_reporter_create_draft(uuid,text,text)
 grant execute on function public.jb_b8_g1_reporter_case_card(uuid)
  to authenticated;
 -- No question dispatch, public timeline, source upload, approval or published news mutation in G1.
+
+-- G0→G9 runtime handshake: used by B8 Android to fail CLOSED on an undeployed/
+-- partially deployed Backend. SECURITY INVOKER reads only fixed catalog existence;
+-- no case/user data, no application writes, no external sends and NO privileged bypass.
+-- This SQL is REVIEW ONLY until Founder independently authorizes deployment.
+create function public.jb_b8_g1_runtime_readiness()
+returns jsonb language sql stable security invoker set search_path=''
+as $b8$
+ select pg_catalog.jsonb_build_object(
+  'component','JANTA_BOL_B8',
+  'contract','G0_G9_20261017',
+  'db_ready',(
+    pg_catalog.to_regclass('public.b8_cases') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g1_owner_create_case(text,text,text)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g2_owner_provenance_summary(uuid)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g3_owner_evidence_packet(uuid)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g4_public_feed(integer)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g5_owner_private_ledger(uuid)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g6_reporter_private_upload_readiness(uuid)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g7_owner_private_history(uuid)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g8_owner_attest_manual_delivery(uuid,uuid,text)') is not null
+    and pg_catalog.to_regprocedure('public.jb_b8_g9_owner_due_followups()') is not null
+  ),
+  'official_send_by_app',false,
+  'edge_storage_verified',false,
+  'e9_external_authenticity_verified',false
+ );
+$b8$;
+revoke all on function public.jb_b8_g1_runtime_readiness()
+ from public,anon,authenticated;
+grant execute on function public.jb_b8_g1_runtime_readiness() to authenticated;

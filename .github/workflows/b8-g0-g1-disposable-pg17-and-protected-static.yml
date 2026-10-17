@@ -63,6 +63,9 @@ on:
       - 'ci/phase4/b8-g9-due-followup-notification-regression.sql'
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
+      - 'ci/phase4/b8-database-readiness-android.test.mjs'
+      - 'ci/phase4/b8-runtime-readiness-g1-negative.sql'
+      - 'ci/phase4/b8-runtime-readiness-g9-positive.sql'
       - 'ci/phase4/build_b0_b8_master_source_zip.py'
       - 'tools/jb_manual_test.py'
       - 'START_HERE_JANTA_BOL_MASTER_B0_TO_B8.md'
@@ -106,6 +109,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-disposable-fixture.sql
       - name: Apply G1 scoped review-only migration into disposable PostgreSQL17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+      - name: G1 only: B8 UI runtime handshake must FAIL CLOSED when other migrations missing
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g1-negative.sql
       - name: REAL PostgreSQL G1 role/ACL/revoke/expiry/session/rollback negative tests
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-real-postgres-regression.sql
       - name: Apply G1 CP02 Editor/immutable review migration into the SAME disposable PG17
@@ -172,6 +177,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g9_due_followup_safe_notifications_REVIEW_ONLY.sql
       - name: REAL PG17 G9 overdue detection, private Founder role, B3 no-external notice, privacy and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g9-due-followup-notification-regression.sql
+      - name: G0-G9 complete: handshake permits UI only after EVERY expected database slice
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
     name: Full B0–B8 Source Master ZIP / all files / SHA256 / random test selector
     needs:
@@ -261,6 +268,7 @@ jobs:
           node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
           node --test ci/phase4/b8-spck-mime-regression.test.mjs
+          node --test ci/phase4/b8-database-readiness-android.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js
