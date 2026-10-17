@@ -15,7 +15,7 @@
 
 ## Six Founder decisions for final freeze — recommended A defaults, NOT YET APPROVED
 1. FD-B8-01: PRIVATE case timeline by default; redacted Founder-approved public view only.
-2. FD-B8-02: Reporter/Editor draft; Founder fresh AAL2 authorizes actual final Right-to-Reply dispatch (no fake SENT). Any future delegate requires explicit scoped approval, Founder-only Article publish unchanged.
+2. FD-B8-02 [SUPERSEDED by Founder 17 Oct / CP08]: Active scoped Reporter can directly send ordinary documented official Right-to-Reply questions WITHOUT per-question Founder approval. High-risk questions follow audited Editor/Founder escalation; no fake SENT; Founder-only Article publish unchanged. See `B8_CP08_FOUNDER_REPORTER_RIGHT_TO_REPLY_DELEGATED_DISPATCH_DESIGN_20261017.md`. Risk-class final decision pending.
 3. FD-B8-03: source-backed case-specific reasonable response opportunity; recorded urgency exception, not arbitrary universal fixed deadline.
 4. FD-B8-04: append-only originals, legal hold plus documented lawful redaction/disposition; no silent deletion or blanket unsupported indefinite retention.
 5. FD-B8-05: same evidence rules and explicit conflict flag for Founder-as-subject; no one can tamper original receipt, independent review where feasible.
