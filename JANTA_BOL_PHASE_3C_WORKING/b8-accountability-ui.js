@@ -49,7 +49,8 @@ const B8_FIELD_HI=Object.freeze({
 function formatExactINR(raw){
  const m=/^(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(String(raw));
  if(!m)return 'राशि स्पष्ट नहीं है';
- const grouped=m[1].replace(/\B(?=(\d{2})+(\d{3})(?!\d))/g,',');
+ const all=m[1],head=all.slice(0,-3),tail=all.slice(-3);
+ const grouped=head?head.replace(/\B(?=(\d{2})+(?!\d))/g,',')+','+tail:tail;
  return '₹'+grouped+(m[2]?'.'+m[2]:'');
 }
 function hindiDateTime(value){
