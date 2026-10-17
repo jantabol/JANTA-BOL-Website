@@ -258,6 +258,68 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('PUBLIC_EVENT_NOT_CONFIRMED');
       return Object.freeze({eventId:Number(ev),eventCode,serverConfirmed:true});
     },
+    // G5 private editorial FACT entries are never an authenticated official answer.
+    async ownerRecordG5Fact(caseId,kind,field,detail,cost='',targetDate='',receipt=''){
+      requireRole(role,'owner');
+      const fields={
+        COST:['SANCTIONED','TENDER','REVISED','ACTUAL'],
+        IMPACT:['AUTHORITY_STATED','GROUND_REPORTED'],
+        ALTERNATIVE:['DOCUMENTED_PROPOSAL','UNVERIFIED_PROPOSAL'],
+        GROUND:['AUTHORITY_COMPLETION_CLAIM','FIELD_OBSERVATION_REPORTED'],
+        DEADLINE:['ORIGINAL','REVISED'],
+        RESPONSIBILITY:['ROLE_MAP'],
+        CONFLICT:['FLAG_RAISED']
+      };
+      if(!fields[kind]?.includes(field))deny('G5_FACT_KIND_OR_FIELD_INVALID');
+      const note=bounded(detail,12,500,'G5_FACT_ATTRIBUTION_REQUIRED');
+      let amount=null,date=null;
+      if(kind==='COST'){
+        if(typeof cost!=='string'||!(/^(0|[1-9][0-9]{0,21})(\.[0-9]{1,2})?$/.test(cost)))
+          deny('G5_COST_MUST_BE_EXACT_DECIMAL_STRING');
+        amount=cost;
+      }else if(cost!==''&&cost!==null)deny('G5_COST_NOT_ALLOWED');
+      if(kind==='DEADLINE'){
+        if(typeof targetDate!=='string'||!/^\d{4}-\d{2}-\d{2}$/.test(targetDate)||
+           Number.isNaN(Date.parse(targetDate)))deny('G5_DEADLINE_INVALID');
+        date=targetDate;
+      }else if(targetDate!==''&&targetDate!==null)deny('G5_DATE_NOT_ALLOWED');
+      const n=await rpc('jb_b8_g5_owner_record_fact',{
+        p_case_id:id(caseId),p_kind:kind,p_field_code:field,
+        p_detail:note,p_cost_inr:amount,p_target_date:date,
+        p_receipt_id:receipt?id(receipt):null
+      });
+      if(!Number.isSafeInteger(Number(n))||Number(n)<1)deny('G5_SERVER_FACT_NOT_COMMITTED');
+      return Object.freeze({eventId:String(n),authenticity:'NOT_INDEPENDENTLY_VERIFIED'});
+    },
+    async ownerRecordG5Outcome(caseId,state,reason,receipt=''){
+      requireRole(role,'owner');
+      if(!['monitoring','closed'].includes(state))deny('G5_OUTCOME_STATE_INVALID');
+      if(state==='closed'&&!receipt)deny('G5_CLOSE_REQUIRES_PRIVATE_RECEIPT');
+      const n=await rpc('jb_b8_g5_owner_record_outcome',{
+        p_case_id:id(caseId),p_case_state:state,
+        p_reason:bounded(reason,12,500,'G5_OUTCOME_REASON_REQUIRED'),
+        p_receipt_id:receipt?id(receipt):null
+      });
+      if(!Number.isSafeInteger(Number(n))||Number(n)<1)deny('G5_SERVER_OUTCOME_NOT_COMMITTED');
+      return Object.freeze({eventId:String(n),state,
+        authenticity:'NOT_INDEPENDENTLY_VERIFIED'});
+    },
+    async ownerReopenG5(caseId,receipt,reason){
+      requireRole(role,'owner');
+      const n=await rpc('jb_b8_g5_owner_reopen_case',{
+        p_case_id:id(caseId),p_new_material_receipt_id:id(receipt),
+        p_reason:bounded(reason,12,500,'G5_REOPEN_REASON_REQUIRED')
+      });
+      if(!Number.isSafeInteger(Number(n))||Number(n)<1)deny('G5_REOPEN_NOT_CONFIRMED');
+      return Object.freeze({eventId:String(n),authenticity:'NOT_INDEPENDENTLY_VERIFIED'});
+    },
+    async ownerG5PrivateLedger(caseId){
+      requireRole(role,'owner');
+      const x=await rpc('jb_b8_g5_owner_private_ledger',{p_case_id:id(caseId)});
+      if(!Array.isArray(x)||x.some(v=>v.authenticity!=='NOT_INDEPENDENTLY_VERIFIED'))
+        deny('G5_FALSE_OFFICIAL_VERIFICATION');
+      return x;
+    },
     async ownerReplyClaimSummary(questionId){
       requireRole(role,'owner');
       const p=await rpc('jb_b8_g3_owner_reply_claim_summary',{
