@@ -19,9 +19,16 @@ button:disabled{opacity:.5;cursor:not-allowed}button.secondary{background:#39394
 a{color:#ffb6bc}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .hint{font-size:13px;color:#c5c5cd}.output{overflow-wrap:anywhere;white-space:pre-wrap;max-height:280px;overflow-y:auto;background:#101014;border:1px solid #47474f;padding:12px;border-radius:8px}
 footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
+[hidden]{display:none!important}
+.b8-phone-menu{padding:12px;margin:8px 0 12px;border:1px solid #676b74;border-radius:12px;background:#1a1c22}
+.b8-phone-menu label{font-size:16px;margin:0 0 6px}
+.b8-phone-active fieldset{min-width:0;margin:8px 0}
+.b8-phone-active button[type=submit]{width:100%;min-height:52px}
+.b8-phone-active input,.b8-phone-active select,.b8-phone-active textarea{font-size:16px;min-width:0}
+@media(max-width:600px){header{position:static;padding:9px 12px}header h1{font-size:17px}header .muted{font-size:12px}main{padding:8px}.card{padding:11px;margin:8px 0}fieldset{padding:9px}h2{font-size:17px}}
 </style></head>
 <body><header><h1>JANTA BOL — B8 Accountability</h1>
-<div class="muted">G3 / CP01 • Android-first • Protected development preview, NOT LIVE</div></header>
+<div class="muted">B8 • Mobile Workflow • केवल वास्तविक Server पुष्टि पर कार्रवाई</div></header>
 <main>
 <div class="card warn" role="note">
 <strong>⚠️ सवाल अभी अधिकारी को नहीं भेजे जा रहे हैं।</strong>
@@ -82,7 +89,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 
 <form id="g4PublicRelease"><fieldset><legend>G4 — Founder Public Projection Approval (सिर्फ सुरक्षित Enum)</legend>
 <label for="g4Case">Private Case UUID</label><input id="g4Case" required autocomplete="off">
-<label for="g4Action">Founder action</label><select id="g4Action">
+<label for="g4Action">Founder action</label><select id="g4Action" required><option value="" disabled selected>Founder Action चुनें</option>
 <option value="PUBLISH">PUBLISH — पहली बार सार्वजनिक करें</option>
 <option value="REVISE">REVISE — स्वीकृत Summary बदलें</option>
 <option value="HIDE">HIDE — तुरंत सार्वजनिक दृश्य हटाएँ</option>
@@ -105,7 +112,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 </fieldset></form>
 <form id="g4Milestone"><fieldset><legend>G4 — Server-checked Public Timeline Milestone</legend>
 <label for="g4MilestoneCase">Public Case UUID</label><input id="g4MilestoneCase" required autocomplete="off">
-<label for="g4MilestoneCode">घटनाक्रम</label><select id="g4MilestoneCode">
+<label for="g4MilestoneCode">घटनाक्रम</label><select id="g4MilestoneCode" required><option value="" disabled selected>घटना चुनें</option>
 <option value="CASE_REVIEW_STARTED">समीक्षा शुरू</option>
 <option value="PUBLIC_RECORDS_UNDER_REVIEW">दस्तावेज समीक्षा में</option>
 <option value="QUESTION_DRAFT_PREPARED">सवाल का Draft तैयार हुआ (भेजा नहीं)</option>
@@ -115,7 +122,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <option value="FOLLOWUP_ARTICLE_LINKED">दूसरी प्रकाशित Follow-up खबर जोड़ी</option>
 <option value="CASE_CLOSED">Case बंद किया गया</option>
 </select>
-<button type="submit">Public Timeline में Verified Milestone दर्ज करें</button>
+<button type="submit">Public Timeline में संपादकीय घटना दर्ज करें</button>
 <p class="hint">Fake event रोकने के लिए Backend original Draft/Review/Article Case Record जाँचता है।</p>
 </fieldset></form>
 
@@ -124,7 +131,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <p class="hint">ये सारे रिकॉर्ड निजी और NOT_INDEPENDENTLY_VERIFIED रहेंगे। Cost को Actual Spend न मानें; आधिकारिक Reply / Delivery यहाँ से सत्यापित नहीं होती।</p>
 <form id="g5Fact"><fieldset><legend>Cost / Ground / Deadline / Conflict का नया अपरिवर्तनीय रिकॉर्ड</legend>
 <label for="g5FactCase">Case UUID</label><input id="g5FactCase" required autocomplete="off">
-<label for="g5Kind">प्रकार</label><select id="g5Kind">
+<label for="g5Kind">प्रकार</label><select id="g5Kind" required><option value="" disabled selected>रिकॉर्ड प्रकार चुनें</option>
 <option value="COST">Cost Stage</option><option value="DEADLINE">Deadline</option>
 <option value="GROUND">Ground vs Official</option><option value="IMPACT">Impact</option>
 <option value="ALTERNATIVE">Alternative (Attribution)</option><option value="RESPONSIBILITY">Responsibility Role</option>
