@@ -60,7 +60,7 @@ begin
  if r->>'title'<>'TEST ONLY mobile case pick verify'
  or r->>'risk_lane'<>'R0' or r->>'state'<>'draft'
  or r ? 'question_text' or r ? 'created_by' or r ? 'recipient_label'
- or pg_catalog.jsonb_object_length(r)<>5 then
+ or (select count(*) from pg_catalog.jsonb_object_keys(r))<>5 then
    raise exception 'B8_OWNER_CASE_LIST_PROJECTED_UNSAFE_FIELDS %',r;end if;
 end $b8$;
 reset role;
