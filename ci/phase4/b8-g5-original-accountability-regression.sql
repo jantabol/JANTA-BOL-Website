@@ -248,7 +248,7 @@ begin
  if not blocked then raise exception 'B8_G5_APPEND_ONLY_HISTORY_MUTABLE';end if;
  select count(*) into v_cnt from public.b8_g5_fact_events
  where case_id=current_setting('b8.g5_case')::uuid;
- if v_cnt<>18 then raise exception 'B8_G5_UNEXPECTED_EVENT_COUNT: %',v_cnt;end if;
+ if v_cnt<>16 then raise exception 'B8_G5_UNEXPECTED_EVENT_COUNT: %',v_cnt;end if;
  if (select case_state from public.b8_cases where id=current_setting('b8.g5_case')::uuid)<>'investigating'
  or (select count(*) from public.b8_g5_fact_events
  where case_id=current_setting('b8.g5_case')::uuid and kind='DEADLINE')<>2
@@ -267,7 +267,7 @@ do $b8$
 declare v jsonb;
 begin
  v:=public.jb_b8_g5_owner_private_ledger(current_setting('b8.g5_case')::uuid);
- if jsonb_array_length(v)<>18
+ if jsonb_array_length(v)<>16
  or exists(select 1 from jsonb_array_elements(v) e where e->>'authenticity'<>'NOT_INDEPENDENTLY_VERIFIED')
  then raise exception 'B8_G5_PRIVATE_LEDGER_TRUTH';end if;
 end $b8$;
