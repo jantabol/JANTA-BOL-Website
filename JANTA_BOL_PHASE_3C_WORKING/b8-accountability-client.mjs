@@ -332,6 +332,29 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('FALSE_OFFICIAL_REPLY_STATUS');
       return Object.freeze(p);
     },
+    // G6 private release is Founder AAL2; public JS flag alone never authorizes upload.
+    async ownerSetPrivateUploadRelease(enabled,reason){
+      requireRole(role,'owner');
+      if(typeof enabled!=='boolean')deny('G6_RELEASE_BOOLEAN_REQUIRED');
+      const value=await rpc('jb_b8_g6_owner_set_private_upload',{
+        p_enable:enabled,p_reason:bounded(reason,12,500,'G6_RELEASE_REASON_REQUIRED')
+      });
+      if(value!==enabled)deny('G6_RELEASE_SERVER_NOT_CONFIRMED');
+      return Object.freeze({enabled:value,serverConfirmed:true});
+    },
+    async reporterPrivateUploadReadiness(caseId){
+      requireRole(role,'reporter');
+      const caseUuid=id(caseId);
+      const v=await rpc('jb_b8_g6_reporter_private_upload_readiness',{
+        p_case_id:caseUuid
+      });
+      if(!v||v.case_id!==caseUuid||typeof v.allowed!=='boolean'||
+        v.max_bytes!==UPLOAD_MAX||
+        v.truth!=='PRIVATE_BYTES_ONLY_NOT_OFFICIAL_AUTHENTICITY')
+        deny('G6_UNTRUSTED_RELEASE_READINESS');
+      return Object.freeze({allowed:v.allowed,caseId:caseUuid,maxBytes:UPLOAD_MAX,
+        truth:v.truth});
+    },
     async reporterUploadCaseEvidence(caseId,file){
       requireRole(role,'reporter');
       if(!allowPrivateUpload)deny('UPLOAD_HOSTED_GATE_NOT_APPROVED');
