@@ -1,5 +1,8 @@
 # JANTA BOL - B8 ACCOUNTABILITY
 ## R3 PRE-CODING FINAL TECHNICAL DESIGN & TEST-LOCK CANDIDATE
+
+> **POST-R3 FOUNDER APPROVAL — 17 OCT 2026:** Founder explicitly selected **A** for FD-B8-01, 03, 04, 05, 06 and the R0/R1/R2 classification (FD-B8-02 was already approved). All six governance / authority choices are now **DESIGN-LEVEL APPROVED**. The historical statements below saying five decisions are pending describe this R3 **pre-signoff draft only** and are superseded by [`B8_CP13_FOUNDER_FINAL_A_SIGNOFF_REQUIREMENTS_FREEZE_20261017.md`](B8_CP13_FOUNDER_FINAL_A_SIGNOFF_REQUIREMENTS_FREEZE_20261017.md). **This is not feature coding approval or a PASS for T092–T099.**
+
 **17 October 2026 | CP10-CP12 design reconciliation | NO FEATURE CODING | NO PRODUCTION CHANGES**
 
 > **Two separate verdicts:** The technical design below has been reconciled against the supplied Master Execution Pack, previous R1/R2, physical test plan, GitHub branch and past LIVE read-only catalog. It is **ready for one grouped Founder sign-off**. Only **FD-B8-02 (Reporter/Editor/Founder proof-pack)** is already Founder-approved. Five remaining governance defaults and precise high-risk boundaries are proposals; **FINAL FOUNDER LOCK must not be claimed without confirmation.** Official B8 T092-T099 = **0/8 RUN**; ACC001-051 = **0/51 RUN**. First real B7 payment remains on separate HOLD.
