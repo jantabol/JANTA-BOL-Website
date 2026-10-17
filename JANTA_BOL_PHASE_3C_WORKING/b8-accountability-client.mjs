@@ -144,6 +144,70 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
       });
       return Object.freeze({claimId:id(receipt),state:'CLAIM_UNVERIFIED_NO_BYTES'});
     },
+    async ownerEvidencePacket(requestId){
+      requireRole(role,'owner');
+      const p=await rpc('jb_b8_g3_owner_evidence_packet',{p_request_id:id(requestId)});
+      if(!p||p.request_id!==requestId||p.full_proof_pack_verified!==false||
+        p.original_official_source_authenticity_verified!==false||
+        p.external_delivery_status!=='NOT_SENT')
+        deny('INVALID_G3_FOUNDER_EVIDENCE_TRUTH');
+      return Object.freeze(p);
+    },
+    async ownerAuthorizeRestricted(requestId,reason){
+      requireRole(role,'owner');
+      const approval=await rpc('jb_b8_g3_owner_authorize_r2',{
+        p_request_id:id(requestId),
+        p_reason:bounded(reason,12,500,'FOUNDER_R2_REASON_REQUIRED')
+      });
+      return Object.freeze({approvalId:id(approval),externalStatus:'NOT_SENT'});
+    },
+    async ownerHandoffTruth(questionId){
+      requireRole(role,'owner');
+      const p=await rpc('jb_b8_g3_owner_handoff_truth',{p_question_id:id(questionId)});
+      if(!p||p.question_id!==questionId||p.official_delivery_verified!==false||
+        p.provider_acceptance_verified!==false||p.external_delivery_status!=='NOT_VERIFIED')
+        deny('FALSE_OFFICIAL_DELIVERY');
+      return Object.freeze(p);
+    },
+    async reporterLinkReceipt(requestId,receiptId){
+      requireRole(role,'reporter');
+      const x=await rpc('jb_b8_g3_reporter_link_verified_bytes',{
+        p_request_id:id(requestId),p_receipt_id:id(receiptId)
+      });
+      return Object.freeze({linkId:id(x),meaning:'PRIVATE_BYTE_INTEGRITY_NOT_OFFICIAL_TRUTH'});
+    },
+    async editorScreenSerious(requestId,reason){
+      requireRole(role,'editor');
+      const x=await rpc('jb_b8_g3_editor_screen_r1',{
+        p_request_id:id(requestId),
+        p_reason:bounded(reason,12,500,'EDITOR_R1_REASON_REQUIRED')
+      });
+      return Object.freeze({screeningId:id(x),externalStatus:'NOT_SENT'});
+    },
+    async reporterPrepareHandoff(questionId,channel){
+      requireRole(role,'reporter');
+      if(!['EMAIL','WHATSAPP','OFFICIAL_PORTAL','HAND_DELIVERY'].includes(channel))
+        deny('HANDOFF_CHANNEL_NOT_ALLOWED');
+      const x=await rpc('jb_b8_g3_reporter_prepare_manual_handoff',{
+        p_question_id:id(questionId),p_channel:channel
+      });
+      return Object.freeze({handoffId:id(x),state:'PREPARED_NOT_SENT',
+        deliveryVerified:false});
+    },
+    async reporterRecordHandoff(intentId,observation,receiptId=null){
+      requireRole(role,'reporter');
+      const allowed=['COMPOSER_OPENED','USER_REPORTED_ATTEMPT',
+        'UNVERIFIED_RECEIPT_ATTACHED'];
+      if(!allowed.includes(observation)||
+        ((observation==='UNVERIFIED_RECEIPT_ATTACHED')!==Boolean(receiptId)))
+        deny('UNVERIFIED_OBSERVATION_INPUT');
+      const x=await rpc('jb_b8_g3_reporter_record_handoff_observation',{
+        p_intent_id:id(intentId),p_observation:observation,
+        p_receipt_id:receiptId?id(receiptId):null
+      });
+      return Object.freeze({observationId:id(x),externalStatus:'NOT_VERIFIED',
+        delivered:false});
+    },
     async reporterUploadCaseEvidence(caseId,file){
       requireRole(role,'reporter');
       if(!allowPrivateUpload)deny('UPLOAD_HOSTED_GATE_NOT_APPROVED');
