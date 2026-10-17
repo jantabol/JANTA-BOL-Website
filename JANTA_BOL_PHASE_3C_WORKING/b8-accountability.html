@@ -118,6 +118,52 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button type="submit">Public Timeline में Verified Milestone दर्ज करें</button>
 <p class="hint">Fake event रोकने के लिए Backend original Draft/Review/Article Case Record जाँचता है।</p>
 </fieldset></form>
+
+<div class="card" aria-label="G5 private accountability facts">
+<h2>G5 — Founder Private Facts, Cost, Ground और History (Review Only)</h2>
+<p class="hint">ये सारे रिकॉर्ड निजी और NOT_INDEPENDENTLY_VERIFIED रहेंगे। Cost को Actual Spend न मानें; आधिकारिक Reply / Delivery यहाँ से सत्यापित नहीं होती।</p>
+<form id="g5Fact"><fieldset><legend>Cost / Ground / Deadline / Conflict का नया अपरिवर्तनीय रिकॉर्ड</legend>
+<label for="g5FactCase">Case UUID</label><input id="g5FactCase" required autocomplete="off">
+<label for="g5Kind">प्रकार</label><select id="g5Kind">
+<option value="COST">Cost Stage</option><option value="DEADLINE">Deadline</option>
+<option value="GROUND">Ground vs Official</option><option value="IMPACT">Impact</option>
+<option value="ALTERNATIVE">Alternative (Attribution)</option><option value="RESPONSIBILITY">Responsibility Role</option>
+<option value="CONFLICT">Founder/JANTA BOL Conflict — flag</option>
+</select>
+<label for="g5Field">Record classification (उसी प्रकार का मान चुनें)</label>
+<select id="g5Field">
+<optgroup label="Cost"><option value="SANCTIONED">Sanctioned</option><option value="TENDER">Tender</option><option value="REVISED">Revised Cost</option><option value="ACTUAL">Reported Actual</option></optgroup>
+<optgroup label="Deadline"><option value="ORIGINAL">Original deadline</option><option value="REVISED">Revised deadline</option></optgroup>
+<optgroup label="Ground"><option value="AUTHORITY_COMPLETION_CLAIM">Authority completion claim</option><option value="FIELD_OBSERVATION_REPORTED">Reported ground visit</option></optgroup>
+<optgroup label="Impact"><option value="AUTHORITY_STATED">Authority-stated impact</option><option value="GROUND_REPORTED">Reported field impact</option></optgroup>
+<optgroup label="Alternative"><option value="DOCUMENTED_PROPOSAL">Documented proposal</option><option value="UNVERIFIED_PROPOSAL">Unverified proposal</option></optgroup>
+<optgroup label="Other"><option value="ROLE_MAP">Responsible role, not guilt</option><option value="FLAG_RAISED">Conflict flag: do not publish</option></optgroup>
+</select>
+<label for="g5Detail">Source attribution / factual uncertainty / reason (12–500)</label>
+<textarea id="g5Detail" required minlength="12" maxlength="500"></textarea>
+<label for="g5Cost">Cost in INR as exact decimal (केवल Cost में)</label><input id="g5Cost" inputmode="decimal" autocomplete="off" placeholder="120000.00">
+<label for="g5Date">Original / Revised deadline date (केवल Deadline में)</label><input id="g5Date" type="date">
+<label for="g5Receipt">Optional PRIVATE same-case byte receipt UUID — authenticity still unverified</label><input id="g5Receipt" autocomplete="off">
+<button type="submit">Founder AAL2 — Private Fact दर्ज करें</button>
+<p class="hint">Conflict flag लगाने से पहले किसी मौजूदा Public Case को HIDE करना जरूरी है।</p>
+</fieldset></form>
+<form id="g5Outcome"><fieldset><legend>Case Editorial Outcome (न्यायिक निष्कर्ष नहीं)</legend>
+<label for="g5OutcomeCase">Case UUID</label><input id="g5OutcomeCase" required autocomplete="off">
+<label for="g5OutcomeState">State</label><select id="g5OutcomeState"><option value="monitoring">Monitoring</option><option value="closed">Closed with reasons</option></select>
+<label for="g5OutcomeReason">Editorial reason</label><textarea id="g5OutcomeReason" required minlength="12" maxlength="500"></textarea>
+<label for="g5OutcomeReceipt">Private Receipt UUID (Closing के लिए जरूरी)</label><input id="g5OutcomeReceipt" autocomplete="off">
+<button type="submit">Founder AAL2 — Recorded Outcome</button></fieldset></form>
+<form id="g5Reopen"><fieldset><legend>New Material Evidence के आधार पर Reopen</legend>
+<label for="g5ReopenCase">Closed Case UUID</label><input id="g5ReopenCase" required autocomplete="off">
+<label for="g5ReopenReceipt">New material की उसी Case की Private Receipt UUID</label><input id="g5ReopenReceipt" required autocomplete="off">
+<label for="g5ReopenReason">क्यों दोबारा जाँच?</label><textarea id="g5ReopenReason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">Founder AAL2 — Reopen Case</button></fieldset></form>
+<form id="g5Ledger"><fieldset><legend>Owner-only Private Event History</legend>
+<label for="g5LedgerCase">Case UUID</label><input id="g5LedgerCase" required autocomplete="off">
+<button type="submit" class="secondary">Private Ledger देखें</button>
+<div id="g5LedgerOutput" class="output" aria-live="polite">सिर्फ Founder AAL2; कोई Public / Verified Reply नहीं।</div>
+</fieldset></form>
+</div>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
 <h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
