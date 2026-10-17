@@ -25,19 +25,92 @@ function showJSON(node,value){
   // NEVER insert raw data as HTML or use an untrusted inline event handler.
   node.textContent=JSON.stringify(value,null,2);
 }
+
+const B8_KIND_HI=Object.freeze({
+ COST:'लागत',DEADLINE:'समयसीमा',GROUND:'जमीनी स्थिति',
+ IMPACT:'जनता पर प्रभाव',ALTERNATIVE:'विकल्प',RESPONSIBILITY:'जिम्मेदार पद',
+ CONFLICT:'हितों का टकराव'
+});
+const B8_FIELD_HI=Object.freeze({
+ ESTIMATED_PROPOSED:'अनुमानित / प्रस्तावित लागत — स्वीकृत या खर्च नहीं',
+ SANCTIONED:'स्वीकृत बजट',TENDER:'निविदा राशि',REVISED:'संशोधित',
+ ACTUAL:'बताया गया वास्तविक खर्च (स्वतंत्र सत्यापन बाकी)',
+ ORIGINAL:'मूल समयसीमा',
+ AUTHORITY_COMPLETION_CLAIM:'अधिकारी का काम पूरा होने का दावा',
+ FIELD_OBSERVATION_REPORTED:'दर्ज जमीनी जानकारी',
+ AUTHORITY_STATED:'अधिकारी द्वारा बताया गया प्रभाव',
+ GROUND_REPORTED:'दर्ज जमीनी प्रभाव',
+ DOCUMENTED_PROPOSAL:'दस्तावेज में दर्ज प्रस्ताव',
+ UNVERIFIED_PROPOSAL:'अप्रमाणित प्रस्ताव',
+ ROLE_MAP:'जिम्मेदार पद / भूमिका (दोष नहीं)',
+ FLAG_RAISED:'हितों के टकराव का संकेत'
+});
+// Never convert large exact monetary DB decimals to a JS floating-point number.
+function formatExactINR(raw){
+ const m=/^(0|[1-9][0-9]*)(?:\.([0-9]{1,2}))?$/.exec(String(raw));
+ if(!m)return 'राशि स्पष्ट नहीं है';
+ const grouped=m[1].replace(/\B(?=(\d{2})+(\d{3})(?!\d))/g,',');
+ return '₹'+grouped+(m[2]?'.'+m[2]:'');
+}
+function hindiDateTime(value){
+ if(!value)return 'तारीख दर्ज नहीं';
+ const time=new Date(value);
+ if(Number.isNaN(time.getTime()))return 'तारीख स्पष्ट नहीं';
+ return new Intl.DateTimeFormat('hi-IN',{dateStyle:'medium',timeStyle:'short',timeZone:'Asia/Kolkata'}).format(time);
+}
+function ledgerRow(root,label,val){
+ const row=document.createElement('div');row.className='b8-ledger-row';
+ const key=document.createElement('strong');key.textContent=label+': ';
+ const value=document.createElement('span');value.textContent=String(val??'उपलब्ध नहीं');
+ row.append(key,value);root.append(row);
+}
+function displayHindiPrivateLedger(node,items){
+ if(!Array.isArray(items))throw Error('B8_G5_PRIVATE_HISTORY_INVALID');
+ node.replaceChildren();
+ const heading=document.createElement('p');
+ heading.className='b8-ledger-heading';
+ heading.textContent='निजी तथ्य रिकॉर्ड — कुल '+items.length;
+ node.append(heading);
+ if(items.length===0){
+  const empty=document.createElement('p');empty.textContent='इस मामले में अभी कोई निजी तथ्य दर्ज नहीं है।';
+  node.append(empty);return;
+ }
+ for(const event of items){
+  const card=document.createElement('section');card.className='b8-ledger-card';
+  const name=document.createElement('h3');
+  name.textContent=(B8_KIND_HI[event.kind]||'निजी तथ्य')+' का रिकॉर्ड #'+String(event.id??'—');
+  card.append(name);
+  ledgerRow(card,'रिकॉर्ड का वर्ग',B8_FIELD_HI[event.field]||'अलग दर्ज श्रेणी');
+  if(event.kind==='COST'&&event.cost_inr!==null&&event.cost_inr!==undefined){
+    ledgerRow(card,'राशि (रुपये)',formatExactINR(event.cost_inr));
+    if(event.field==='ESTIMATED_PROPOSED'){
+      ledgerRow(card,'महत्वपूर्ण स्पष्टता','यह ऐतिहासिक अनुमान है, स्वीकृत बजट या वास्तविक खर्च नहीं।');
+    }else if(event.field==='ACTUAL'){
+      ledgerRow(card,'महत्वपूर्ण स्पष्टता','यह दर्ज किया गया खर्च का दावा है, स्वतंत्र सत्यापन नहीं।');
+    }
+  }
+  if(event.date)ledgerRow(card,'दर्ज समयसीमा',event.date);
+  ledgerRow(card,'स्रोत और विवरण',event.detail);
+  ledgerRow(card,'तथ्य की पुष्टि','स्वतंत्र सत्यापन बाकी; इसे प्रमाणित सरकारी तथ्य न मानें।');
+  ledgerRow(card,'रिकॉर्ड बनाया गया',hindiDateTime(event.recorded_at));
+  // The only source of authority is the server. No user-supplied HTML rendering.
+  node.append(card);
+ }
+}
+
 function lock(reason){
   locked=true;workflow=null;role=null;busy=false;uploadReadyCase=null;
   $('uploadBtn').disabled=true;
   $('uploadFile').value='';
   app.classList.add('hide');
   for(const section of ['owner','reporter','editor'])$(section).classList.add('hide');
-  $('founderPacket').textContent='Locked — Private Packet cleared.';
-  $('editorCard').textContent='Locked — Private Review cleared.';
-  $('reporterCard').textContent='Locked — Case details cleared.';
-  $('g5LedgerOutput').textContent='Locked — G5 private case history cleared.';
-  $('g7HistoryOutput').textContent='Locked — G7 reply/history claims cleared.';
-  $('g9DueOutput').textContent='Locked — G9 private overdue cases cleared.';
-  guard.textContent=reason||'Security check required. Please reload this page.';
+  $('founderPacket').textContent='Locked — निजी प्रमाण सामग्री स्क्रीन से हटा दी गई।';
+  $('editorCard').textContent='Locked — निजी समीक्षा सामग्री स्क्रीन से हटा दी गई।';
+  $('reporterCard').textContent='Locked — मामले की निजी जानकारी स्क्रीन से हटा दी गई।';
+  $('g5LedgerOutput').textContent='Locked — G5 का निजी इतिहास स्क्रीन से हटा दिया गया।';
+  $('g7HistoryOutput').textContent='Locked — G7 के निजी दावे और घटनाक्रम हटाए गए।';
+  $('g9DueOutput').textContent='Locked — G9 के निजी लंबित मामले स्क्रीन से हटाए गए।';
+  guard.textContent=reason||'सुरक्षा जाँच आवश्यक है। कृपया यह पेज फिर खोलें।';
   guard.classList.remove('hide');
 }
 async function requireFreshIdentity(){
@@ -60,12 +133,12 @@ async function execute(form,action){
   if(button)button.disabled=true;
   try{
     await requireFreshIdentity();
-    showStatus('Backend Confirmation का इंतजार… अभी कोई सवाल भेजा नहीं गया है।');
+    showStatus('सर्वर से पुष्टि का इंतजार है… अभी कोई सवाल नहीं भेजा गया है।');
     const response=await action();
-    showStatus(response||'Server ने कार्रवाई की पुष्टि की। सवाल अभी नहीं भेजा गया है।','good');
+    showStatus(response||'सर्वर ने कार्रवाई की पुष्टि की। कोई सवाल अधिकारी को नहीं भेजा गया है।','good');
   }catch(e){
     showStatus('कार्रवाई रोक दी गई: '+String(e?.message||'BACKEND_UNAVAILABLE')+
-      '\nकिसी Draft, Review, Upload या SEND को सफलता नहीं माना गया।','bad');
+      '\nमसौदा, समीक्षा, प्रमाण अपलोड या सवाल भेजे जाने को सफल नहीं माना गया।','bad');
   }finally{
     busy=false;if(button&&!locked)button.disabled=false;
     // Restore only if still scoped to an independently checked live backend gate.
@@ -81,16 +154,16 @@ const v=id=>$(id).value.trim();
 const PHONE_GROUPS={
  owner:[
  ['केस बनाएँ / टीम',['createCase','assignStaff','linkArticle','legalHold']],
- ['प्रमाण / Review',['packetForm','g3Packet','g3R2Authorization']],
+ ['प्रमाण / समीक्षा',['packetForm','g3Packet','g3R2Authorization']],
  ['सवाल / जवाब',['g3Truth','g3ReplyTruth','g8Delivery','g7History','g7HistoryRead']],
  ['सार्वजनिक जानकारी',['g4PublicRelease','g4Milestone']],
  ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5Outcome','g5Reopen','g5Ledger','g9Due']],
  ['सुरक्षा',['g6Release']]],
  reporter:[
  ['मेरा केस',['caseLookup']],
- ['सवाल Draft',['draftForm','requestReview']],
+ ['सवाल का मसौदा',['draftForm','requestReview']],
  ['प्रमाण',['reporterClaim','uploadForm','g3EvidenceLink']],
- ['Handoff / Reply',['g3Handoff','g3Observation','g3ReplyClaim']]],
+ ['भेजना / जवाब',['g3Handoff','g3Observation','g3ReplyClaim']]],
  editor:[['समीक्षा',['editorRead','editorDecision','g3Screen']]]
 };
 function enablePhoneWorkflow(forRole){
@@ -106,7 +179,7 @@ function enablePhoneWorkflow(forRole){
  label.textContent='📱 अभी कौन-सा काम करना है?';
  const pick=document.createElement('select');pick.id='b8PhoneTask';pick.required=true;
  const note=document.createElement('p');note.className='hint';
- note.textContent='एक बार में एक सुरक्षित Form। अभी कोई सवाल अधिकारी को नहीं भेजा जाता।';
+ note.textContent='एक समय में एक ही सुरक्षित काम। अभी कोई सवाल अधिकारी को नहीं भेजा जाता।';
  const active=document.createElement('div');active.className='b8-phone-active';
  for(const g of groups){
    const optgroup=document.createElement('optgroup');optgroup.label=g[0];
@@ -176,15 +249,15 @@ async function boot(){
       allowPrivateUpload:role==='reporter'});
     uploadReadyCase=null;
     locked=false;lastActivity=Date.now();
-    $('roleName').textContent='Verified Session Role: '+role.toUpperCase();
+    $('roleName').textContent='सत्यापित उपयोगकर्ता: '+({owner:'संस्थापक',reporter:'संवाददाता',editor:'संपादक'}[role]||'अधिकृत कर्मचारी');
     guard.classList.add('hide');app.classList.remove('hide');
     $(role).classList.remove('hide');
     enablePhoneWorkflow(role);
     updateUploadAvailability();
-    showStatus('Role verified for this page. केवल नए B8 RPCs की वास्तविक Server पुष्टि स्वीकार होगी; SEND अभी नहीं।');
+    showStatus('इस पेज पर आपकी पहचान सत्यापित है। प्रत्येक कार्रवाई के लिए सर्वर की पुष्टि जरूरी है। कोई सवाल नहीं भेजा गया।');
   }catch(e){
-    lock('B8 PRIVATE ACCESS STOP: '+String(e?.message||'BACKEND_UNAVAILABLE')+
-      '. पहले मौजूदा अधिकृत Staff Login और reviewed Backend deployment चाहिए।');
+    lock('B8 निजी पहुँच बंद: '+String(e?.message||'BACKEND_UNAVAILABLE')+
+      '. पहले अधिकृत कर्मचारी का लॉगिन और सुरक्षित सर्वर की पुष्टि जरूरी है।');
   }
 }
 for(const event of ['pointerdown','keydown','touchstart']){
@@ -192,11 +265,11 @@ for(const event of ['pointerdown','keydown','touchstart']){
 }
 window.setInterval(()=>{
   if(workflow&&!locked&&Date.now()-lastActivity>LOCK_MS)
-    lock('B8 Screen 15 मिनट के बाद Locked। निजी जानकारी छिपा दी गई है। Reload करें।');
+    lock('15 मिनट निष्क्रिय रहने से स्क्रीन लॉक हुई। निजी जानकारी छिपा दी गई है। पेज फिर खोलें।');
 },30000);
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&workflow&&Date.now()-lastActivity>LOCK_MS)
-    lock('B8 inactive session locked. Reload for genuine staff check.');
+    lock('लंबे समय तक निष्क्रिय रहने से स्क्रीन लॉक हुई। कृपया फिर लॉगिन जाँचें।');
 });
 $('refreshLogin').addEventListener('click',()=>window.location.reload());
 
@@ -204,7 +277,7 @@ form('createCase',async()=>{
   const id=await workflow.ownerCreateCase(v('caseTitle'),v('caseArea'),v('caseRisk'));
   for(const name of ['assignCase','linkCase','holdCase','g4Case','g4MilestoneCase',
     'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','g7Case','g7ReadCase'])$(name).value=id;
-  return 'PRIVATE Case Created: '+id+'\nयह Public News या सवाल का SEND नहीं है।';
+  return 'निजी मामला सफलतापूर्वक बना। पहचान (UUID): '+id+'\nकोई खबर प्रकाशित नहीं हुई और कोई सवाल अधिकारी को नहीं भेजा गया।';
 });
 form('assignStaff',async()=>{
   const expiry=new Date(v('grantUntil'));
@@ -217,17 +290,17 @@ form('assignStaff',async()=>{
 });
 form('linkArticle',async()=>{
   const ref=await workflow.ownerLinkArticle(v('linkCase'),v('articleUuid'));
-  return 'Existing Article Identity Link: '+ref+'\nमूल Article Published/Deleted नहीं हुआ।';
+  return 'मूल खबर से पहचान जोड़ी गई: '+ref+'\nमूल खबर न प्रकाशित की गई, न मिटाई गई।';
 });
 form('legalHold',async()=>{
   const hold=await workflow.ownerAssertHold(v('holdCase'),v('holdReason'));
-  return 'Append-only Hold Confirmation #'+hold+'; Original Source Protection requires production release gate.';
+  return 'महत्वपूर्ण रिकॉर्ड सुरक्षित रखने की पुष्टि #'+hold+'। आगे के रिकॉर्ड संरक्षण के लिए अलग सुरक्षा जाँच जरूरी है।';
 });
 form('packetForm',async()=>{
-  $('founderPacket').textContent='Loading gated private preview…';
+  $('founderPacket').textContent='अधिकृत निजी समीक्षा सामग्री लोड हो रही है…';
   const packet=await workflow.ownerPreliminaryPacket(v('packetId'));
   showJSON($('founderPacket'),packet);
-  return 'Owner AAL2 preliminary packet मिला। EVIDENCE_GAP, NOT_SENT और complete_proof_pack=false सत्यापित।';
+  return 'संस्थापक की दो-चरणीय पुष्टि से प्रारंभिक सामग्री मिली। प्रमाण अधूरे हैं और सवाल अधिकारी को नहीं भेजा गया है।';
 });
 form('caseLookup',async()=>{
   const c=await workflow.reporterCaseCard(v('reporterCase'));
@@ -239,25 +312,25 @@ form('caseLookup',async()=>{
   const release=await workflow.reporterPrivateUploadReadiness(c.id);
   if(release.allowed)uploadReadyCase=c.id;
   updateUploadAvailability();
-  return 'Case Permission Server द्वारा जाँची गई। Risk '+c.risk_lane+
-    '. Private Upload: '+(release.allowed?'OWNER-RELEASED + SERVER-SCOPED':'BLOCKED, DEFAULT OFF')+
+  return 'सर्वर ने मामले की अनुमति जाँची। जोखिम श्रेणी '+c.risk_lane+
+    '. निजी प्रमाण अपलोड: '+(release.allowed?'संस्थापक की अनुमति और सर्वर की शर्तों के तहत चालू':'अभी बंद')+
     '. कोई संदेश नहीं भेजा गया।';
 });
 form('draftForm',async()=>{
   const result=await workflow.reporterCreateDraft(v('questionCase'),v('questionText'),v('recipient'));
   $('reviewDraftId').value=result.draftId;
-  return 'Draft UUID: '+result.draftId+'\nस्थिति: '+result.status+
+  return 'सवाल का मसौदा बना। पहचान (UUID): '+result.draftId+'\nतकनीकी स्थिति: '+result.status+
     '. वास्तविक अधिकारी तक कोई सवाल नहीं भेजा गया।';
 });
 form('requestReview',async()=>{
   const result=await workflow.reporterRequestReview(v('reviewDraftId'));
-  return 'Editor Review Request UUID: '+result.requestId+
-    '\nStatus: '+result.status+'\nActual Delivery: '+result.deliveryStatus;
+  return 'संपादक की समीक्षा का अनुरोध बना। पहचान (UUID): '+result.requestId+
+    '\nसमीक्षा की स्थिति: '+result.status+'\nबाहरी भेजे जाने की स्थिति: '+result.deliveryStatus;
 });
 form('reporterClaim',async()=>{
   const r=await workflow.reporterSubmitClaim(
     v('claimCase'),v('claimType'),v('claimLabel'),v('claimHash'));
-  return 'Evidence Claim ID: '+r.claimId+'\n'+r.state+
+  return 'प्रमाण का अप्रमाणित दावा दर्ज हुआ। पहचान: '+r.claimId+'\n'+r.state+
     ' — कोई PDF/फोटो वास्तव में Upload या सत्यापित होने का दावा नहीं।';
 });
 $('uploadCase').addEventListener('input',()=>{
@@ -275,7 +348,7 @@ form('uploadForm',async()=>{
   const result=await workflow.reporterUploadCaseEvidence(c,file);
   $('uploadFile').value='';
   // Never display a private Storage URL, object key, identity or uploaded bytes.
-  return 'सुरक्षित Private Byte Receipt: '+result.receiptId+
+  return 'निजी फाइल रसीद की पहचान: '+result.receiptId+
     '\\n'+result.proof+' — केवल byte/hash readback सत्यापित, आधिकारिक दस्तावेज की सच्चाई नहीं।';
 });
 form('g6Release',async()=>{
@@ -283,61 +356,61 @@ form('g6Release',async()=>{
   const target=v('g6ReleaseAction')==='ON';
   const x=await workflow.ownerSetPrivateUploadRelease(target,v('g6ReleaseReason'));
   $('g6ReleaseAck').checked=false;
-  return 'Founder AAL2 Server Release Gate: '+(x.enabled?'ON':'OFF')+
-    '. Immutable audit saved; old News/Ads unaffected.';
+  return 'संस्थापक की अपलोड अनुमति: '+(x.enabled?'चालू':'बंद')+
+    '. स्थायी जाँच रिकॉर्ड सुरक्षित किया गया। पुरानी खबरों और विज्ञापनों पर कोई कार्रवाई नहीं।';
 });
 form('editorRead',async()=>{
   const data=await workflow.editorReviewCard(v('editorRequest'));
   $('decisionRequest').value=data.request_id;
   showJSON($('editorCard'),data);
-  return 'Private Review पढ़ा गया; UNSENT_REVIEW_ONLY / EVIDENCE_NOT_VERIFIED.';
+  return 'निजी समीक्षा पढ़ी गई। सवाल अभी भेजा नहीं गया और प्रमाण स्वतंत्र रूप से सत्यापित नहीं हैं।';
 });
 form('editorDecision',async()=>{
   const r=await workflow.editorRecordReview(
     v('decisionRequest'),v('decision'),v('decisionReason'));
-  return 'Immutable Editor Decision ID: '+r.reviewId+'\n'+r.status+
+  return 'संपादक के स्थायी निर्णय की पहचान: '+r.reviewId+'\n'+r.status+
     '. Official send अभी नहीं हुआ, Founder की वास्तविक E9 proof notification भी नहीं हुई।';
 });
 
 
 form('g3Packet',async()=>{
-  $('g3PacketData').textContent='Authenticating Founder evidence and attached files…';
+  $('g3PacketData').textContent='संस्थापक के निजी प्रमाण और संलग्न फाइलें जाँची जा रही हैं…';
   const packet=await workflow.ownerEvidencePacket(v('g3PacketReq'));
   showJSON($('g3PacketData'),packet);
-  return 'Verified private BYTE receipt metadata loaded. Official documentary authenticity is NOT verified; notification is IN_APP only.';
+  return 'निजी फाइल के तकनीकी रसीद विवरण प्राप्त हुए। सरकारी दस्तावेज की असलियत अभी सत्यापित नहीं है; सूचना केवल ऐप में है।';
 });
 form('g3R2Authorization',async()=>{
   const x=await workflow.ownerAuthorizeRestricted(v('g3R2Req'),v('g3R2Reason'));
-  return 'R2 Founder AAL2 authorization ID: '+x.approvalId+
-    '\nNo official message was sent: '+x.externalStatus;
+  return 'R2 में संस्थापक की दो-चरणीय अनुमति दर्ज हुई। पहचान: '+x.approvalId+
+    '\nकिसी अधिकारी को संदेश नहीं भेजा गया। तकनीकी स्थिति: '+x.externalStatus;
 });
 form('g3Truth',async()=>{
   const p=await workflow.ownerHandoffTruth(v('g3TruthQ'));
   showJSON($('g3TruthData'),p);
-  return 'Handoff verified from backend; provider acceptance and official receipt remain NOT VERIFIED.';
+  return 'सर्वर पर सवाल भेजने की प्रक्रिया का रिकॉर्ड मिला। बाहरी सेवा की स्वीकृति या सरकारी प्राप्ति रसीद अभी सत्यापित नहीं है।';
 });
 form('g3EvidenceLink',async()=>{
   const x=await workflow.reporterLinkReceipt(v('g3LinkReq'),v('g3LinkReceipt'));
-  return 'Private receipt linked by Server: '+x.linkId+
-   '\nThis verifies only private byte integrity, not authenticity of accusations.';
+  return 'सर्वर ने निजी रसीद जोड़ी। पहचान: '+x.linkId+
+   '\nइससे केवल फाइल की तकनीकी अखंडता जाँची गई है, किसी आरोप की सत्यता नहीं।';
 });
 form('g3Handoff',async()=>{
   const x=await workflow.reporterPrepareHandoff(v('g3HandoffQ'),v('g3HandoffChannel'));
   $('g3ObsIntent').value=x.handoffId;
-  return 'Manual handoff prepared: '+x.handoffId+
-    '\n'+x.state+' — this did NOT send a message to the official.';
+  return 'सवाल खुद भेजने की तैयारी दर्ज हुई। पहचान: '+x.handoffId+
+    '\n'+x.state+' — इससे अधिकारी को संदेश नहीं भेजा गया।';
 });
 form('g3Observation',async()=>{
   const type=v('g3ObsType'),receipt=v('g3ObsReceipt')||null;
   const x=await workflow.reporterRecordHandoff(v('g3ObsIntent'),type,receipt);
-  return 'Attempt observation stored: '+x.observationId+
-    '\nExternal Delivery: '+x.externalStatus+
-    '. This is NOT a delivery receipt verification.';
+  return 'भेजने के प्रयास का विवरण दर्ज हुआ। पहचान: '+x.observationId+
+    '\nबाहरी भेजने की स्थिति: '+x.externalStatus+
+    '. यह वास्तविक प्राप्ति रसीद का स्वतंत्र सत्यापन नहीं है।';
 });
 form('g3Screen',async()=>{
   const x=await workflow.editorScreenSerious(v('g3ScreenReq'),v('g3ScreenReason'));
-  return 'Immutable Editor R1 evidence screening: '+x.screeningId+
-    '\nQuestion NOT SENT: '+x.externalStatus;
+  return 'R1 के प्रमाण पर संपादक की स्थायी समीक्षा दर्ज हुई। पहचान: '+x.screeningId+
+    '\nसवाल अधिकारी को नहीं भेजा गया। स्थिति: '+x.externalStatus;
 });
 
 
@@ -348,13 +421,13 @@ form('g3ReplyClaim',async()=>{
     v('g3ReplyIntent'),v('g3ReplyReceipt'),v('g3ReplyOffice'),
     d.toISOString(),v('g3ReplySummary')
   );
-  return 'Official Reply Claim UUID: '+x.replyClaimId+
+  return 'अधिकारी के जवाब का अप्रमाणित दावा दर्ज हुआ। पहचान: '+x.replyClaimId+
     '\n'+x.accuracy+'; स्वतंत्र आधिकारिक जवाब अभी सत्यापित नहीं।';
 });
 form('g3ReplyTruth',async()=>{
   const x=await workflow.ownerReplyClaimSummary(v('g3ReplyTruthQ'));
   showJSON($('g3ReplyTruthOutput'),x);
-  return 'Private reply claim summary loaded. Official reply/provider delivery remain unverified.';
+  return 'जवाब के दावे का निजी सारांश मिला। सरकारी जवाब और बाहरी भेजने की पुष्टि अभी नहीं हुई।';
 });
 
 
@@ -368,25 +441,25 @@ form('g4PublicRelease',async()=>{
     safe?null:v('g4Status'),safe?false:$('g4Privacy').checked
   );
   $('g4MilestoneCase').value=caseId;
-  return 'G4 immutable public revision record: '+result.revisionEventId+
-   '\nAction: '+result.action+
-   '\nयह केवल Owner-AAL2 Server-confirmed public approval है; स्वतंत्र तथ्य सत्यापन और Live Release अलग हैं।';
+  return 'G4 में सार्वजनिक जानकारी बदलने का स्थायी रिकॉर्ड बना। नंबर: '+result.revisionEventId+
+   '\nकार्रवाई: '+({PUBLISH:'सार्वजनिक',REVISE:'सार्वजनिक विवरण बदला',HIDE:'सार्वजनिक दृश्य छिपाया'}[result.action]||result.action)+
+   '\nयह संस्थापक की सर्वर-स्वीकृत कार्रवाई है। इससे किसी दावे का स्वतंत्र तथ्य सत्यापन नहीं होता।';
 });
 form('g4Milestone',async()=>{
   const x=await workflow.ownerAppendPublicMilestone(
     v('g4MilestoneCase'),v('g4MilestoneCode'));
-  return 'G4 Server-checked public milestone ID: '+x.eventId+
-    '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
+  return 'G4 में सर्वर से जाँची गई सार्वजनिक संपादकीय घटना का नंबर: '+x.eventId+
+    '\nसार्वजनिक घटनाक्रम में निजी प्रमाण या नाम नहीं दिखाए जाएँगे।';
 });
 
 // G9: own due-case follow-up review only. No automatic official outreach.
 form('g9Due',async()=>{
   const out=$('g9DueOutput');
-  out.textContent='Founder-only overdue cases loading…';
+  out.textContent='संस्थापक के लिए लंबित मामले लोड हो रहे हैं…';
   const due=await workflow.ownerDueG9Followups();
   showJSON(out,due);
-  return 'Overdue cases requiring human review: '+due.length+
-    '. No claim about official motive or external delivery.';
+  return 'मानवीय समीक्षा की जरूरत वाले समयसीमा-पार मामले: '+due.length+
+    '. अधिकारी की नीयत या वास्तविक प्राप्ति का कोई दावा नहीं।';
 });
 
 // G8: manual proof intake is NOT an outbound official message.
@@ -396,9 +469,9 @@ form('g8Delivery',async()=>{
     v('g8Handoff'),v('g8Receipt'),v('g8Basis')
   );
   $('g8Ack').checked=false;
-  return 'Founder Reviewed External Evidence Event #'+x.attestationEventId+
-    '\\n'+x.proofClass+'; independent provider authenticity remains false.'+
-    ' App has not sent any message to the officer.';
+  return 'संस्थापक ने बाहरी प्रमाण की समीक्षा दर्ज की। घटना नंबर: '+x.attestationEventId+
+    '\\n'+x.proofClass+'; बाहरी सेवा की प्रामाणिकता स्वतंत्र रूप से सत्यापित नहीं हुई है।'+
+    ' ऐप से अधिकारी को कोई संदेश नहीं भेजा गया।';
 });
 
 // G7: preserve source-attributed claims & visible correction handoff, never fake E9.
@@ -407,16 +480,16 @@ form('g7History',async()=>{
     v('g7Case'),v('g7Kind'),v('g7Note'),v('g7Question'),
     v('g7Receipt'),v('g7Prior'),v('g7AsOf')
   );
-  return 'Private immutable G7 timeline event #'+x.eventId+
-    '\\n'+x.truth+'; official reply/provider SEND not independently verified.';
+  return 'G7 निजी स्थायी घटनाक्रम में रिकॉर्ड नंबर: '+x.eventId+
+    '\\n'+x.truth+'; सरकारी जवाब या सवाल पहुँचने की पुष्टि नहीं है।';
 });
 form('g7HistoryRead',async()=>{
   const out=$('g7HistoryOutput');
-  out.textContent='Founder AAL2 private history reading…';
+  out.textContent='संस्थापक का निजी घटनाक्रम पढ़ा जा रहा है…';
   const x=await workflow.ownerG7PrivateHistory(v('g7ReadCase'));
   showJSON(out,x);
-  return 'Private chronological record: '+x.length+
-    ' events. NOT a public published Article correction.';
+  return 'निजी घटनाक्रम में कुल '+x.length+
+    ' प्रविष्टियाँ मिलीं। यह प्रकाशित खबर में सुधार नहीं है।';
 });
 
 // G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
@@ -425,29 +498,29 @@ form('g5Fact',async()=>{
     v('g5FactCase'),v('g5Kind'),v('g5Field'),v('g5Detail'),
     v('g5Cost'),v('g5Date'),v('g5Receipt')
   );
-  return 'Private append-only G5 Event #'+x.eventId+
-   '\n'+x.authenticity+' — No official source authenticity or delivery confirmed.';
+  return 'निजी तथ्य स्थायी रूप से दर्ज हुआ। रिकॉर्ड नंबर #'+x.eventId+
+   '\n'+x.authenticity+' — सरकारी स्रोत की असलियत और सवाल पहुँचने की स्वतंत्र पुष्टि नहीं हुई है।';
 });
 form('g5Outcome',async()=>{
   const x=await workflow.ownerRecordG5Outcome(
     v('g5OutcomeCase'),v('g5OutcomeState'),v('g5OutcomeReason'),v('g5OutcomeReceipt')
   );
-  return 'Editorial Case status '+x.state+' / Event #'+x.eventId+
-   '\nNot a verified civic result and not a judicial finding.';
+  return 'मामले की संपादकीय स्थिति '+({closed:'कारण सहित बंद',monitoring:'निगरानी जारी'}[x.state]||x.state)+' / रिकॉर्ड नंबर #'+x.eventId+
+   '\nयह स्वतंत्र रूप से सत्यापित नागरिक परिणाम या अदालत का फैसला नहीं है।';
 });
 form('g5Reopen',async()=>{
   const x=await workflow.ownerReopenG5(
     v('g5ReopenCase'),v('g5ReopenReceipt'),v('g5ReopenReason')
   );
-  return 'Append-only Reopen Event #'+x.eventId+
-   '\nNew material requires further independent fact checking.';
+  return 'मामले को दोबारा खोलने की स्थायी प्रविष्टि नंबर #'+x.eventId+
+   '\nनए प्रमाण की आगे स्वतंत्र जाँच जरूरी है।';
 });
 form('g5Ledger',async()=>{
   const out=$('g5LedgerOutput');
-  out.textContent='Fresh Founder AAL2 ledger read…';
+  out.textContent='संस्थापक का निजी तथ्य इतिहास पढ़ा जा रहा है…';
   const x=await workflow.ownerG5PrivateLedger(v('g5LedgerCase'));
-  showJSON(out,x);
-  return 'G5 private timeline read ('+x.length+' events). Every entry NOT_INDEPENDENTLY_VERIFIED.';
+  displayHindiPrivateLedger(out,x);
+  return 'G5 के निजी तथ्य इतिहास में '+x.length+' प्रविष्टियाँ मिलीं। सभी का स्वतंत्र तथ्य सत्यापन बाकी है।';
 });
 
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
