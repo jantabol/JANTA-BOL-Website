@@ -59,6 +59,20 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button type="submit">वास्तविक Backend Packet देखें</button>
 <p class="hint">यह पूर्ण Verified Proof Pack नहीं है। अधूरे प्रमाण EVIDENCE_GAP दिखेंगे।</p>
 <div id="founderPacket" class="output" aria-live="polite">अभी कोई Packet नहीं देखा गया।</div></fieldset></form>
+
+<form id="g3Packet"><fieldset><legend>G3 Private Evidence Packet — IN-APP ONLY</legend>
+<label for="g3PacketReq">Review Request UUID</label><input id="g3PacketReq" required autocomplete="off">
+<button type="submit">Private Evidence Pack देखना</button>
+<div id="g3PacketData" class="output" aria-live="polite">फाइलों की Byte Integrity मिल सकती है; Official Truth अभी नहीं।</div></fieldset></form>
+<form id="g3R2Authorization"><fieldset><legend>R2 Restricted — पहले Founder की AAL2 अनुमति</legend>
+<label for="g3R2Req">R2 Review Request UUID</label><input id="g3R2Req" required autocomplete="off">
+<label for="g3R2Reason">Founder Approval Reason</label><textarea id="g3R2Reason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">Restricted Question Review को अनुमति</button>
+<p class="hint">यह News Publish या अधिकारी को SENT नहीं है।</p></fieldset></form>
+<form id="g3Truth"><fieldset><legend>प्रश्न के वास्तविक Handoff Status</legend>
+<label for="g3TruthQ">Question Draft UUID</label><input id="g3TruthQ" required autocomplete="off">
+<button type="submit">Truth Status जाँचें</button>
+<div id="g3TruthData" class="output" aria-live="polite">कोई Delivered दावा नहीं।</div></fieldset></form>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
 <h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
@@ -88,6 +102,30 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button id="uploadBtn" type="submit" disabled>Hosted E2 तैयार होने पर सक्रिय होगा</button>
 <p class="hint" id="uploadNotice">अभी सुरक्षित Backend Deployment की पुष्टि नहीं हुई। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
 </fieldset></form>
+
+<form id="g3EvidenceLink"><fieldset><legend>Evidence को गंभीर सवाल की समीक्षा में जोड़ें</legend>
+<label for="g3LinkReq">Review Request UUID</label><input id="g3LinkReq" required autocomplete="off">
+<label for="g3LinkReceipt">Private Byte-Integrity Receipt UUID</label><input id="g3LinkReceipt" required autocomplete="off">
+<button type="submit">उसी Case का Evidence Link करें</button>
+<p class="hint">Evidence Hash Verified होने का अर्थ आरोप सत्य होना नहीं है।</p></fieldset></form>
+<form id="g3Handoff"><fieldset><legend>R0/R1/R2 सवाल का MANUAL Handoff तैयार करें</legend>
+<label for="g3HandoffQ">Question UUID</label><input id="g3HandoffQ" required autocomplete="off">
+<label for="g3HandoffChannel">चैनल</label><select id="g3HandoffChannel">
+<option value="EMAIL">Email (मैन्युअल)</option><option value="WHATSAPP">WhatsApp (मैन्युअल)</option>
+<option value="OFFICIAL_PORTAL">Official Portal</option><option value="HAND_DELIVERY">हाथ से पहुँचाना</option>
+</select>
+<button type="submit">सुरक्षित Handoff Token तैयार करें (SEND नहीं)</button>
+<p class="hint">R0 Reporter स्वयं तैयार कर सकता है; R1 में Editor Screening, R2 में Founder Approval चाहिए।</p></fieldset></form>
+<form id="g3Observation"><fieldset><legend>Handoff प्रयास दर्ज करें, Delivered नहीं</legend>
+<label for="g3ObsIntent">Handoff UUID</label><input id="g3ObsIntent" required autocomplete="off">
+<label for="g3ObsType">वास्तविक घटना</label><select id="g3ObsType">
+<option value="COMPOSER_OPENED">Message Composer खोला</option>
+<option value="USER_REPORTED_ATTEMPT">मैंने भेजने की कोशिश की</option>
+<option value="UNVERIFIED_RECEIPT_ATTACHED">Private Receipt जोड़ी (अभी अप्रमाणित Delivery)</option>
+</select>
+<label for="g3ObsReceipt">Receipt UUID (केवल तीसरे विकल्प में)</label><input id="g3ObsReceipt" autocomplete="off">
+<button type="submit">वास्तविक प्रयास दर्ज करें</button>
+<p class="hint">सफलतापूर्वक अधिकारी तक पहुँचना स्वतंत्र प्रमाण के बिना Confirm नहीं होगा।</p></fieldset></form>
 </section>
 <section id="editor" class="hide card" aria-label="Editor case review">
 <h2>🛡 Editor — प्रमाण की Review</h2>
@@ -104,6 +142,12 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 </select>
 <label for="decisionReason">कारण (12 से 500 अक्षर)</label><textarea id="decisionReason" required minlength="12" maxlength="500"></textarea>
 <button type="submit">Editor Decision सुरक्षित करें</button></fieldset></form>
+
+<form id="g3Screen"><fieldset><legend>R1 गंभीर सवाल: Evidence के साथ Editor Screening</legend>
+<label for="g3ScreenReq">Review Request UUID</label><input id="g3ScreenReq" required autocomplete="off">
+<label for="g3ScreenReason">समीक्षा का स्पष्ट कारण</label><textarea id="g3ScreenReason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">R1 Evidence Screening Confirm</button>
+<p class="hint">केवल सही Case के वास्तविक Private File Receipt जुड़ने पर। R2 में Founder Approval जरूरी है।</p></fieldset></form>
 </section>
 </div>
 </main><footer>B8 G3/CP01: NO ARTICLE PUBLISH • NO OUTBOUND SEND • NO FAKE PASS • Source-only Review</footer>
