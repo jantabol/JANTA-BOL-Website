@@ -103,6 +103,9 @@ function lock(reason){
   locked=true;workflow=null;role=null;busy=false;uploadReadyCase=null;
   $('uploadBtn').disabled=true;
   $('uploadFile').value='';
+  ownerKnownCases=[];
+  if(ownerCasePick)ownerCasePick.replaceChildren();
+  clearOwnerCaseInputs();
   app.classList.add('hide');
   for(const section of ['owner','reporter','editor'])$(section).classList.add('hide');
   $('founderPacket').textContent='Locked — निजी प्रमाण सामग्री स्क्रीन से हटा दी गई।';
@@ -152,6 +155,105 @@ function form(id,fn){$(id).addEventListener('submit',e=>{
 });}
 const v=id=>$(id).value.trim();
 
+
+const B8_CASE_FIELDS=[
+ 'assignCase','linkCase','holdCase','g4Case','g4MilestoneCase',
+ 'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','g7Case','g7ReadCase'
+];
+const B8_PRIVATE_OUTPUT_IDS=[
+ 'founderPacket','g3PacketData','g3TruthData','g3ReplyTruthOutput',
+ 'g5LedgerOutput','g7HistoryOutput','g9DueOutput'
+];
+let ownerCasePick=null,ownerCaseRefresh=null,ownerKnownCases=[];
+const B8_CASE_STATE_HI=Object.freeze({
+ draft:'मसौदा',investigating:'जाँच जारी',monitoring:'निगरानी',
+ closed:'बंद'
+});
+function clearOwnerCaseInputs(){
+ for(const name of B8_CASE_FIELDS)$(name).value='';
+}
+function applyOwnerCaseSelection(id,resetUnsubmitted=true){
+ if(!id){clearOwnerCaseInputs();return;}
+ if(!validId(id)||!ownerKnownCases.some(c=>c.id===id))
+   throw Error('B8_CASE_SELECTION_NOT_SERVER_LISTED');
+ // Avoid old-case draft text accidentally being filed under a DIFFERENT case.
+ if(resetUnsubmitted){
+   for(const current of $('owner').querySelectorAll('form[id]')){
+     if(current.id!=='createCase'&&current.id!=='g6Release')current.reset();
+   }
+   updateG5Classification();
+   for(const name of B8_PRIVATE_OUTPUT_IDS)
+     $(name).textContent='इस चुने हुए मामले की निजी जानकारी अभी नहीं पढ़ी गई है।';
+ }
+ for(const name of B8_CASE_FIELDS)$(name).value=id;
+}
+function drawOwnerCaseChoices(selectedId=''){
+ if(!ownerCasePick)return;
+ ownerCasePick.replaceChildren();
+ const placeholder=document.createElement('option');
+ placeholder.value='';placeholder.textContent='मामला चुनें — UUID लिखने की जरूरत नहीं';
+ ownerCasePick.append(placeholder);
+ for(const c of ownerKnownCases){
+   const option=document.createElement('option');option.value=c.id;
+   option.textContent=c.title+' — '+c.area+' ('+c.risk_lane+
+     ', '+(B8_CASE_STATE_HI[c.state]||'दर्ज मामला')+')';
+   ownerCasePick.append(option);
+ }
+ if(selectedId&&ownerKnownCases.some(c=>c.id===selectedId))
+   ownerCasePick.value=selectedId;
+ else ownerCasePick.value='';
+}
+function makeOwnerCaseChooser(parent){
+ const label=document.createElement('label');
+ label.htmlFor='b8OwnerCasePick';label.textContent='🗂️ अपना मामला नाम से चुनें';
+ ownerCasePick=document.createElement('select');ownerCasePick.id='b8OwnerCasePick';
+ ownerCasePick.autocomplete='off';
+ ownerCaseRefresh=document.createElement('button');
+ ownerCaseRefresh.type='button';ownerCaseRefresh.className='secondary';
+ ownerCaseRefresh.id='b8OwnerCaseRefresh';
+ ownerCaseRefresh.textContent='मेरे मामले फिर से लाएँ';
+ const hint=document.createElement('p');hint.className='hint';
+ hint.textContent='सिर्फ संस्थापक के निजी मामले। पहले नाम चुनें, फिर नीचे काम चुनें।';
+ parent.prepend(label,ownerCasePick,ownerCaseRefresh,hint);
+ drawOwnerCaseChoices();
+ ownerCasePick.addEventListener('change',()=>{
+   if(busy||locked)return;
+   applyOwnerCaseSelection(ownerCasePick.value,true);
+ });
+ ownerCaseRefresh.addEventListener('click',async()=>{
+   if(busy||locked)return;
+   ownerCaseRefresh.disabled=true;
+   try{
+     await requireFreshIdentity();
+     await loadOwnerCases();
+     showStatus('सर्वर से निजी मामले दोबारा लाए गए। कोई रिकॉर्ड बदला नहीं गया।','good');
+   }catch(e){
+     showStatus('निजी मामले अभी नहीं मिले; सुरक्षा/सर्वर जाँच जरूरी है।','bad');
+   }finally{ownerCaseRefresh.disabled=false;}
+ });
+}
+async function loadOwnerCases(){
+ if(!workflow||role!=='owner'||locked)throw Error('B8_OWNER_CASE_CHOICES_LOCKED');
+ const list=await workflow.ownerCaseChoices();
+ if(locked||role!=='owner'||!workflow)throw Error('B8_OWNER_CASE_LIST_SESSION_CHANGED');
+ ownerKnownCases=list;
+ const current=ownerCasePick?.value||'';
+ drawOwnerCaseChoices(current);
+ // Never guess a case when none was deliberately selected.
+ if(current&&!ownerKnownCases.some(c=>c.id===current)){
+    applyOwnerCaseSelection('',true);
+ }
+ return list;
+}
+function onOwnerCreatedCase(id){
+ if(!validId(id))throw Error('B8_OWNER_CASE_SERVER_UUID_INVALID');
+ const item={id,title:v('caseTitle'),area:v('caseArea'),
+             risk_lane:v('caseRisk'),state:'draft'};
+ ownerKnownCases=[item,...ownerKnownCases.filter(c=>c.id!==id)].slice(0,50);
+ drawOwnerCaseChoices(id);
+ applyOwnerCaseSelection(id,false);
+}
+
 const PHONE_GROUPS={
  owner:[
  ['केस बनाएँ / टीम',['createCase','assignStaff','linkArticle','legalHold']],
@@ -192,6 +294,7 @@ function enablePhoneWorkflow(forRole){
    pick.append(optgroup);
  }
  menu.append(label,pick,note);
+ if(forRole==='owner')makeOwnerCaseChooser(menu);
  // Keep all ORIGINAL form IDs in the document, retaining handlers, values and backend guards.
  const oldCards=Array.from(section.querySelectorAll('div.card'));
  for(const form of forms)hidden.append(form);
@@ -255,6 +358,10 @@ async function boot(){
     $(role).classList.remove('hide');
     enablePhoneWorkflow(role);
     updateUploadAvailability();
+    if(role==='owner'){
+      try{await loadOwnerCases();}
+      catch(e){showStatus('मामलों की नाम-सूची अभी नहीं मिली। सुरक्षा जाँच के बाद दोबारा लाएँ।','warn');}
+    }
     showStatus('इस पेज पर आपकी पहचान सत्यापित है। प्रत्येक कार्रवाई के लिए सर्वर की पुष्टि जरूरी है। कोई सवाल नहीं भेजा गया।');
   }catch(e){
     lock('B8 निजी पहुँच बंद: '+String(e?.message||'BACKEND_UNAVAILABLE')+
@@ -276,8 +383,7 @@ $('refreshLogin').addEventListener('click',()=>window.location.reload());
 
 form('createCase',async()=>{
   const id=await workflow.ownerCreateCase(v('caseTitle'),v('caseArea'),v('caseRisk'));
-  for(const name of ['assignCase','linkCase','holdCase','g4Case','g4MilestoneCase',
-    'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','g7Case','g7ReadCase'])$(name).value=id;
+  onOwnerCreatedCase(id);
   return 'निजी मामला सफलतापूर्वक बना। पहचान (UUID): '+id+'\nकोई खबर प्रकाशित नहीं हुई और कोई सवाल अधिकारी को नहीं भेजा गया।';
 });
 form('assignStaff',async()=>{
