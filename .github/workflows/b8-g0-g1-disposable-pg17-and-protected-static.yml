@@ -47,6 +47,9 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g5-original-accountability-regression.sql'
       - 'ci/phase4/b8-g5-android-owner-contract.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/B8_G5_OFFICIAL_EVIDENCE_MANIFEST_20261017.json'
+      - 'ci/phase4/b8-official-evidence-release-gate.cjs'
+      - 'ci/phase4/b8-official-evidence-release-gate.test.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -175,6 +178,11 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.mjs
           node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
           node --test ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+      - name: B8 G5 original E-class and Founder real-evidence release gate (audit only)
+        run: |
+          node --check ci/phase4/b8-official-evidence-release-gate.cjs
+          node ci/phase4/b8-official-evidence-release-gate.cjs --audit
+          node --test ci/phase4/b8-official-evidence-release-gate.test.cjs
       - name: B7 canonical 9/60 never fake PASS or paid activation
         run: |
           node ci/phase4/b7-closure-gate.cjs --audit
