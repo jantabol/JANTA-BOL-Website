@@ -1,0 +1,328 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JANTA-BOL Admin Login</title><link rel="stylesheet" href="admin-common.css"></head><body>
+<header class="topbar"><h1>JANTA-BOL</h1><p>Secure Admin Login</p></header><main class="page"><div class="form-card"><h2>🔐 Super Admin Login</h2><div class="notice backend">Self-signup disabled workflow. Sirf authorized Founder/Super Admin account login karega.</div><div id="msg" class="notice" style="display:none"></div><div id="emailField" class="field"><label>Email</label><input id="email" type="email" autocomplete="username"></div><div id="passwordField" class="field"><label>Password</label><input id="password" type="password" autocomplete="current-password"></div><div id="mfaBox" style="display:none">
+  <div class="field">
+    <label>Authenticator Code</label>
+    <input id="mfaCode" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="6-digit code">
+  </div>
+  <div class="actions">
+    <button id="verifyMfa" type="button" class="btn primary">Verify 2FA</button>
+  </div>
+</div><div id="loginActions" class="actions"><button id="login" class="btn primary">Login</button><button id="setupMfa" type="button" class="btn">Setup 2FA</button></div><div id="localLockActions" class="actions" style="display:none"><button id="deviceUnlock" type="button" class="btn primary" style="display:none">Unlock with Device Credential</button><button id="deviceSetup" type="button" class="btn primary" style="display:none">Set up Device Unlock</button><button id="deviceRetry" type="button" class="btn secondary" style="display:none">Retry</button></div></div></main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script>
+const q=new URLSearchParams(location.search), msg=document.getElementById('msg');if(q.get('locked')){msg.style.display='block';msg.textContent='15 minutes inactivity ke baad Admin Panel local device lock hua. Existing session ko logout nahi kiya gaya.'}else if(q.get('reason')==='aal2'){msg.style.display='block';msg.textContent='Protected Admin ke liye AAL2/2FA session required hai.'}else if(q.get('reason')==='session'){msg.style.display='block';msg.textContent='Admin session available nahi hai. Secure login required.'}
+let pendingFactorId=null;
+
+const ACTIVITY_KEY='jbAdminLastActivity';
+const DEVICE_CRED_KEY='jbLocalDeviceCredentialId';
+const emailField=document.getElementById('emailField');
+const passwordField=document.getElementById('passwordField');
+const loginActions=document.getElementById('loginActions');
+const localLockActions=document.getElementById('localLockActions');
+const deviceUnlock=document.getElementById('deviceUnlock');
+const deviceSetup=document.getElementById('deviceSetup');
+const deviceRetry=document.getElementById('deviceRetry');
+
+const bytesToB64url=(bytes)=>{let s='';bytes.forEach(b=>s+=String.fromCharCode(b));return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'')};
+const b64urlToBytes=(value)=>{const n=String(value||'').replace(/-/g,'+').replace(/_/g,'/');const p=n.padEnd(Math.ceil(n.length/4)*4,'=');const raw=atob(p);return Uint8Array.from(raw,c=>c.charCodeAt(0))};
+const randomBytes=(n=32)=>{const out=new Uint8Array(n);crypto.getRandomValues(out);return out};
+const deviceCredentialSupported=()=>!!(window.isSecureContext&&window.PublicKeyCredential&&navigator.credentials&&typeof navigator.credentials.create==='function'&&typeof navigator.credentials.get==='function');
+
+function showNormalLogin(message){
+  emailField.style.display='block';
+  passwordField.style.display='block';
+  loginActions.style.display='flex';
+  localLockActions.style.display='none';
+  if(message){msg.style.display='block';msg.textContent=message;}
+}
+function showLocalLock(){
+  emailField.style.display='none';
+  passwordField.style.display='none';
+  mfaBox.style.display='none';
+  loginActions.style.display='none';
+  localLockActions.style.display='flex';
+}
+async function existingAAL2State(){
+  const s=await JBBackend.session();
+  if(!s)return {kind:'no-session'};
+  const r=await JBBackend.role();
+  if(r!=='owner')return {kind:'role'};
+  const aal=await JBBackend.mfaAAL();
+  if(aal?.currentLevel!=='aal2')return {kind:'aal'};
+  return {kind:'ok'};
+}
+function finishLocalUnlock(){
+  localStorage.setItem(ACTIVITY_KEY,String(Date.now()));
+  location.replace(q.get('next')||'admin.html');
+}
+async function setupDeviceUnlock(){
+  deviceSetup.disabled=true;
+  try{
+    const state=await existingAAL2State();
+    if(state.kind!=='ok'){showNormalLogin('Existing trusted AAL2 session available nahi hai. Fresh secure login required.');return;}
+    if(!deviceCredentialSupported())throw new Error('DEVICE_CREDENTIAL_API_UNSUPPORTED');
+    msg.style.display='block';msg.textContent='Trusted device credential setup prompt open ho raha hai…';
+    const cred=await navigator.credentials.create({publicKey:{challenge:randomBytes(32),rp:{name:'JANTA BOL'},user:{id:randomBytes(32),name:'janta-bol-founder-local-lock',displayName:'JANTA BOL Founder'},pubKeyCredParams:[{type:'public-key',alg:-7},{type:'public-key',alg:-257}],authenticatorSelection:{authenticatorAttachment:'platform',residentKey:'discouraged',userVerification:'required'},timeout:60000,attestation:'none'}});
+    if(!cred?.rawId)throw new Error('DEVICE_CREDENTIAL_SETUP_FAILED');
+    localStorage.setItem(DEVICE_CRED_KEY,bytesToB64url(new Uint8Array(cred.rawId)));
+    msg.className='notice status-good';msg.textContent='Device credential verified. Admin unlock ho raha hai…';
+    finishLocalUnlock();
+  }catch(e){
+    console.error(e);
+    msg.style.display='block';msg.className='notice';
+    if(String(e?.name||e?.message||'').includes('UNSUPPORTED'))msg.textContent='Is SPCK Preview/WebView me device credential API available nahi hai. #099/#100 PASS nahi maana jayega.';
+    else if(String(e?.name||'').includes('NotAllowedError'))msg.textContent='Device credential prompt cancel/fail hua. Admin locked hi rahega.';
+    else msg.textContent='Device unlock setup failed. Admin locked hi rahega.';
+    deviceRetry.style.display='inline-block';
+  }finally{deviceSetup.disabled=false;}
+}
+async function unlockWithDevice(){
+  deviceUnlock.disabled=true;
+  try{
+    const state=await existingAAL2State();
+    if(state.kind!=='ok'){showNormalLogin('Existing trusted AAL2 session available nahi hai. Fresh secure login required.');return;}
+    if(!deviceCredentialSupported())throw new Error('DEVICE_CREDENTIAL_API_UNSUPPORTED');
+    const stored=localStorage.getItem(DEVICE_CRED_KEY);
+    if(!stored){deviceUnlock.style.display='none';deviceSetup.style.display='inline-block';msg.style.display='block';msg.textContent='Is trusted device par local unlock ek baar setup karein.';return;}
+    msg.style.display='block';msg.textContent='Fingerprint / secure device credential verify karein…';
+    const assertion=await navigator.credentials.get({publicKey:{challenge:randomBytes(32),allowCredentials:[{type:'public-key',id:b64urlToBytes(stored),transports:['internal']}],userVerification:'required',timeout:60000}});
+    if(!assertion?.response?.authenticatorData)throw new Error('DEVICE_CREDENTIAL_VERIFY_FAILED');
+    const authData=new Uint8Array(assertion.response.authenticatorData);
+    const flags=authData.length>32?authData[32]:0;
+    if((flags&0x04)===0)throw new Error('USER_VERIFICATION_NOT_CONFIRMED');
+    msg.className='notice status-good';msg.textContent='Device credential verified. Admin unlock ho raha hai…';
+    finishLocalUnlock();
+  }catch(e){
+    console.error(e);msg.style.display='block';msg.className='notice';
+    if(String(e?.name||e?.message||'').includes('UNSUPPORTED'))msg.textContent='Is SPCK Preview/WebView me device credential API available nahi hai. #099/#100 PASS nahi maana jayega.';
+    else if(String(e?.name||'').includes('NotAllowedError'))msg.textContent='Biometric/device credential cancel/fail hua. Admin locked hi rahega. Android secure PIN/pattern fallback platform prompt me try karein.';
+    else msg.textContent='Device credential verify nahi hua. Admin locked hi rahega.';
+    deviceRetry.style.display='inline-block';
+  }finally{deviceUnlock.disabled=false;}
+}
+async function bootLocalLock(){
+  if(!q.get('locked'))return;
+  showLocalLock();
+  try{
+    const state=await existingAAL2State();
+    if(state.kind!=='ok'){showNormalLogin('Existing trusted AAL2 session available nahi hai. Fresh secure login required.');return;}
+    if(!deviceCredentialSupported()){msg.style.display='block';msg.textContent='Current preview environment device biometric/credential API support report nahi kar raha. Admin content locked hai.';deviceRetry.style.display='inline-block';return;}
+    if(localStorage.getItem(DEVICE_CRED_KEY)){deviceUnlock.style.display='inline-block';msg.style.display='block';msg.textContent='Existing Founder AAL2 session alive hai. Local device credential se unlock karein.';}
+    else{deviceSetup.style.display='inline-block';msg.style.display='block';msg.textContent='Existing Founder AAL2 session alive hai. Is trusted device par local unlock ek baar setup karein.';}
+  }catch(e){console.error(e);msg.style.display='block';msg.textContent='Security state temporarily verify nahi ho saki. Admin content locked hai.';deviceRetry.style.display='inline-block';}
+}
+deviceUnlock.onclick=unlockWithDevice;
+deviceSetup.onclick=setupDeviceUnlock;
+deviceRetry.onclick=()=>location.reload();
+bootLocalLock();
+
+async function finishAdminLogin(){
+  const r=await JBBackend.role();
+
+  if(r!=='owner'){
+    await JBBackend.signOut();
+    throw new Error('Owner/Super Admin role required');
+  }
+
+  localStorage.setItem(
+    'jbAdminLastActivity',
+    String(Date.now())
+  );
+
+  location.replace(q.get('next')||'admin.html');
+}
+
+login.onclick=async()=>{
+  login.disabled=true;
+  msg.style.display='none';
+
+  try{
+    await JBBackend.signIn(
+      email.value.trim(),
+      password.value
+    );
+  const r=await JBBackend.role();
+
+if(r!=='owner'){
+  await JBBackend.signOut();
+  throw new Error('Owner/Super Admin role required');
+}
+    const factors=await JBBackend.mfaListFactors();
+
+const verifiedFactors=(factors?.totp||[]).filter(
+  factor=>factor.status==='verified'
+);
+
+let verified=verifiedFactors[0]||null;
+
+if(verifiedFactors.length>1){
+  const choices=verifiedFactors.map(
+    (factor,index)=>
+      `${index+1}. ${factor.friendly_name||('Verified MFA Factor '+(index+1))}`
+  ).join('\n');
+
+  const selected=prompt(
+    'Kaunsa Authenticator factor ka current 6-digit code use kar rahe hain?\n\n'+
+    choices+
+    '\n\nFactor number enter karein.'
+  );
+
+  if(selected===null){
+    await JBBackend.signOut();
+    throw new Error('2FA factor selection cancelled');
+  }
+
+  const selectedIndex=Number(selected)-1;
+
+  if(
+    !Number.isInteger(selectedIndex) ||
+    selectedIndex<0 ||
+    selectedIndex>=verifiedFactors.length
+  ){
+    await JBBackend.signOut();
+    throw new Error('Valid MFA factor number select karein');
+  }
+
+  verified=verifiedFactors[selectedIndex];
+}
+
+    if(!verified){
+  pendingFactorId=factors?.totp?.[0]?.id || null;
+
+  if(!pendingFactorId){
+    await JBBackend.signOut();
+    throw new Error('2FA setup required. Setup 2FA button use karein.');
+  }
+
+  mfaBox.style.display='block';
+  email.disabled=true;
+  password.disabled=true;
+  login.style.display='none';
+
+  msg.style.display='block';
+  msg.textContent='2FA setup pending. Authenticator ka 6-digit code enter karein.';
+  return;
+}
+
+    pendingFactorId=verified.id;
+
+    mfaBox.style.display='block';
+    email.disabled=true;
+    password.disabled=true;
+    login.style.display='none';
+
+    msg.style.display='block';
+    msg.textContent='Password verified. Authenticator ka 6-digit code enter karein.';
+
+  }catch(e){
+    msg.style.display='block';
+    msg.textContent=e.message||'Login failed';
+  }finally{
+    login.disabled=false;
+  }
+};
+
+verifyMfa.onclick=async()=>{
+  verifyMfa.disabled=true;
+  msg.style.display='none';
+
+  try{
+    const code=mfaCode.value.trim();
+
+    if(!/^\d{6}$/.test(code)){
+      throw new Error('Valid 6-digit Authenticator code enter karein');
+    }
+
+    if(!pendingFactorId){
+      throw new Error('MFA factor missing');
+    }
+
+    await JBBackend.mfaChallengeAndVerify(
+      pendingFactorId,
+      code
+    );
+
+    const aal=await JBBackend.mfaAAL();
+
+    if(aal?.currentLevel!=='aal2'){
+      throw new Error('2FA verification failed');
+    }
+
+    await finishAdminLogin();
+
+  }catch(e){
+    msg.style.display='block';
+    msg.textContent=e.message||'2FA verification failed';
+  }finally{
+    verifyMfa.disabled=false;
+  }
+};
+ setupMfa.onclick=async()=>{
+  setupMfa.disabled=true;
+  msg.style.display='none';
+
+  try{
+    await JBBackend.signIn(
+      email.value.trim(),
+      password.value
+    );
+
+    const r=await JBBackend.role();
+    if(r!=='owner'){
+      await JBBackend.signOut();
+      throw new Error('Owner/Super Admin role required');
+    }
+
+    const factors=await JBBackend.mfaListFactors();
+    const existing=factors?.totp?.find(
+      factor=>factor.status==='verified'
+    );
+
+    if(existing){
+      throw new Error('2FA is already setup for Founder account');
+    }
+
+    const enrolled=await JBBackend.mfaEnroll();
+    const qrCode=enrolled.totp?.qr_code;
+
+if(qrCode){
+  msg.style.display='block';
+  msg.textContent='';
+
+  const intro=document.createElement('div');
+  intro.textContent='2FA QR तैयार है। इसे Authenticator app से scan करें.';
+
+  const img=document.createElement('img');
+  img.src=String(qrCode);
+  img.alt='2FA setup QR';
+  img.style.width='220px';
+  img.style.maxWidth='100%';
+  img.style.display='block';
+  img.style.margin='12px 0';
+
+  const small=document.createElement('small');
+  small.textContent='QR/secret को किसी के साथ share न करें.';
+
+  msg.append(intro,img,small);
+}
+    pendingFactorId=enrolled.id;
+    mfaBox.style.display='block';
+email.disabled=true;
+password.disabled=true;
+login.style.display='none';
+setupMfa.style.display='none';
+
+msg.style.display='block';
+const verifyNote=document.createElement('div');
+verifyNote.style.marginTop='12px';
+verifyNote.textContent='QR scan करने के बाद नीचे Authenticator का 6-digit code डालकर Verify 2FA दबाएँ।';
+msg.appendChild(verifyNote);
+
+    
+  }catch(e){
+    msg.style.display='block';
+    msg.textContent=e.message||'2FA setup failed';
+  }finally{
+    setupMfa.disabled=false;
+  }
+};
+</script></body></html>

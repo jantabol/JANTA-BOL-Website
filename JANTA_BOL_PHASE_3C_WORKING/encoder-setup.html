@@ -1,0 +1,53 @@
+<!doctype html><html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Live Camera Setup — JANTA BOL</title><style>
+:root{color-scheme:dark}body{font-family:Arial,sans-serif;background:#090909;color:#eee;margin:0}.top{background:#111;border-bottom:2px solid #b30000;padding:14px 16px}.wrap{max-width:620px;margin:auto;padding:18px}.card{background:#171717;border:1px solid #333;border-radius:16px;padding:18px;margin-top:20px}.btn{width:100%;border:0;border-radius:10px;padding:14px;background:#b30000;color:white;font-weight:700;font-size:16px;margin-top:12px}.btn.alt{background:#333}.muted{color:#aaa;line-height:1.45}.good{color:#8be28b}.bad{color:#ff9c9c}.status{background:#101010;border-radius:10px;padding:12px;margin-top:12px;line-height:1.45}
+</style></head><body><header class="top"><b>JANTA BOL — Live Camera Setup</b></header><main class="wrap"><section class="card"><h2 id="title">Streaming app setup taiyar ho raha hai…</h2><p class="muted" id="help">Secure one-time camera setup liya ja raha hai.</p><button class="btn" id="go" disabled>Setup copy karke app kholo</button><button class="btn alt" id="back" type="button">Reporter page par wapas</button><div class="status muted" id="status">Please wait…</div></section></main><script>
+(function(){
+'use strict';
+const KEY='jbPhase3cEncoderSetupV1';
+const title=document.getElementById('title'),help=document.getElementById('help'),go=document.getElementById('go'),status=document.getElementById('status'),back=document.getElementById('back');
+let bridge=null;
+function fail(msg){status.className='status bad';status.textContent=msg;go.disabled=true}
+back.onclick=()=>location.replace('reporter-live.html');
+async function boot(){
+  let saved=null;
+  try{saved=JSON.parse(sessionStorage.getItem(KEY)||'null')}catch(_){saved=null}
+  sessionStorage.removeItem(KEY);
+  if(!saved?.handoff_url){fail('Fresh camera setup nahi mila. Reporter page par wapas jaakar LIVE SHURU KAREIN dabayein.');return}
+  title.textContent=(saved.connector_name||'Streaming app')+' setup';
+  try{
+    const r=await fetch(saved.handoff_url,{method:'GET',cache:'no-store',credentials:'omit',referrerPolicy:'no-referrer'});
+    const ct=(r.headers.get('content-type')||'').toLowerCase();
+    if(!r.ok){const t=await r.text().catch(()=>String(r.status));throw new Error(t||('HTTP '+r.status))}
+    if(!ct.includes('application/json'))throw new Error('CONNECTOR_BRIDGE_RESPONSE_INVALID');
+    const d=await r.json();
+    if(!d?.ok||d.launch_mode!=='CLIPBOARD_THEN_OPEN'||!d.clipboard_text||!d.launch_url)throw new Error('CONNECTOR_BRIDGE_NOT_READY');
+    bridge=d;
+    title.textContent=d.title||title.textContent;
+    help.textContent=d.help_text||'Setup copy hone ke baad streaming app me Import option use karein.';
+    go.textContent=d.button_text||'Setup copy karke app kholo';
+    go.disabled=false;
+    status.className='status good';
+    status.textContent='Secure setup ready. Neeche button ek baar dabayein.';
+  }catch(e){
+    const m=String(e?.message||e||'');
+    if(/use ho chuka|ALREADY_USED|EXPIRED/i.test(m))fail('Camera setup expire/use ho gaya. Reporter page par wapas jaakar LIVE SHURU KAREIN dobara dabayein.');
+    else fail('Streaming app setup nahi ban paya. Reporter page par wapas jaakar dobara koshish karein.');
+  }
+}
+go.onclick=async()=>{
+  if(!bridge)return;
+  go.disabled=true;
+  try{
+    if(!navigator.clipboard?.writeText)throw new Error('CLIPBOARD_UNAVAILABLE');
+    await navigator.clipboard.writeText(String(bridge.clipboard_text));
+    status.className='status good';
+    status.textContent='Setup copy ho gaya. Streaming app khul raha hai…';
+    setTimeout(()=>{location.href=String(bridge.launch_url)},180);
+  }catch(_){
+    go.disabled=false;
+    fail('Clipboard permission nahi mili. Browser clipboard permission allow karke button dobara dabayein.');
+  }
+};
+boot();
+})();
+</script></body></html>

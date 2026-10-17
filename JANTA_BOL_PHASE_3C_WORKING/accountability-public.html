@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,follow">
+<title>Accountability — JANTA BOL</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{background:#101014;color:#fff;font-family:system-ui,Arial,sans-serif;line-height:1.55;margin:0}
+header{background:#151519;border-bottom:3px solid #aa1015;padding:16px}
+header a{color:white;text-decoration:none;font-weight:700;font-size:22px}
+main{max-width:850px;margin:auto;padding:18px 14px 48px}
+.card{border:1px solid #45434a;background:#1b1c21;padding:17px;margin:12px 0;border-radius:14px;overflow-wrap:anywhere}
+h1{font-size:26px;margin:6px 0 16px}h2{font-size:20px;margin:6px 0}
+a{color:#ffa1a6}.notice{padding:14px;background:#352b12;color:#ffe6ae;border-left:4px solid #ffcb6f;border-radius:8px}
+.timeline{list-style:none;margin:10px 0;padding:0}
+.timeline li{padding:12px 14px;margin:8px 0;border-left:3px solid #e37e80;background:#141417}
+.time{color:#c1c1c8;font-size:14px}small{color:#c6c6cc}
+input,button{font:inherit;min-height:44px;background:#16171b;color:#fff;border:1px solid #777;border-radius:8px;padding:10px}
+button{background:#ad1118;border:0;cursor:pointer}
+.row{display:flex;gap:10px;flex-wrap:wrap}input{flex:1;min-width:230px}
+.unavailable{color:#f6cbaf}
+</style></head><body>
+<header><a href="index.html">JANTA <span style="color:#e11d26">BOL</span></a></header>
+<main><h1>जनता के सवाल — सार्वजनिक जवाबदेही</h1>
+<p class="notice">केवल Founder की स्वीकृत और सुरक्षित सार्वजनिक जानकारी दिखाई जाती है। सवाल तैयार होने का मतलब अधिकारी तक पहुँचना नहीं है। निजी स्रोत, प्रमाण और संपर्क विवरण सार्वजनिक नहीं किए जाते।</p>
+<form id="caseForm" class="card"><label for="caseId">पहले से प्रकाशित Accountability Case UUID (वैकल्पिक)</label>
+<div class="row"><input id="caseId" autocomplete="off" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" aria-label="Accountability case UUID">
+<button type="submit">Case देखें</button><button id="latest" type="button">नवीनतम Cases</button></div></form>
+<div id="status" class="notice" role="status" aria-live="polite">केवल स्वीकृत Public Cases लोड हो रहे हैं…</div>
+<section id="cases" aria-label="Public accountability cases"></section>
+</main>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabase-config.js"></script>
+<script defer src="backend-client.js"></script>
+<script type="module" src="b8-public-case-ui.mjs"></script>
+</body></html>

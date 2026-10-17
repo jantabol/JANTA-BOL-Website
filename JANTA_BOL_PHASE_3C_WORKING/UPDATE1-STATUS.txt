@@ -1,0 +1,51 @@
+JANTA BOL — UPDATE 1 (0→30%) EXECUTION STATUS
+Status: BUILD IN PROGRESS — AUTH ACCOUNT BINDING PENDING
+
+REAL SUPABASE FOUNDATION IMPLEMENTED:
+- JANTA BOL Supabase project: ACTIVE_HEALTHY / Mumbai
+- PostgreSQL article database
+- user_roles with Owner/Admin/Editor/Reporter model
+- RLS enabled
+- Owner-only lifecycle status enforcement
+- Immutable Article ID enforcement
+- Draft/Published/Review/Unpublished/Deleted lifecycle foundation
+- Private article_sources table
+- verification_history
+- article_versions
+- audit_logs
+- public-media + private-editorial storage buckets
+- Public article column restriction: internal source URL/name/note/evidence not exposed
+- Security Advisor: 0 security lints at current checkpoint
+
+V3 INTEGRATION WIP IMPLEMENTED:
+- Existing 16-file V3 copied as safe baseline into working build
+- Added supabase-config.js (publishable key only; no service/admin secret)
+- Added backend-client.js adapter
+- Added admin-auth.js guard + 15-minute inactivity lock
+- Added admin-login.html (login only; no self-signup)
+- Add/Edit News connected to backend adapter
+- Background Auto-Save + local offline shadow
+- OFFLINE / NOT SYNCED state
+- Version conflict detection (optimistic concurrency)
+- Final Review → Confirm Publish workflow
+- Published Successfully only after backend success
+- Drafts/Published/Trash pages converted to backend adapter
+- Soft Delete/Restore/Permanent Delete backend flows prepared
+- Public article page fetches published Supabase article
+- Homepage feed adapter fetches Supabase published articles
+- Cover image upload helper prepared for public-media bucket
+- Internal Source data written separately from public article
+
+NOT YET PASS / NOT LOCKED:
+- Founder Auth account does not exist yet in auth.users
+- Owner role cannot be bound until Auth account exists
+- Real login test pending
+- Real Create/Draft/Auto-Save/Publish/Unpublish/Republish test pending
+- Multi-device conflict real test pending
+- 15-minute lock real re-auth test pending
+- MFA/2FA activation and test pending
+- Android/SPCK real-device test pending
+- Final regression + Update-1 Stable ZIP pending
+
+RULE:
+This WIP must NOT be called Update-1 PASS or LOCKED until the pending real tests pass.
