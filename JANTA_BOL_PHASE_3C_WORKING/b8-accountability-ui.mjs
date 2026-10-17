@@ -35,6 +35,7 @@ function lock(reason){
   $('editorCard').textContent='Locked — Private Review cleared.';
   $('reporterCard').textContent='Locked — Case details cleared.';
   $('g5LedgerOutput').textContent='Locked — G5 private case history cleared.';
+  $('g7HistoryOutput').textContent='Locked — G7 reply/history claims cleared.';
   guard.textContent=reason||'Security check required. Please reload this page.';
   guard.classList.remove('hide');
 }
@@ -291,6 +292,24 @@ form('g4Milestone',async()=>{
     v('g4MilestoneCase'),v('g4MilestoneCode'));
   return 'G4 Server-checked public milestone ID: '+x.eventId+
     '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
+});
+
+// G7: preserve source-attributed claims & visible correction handoff, never fake E9.
+form('g7History',async()=>{
+  const x=await workflow.ownerRecordG7History(
+    v('g7Case'),v('g7Kind'),v('g7Note'),v('g7Question'),
+    v('g7Receipt'),v('g7Prior'),v('g7AsOf')
+  );
+  return 'Private immutable G7 timeline event #'+x.eventId+
+    '\\n'+x.truth+'; official reply/provider SEND not independently verified.';
+});
+form('g7HistoryRead',async()=>{
+  const out=$('g7HistoryOutput');
+  out.textContent='Founder AAL2 private history reading…';
+  const x=await workflow.ownerG7PrivateHistory(v('g7ReadCase'));
+  showJSON(out,x);
+  return 'Private chronological record: '+x.length+
+    ' events. NOT a public published Article correction.';
 });
 
 // G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
