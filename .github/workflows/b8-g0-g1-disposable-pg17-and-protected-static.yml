@@ -208,10 +208,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          python3 ci/phase4/build_b0_b8_master_source_zip.py \\
-            --out "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
-          python3 ci/phase4/build_b0_b8_master_source_zip.py \\
-            --verify "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --out "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --verify "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
           test "$(stat -c %s dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip)" -gt 200000
           echo "Full tracked Git commit pinned: $GITHUB_SHA"
           ls -lh dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip dist/MASTER_ZIP_SHA256.txt
