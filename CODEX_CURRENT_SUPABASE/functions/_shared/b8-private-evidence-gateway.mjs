@@ -52,10 +52,10 @@ export async function processPrivateEvidence({
     intent.byte_count!==bytes.byteLength||
     intent.object_key!==`b8/cases/${caseId}/${intentId}.bin`) fail('INTENT_BOUNDARY');
  const wantedHash=await digest(bytes);
- let uploaded=false;
+ let uploadAttempted=false;
  try{
+  uploadAttempted=true;
   await upload({bucket:'private-editorial',key:intent.object_key,bytes,mime,upsert:false});
-  uploaded=true;
   const stored=await readback({bucket:'private-editorial',key:intent.object_key});
   if(!(stored instanceof Uint8Array)||!equal(bytes,stored)||
      await digest(stored)!==wantedHash) fail('PRIVATE_READBACK_FAILED');
@@ -69,7 +69,9 @@ export async function processPrivateEvidence({
    proof:'PRIVATE_READBACK_SHA256_ONLY',documentaryAuthenticityVerified:false
   });
  }catch(e){
-  if(uploaded){
+  // A provider write may commit bytes and still report a timeout/error; always
+  // attempt safe cleanup once storage upload was attempted, then log orphan.
+  if(uploadAttempted){
    const reason=String(e?.message??'').includes('READBACK')
      ?'PRIVATE_READBACK_FAILED':'FINALIZE_REJECTED';
    try{await remove({bucket:'private-editorial',key:intent.object_key});}
