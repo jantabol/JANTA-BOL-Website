@@ -300,7 +300,7 @@ begin
  v:=public.jb_b8_g5_owner_private_ledger(current_setting('b8.g5_case')::uuid);
  if jsonb_array_length(v)<>17
  or not exists(select 1 from jsonb_array_elements(v) e
-   where e->>'kind'='COST' and e->>'field_code'='ESTIMATED_PROPOSED'
+   where e->>'kind'='COST' and e->>'field'='ESTIMATED_PROPOSED'
       and e->>'authenticity'='NOT_INDEPENDENTLY_VERIFIED')
  or exists(select 1 from jsonb_array_elements(v) e where e->>'authenticity'<>'NOT_INDEPENDENTLY_VERIFIED')
  then raise exception 'B8_G5_PRIVATE_LEDGER_TRUTH';end if;
