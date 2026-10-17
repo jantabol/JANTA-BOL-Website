@@ -23,10 +23,14 @@ declare v_case uuid=current_setting('b8.t093_case')::uuid;
 begin
  select public.jb_b8_g5_owner_private_ledger(v_case) into v;
  if jsonb_array_length(v)<>2 or
- not exists(select 1 from public.b8_g5_fact_events where id=v_event and
-    case_id=v_case and kind='IMPACT' and field_code='DOCUMENTED_PROJECTED'
-    and authenticity='NOT_INDEPENDENTLY_VERIFIED' and cost_inr is null and target_date is null)
- then raise exception 'B8_T093_PROJECTED_IMPACT_NOT_IMMUTABLY_STORED';end if;
+ (select count(*) from pg_catalog.jsonb_array_elements(v) as row_value
+  where row_value->>'id'=v_event::text
+    and row_value->>'kind'='IMPACT'
+    and row_value->>'field'='DOCUMENTED_PROJECTED'
+    and row_value->>'authenticity'='NOT_INDEPENDENTLY_VERIFIED'
+    and row_value->>'cost_inr' is null
+    and row_value->>'date' is null)<>1
+ then raise exception 'B8_T093_PROJECTED_IMPACT_NOT_PRIVATELY_STORED';end if;
  denied:=false;
  begin perform public.jb_b8_g5_owner_record_fact(
    v_case,'IMPACT','DOCUMENTED_PROPOSAL','Wrong alternative class cannot pose as projected impact',null,null,null);
