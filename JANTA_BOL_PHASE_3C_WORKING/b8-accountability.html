@@ -79,6 +79,45 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button type="submit">Reply Claim की स्थिति देखें</button>
 <div id="g3ReplyTruthOutput" class="output" aria-live="polite">यह वास्तविक अधिकारी के जवाब की पुष्टि नहीं है।</div>
 </fieldset></form>
+
+<form id="g4PublicRelease"><fieldset><legend>G4 — Founder Public Projection Approval (सिर्फ सुरक्षित Enum)</legend>
+<label for="g4Case">Private Case UUID</label><input id="g4Case" required autocomplete="off">
+<label for="g4Action">Founder action</label><select id="g4Action">
+<option value="PUBLISH">PUBLISH — पहली बार सार्वजनिक करें</option>
+<option value="REVISE">REVISE — स्वीकृत Summary बदलें</option>
+<option value="HIDE">HIDE — तुरंत सार्वजनिक दृश्य हटाएँ</option>
+</select>
+<label for="g4Topic">Public विषय (व्यक्तियों/आरोपों के नाम नहीं)</label><select id="g4Topic">
+<option value="PUBLIC_WORKS">सार्वजनिक कार्य</option><option value="PUBLIC_SERVICE">जनसेवा</option>
+<option value="HEALTHCARE">स्वास्थ्य</option><option value="EDUCATION">शिक्षा</option>
+<option value="OTHER">अन्य जनहित</option></select>
+<label for="g4Area">Public क्षेत्र</label><select id="g4Area">
+<option value="PICHHORE">पिछोर</option><option value="SHIVPURI">शिवपुरी</option>
+<option value="GUNA">गुना</option><option value="ASHOKNAGAR">अशोकनगर</option>
+<option value="MADHYA_PRADESH">मध्य प्रदेश</option></select>
+<label for="g4Status">सत्यापित Public स्थिति</label><select id="g4Status">
+<option value="UNDER_REVIEW">समीक्षा जारी</option><option value="UPDATED">अपडेट हुआ</option>
+</select>
+<label><input id="g4Privacy" type="checkbox" style="width:auto;min-height:auto">
+ मैंने निजी स्रोत/व्यक्ति/आरोप के Public Disclosure जोखिम की समीक्षा की है। R2 Restricted मामले अभी सार्वजनिक नहीं होंगे।</label>
+<button type="submit">Founder AAL2 — Public Revision रिकॉर्ड करें</button>
+<p class="hint">Server HIDE पर Topic/Area/Status को खाली करेगा। Publication केवल Owner/AAL2 और Server Enum से।</p>
+</fieldset></form>
+<form id="g4Milestone"><fieldset><legend>G4 — Server-checked Public Timeline Milestone</legend>
+<label for="g4MilestoneCase">Public Case UUID</label><input id="g4MilestoneCase" required autocomplete="off">
+<label for="g4MilestoneCode">घटनाक्रम</label><select id="g4MilestoneCode">
+<option value="CASE_REVIEW_STARTED">समीक्षा शुरू</option>
+<option value="PUBLIC_RECORDS_UNDER_REVIEW">दस्तावेज समीक्षा में</option>
+<option value="QUESTION_DRAFT_PREPARED">सवाल का Draft तैयार हुआ (भेजा नहीं)</option>
+<option value="EDITORIAL_REVIEW_UPDATED">Editor Review दर्ज हुआ</option>
+<option value="RESPONSE_STATUS_NOT_VERIFIED">अधिकारी का जवाब स्वतंत्र रूप से Verified नहीं</option>
+<option value="CASE_STATUS_UPDATED">स्वीकृत Status बदला</option>
+<option value="FOLLOWUP_ARTICLE_LINKED">दूसरी प्रकाशित Follow-up खबर जोड़ी</option>
+<option value="CASE_CLOSED">Case बंद किया गया</option>
+</select>
+<button type="submit">Public Timeline में Verified Milestone दर्ज करें</button>
+<p class="hint">Fake event रोकने के लिए Backend original Draft/Review/Article Case Record जाँचता है।</p>
+</fieldset></form>
 </section>
 <section id="reporter" class="hide card" aria-label="Reporter case question">
 <h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
