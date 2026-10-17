@@ -54,6 +54,6 @@ test('G8 Founder form is role scoped with positive check and no automatic dispat
  assert(h.includes('id="g8Ack" type="checkbox" required'));
  assert(ui.includes('workflow.ownerAttestManualDelivery'));
  assert(ui.includes('if(!$(\'g8Ack\').checked)'));
- assert(ui.includes('App has not sent any message to the officer.'));
+ assert(ui.includes('ऐप से अधिकारी को कोई संदेश नहीं भेजा गया।'));
  assert(!ui.includes('.innerHTML='));
 });
