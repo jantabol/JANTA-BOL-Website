@@ -26,6 +26,7 @@ function lock(reason){
   $('founderPacket').textContent='Locked — Private Packet cleared.';
   $('editorCard').textContent='Locked — Private Review cleared.';
   $('reporterCard').textContent='Locked — Case details cleared.';
+  $('g5LedgerOutput').textContent='Locked — G5 private case history cleared.';
   guard.textContent=reason||'Security check required. Please reload this page.';
   guard.classList.remove('hide');
 }
@@ -250,6 +251,37 @@ form('g4Milestone',async()=>{
     v('g4MilestoneCase'),v('g4MilestoneCode'));
   return 'G4 Server-checked public milestone ID: '+x.eventId+
     '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
+});
+
+// G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
+form('g5Fact',async()=>{
+  const x=await workflow.ownerRecordG5Fact(
+    v('g5FactCase'),v('g5Kind'),v('g5Field'),v('g5Detail'),
+    v('g5Cost'),v('g5Date'),v('g5Receipt')
+  );
+  return 'Private append-only G5 Event #'+x.eventId+
+   '\n'+x.authenticity+' — No official source authenticity or delivery confirmed.';
+});
+form('g5Outcome',async()=>{
+  const x=await workflow.ownerRecordG5Outcome(
+    v('g5OutcomeCase'),v('g5OutcomeState'),v('g5OutcomeReason'),v('g5OutcomeReceipt')
+  );
+  return 'Editorial Case status '+x.state+' / Event #'+x.eventId+
+   '\nNot a verified civic result and not a judicial finding.';
+});
+form('g5Reopen',async()=>{
+  const x=await workflow.ownerReopenG5(
+    v('g5ReopenCase'),v('g5ReopenReceipt'),v('g5ReopenReason')
+  );
+  return 'Append-only Reopen Event #'+x.eventId+
+   '\nNew material requires further independent fact checking.';
+});
+form('g5Ledger',async()=>{
+  const out=$('g5LedgerOutput');
+  out.textContent='Fresh Founder AAL2 ledger read…';
+  const x=await workflow.ownerG5PrivateLedger(v('g5LedgerCase'));
+  showJSON(out,x);
+  return 'G5 private timeline read ('+x.length+' events). Every entry NOT_INDEPENDENTLY_VERIFIED.';
 });
 
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
