@@ -14,9 +14,9 @@ begin
  where c.conrelid='public.b8_g5_fact_events'::pg_catalog.regclass
    and c.conname='b8_g5_fact_events_check' and c.contype='c' and c.convalidated;
  if v_definition is null
-    or pg_catalog.position('AUTHORITY_STATED' in v_definition)=0
-    or pg_catalog.position('GROUND_REPORTED' in v_definition)=0
-    or pg_catalog.position('DOCUMENTED_PROJECTED' in v_definition)>0
+    or pg_catalog.strpos(v_definition,'AUTHORITY_STATED')=0
+    or pg_catalog.strpos(v_definition,'GROUND_REPORTED')=0
+    or pg_catalog.strpos(v_definition,'DOCUMENTED_PROJECTED')>0
  then raise exception 'B8_T093_EXISTING_CONSTRAINT_DRIFT_STOP';end if;
  if not exists (
    select 1 from pg_catalog.pg_trigger
