@@ -294,6 +294,18 @@ form('g4Milestone',async()=>{
     '\nCase Timeline event text private evidence या नाम उजागर नहीं करेगा।';
 });
 
+// G8: manual proof intake is NOT an outbound official message.
+form('g8Delivery',async()=>{
+  if(!$('g8Ack').checked)throw Error('B8_G8_FOUNDER_REAL_PROVIDER_EVIDENCE_ACK_REQUIRED');
+  const x=await workflow.ownerAttestManualDelivery(
+    v('g8Handoff'),v('g8Receipt'),v('g8Basis')
+  );
+  $('g8Ack').checked=false;
+  return 'Founder Reviewed External Evidence Event #'+x.attestationEventId+
+    '\\n'+x.proofClass+'; independent provider authenticity remains false.'+
+    ' App has not sent any message to the officer.';
+});
+
 // G7: preserve source-attributed claims & visible correction handoff, never fake E9.
 form('g7History',async()=>{
   const x=await workflow.ownerRecordG7History(
