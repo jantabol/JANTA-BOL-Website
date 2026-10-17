@@ -64,6 +64,7 @@ on:
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
+      - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
       - 'ci/phase4/b8-live-parity-static.test.mjs'
       - 'ci/phase4/b8-predeploy-live-catalog-READ_ONLY.sql'
       - 'ci/phase4/b8-g4-public-article-status-fixture.sql'
@@ -273,6 +274,7 @@ jobs:
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
           node --test ci/phase4/b8-spck-mime-regression.test.mjs
           node --test ci/phase4/b8-database-readiness-android.test.mjs
+          node --test ci/phase4/b8-mobile-focused-workflow.test.mjs
           node --test ci/phase4/b8-live-parity-static.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
