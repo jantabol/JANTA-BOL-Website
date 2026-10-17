@@ -31,6 +31,8 @@ on:
       - 'ci/phase4/b8-g3-cp02-notification-fixture.sql'
       - 'ci/phase4/b8-g3-cp02-evidence-founder-notifications-regression.sql'
       - 'ci/phase4/b8-g3-cp03-handoff-truth-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp04_reply_claim_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g3-cp04-reply-claim-regression.sql'
       - 'ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs'
   workflow_dispatch:
 permissions:
@@ -105,6 +107,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp03_manual_handoff_truth_REVIEW_ONLY.sql
       - name: PG17 G3 CP03 real R0/R1/R2 question handoff and no false delivery
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp03-handoff-truth-regression.sql
+      - name: Apply G3 CP04 immutable officer-response CLAIM (never fake E9)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp04_reply_claim_REVIEW_ONLY.sql
+      - name: REAL PG17 G3 CP04 private evidence reply ownership and Founder truth
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp04-reply-claim-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
