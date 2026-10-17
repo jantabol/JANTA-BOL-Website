@@ -14,7 +14,7 @@ const make=(opt={})=>{
  const calls=[];
  const storage=new Map();
  const f={
-  authenticate:async token=>{calls.push('auth');return opt.user??USER;},
+  authenticate:async token=>{calls.push('auth');return opt.user===undefined?USER:opt.user;},
   prepare:async arg=>{calls.push('prepare');return opt.intentId??INTENT;},
   getIntent:async id=>{calls.push('lookup');return {
    intent_id:INTENT,case_id:opt.boundCase??CASE,reporter_user_id:opt.boundUser??USER,
