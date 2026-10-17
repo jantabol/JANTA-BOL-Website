@@ -332,6 +332,16 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('FALSE_OFFICIAL_REPLY_STATUS');
       return Object.freeze(p);
     },
+    async ownerDueG9Followups(){
+      requireRole(role,'owner');
+      const items=await rpc('jb_b8_g9_owner_due_followups',{});
+      if(!Array.isArray(items)||items.some(x=>
+        !validId(x?.case_id)||!Number.isSafeInteger(Number(x.days_overdue))||
+        Number(x.days_overdue)<1||!/^\d{4}-\d{2}-\d{2}$/.test(x.deadline)||
+        x.readiness!=='DUE_FOR_HUMAN_REVIEW_NOT_OFFICIAL_GUILT'))
+        deny('G9_UNTRUSTED_DUE_DASHBOARD');
+      return items;
+    },
     // G8 actual external delivery is manual: Founder must visually inspect a
     // SAME-CASE real portal/provider artifact; byte-integrity != official authenticity.
     async ownerAttestManualDelivery(handoffId,receiptId,basis){
