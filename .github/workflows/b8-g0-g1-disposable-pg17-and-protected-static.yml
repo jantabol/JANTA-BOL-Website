@@ -21,6 +21,7 @@ on:
       - 'CODEX_CURRENT_SUPABASE/functions/_shared/b8-private-evidence-gateway.mjs'
       - 'CODEX_CURRENT_SUPABASE/functions/jb-b8-private-evidence/index.ts'
       - 'ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs'
+      - 'ci/phase4/b8-g2-cp02-race-isolated-pg17.sh'
   workflow_dispatch:
 permissions:
   contents: read
@@ -82,6 +83,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp03_private_upload_REVIEW_ONLY.sql
       - name: REAL PostgreSQL17 private upload RPC/quota/session/replay/actor and ROLLBACK
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-private-upload-scope-regression.sql
+      - name: REAL two-session PG17 concurrent Article-link vs old hard-delete transaction race
+        run: bash ci/phase4/b8-g2-cp02-race-isolated-pg17.sh
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
