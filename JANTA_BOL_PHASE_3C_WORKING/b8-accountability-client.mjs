@@ -332,6 +332,20 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('FALSE_OFFICIAL_REPLY_STATUS');
       return Object.freeze(p);
     },
+    // G8 actual external delivery is manual: Founder must visually inspect a
+    // SAME-CASE real portal/provider artifact; byte-integrity != official authenticity.
+    async ownerAttestManualDelivery(handoffId,receiptId,basis){
+      requireRole(role,'owner');
+      const n=await rpc('jb_b8_g8_owner_attest_manual_delivery',{
+        p_handoff_id:id(handoffId),p_receipt_id:id(receiptId),
+        p_verification_basis:bounded(basis,12,500,'G8_FOUNDER_VERIFICATION_BASIS_REQUIRED')
+      });
+      if(!Number.isSafeInteger(Number(n))||Number(n)<1)
+        deny('G8_DELIVERY_ATTESTATION_NOT_CONFIRMED');
+      return Object.freeze({attestationEventId:String(n),
+        proofClass:'FOUNDER_REVIEWED_EXTERNAL_RECEIPT_OFFLINE',
+        independentProviderAuthenticityVerified:false,externalMessageSentByApp:false});
+    },
     // G7 original RUN-12 private chronology: late/partial/no reply remain claims
     // until genuine E9 evidence is independently reviewed on physical device.
     async ownerRecordG7History(caseId,kind,note,question='',receipt='',prior='',asOf=''){
