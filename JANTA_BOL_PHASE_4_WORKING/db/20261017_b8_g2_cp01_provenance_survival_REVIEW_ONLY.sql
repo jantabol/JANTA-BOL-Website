@@ -79,7 +79,8 @@ begin
  -- This SELECT is authoritative and performed server-side. Existing News tables UNCHANGED.
  select a.title,a.version,a.status::text
  into v_title,v_version,v_status from public.articles a
- where a.id=p_article_id and a.deleted_at is null;
+ where a.id=p_article_id and a.deleted_at is null
+ for key share; -- serializes link creation with concurrent hard DELETE of this Article
  if not found or v_title is null or v_version is null or v_status is null then
   raise exception 'B8_EXISTING_NONDELETED_ARTICLE_REQUIRED';end if;
  insert into public.b8_case_article_links (
