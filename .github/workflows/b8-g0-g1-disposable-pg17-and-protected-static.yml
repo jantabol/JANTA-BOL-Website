@@ -15,6 +15,12 @@ on:
       - 'ci/phase4/b8-g2-cp01-provenance-regression.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp02_article_hold_GUARD_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g2-cp02-legal-hold-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp03_private_upload_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g2-cp03-upload-session-fixture.sql'
+      - 'ci/phase4/b8-g2-cp03-private-upload-scope-regression.sql'
+      - 'CODEX_CURRENT_SUPABASE/functions/_shared/b8-private-evidence-gateway.mjs'
+      - 'CODEX_CURRENT_SUPABASE/functions/jb-b8-private-evidence/index.ts'
+      - 'ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -70,6 +76,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp02_article_hold_GUARD_REVIEW_ONLY.sql
       - name: Real PG17 linked hard-delete rejection, original sources survive, ROLLBACK
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp02-legal-hold-regression.sql
+      - name: Init synthetic actor JWT+session tables for scoped private upload CI
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-upload-session-fixture.sql
+      - name: Apply G2 CP03 bounded private upload intent and server-only receipts
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp03_private_upload_REVIEW_ONLY.sql
+      - name: REAL PostgreSQL17 private upload RPC/quota/session/replay/actor and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-private-upload-scope-regression.sql
   b8-g0-news-unchanged:
     name: G0 protected Phase3 News/Auth + B7 original closure unchanged
     runs-on: ubuntu-latest
@@ -83,6 +95,8 @@ jobs:
           node ci/phase3-regression/static-security-architecture-regression.cjs
           node ci/phase3-regression/static-p3-security-regression.cjs
           node ci/phase3-regression/coverage-audit.cjs
+      - name: B8 Private Evidence Gateway real byte/MIME/SHA256 mock-storage regression
+        run: node --test ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs
       - name: B7 canonical 9/60 never fake PASS or paid activation
         run: |
           node ci/phase4/b7-closure-gate.cjs --audit
