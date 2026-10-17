@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="hi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Accountability — JANTA BOL B8 (Review)</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{font-family:system-ui,Arial,sans-serif;margin:0;background:#0c0d0f;color:#f6f6f6;line-height:1.5}
+header{padding:15px 18px;background:#17171a;border-bottom:3px solid #a70000;position:sticky;top:0;z-index:2}
+main{max-width:810px;padding:16px;margin:0 auto}
+h1{font-size:21px;margin:0}h2{font-size:19px;margin:5px 0 10px}
+p{margin:8px 0}.card{background:#1a1b1e;border:1px solid #404047;border-radius:14px;padding:17px;margin:14px 0}
+fieldset{border:1px solid #555;border-radius:10px;margin:14px 0;padding:12px}
+legend{font-weight:700;padding:0 6px}label{display:block;font-weight:600;margin-top:10px}
+input,select,textarea{width:100%;padding:12px;background:#101014;color:#fff;border:1px solid #555;border-radius:9px;margin:6px 0 10px;font:inherit;min-height:44px}
+textarea{min-height:95px;resize:vertical}button{background:#aa0c12;border:0;border-radius:9px;color:#fff;font:inherit;font-weight:700;padding:12px 14px;min-height:44px;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}button.secondary{background:#393945}
+.status{white-space:pre-wrap;background:#0d0f13;border-radius:9px;border-left:4px solid #777;padding:11px;margin:11px 0;font-size:14px;overflow-wrap:anywhere}
+.warn{border-left-color:#ffc45c;color:#ffda9d}.bad{border-left-color:#ff7575;color:#ffc9c9}.good{border-left-color:#7be1a4;color:#c4ffdc}
+.hide{display:none!important}.muted{color:#bdbec6;font-size:14px}
+a{color:#ffb6bc}.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.hint{font-size:13px;color:#c5c5cd}.output{overflow-wrap:anywhere;white-space:pre-wrap;max-height:280px;overflow-y:auto;background:#101014;border:1px solid #47474f;padding:12px;border-radius:8px}
+footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
+</style></head>
+<body><header><h1>JANTA BOL — B8 Accountability</h1>
+<div class="muted">G3 / CP01 • Android-first • Protected development preview, NOT LIVE</div></header>
+<main>
+<div class="card warn" role="note">
+<strong>⚠️ सवाल अभी अधिकारी को नहीं भेजे जा रहे हैं।</strong>
+<p>यह Review-only कार्यक्षेत्र है। केवल Backend का असली जवाब मिलने पर Draft/Review रिकॉर्ड होगा। EVIDENCE_GAP का मतलब प्रमाण अभी सत्यापित नहीं हैं। कोई नकली SENT या पूर्ण प्रमाण नहीं दिखेगा।</p>
+</div>
+<div id="guard" class="card" role="status" aria-live="polite">Staff Login और Backend की स्थिति जाँची जा रही है…</div>
+<div id="app" class="hide">
+<div class="card"><div class="row"><strong id="roleName">—</strong><button id="refreshLogin" class="secondary" type="button">Security Recheck</button></div>
+<p class="hint">15 मिनट निष्क्रिय रहने पर B8 Screen दोबारा सत्यापन तक लॉक होगी। सभी अधिकार Server पर जाँचे जाएँगे।</p>
+<div id="status" class="status" role="status" aria-live="polite">Ready. कोई सवाल नहीं भेजा गया है।</div>
+</div>
+<section id="owner" class="hide card" aria-label="Founder private case actions">
+<h2>🔐 Founder — Case और Evidence नियंत्रण</h2>
+<form id="createCase"><fieldset><legend>नया Private Case</legend>
+<label for="caseTitle">मामले का शीर्षक</label><input id="caseTitle" required minlength="12" maxlength="200" autocomplete="off">
+<label for="caseArea">क्षेत्र</label><input id="caseArea" required minlength="2" maxlength="120" autocomplete="off">
+<label for="caseRisk">जोखिम</label><select id="caseRisk"><option value="R0">R0 — सामान्य</option><option value="R1">R1 — गंभीर, Editor Review</option><option value="R2">R2 — Founder restricted</option></select>
+<button type="submit">Private Case बनाएँ</button></fieldset></form>
+<form id="assignStaff"><fieldset><legend>Staff को किसी Case की अनुमति</legend>
+<label for="assignCase">Case UUID</label><input id="assignCase" required autocomplete="off">
+<label for="staffRole">Role</label><select id="staffRole"><option value="reporter">Reporter</option><option value="editor">Editor</option></select>
+<label for="staffId">Staff User UUID (सत्यापित)</label><input id="staffId" required autocomplete="off">
+<label for="grantUntil">अनुमति समाप्ति (Local Time)</label><input id="grantUntil" type="datetime-local" required>
+<button type="submit">Case-specific Permission दें</button></fieldset></form>
+<form id="linkArticle"><fieldset><legend>पुराने Article की पहचान जोड़ें</legend>
+<label for="linkCase">Case UUID</label><input id="linkCase" required autocomplete="off">
+<label for="articleUuid">Original Article UUID</label><input id="articleUuid" required autocomplete="off">
+<button type="submit">Original Article Link</button></fieldset></form>
+<form id="legalHold"><fieldset><legend>महत्वपूर्ण रिकॉर्ड की Legal Hold</legend>
+<label for="holdCase">Case UUID</label><input id="holdCase" required autocomplete="off">
+<label for="holdReason">वजह</label><textarea id="holdReason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">Hold Reaffirm</button></fieldset></form>
+<form id="packetForm"><fieldset><legend>Founder का प्रारंभिक Review Packet</legend>
+<label for="packetId">Review Request UUID</label><input id="packetId" required autocomplete="off">
+<button type="submit">वास्तविक Backend Packet देखें</button>
+<p class="hint">यह पूर्ण Verified Proof Pack नहीं है। अधूरे प्रमाण EVIDENCE_GAP दिखेंगे।</p>
+<div id="founderPacket" class="output" aria-live="polite">अभी कोई Packet नहीं देखा गया।</div></fieldset></form>
+</section>
+<section id="reporter" class="hide card" aria-label="Reporter case question">
+<h2>🎤 Reporter — अधिकारी से प्रश्न तैयार करें</h2>
+<form id="caseLookup"><fieldset><legend>मुझे सौंपा गया Case</legend>
+<label for="reporterCase">Case UUID</label><input id="reporterCase" required autocomplete="off">
+<button type="submit" class="secondary">Case Permission और Risk सत्यापित करें</button>
+<div id="reporterCard" class="output">केवल Assigned Case की जानकारी दिखाई जाएगी।</div></fieldset></form>
+<form id="draftForm"><fieldset><legend>सवाल (अभी नहीं भेजा जाएगा)</legend>
+<label for="questionCase">Case UUID</label><input id="questionCase" required autocomplete="off">
+<label for="questionText">तथ्यात्मक, निष्पक्ष सवाल</label><textarea id="questionText" required minlength="20" maxlength="2000"></textarea>
+<label for="recipient">अधिकारी का पद/कार्यालय (Private)</label><input id="recipient" required minlength="3" maxlength="160" autocomplete="off">
+<button type="submit">Draft Server पर सुरक्षित करें</button>
+<p class="hint">R0 का Draft भी SENT नहीं है। R1/R2 में Editor समीक्षा की अलग व्यवस्था है।</p></fieldset></form>
+<form id="requestReview"><fieldset><legend>गंभीर सवाल Editor को Review के लिए</legend>
+<label for="reviewDraftId">Draft Question UUID</label><input id="reviewDraftId" required autocomplete="off">
+<button type="submit">Editor Review Request दर्ज करें</button>
+<p class="hint">R0 Draft के लिए यह प्रक्रिया लागू नहीं होगी; R2 में Founder escalation अनिवार्य है।</p></fieldset></form>
+<form id="reporterClaim"><fieldset><legend>प्रमाण की जानकारी — अभी केवल Unverified Claim</legend>
+<label for="claimCase">Case UUID</label><input id="claimCase" required autocomplete="off">
+<label for="claimType">दस्तावेज का प्रकार</label><select id="claimType"><option value="PUBLIC_DOCUMENT">Public Document</option><option value="FIELD_OBSERVATION">Field Observation</option><option value="OFFICIAL_RESPONSE">Official Response</option><option value="OTHER">Other</option></select>
+<label for="claimLabel">दस्तावेज का नाम</label><input id="claimLabel" required minlength="5" maxlength="180" autocomplete="off">
+<label for="claimHash">SHA-256 (64 Hex) — असत्यापित दावा</label><input id="claimHash" required minlength="64" maxlength="64" autocomplete="off">
+<button type="submit">UNVERIFIED Evidence Claim दर्ज करें</button></fieldset></form>
+<form id="uploadForm"><fieldset><legend>Private फोटो/PDF Upload — Deployment Gate</legend>
+<label for="uploadCase">Assigned Case UUID</label><input id="uploadCase" required autocomplete="off">
+<label for="uploadFile">एक फोटो या PDF (अधिकतम 8 MiB)</label><input id="uploadFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
+<button id="uploadBtn" type="submit" disabled>Hosted E2 तैयार होने पर सक्रिय होगा</button>
+<p class="hint" id="uploadNotice">अभी सुरक्षित Backend Deployment की पुष्टि नहीं हुई। कोई Browser File अपने-आप Server पर नहीं जाएगी।</p>
+</fieldset></form>
+</section>
+<section id="editor" class="hide card" aria-label="Editor case review">
+<h2>🛡 Editor — प्रमाण की Review</h2>
+<form id="editorRead"><fieldset><legend>Assigned Review Request देखें</legend>
+<label for="editorRequest">Review Request UUID</label><input id="editorRequest" required autocomplete="off">
+<button type="submit">Server से Review पढ़ें</button>
+<div id="editorCard" class="output">Private Review केवल Assigned Editor पढ़ सकेगा।</div></fieldset></form>
+<form id="editorDecision"><fieldset><legend>समीक्षा का निर्णय — SEND Approval नहीं</legend>
+<label for="decisionRequest">Review Request UUID</label><input id="decisionRequest" required autocomplete="off">
+<label for="decision">Decision</label><select id="decision">
+<option value="RETURN_FOR_EVIDENCE">प्रमाण के लिए वापस भेजें</option>
+<option value="EVIDENCE_REVIEW_PENDING">प्रमाण सत्यापन बाकी</option>
+<option value="ESCALATE_TO_FOUNDER">Founder तक गंभीर मामला पहुँचाएँ (अभी notification नहीं)</option>
+</select>
+<label for="decisionReason">कारण (12 से 500 अक्षर)</label><textarea id="decisionReason" required minlength="12" maxlength="500"></textarea>
+<button type="submit">Editor Decision सुरक्षित करें</button></fieldset></form>
+</section>
+</div>
+</main><footer>B8 G3/CP01: NO ARTICLE PUBLISH • NO OUTBOUND SEND • NO FAKE PASS • Source-only Review</footer>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="supabase-config.js"></script>
+<script defer src="backend-client.js"></script>
+<script type="module" src="b8-accountability-ui.mjs"></script>
+</body></html>
