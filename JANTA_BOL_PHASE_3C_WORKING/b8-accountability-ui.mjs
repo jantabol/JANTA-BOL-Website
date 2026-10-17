@@ -172,6 +172,47 @@ form('editorDecision',async()=>{
     '. Official send अभी नहीं हुआ, Founder की वास्तविक E9 proof notification भी नहीं हुई।';
 });
 
+
+form('g3Packet',async()=>{
+  $('g3PacketData').textContent='Authenticating Founder evidence and attached files…';
+  const packet=await workflow.ownerEvidencePacket(v('g3PacketReq'));
+  showJSON($('g3PacketData'),packet);
+  return 'Verified private BYTE receipt metadata loaded. Official documentary authenticity is NOT verified; notification is IN_APP only.';
+});
+form('g3R2Authorization',async()=>{
+  const x=await workflow.ownerAuthorizeRestricted(v('g3R2Req'),v('g3R2Reason'));
+  return 'R2 Founder AAL2 authorization ID: '+x.approvalId+
+    '\nNo official message was sent: '+x.externalStatus;
+});
+form('g3Truth',async()=>{
+  const p=await workflow.ownerHandoffTruth(v('g3TruthQ'));
+  showJSON($('g3TruthData'),p);
+  return 'Handoff verified from backend; provider acceptance and official receipt remain NOT VERIFIED.';
+});
+form('g3EvidenceLink',async()=>{
+  const x=await workflow.reporterLinkReceipt(v('g3LinkReq'),v('g3LinkReceipt'));
+  return 'Private receipt linked by Server: '+x.linkId+
+   '\nThis verifies only private byte integrity, not authenticity of accusations.';
+});
+form('g3Handoff',async()=>{
+  const x=await workflow.reporterPrepareHandoff(v('g3HandoffQ'),v('g3HandoffChannel'));
+  $('g3ObsIntent').value=x.handoffId;
+  return 'Manual handoff prepared: '+x.handoffId+
+    '\n'+x.state+' — this did NOT send a message to the official.';
+});
+form('g3Observation',async()=>{
+  const type=v('g3ObsType'),receipt=v('g3ObsReceipt')||null;
+  const x=await workflow.reporterRecordHandoff(v('g3ObsIntent'),type,receipt);
+  return 'Attempt observation stored: '+x.observationId+
+    '\nExternal Delivery: '+x.externalStatus+
+    '. This is NOT a delivery receipt verification.';
+});
+form('g3Screen',async()=>{
+  const x=await workflow.editorScreenSerious(v('g3ScreenReq'),v('g3ScreenReason'));
+  return 'Immutable Editor R1 evidence screening: '+x.screeningId+
+    '\nQuestion NOT SENT: '+x.externalStatus;
+});
+
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
 // nor the real G1/G2 server role and case grants.
 boot();
