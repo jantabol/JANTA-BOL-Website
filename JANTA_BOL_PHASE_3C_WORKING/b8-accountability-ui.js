@@ -77,6 +77,79 @@ function form(id,fn){$(id).addEventListener('submit',e=>{
   execute($(id),fn);
 });}
 const v=id=>$(id).value.trim();
+
+const PHONE_GROUPS={
+ owner:[
+ ['केस बनाएँ / टीम',['createCase','assignStaff','linkArticle','legalHold']],
+ ['प्रमाण / Review',['packetForm','g3Packet','g3R2Authorization']],
+ ['सवाल / जवाब',['g3Truth','g3ReplyTruth','g8Delivery','g7History','g7HistoryRead']],
+ ['सार्वजनिक जानकारी',['g4PublicRelease','g4Milestone']],
+ ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5Outcome','g5Reopen','g5Ledger','g9Due']],
+ ['सुरक्षा',['g6Release']]],
+ reporter:[
+ ['मेरा केस',['caseLookup']],
+ ['सवाल Draft',['draftForm','requestReview']],
+ ['प्रमाण',['reporterClaim','uploadForm','g3EvidenceLink']],
+ ['Handoff / Reply',['g3Handoff','g3Observation','g3ReplyClaim']]],
+ editor:[['समीक्षा',['editorRead','editorDecision','g3Screen']]]
+};
+function enablePhoneWorkflow(forRole){
+ const section=$(forRole), groups=PHONE_GROUPS[forRole];
+ if(!section||!groups)throw Error('B8_PHONE_ROLE_NOT_SUPPORTED');
+ const forms=Array.from(section.querySelectorAll('form[id]'));
+ const ids=groups.flatMap(g=>g[1]);
+ if(ids.length!==forms.length||new Set(ids).size!==ids.length||
+    forms.some(f=>!ids.includes(f.id)))throw Error('B8_PHONE_TASK_COVERAGE_MISMATCH');
+ const hidden=document.createElement('div');hidden.hidden=true;
+ const menu=document.createElement('div');menu.className='b8-phone-menu';
+ const label=document.createElement('label');label.htmlFor='b8PhoneTask';
+ label.textContent='📱 अभी कौन-सा काम करना है?';
+ const pick=document.createElement('select');pick.id='b8PhoneTask';pick.required=true;
+ const note=document.createElement('p');note.className='hint';
+ note.textContent='एक बार में एक सुरक्षित Form। अभी कोई सवाल अधिकारी को नहीं भेजा जाता।';
+ const active=document.createElement('div');active.className='b8-phone-active';
+ for(const g of groups){
+   const optgroup=document.createElement('optgroup');optgroup.label=g[0];
+   for(const id of g[1]){
+     const form=$(id),opt=document.createElement('option');
+     opt.value=id;opt.textContent=form.querySelector('legend')?.textContent||id;
+     optgroup.append(opt);
+   }
+   pick.append(optgroup);
+ }
+ menu.append(label,pick,note);
+ // Keep all ORIGINAL form IDs in the document, retaining handlers, values and backend guards.
+ const oldCards=Array.from(section.querySelectorAll('div.card'));
+ for(const form of forms)hidden.append(form);
+ for(const card of oldCards)card.hidden=true;
+ section.insertBefore(menu,section.firstElementChild?.nextSibling||null);
+ section.append(active,hidden);
+ function showSelected(){
+   if(busy||locked)return;
+   const selected=$(pick.value);
+   if(!selected||!ids.includes(selected.id))throw Error('B8_PHONE_TASK_INVALID');
+   const current=active.querySelector('form');
+   if(current)hidden.append(current);
+   active.replaceChildren(selected);
+ }
+ pick.addEventListener('change',showSelected);
+ pick.value=ids[0];showSelected();
+}
+function updateG5Classification(){
+ const kind=v('g5Kind'),field=$('g5Field');
+ const labels={COST:'Cost',DEADLINE:'Deadline',GROUND:'Ground',IMPACT:'Impact',
+  ALTERNATIVE:'Alternative',RESPONSIBILITY:'Other',CONFLICT:'Other'};
+ for(const group of field.querySelectorAll('optgroup'))
+  for(const option of group.querySelectorAll('option')){
+   option.disabled=group.label!==labels[kind]||
+     (kind==='RESPONSIBILITY'&&option.value!=='ROLE_MAP')||
+     (kind==='CONFLICT'&&option.value!=='FLAG_RAISED');
+  }
+ field.value='';
+}
+$('g5Kind').addEventListener('change',updateG5Classification);
+updateG5Classification();
+
 async function boot(){
   try{
     if(!window.JBBackend?.client||!navigator.onLine)throw Error('B8_BACKEND_OFFLINE_OR_UNAVAILABLE');
@@ -106,6 +179,7 @@ async function boot(){
     $('roleName').textContent='Verified Session Role: '+role.toUpperCase();
     guard.classList.add('hide');app.classList.remove('hide');
     $(role).classList.remove('hide');
+    enablePhoneWorkflow(role);
     updateUploadAvailability();
     showStatus('Role verified for this page. केवल नए B8 RPCs की वास्तविक Server पुष्टि स्वीकार होगी; SEND अभी नहीं।');
   }catch(e){
@@ -128,7 +202,8 @@ $('refreshLogin').addEventListener('click',()=>window.location.reload());
 
 form('createCase',async()=>{
   const id=await workflow.ownerCreateCase(v('caseTitle'),v('caseArea'),v('caseRisk'));
-  for(const name of ['assignCase','linkCase','holdCase'])$(name).value=id;
+  for(const name of ['assignCase','linkCase','holdCase','g4Case','g4MilestoneCase',
+    'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','g7Case','g7ReadCase'])$(name).value=id;
   return 'PRIVATE Case Created: '+id+'\nयह Public News या सवाल का SEND नहीं है।';
 });
 form('assignStaff',async()=>{
