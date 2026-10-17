@@ -48,7 +48,12 @@ function renderCard(row){
  card.append(title,state,approved,permalink,safeNotice,h,timeline,linked,articles);
  return card;
 }
+let requestEpoch=0;
+let lastVisibleCheckAt=0;
 async function render(query=null){
+ // Latest-result-wins: a slow older approved response must NOT redraw a case
+ // after a newer response revealed HIDE/unpublish or a different Case selection.
+ const epoch=++requestEpoch;
  const root=$('cases');root.replaceChildren();
  const api=window.JBBackend?.client;
  if(!api?.rpc){setStatus('Public service उपलब्ध नहीं है। कोई निजी जानकारी दिखाई नहीं जाएगी।',true);return;}
@@ -58,15 +63,18 @@ async function render(query=null){
   if(query){
    if(!isUuid(query)){setStatus('Case ID सही UUID नहीं है।',true);return;}
    const data=await reader.case(query);
+   if(epoch!==requestEpoch)return;
    if(!data){setStatus('यह Case सार्वजनिक रूप से उपलब्ध नहीं है।',true);return;}
    root.append(renderCard(data));setStatus('Founder-approved सार्वजनिक Case दिखाई जा रही है।');
   }else{
    const list=await reader.feed(12);
+   if(epoch!==requestEpoch)return;
    for(const data of list)root.append(renderCard(data));
    setStatus(list.length?list.length+' स्वीकृत Public Case दिखाई जा रही हैं।':
      'अभी कोई स्वीकृत सार्वजनिक Accountability Case नहीं है।');
   }
  }catch(_){
+  if(epoch!==requestEpoch)return;
   root.replaceChildren();
   // Do not echo server error body, SQL, private IDs or hidden moderation decisions.
   setStatus('सार्वजनिक Case लोड नहीं हो सका। बाद में फिर प्रयास करें।',true);
@@ -85,6 +93,22 @@ $('latest').addEventListener('click',()=>{
  const url=new URL(window.location.href);url.search='';
  history.replaceState(null,'',url);render();
 });
+// Returning to a previously open page or a browser back-forward cache must
+// re-check the Founder-approved server projection, not trust old DOM snapshots.
+// No periodic polling: conserve the existing free hosted provider budget.
+function currentCaseId(){
+ return new URLSearchParams(window.location.search).get('id');
+}
+function revalidateVisible(){
+ if(document.hidden || Date.now()-lastVisibleCheckAt<10000)return;
+ lastVisibleCheckAt=Date.now();
+ render(currentCaseId()||null);
+}
+document.addEventListener('visibilitychange',revalidateVisible);
+window.addEventListener('pageshow',e=>{if(e.persisted){
+ lastVisibleCheckAt=0;
+ revalidateVisible();
+}});
 const asked=new URLSearchParams(window.location.search).get('id');
 if(asked)$('caseId').value=asked;
 render(asked||null);
