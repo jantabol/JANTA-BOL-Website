@@ -1,0 +1,76 @@
+name: B8 G0/G1 Case Reporter Scope / No-Prod PG17 + Protected News CI
+on:
+  push:
+    branches:
+      - codex/b8-g0-g1-accountability-20261017
+    paths:
+      - '.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g1-disposable-fixture.sql'
+      - 'ci/phase4/b8-g1-real-postgres-regression.sql'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  b8-g1-disposable-postgres:
+    name: G1 Actual PG17 scope/ACL/Owner/Reporter failures and rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_b8_fixture_only
+          POSTGRES_DB: jb_b8_g1
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_b8_g1"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: local_b8_fixture_only
+      PGDATABASE: jb_b8_g1
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Explicit public-safety guard, no connected database secrets
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          echo 'B8 G1 isolated local postgres ONLY — never LIVE Supabase or production auth'
+      - name: Build synthetic B1 roles + Owner + normal Article and B7 sentinels
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-disposable-fixture.sql
+      - name: Apply G1 scoped review-only migration into disposable PostgreSQL17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+      - name: REAL PostgreSQL G1 role/ACL/revoke/expiry/session/rollback negative tests
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-real-postgres-regression.sql
+  b8-g0-news-unchanged:
+    name: G0 protected Phase3 News/Auth + B7 original closure unchanged
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Original protected Phase3 STATIC News/Auth/Security
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+      - name: B7 canonical 9/60 never fake PASS or paid activation
+        run: |
+          node ci/phase4/b7-closure-gate.cjs --audit
+          node --test ci/phase4/b7-closure-regression.cjs
+          node ci/phase4/b7-public-secret-scan.cjs
+      - name: Confirm no old News/B6/Ad application files modified by the G1 feature commit
+        run: |
+          set -euo pipefail
+          test -f JANTA_BOL_PHASE_3C_WORKING/article.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/index.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/compliance.html
+          echo 'B8 G0 protected source present; full E2/E3/E5 original regressions NOT implied by STATIC.'
