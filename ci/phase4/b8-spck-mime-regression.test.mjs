@@ -19,6 +19,7 @@ test('B8 private and public browser JS modules use SPCK-compatible .js not .mjs 
 });
 test('Original B8 safe preview disclaimer and 15-minute security timeout retained',async()=>{
  const a=await read('b8-accountability.html'),u=await read('b8-accountability-ui.js');
- assert.match(a,/NO OUTBOUND SEND/);
+ assert.match(a,/कोई सरकारी संदेश नहीं भेजा जाता/);
+ assert.match(a,/बिना प्रमाण पास नहीं/);
  assert.match(u,/const LOCK_MS=15\*60\*1000/);
 });
