@@ -73,6 +73,9 @@ select public.jb_b8_g1_reporter_request_review(:'q_r2'::uuid) as review_r2 \gset
 reset role;
 select set_config('b8.fixture_req_r1',:'review_r1',false);
 select set_config('b8.fixture_req_r2',:'review_r2',false);
+-- Test caller cannot SELECT the private drafts directly. Carry only its own returned UUIDs.
+select set_config('b8.fixture_q_r1',:'q_r1',false);
+select set_config('b8.fixture_q_r0',:'q_r0',false);
 
 -- Request review is immutable unique; routine R0 requires no Editor gate.
 set role authenticated;
@@ -81,11 +84,11 @@ declare duplicate_denied boolean:=false;routine_denied boolean:=false;editor_den
 begin
  begin
   perform public.jb_b8_g1_reporter_request_review(
-    (select id from public.b8_question_drafts where case_id=current_setting('b8.fixture_r1')::uuid limit 1));
+    current_setting('b8.fixture_q_r1')::uuid);
  exception when others then duplicate_denied:=sqlerrm='B8_REVIEW_ALREADY_REQUESTED';end;
  begin
   perform public.jb_b8_g1_reporter_request_review(
-    (select id from public.b8_question_drafts where case_id=current_setting('b8.fixture_r0')::uuid limit 1));
+    current_setting('b8.fixture_q_r0')::uuid);
  exception when others then routine_denied:=sqlerrm='B8_ONLY_SERIOUS_REVIEW_REQUIRED';end;
  begin
   perform public.jb_b8_g1_editor_review(
