@@ -31,6 +31,7 @@ on:
       - 'ci/phase4/b8-g3-cp02-notification-fixture.sql'
       - 'ci/phase4/b8-g3-cp02-evidence-founder-notifications-regression.sql'
       - 'ci/phase4/b8-g3-cp03-handoff-truth-regression.sql'
+      - 'ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -124,6 +125,7 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.mjs
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.mjs
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
+          node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
       - name: B7 canonical 9/60 never fake PASS or paid activation
         run: |
           node ci/phase4/b7-closure-gate.cjs --audit
