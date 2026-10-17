@@ -143,6 +143,15 @@ begin
   select 1 from public.b8_private_upload_receipts
   where id=p_new_material_receipt_id and case_id=p_case_id)
  then raise exception 'B8_G5_REOPEN_REQUIRES_SAME_CASE_BYTES';end if;
+ -- Reopening with the very SAME receipt already consumed for closure or a
+ -- previous reopening is not material new evidence. An older previously
+ -- available but not previously used private receipt MAY be newly discovered;
+ -- never claim independent authenticity merely from byte integrity.
+ if exists(select 1 from public.b8_g5_fact_events e
+   where e.case_id=p_case_id
+     and e.evidence_receipt_id=p_new_material_receipt_id
+     and e.kind in('OUTCOME','REOPEN')) then
+  raise exception 'B8_G5_REOPEN_RECEIPT_ALREADY_USED';end if;
  insert into public.b8_g5_fact_events
  (case_id,kind,field_code,detail_text,evidence_receipt_id,recorded_by)
  values(p_case_id,'REOPEN','NEW_MATERIAL_EVIDENCE',p_reason,p_new_material_receipt_id,auth.uid())
