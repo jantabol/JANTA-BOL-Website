@@ -376,7 +376,9 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         ||p.items.some(v=>!v||v.authenticity!=='NOT_INDEPENDENTLY_VERIFIED')
         ||(p.has_more&&(p.items.length===0||
           !/^[1-9][0-9]*$/.test(String(p.next_before_id??''))))
-        ||(!p.has_more&&p.next_before_id!==null))
+        ||(!p.has_more&&p.next_before_id!==null)
+        ||(p.has_more&&beforeId!==null&&
+          BigInt(String(p.next_before_id))>=BigInt(String(beforeId))))
         deny('T097_UNTRUSTED_PRIVATE_FACT_PAGE');
       return Object.freeze({items:Object.freeze(p.items.slice()),hasMore:p.has_more,
         nextBeforeId:p.has_more?String(p.next_before_id):null});
@@ -393,7 +395,9 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         ||p.items.some(v=>!v||v.truth!=='FOUNDER_ATTRIBUTED_UNVERIFIED')
         ||(p.has_more&&(p.items.length===0||
           !/^[1-9][0-9]*$/.test(String(p.next_before_id??''))))
-        ||(!p.has_more&&p.next_before_id!==null))
+        ||(!p.has_more&&p.next_before_id!==null)
+        ||(p.has_more&&beforeId!==null&&
+          BigInt(String(p.next_before_id))>=BigInt(String(beforeId))))
         deny('T097_UNTRUSTED_PRIVATE_HISTORY_PAGE');
       return Object.freeze({items:Object.freeze(p.items.slice()),hasMore:p.has_more,
         nextBeforeId:p.has_more?String(p.next_before_id):null});
