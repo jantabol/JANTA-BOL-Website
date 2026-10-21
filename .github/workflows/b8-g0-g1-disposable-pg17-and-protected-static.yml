@@ -72,6 +72,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g9_due_followup_safe_notifications_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g9-due-followup-notification-regression.sql'
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
+      - 'ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
       - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
@@ -294,6 +295,7 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
           node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
+          node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
           node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
           node --test ci/phase4/b8-g6-release-ready-android.test.mjs
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
