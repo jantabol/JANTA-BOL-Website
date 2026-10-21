@@ -50,6 +50,8 @@ on:
       - 'ci/phase4/b8-g5-original-accountability-regression.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_t093_document_projected_impact_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g5-t093-documented-projected-impact-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_no_exact_duplicate_fact_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g5-t093-duplicate-fact-retry-pg17.sql'
       - 'ci/phase4/b8-g5-t093-android-document-projection.test.mjs'
       - 'ci/phase4/b8-g5-android-owner-contract.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/review/B8_G5_OFFICIAL_EVIDENCE_MANIFEST_20261017.json'
@@ -180,6 +182,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_t093_document_projected_impact_REVIEW_ONLY.sql
       - name: PG17 T093 proposed impact != official statement or field evidence
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-documented-projected-impact-regression.sql
+      - name: Add fail-closed exact-duplicate G5 fact retry protection in isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_no_exact_duplicate_fact_REVIEW_ONLY.sql
+      - name: PG17 duplicate facts must not append; distinct evidence and original history preserved
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-duplicate-fact-retry-pg17.sql
       - name: Apply additive G6 Founder private upload release control OFF by default to disposable PG17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g6_private_upload_release_gate_REVIEW_ONLY.sql
       - name: REAL PG17 G6 Owner AAL2 ON/OFF + Reporter case scope, mid-flight finalize denial, immutable audit and ROLLBACK
