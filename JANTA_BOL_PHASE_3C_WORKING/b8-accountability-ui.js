@@ -142,8 +142,13 @@ async function execute(form,action){
     const response=await action();
     showStatus(response||'सर्वर ने कार्रवाई की पुष्टि की। कोई सवाल अधिकारी को नहीं भेजा गया है।','good');
   }catch(e){
-    showStatus('कार्रवाई रोक दी गई: '+String(e?.message||'BACKEND_UNAVAILABLE')+
-      '\nमसौदा, समीक्षा, प्रमाण अपलोड या सवाल भेजे जाने को सफल नहीं माना गया।','bad');
+    const message=String(e?.message||'BACKEND_UNAVAILABLE');
+    if(message.includes('B8_G5_EXACT_DUPLICATE_NOT_APPENDED')){
+      showStatus('यह बिल्कुल समान निजी रिकॉर्ड पहले से सुरक्षित है। दोबारा दर्ज नहीं किया गया। पुराने रिकॉर्ड की पुष्टि के लिए निजी रिकॉर्ड इतिहास देखें।','warn');
+    }else{
+      showStatus('कार्रवाई रोक दी गई: '+message+
+        '\nमसौदा, समीक्षा, प्रमाण अपलोड या सवाल भेजे जाने को सफल नहीं माना गया।','bad');
+    }
   }finally{
     busy=false;if(button&&!locked)button.disabled=false;
     // Restore only if still scoped to an independently checked live backend gate.
