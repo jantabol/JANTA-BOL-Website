@@ -166,6 +166,16 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button type="submit">संस्थापक की दो-चरणीय पुष्टि — निजी तथ्य दर्ज करें</button>
 <p class="hint">हितों का टकराव दर्ज करने से पहले संबंधित सार्वजनिक मामले को छिपाना जरूरी है।</p>
 </fieldset></form>
+<form id="g5QuestionDisposition"><fieldset><legend>T096 — हर मसौदा सवाल की संपादकीय स्थिति (निजी)</legend>
+<label for="g5QuestionCase">मामले की पहचान (UUID)</label><input id="g5QuestionCase" required autocomplete="off">
+<label for="g5QuestionId">सवाल की पहचान (UUID)</label><input id="g5QuestionId" required autocomplete="off">
+<label for="g5QuestionStatus">दर्ज स्थिति — वास्तविक सरकारी जवाब का स्वतंत्र प्रमाण नहीं</label>
+<select id="g5QuestionStatus"><option value="UNANSWERED_MONITORING">जवाब नहीं मिला — निगरानी जारी (दावा)</option><option value="PARTIAL_REPORTED">आंशिक जवाब दर्ज होने का दावा</option><option value="ANSWERED_REPORTED">जवाब दर्ज होने का दावा (निजी बाइट रसीद जरूरी)</option></select>
+<label for="g5QuestionReason">कारण / स्थिति का तथ्यात्मक विवरण</label><textarea id="g5QuestionReason" required minlength="12" maxlength="500"></textarea>
+<label for="g5QuestionReceipt">निजी प्रमाण रसीद (पूर्ण जवाब दर्ज करने के लिए आवश्यक)</label><input id="g5QuestionReceipt" autocomplete="off">
+<button type="submit">संस्थापक की दो-चरणीय पुष्टि — सवाल की स्थिति दर्ज करें</button>
+<p class="hint">यह संपादकीय रिकॉर्ड है, अधिकारी द्वारा जवाब देने या सवाल मिलने का स्वतंत्र प्रमाण नहीं। बिना अलग स्थिति दर्ज किए मामले को बंद नहीं कर सकते।</p>
+</fieldset></form>
 <form id="g5Outcome"><fieldset><legend>मामले का संपादकीय निष्कर्ष (अदालत का निर्णय नहीं)</legend>
 <label for="g5OutcomeCase">मामले की पहचान (UUID)</label><input id="g5OutcomeCase" required autocomplete="off">
 <label for="g5OutcomeState">स्थिति</label><select id="g5OutcomeState"><option value="monitoring">निगरानी जारी</option><option value="closed">कारण सहित बंद</option></select>
@@ -180,6 +190,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <form id="g5Ledger"><fieldset><legend>केवल संस्थापक के लिए निजी रिकॉर्ड इतिहास</legend>
 <label for="g5LedgerCase">मामले की पहचान (UUID)</label><input id="g5LedgerCase" required autocomplete="off">
 <button type="submit" class="secondary">निजी रिकॉर्ड इतिहास देखें</button>
+<button id="g5LedgerMore" type="button" class="secondary" hidden>अगले पुराने 50 निजी रिकॉर्ड देखें</button>
 <div id="g5LedgerOutput" class="output" aria-live="polite">केवल संस्थापक की दो-चरणीय पुष्टि के बाद। यहाँ कोई सार्वजनिक या सत्यापित सरकारी जवाब नहीं है।</div>
 </fieldset></form>
 </div>
@@ -233,6 +244,7 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <form id="g7HistoryRead"><fieldset><legend>केवल संस्थापक के लिए मामले का घटनाक्रम</legend>
 <label for="g7ReadCase">मामले की पहचान (UUID)</label><input id="g7ReadCase" required autocomplete="off">
 <button type="submit" class="secondary">निजी स्थायी इतिहास देखें</button>
+<button id="g7HistoryMore" type="button" class="secondary" hidden>अगले पुराने 50 घटनाक्रम देखें</button>
 <div id="g7HistoryOutput" class="output">संस्थापक की दो-चरणीय जाँच के बाद ही निजी घटनाक्रम दिखेगा।</div>
 </fieldset></form>
 </div>
