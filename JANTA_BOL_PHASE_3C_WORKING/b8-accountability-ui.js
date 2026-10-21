@@ -16,7 +16,7 @@ function updateUploadAvailability(){
   $('uploadBtn').disabled=!enabled;
 }
 const ALL_FORMS=['createCase','assignStaff','linkArticle','legalHold','packetForm',
-  'caseLookup','draftForm','requestReview','reporterClaim','uploadForm','editorRead','editorDecision'];
+  'caseLookup','draftForm','requestReview','reporterClaim','sourceLinkForm','uploadForm','editorRead','editorDecision'];
 function showStatus(text,kind='warn'){
   status.textContent=String(text);
   status.className='status '+kind;
@@ -273,7 +273,7 @@ const PHONE_GROUPS={
  ['सुरक्षा',['g6Release']]],
  reporter:[
  ['मेरा केस',['caseLookup']],
- ['सवाल का मसौदा',['draftForm','requestReview']],
+ ['सवाल का मसौदा',['draftForm','sourceLinkForm','requestReview']],
  ['प्रमाण',['reporterClaim','uploadForm','g3EvidenceLink']],
  ['भेजना / जवाब',['g3Handoff','g3Observation','g3ReplyClaim']]],
  editor:[['समीक्षा',['editorRead','editorDecision','g3Screen']]]
@@ -435,6 +435,7 @@ form('caseLookup',async()=>{
 form('draftForm',async()=>{
   const result=await workflow.reporterCreateDraft(v('questionCase'),v('questionText'),v('recipient'));
   $('reviewDraftId').value=result.draftId;
+  $('sourceDraftId').value=result.draftId;
   return 'सवाल का मसौदा बना। पहचान (UUID): '+result.draftId+'\nतकनीकी स्थिति: '+result.status+
     '. वास्तविक अधिकारी तक कोई सवाल नहीं भेजा गया।';
 });
@@ -446,8 +447,17 @@ form('requestReview',async()=>{
 form('reporterClaim',async()=>{
   const r=await workflow.reporterSubmitClaim(
     v('claimCase'),v('claimType'),v('claimLabel'),v('claimHash'));
+  $('sourceClaimId').value=r.claimId;
   return 'प्रमाण का अप्रमाणित दावा दर्ज हुआ। पहचान: '+r.claimId+'\n'+r.state+
     ' — कोई PDF/फोटो वास्तव में Upload या सत्यापित होने का दावा नहीं।';
+});
+form('sourceLinkForm',async()=>{
+  const x=await workflow.reporterBindQuestionEvidence(
+    v('sourceDraftId'),v('sourceClaimId'));
+  if(!x.linked||x.status!=='NOT_SENT'||x.authenticity!=='CLAIM_UNVERIFIED_NO_BYTES')
+    throw Error('B8_T094_SOURCE_LINK_TRUTH_MISMATCH');
+  return 'सवाल और उसी मामले के अप्रमाणित स्रोत का स्थायी संबंध बना। स्थिति: '+x.authenticity+
+    '. सवाल अधिकारी को नहीं भेजा गया। अब गंभीर सवाल हो तो संपादकीय समीक्षा अलग होगी।';
 });
 $('uploadCase').addEventListener('input',()=>{
   uploadReadyCase=null;
