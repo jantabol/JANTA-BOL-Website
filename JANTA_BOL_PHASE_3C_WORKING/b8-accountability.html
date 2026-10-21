@@ -270,6 +270,11 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <label for="claimLabel">दस्तावेज का नाम</label><input id="claimLabel" required minlength="5" maxlength="180" autocomplete="off">
 <label for="claimHash">SHA-256 (फाइल की तकनीकी पहचान, 64 अक्षर) — दावा अभी अप्रमाणित</label><input id="claimHash" required minlength="64" maxlength="64" autocomplete="off">
 <button type="submit">अप्रमाणित प्रमाण का दावा दर्ज करें</button></fieldset></form>
+<form id="sourceLinkForm"><fieldset><legend>मसौदा सवाल ↔ उसी मामले के प्रमाण का निजी संबंध</legend>
+<label for="sourceDraftId">मसौदा सवाल की पहचान (UUID)</label><input id="sourceDraftId" required autocomplete="off">
+<label for="sourceClaimId">प्रमाण के अप्रमाणित दावे की पहचान (UUID)</label><input id="sourceClaimId" required autocomplete="off">
+<button type="submit">सवाल और स्रोत को सुरक्षित जोड़ें (अभी कुछ नहीं भेजा जाएगा)</button>
+<p class="hint">यह उसी मामले के दस्तावेज का संदर्भ है। केवल SHA-256 का दावा दस्तावेज की स्वतंत्र सत्यता नहीं है। स्रोत लिंक के बिना सवाल भेजने की तैयारी रुक जाएगी।</p></fieldset></form>
 <form id="uploadForm"><fieldset><legend>निजी फोटो / पीडीएफ अपलोड — सुरक्षा रोक</legend>
 <label for="uploadCase">Assigned मामले की पहचान (UUID)</label><input id="uploadCase" required autocomplete="off">
 <label for="uploadFile">एक फोटो या PDF (अधिकतम 8 MiB)</label><input id="uploadFile" type="file" accept="image/png,image/jpeg,image/webp,application/pdf">
