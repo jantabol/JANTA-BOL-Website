@@ -82,7 +82,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t096_master_outcome_reopen_guard_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-t096-master-outcome-reopen-regression-v3.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql'
-      - 'ci/phase4/b8-t097-neutral-integrity-paging-regression-v2.sql'
+      - 'ci/phase4/b8-t097-neutral-integrity-paging-regression-v3.sql'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
       - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
@@ -237,7 +237,7 @@ jobs:
       - name: P4 T097 immutable source versions and keyset unlimited record-count paging
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql
       - name: P4 T097 PG17 120 evidence, 105 chronology, version/case/privacy negative and rollback
-        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t097-neutral-integrity-paging-regression-v2.sql
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t097-neutral-integrity-paging-regression-v3.sql
       - name: G0-G9 complete handshake permits UI only after EVERY expected database slice
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
