@@ -346,6 +346,58 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
         deny('G5_FALSE_OFFICIAL_VERIFICATION');
       return x;
     },
+
+    // T096 ACC-028: private Founder-attributed disposition; no claim of actual official reply.
+    async ownerRecordG5QuestionDisposition(caseId,questionId,disposition,note,receipt=''){
+      requireRole(role,'owner');
+      if(!['ANSWERED_REPORTED','PARTIAL_REPORTED','UNANSWERED_MONITORING'].includes(disposition))
+        deny('T096_DISPOSITION_INVALID');
+      if(disposition==='ANSWERED_REPORTED'&&!receipt)
+        deny('T096_ANSWERED_RECEIPT_REQUIRED');
+      const value=await rpc('jb_b8_t096_owner_record_question_disposition',{
+        p_case_id:id(caseId),p_question_id:id(questionId),p_disposition:disposition,
+        p_note:bounded(note,12,500,'T096_DISPOSITION_NOTE_REQUIRED'),
+        p_receipt_id:receipt?id(receipt):null
+      });
+      if(!Number.isSafeInteger(Number(value))||Number(value)<1)
+        deny('T096_DISPOSITION_NOT_CONFIRMED');
+      return Object.freeze({eventId:String(value),truth:'FOUNDER_REPORTED_UNVERIFIED'});
+    },
+    // T097: bounded keyset pages with NO arbitrary total-record limit; old readers retained.
+    async ownerG5FactPage(caseId,beforeId=null){
+      requireRole(role,'owner');
+      if(beforeId!==null &&
+        !/^[1-9][0-9]*$/.test(String(beforeId)))deny('T097_CURSOR_INVALID');
+      const p=await rpc('jb_b8_t097_owner_fact_page',{
+        p_case_id:id(caseId),p_before_id:beforeId===null?null:String(beforeId),p_limit:50
+      });
+      if(!p||!Array.isArray(p.items)||typeof p.has_more!=='boolean'
+        ||p.items.length>50||p.truth!=='NOT_INDEPENDENTLY_VERIFIED'
+        ||p.items.some(v=>!v||v.authenticity!=='NOT_INDEPENDENTLY_VERIFIED')
+        ||(p.has_more&&(p.items.length===0||
+          !/^[1-9][0-9]*$/.test(String(p.next_before_id??''))))
+        ||(!p.has_more&&p.next_before_id!==null))
+        deny('T097_UNTRUSTED_PRIVATE_FACT_PAGE');
+      return Object.freeze({items:Object.freeze(p.items.slice()),hasMore:p.has_more,
+        nextBeforeId:p.has_more?String(p.next_before_id):null});
+    },
+    async ownerG7HistoryPage(caseId,beforeId=null){
+      requireRole(role,'owner');
+      if(beforeId!==null &&
+        !/^[1-9][0-9]*$/.test(String(beforeId)))deny('T097_CURSOR_INVALID');
+      const p=await rpc('jb_b8_t097_owner_history_page',{
+        p_case_id:id(caseId),p_before_id:beforeId===null?null:String(beforeId),p_limit:50
+      });
+      if(!p||!Array.isArray(p.items)||typeof p.has_more!=='boolean'
+        ||p.items.length>50||p.truth!=='FOUNDER_ATTRIBUTED_UNVERIFIED'
+        ||p.items.some(v=>!v||v.truth!=='FOUNDER_ATTRIBUTED_UNVERIFIED')
+        ||(p.has_more&&(p.items.length===0||
+          !/^[1-9][0-9]*$/.test(String(p.next_before_id??''))))
+        ||(!p.has_more&&p.next_before_id!==null))
+        deny('T097_UNTRUSTED_PRIVATE_HISTORY_PAGE');
+      return Object.freeze({items:Object.freeze(p.items.slice()),hasMore:p.has_more,
+        nextBeforeId:p.has_more?String(p.next_before_id):null});
+    },
     async ownerReplyClaimSummary(questionId){
       requireRole(role,'owner');
       const p=await rpc('jb_b8_g3_owner_reply_claim_summary',{
