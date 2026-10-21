@@ -79,6 +79,10 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_reporter_readiness_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-t094-cp03-reporter-readiness-regression.sql'
       - 'ci/phase4/b8-t094-cp03-serious-r1-r2-after-source-binding-v3.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t096_master_outcome_reopen_guard_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-t096-master-outcome-reopen-regression.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-t097-neutral-integrity-paging-regression.sql'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
       - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
@@ -226,6 +230,14 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-reporter-readiness-regression.sql
       - name: T094 CP03 POST migration R1 Editor/R2 Founder gates stay intact with source-linked question
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-serious-r1-r2-after-source-binding-v3.sql
+      - name: P4 T096 implement multi-article one-Master, no false closure and post-reopen public privacy safety
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t096_master_outcome_reopen_guard_REVIEW_ONLY.sql
+      - name: P4 T096 PG17 one master/article, question disposition required, immutable reopen plus rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t096-master-outcome-reopen-regression.sql
+      - name: P4 T097 immutable source versions and keyset unlimited record-count paging
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql
+      - name: P4 T097 PG17 120 evidence, 105 chronology, version/case/privacy negative and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t097-neutral-integrity-paging-regression.sql
       - name: G0-G9 complete handshake permits UI only after EVERY expected database slice
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
