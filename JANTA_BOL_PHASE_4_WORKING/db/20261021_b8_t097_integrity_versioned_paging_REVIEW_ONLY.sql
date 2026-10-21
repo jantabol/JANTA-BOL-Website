@@ -98,7 +98,7 @@ begin
  then raise exception 'B8_T097_CASE_REQUIRED';end if;
  select coalesce(jsonb_agg(jsonb_build_object('id',e.id,
    'kind',e.kind,'field',e.field_code,'detail',e.detail_text,
-   'authenticity',e.authenticity,'date',e.target_date,
+   'cost_inr',e.cost_inr,'authenticity',e.authenticity,'date',e.target_date,
    'recorded_at',e.recorded_at) order by e.id desc),'[]'::jsonb),
    min(e.id) into v_items,v_oldest from
    (select * from public.b8_g5_fact_events
