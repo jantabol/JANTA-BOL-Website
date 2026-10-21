@@ -83,6 +83,7 @@ on:
       - 'ci/phase4/b8-t096-master-outcome-reopen-regression-v3.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-t097-neutral-integrity-paging-regression-v3.sql'
+      - 'ci/phase4/b8-t096-t097-android-live-parity.test.mjs'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
       - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
@@ -328,6 +329,7 @@ jobs:
           node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
           node --test ci/phase4/b8-g6-release-ready-android.test.mjs
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
           node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
           node --test ci/phase4/b8-spck-mime-regression.test.mjs
