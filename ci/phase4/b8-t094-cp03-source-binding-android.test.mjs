@@ -16,6 +16,10 @@ test('ACC013 Android case-scoped source form has all IDs and phone task, no outb
   assert.match(ui,/\['सवाल का मसौदा',\['draftForm','sourceLinkForm','requestReview'\]\]/);
   assert.match(ui,/form\('sourceLinkForm',async\(\)=>/);
   assert.match(ui,/workflow\.reporterBindQuestionEvidence/);
+  assert.match(ui,/currentRole==='reporter'/);
+  assert.match(ui,/jb_b8_t094_source_binding_readiness/);
+  assert.match(ui,/B8_T094_QUESTION_SOURCE_SERVER_GUARD_NOT_READY/);
+  assert.match(ui,/server_guard_ready!==true/);
   assert.doesNotMatch(html,/on(?:click|submit)\s*=/i);
 });
 
