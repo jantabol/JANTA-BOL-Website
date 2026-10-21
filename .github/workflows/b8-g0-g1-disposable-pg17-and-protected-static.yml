@@ -73,6 +73,7 @@ on:
       - 'ci/phase4/b8-g9-due-followup-notification-regression.sql'
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
       - 'ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs'
+      - 'ci/phase4/b8-t094-cp03-source-binding-android.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_question_evidence_binding_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-t094-cp03-source-bound-question-regression-v2.sql'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
@@ -302,6 +303,7 @@ jobs:
           node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
           node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
           node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
+          node --test ci/phase4/b8-t094-cp03-source-binding-android.test.mjs
           node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
           node --test ci/phase4/b8-g6-release-ready-android.test.mjs
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
