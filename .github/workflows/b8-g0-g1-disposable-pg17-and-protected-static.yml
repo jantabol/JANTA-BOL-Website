@@ -52,6 +52,9 @@ on:
       - 'ci/phase4/b8-g5-t093-documented-projected-impact-regression.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_no_exact_duplicate_fact_REVIEW_ONLY.sql'
       - 'ci/phase4/b8-g5-t093-duplicate-fact-retry-pg17.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_t093_document_stated_purpose_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-g5-t093-source-attributed-purpose-regression.sql'
+      - 'ci/phase4/b8-g5-t093-purpose-mobile-contract.test.mjs'
       - 'ci/phase4/b8-g5-t093-android-document-projection.test.mjs'
       - 'ci/phase4/b8-g5-android-owner-contract.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/review/B8_G5_OFFICIAL_EVIDENCE_MANIFEST_20261017.json'
@@ -186,6 +189,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_no_exact_duplicate_fact_REVIEW_ONLY.sql
       - name: PG17 duplicate facts must not append; distinct evidence and original history preserved
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-duplicate-fact-retry-pg17.sql
+      - name: Add historical document-stated project PURPOSE without false official verification in isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_t093_document_stated_purpose_REVIEW_ONLY.sql
+      - name: PG17 T093 source-required PURPOSE, cross-kind, Owner AAL2, immutable and duplicate negatives
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-source-attributed-purpose-regression.sql
       - name: Apply additive G6 Founder private upload release control OFF by default to disposable PG17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g6_private_upload_release_gate_REVIEW_ONLY.sql
       - name: REAL PG17 G6 Owner AAL2 ON/OFF + Reporter case scope, mid-flight finalize denial, immutable audit and ROLLBACK
@@ -297,6 +304,7 @@ jobs:
           node --test ci/phase4/b8-mobile-focused-workflow.test.mjs
           node --test ci/phase4/b8-g1-mobile-case-picker.test.mjs
           node --test ci/phase4/b8-g5-t093-android-document-projection.test.mjs
+          node --test ci/phase4/b8-g5-t093-purpose-mobile-contract.test.mjs
           node --test ci/phase4/b8-live-parity-static.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
