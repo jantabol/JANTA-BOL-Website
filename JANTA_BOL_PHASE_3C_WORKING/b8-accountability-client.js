@@ -122,6 +122,16 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
       return Object.freeze({draftId:id(draftId),status:NO_DISPATCH_STATUS,
         approvalStatus:'DRAFT_ONLY'});
     },
+    // ACC-013: source-claim link is a private immutable reference, NOT verified evidence.
+    async reporterBindQuestionEvidence(questionId,claimId){
+      requireRole(role,'reporter');
+      const ok=await rpc('jb_b8_g1_reporter_bind_question_evidence',{
+        p_question_id:id(questionId),p_claim_id:id(claimId)
+      });
+      if(ok!==true)deny('QUESTION_EVIDENCE_LINK_NOT_CONFIRMED');
+      return Object.freeze({linked:true,authenticity:'CLAIM_UNVERIFIED_NO_BYTES',
+        status:NO_DISPATCH_STATUS});
+    },
     async reporterRequestReview(questionId){
       requireRole(role,'reporter');
       const requestId=await rpc('jb_b8_g1_reporter_request_review',{p_question_id:id(questionId)});
