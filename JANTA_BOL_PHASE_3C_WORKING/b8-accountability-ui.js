@@ -10,6 +10,9 @@ const status=$('status'),guard=$('guard'),app=$('app');
 const LOCK_MS=15*60*1000;
 let workflow=null,role=null,lastActivity=Date.now(),busy=false,locked=false;
 let uploadReadyCase=null;
+// B8 keyset cursors are private, per-case and cleared on lock/case switch.
+let g5Page=null,g7Page=null;
+function clearPageCursors(){g5Page=null;g7Page=null;$('g5LedgerMore').hidden=true;$('g7HistoryMore').hidden=true;}
 function updateUploadAvailability(){
   const enabled=role==='reporter'&&!locked&&!busy&&
     uploadReadyCase!==null&&$('uploadCase').value.trim()===uploadReadyCase;
@@ -106,6 +109,7 @@ function lock(reason){
   $('uploadBtn').disabled=true;
   $('uploadFile').value='';
   ownerKnownCases=[];
+  clearPageCursors();
   if(ownerCasePick)ownerCasePick.replaceChildren();
   clearOwnerCaseInputs();
   app.classList.add('hide');
@@ -185,6 +189,7 @@ function applyOwnerCaseSelection(id,resetUnsubmitted=true){
    throw Error('B8_CASE_SELECTION_NOT_SERVER_LISTED');
  // Avoid old-case draft text accidentally being filed under a DIFFERENT case.
  if(resetUnsubmitted){
+   clearPageCursors();
    for(const current of $('owner').querySelectorAll('form[id]')){
      if(current.id!=='createCase'&&current.id!=='g6Release')current.reset();
    }
@@ -269,7 +274,7 @@ const PHONE_GROUPS={
  ['प्रमाण / समीक्षा',['packetForm','g3Packet','g3R2Authorization']],
  ['सवाल / जवाब',['g3Truth','g3ReplyTruth','g8Delivery','g7History','g7HistoryRead']],
  ['सार्वजनिक जानकारी',['g4PublicRelease','g4Milestone']],
- ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5Outcome','g5Reopen','g5Ledger','g9Due']],
+ ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5QuestionDisposition','g5Outcome','g5Reopen','g5Ledger','g9Due']],
  ['सुरक्षा',['g6Release']]],
  reporter:[
  ['मेरा केस',['caseLookup']],
@@ -621,13 +626,26 @@ form('g7History',async()=>{
     '\\n'+x.truth+'; सरकारी जवाब या सवाल पहुँचने की पुष्टि नहीं है।';
 });
 form('g7HistoryRead',async()=>{
-  const out=$('g7HistoryOutput');
+  const caseId=v('g7ReadCase'),out=$('g7HistoryOutput');
+  clearPageCursors();
   out.textContent='संस्थापक का निजी घटनाक्रम पढ़ा जा रहा है…';
-  const x=await workflow.ownerG7PrivateHistory(v('g7ReadCase'));
-  showJSON(out,x);
-  return 'निजी घटनाक्रम में कुल '+x.length+
-    ' प्रविष्टियाँ मिलीं। यह प्रकाशित खबर में सुधार नहीं है।';
+  const x=await workflow.ownerG7HistoryPage(caseId);
+  g7Page={caseId,beforeId:x.nextBeforeId};
+  showJSON(out,x.items);
+  $('g7HistoryMore').hidden=!x.hasMore;
+  return 'इस पन्ने पर '+x.items.length+' निजी घटनाएँ। '+(x.hasMore?
+    'अगले पुराने रिकॉर्ड उपलब्ध हैं।':'इससे पुराने रिकॉर्ड नहीं।');
 });
+$('g7HistoryMore').addEventListener('click',()=>execute($('g7HistoryRead'),async()=>{
+  if(!g7Page||g7Page.caseId!==v('g7ReadCase')||g7Page.beforeId===null)
+    throw Error('B8_T097_G7_PAGE_CONTEXT_CHANGED');
+  const caseId=g7Page.caseId;
+  const x=await workflow.ownerG7HistoryPage(caseId,g7Page.beforeId);
+  g7Page={caseId,beforeId:x.nextBeforeId};
+  showJSON($('g7HistoryOutput'),x.items);
+  $('g7HistoryMore').hidden=!x.hasMore;
+  return 'अगले '+x.items.length+' निजी घटनाक्रम दिखाए गए। स्वतंत्र सरकारी जवाब सिद्ध नहीं।';
+}));
 
 // G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
 form('g5Fact',async()=>{
@@ -637,6 +655,14 @@ form('g5Fact',async()=>{
   );
   return 'निजी तथ्य स्थायी रूप से दर्ज हुआ। रिकॉर्ड नंबर #'+x.eventId+
    '\n'+x.authenticity+' — सरकारी स्रोत की असलियत और सवाल पहुँचने की स्वतंत्र पुष्टि नहीं हुई है।';
+});
+form('g5QuestionDisposition',async()=>{
+  const x=await workflow.ownerRecordG5QuestionDisposition(
+    v('g5QuestionCase'),v('g5QuestionId'),v('g5QuestionStatus'),
+    v('g5QuestionReason'),v('g5QuestionReceipt')
+  );
+  return 'निजी सवाल-स्थिति रिकॉर्ड #'+x.eventId+' दर्ज हुआ। '+x.truth+
+    ' — यह सत्यापित सरकारी जवाब या बाहर भेजे सवाल का प्रमाण नहीं है।';
 });
 form('g5Outcome',async()=>{
   const x=await workflow.ownerRecordG5Outcome(
@@ -653,12 +679,27 @@ form('g5Reopen',async()=>{
    '\nनए प्रमाण की आगे स्वतंत्र जाँच जरूरी है।';
 });
 form('g5Ledger',async()=>{
-  const out=$('g5LedgerOutput');
+  const caseId=v('g5LedgerCase'),out=$('g5LedgerOutput');
+  clearPageCursors();
   out.textContent='संस्थापक का निजी तथ्य इतिहास पढ़ा जा रहा है…';
-  const x=await workflow.ownerG5PrivateLedger(v('g5LedgerCase'));
-  displayHindiPrivateLedger(out,x);
-  return 'G5 के निजी तथ्य इतिहास में '+x.length+' प्रविष्टियाँ मिलीं। सभी का स्वतंत्र तथ्य सत्यापन बाकी है।';
+  const x=await workflow.ownerG5FactPage(caseId);
+  g5Page={caseId,beforeId:x.nextBeforeId};
+  displayHindiPrivateLedger(out,x.items);
+  $('g5LedgerMore').hidden=!x.hasMore;
+  return 'इस पन्ने में '+x.items.length+' निजी तथ्य। '+(x.hasMore?
+    'अगले पुराने रिकॉर्ड उपलब्ध हैं।':'इससे पुराने रिकॉर्ड नहीं।')+
+    ' सभी की स्वतंत्र पुष्टि बाकी है।';
 });
+$('g5LedgerMore').addEventListener('click',()=>execute($('g5Ledger'),async()=>{
+  if(!g5Page||g5Page.caseId!==v('g5LedgerCase')||g5Page.beforeId===null)
+    throw Error('B8_T097_G5_PAGE_CONTEXT_CHANGED');
+  const caseId=g5Page.caseId;
+  const x=await workflow.ownerG5FactPage(caseId,g5Page.beforeId);
+  g5Page={caseId,beforeId:x.nextBeforeId};
+  displayHindiPrivateLedger($('g5LedgerOutput'),x.items);
+  $('g5LedgerMore').hidden=!x.hasMore;
+  return 'अगले '+x.items.length+' निजी तथ्य देखे गए। स्वतंत्र सत्यापन बाकी है।';
+}));
 
 // A wrong/injected DOM click on a hidden role does not bypass the JS role check,
 // nor the real G1/G2 server role and case grants.
