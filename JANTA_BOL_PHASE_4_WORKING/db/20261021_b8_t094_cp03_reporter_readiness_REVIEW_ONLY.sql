@@ -9,8 +9,8 @@ as $b8$
    'server_guard_ready',coalesce(
      pg_catalog.to_regclass('public.b8_question_evidence_links') is not null
      and pg_catalog.to_regprocedure('public.jb_b8_g1_reporter_bind_question_evidence(uuid,uuid)') is not null
-     and pg_catalog.position('B8_T094_QUESTION_SOURCE_LINK_REQUIRED' in
-       pg_catalog.pg_get_functiondef('public.jb_b8_g3_reporter_prepare_manual_handoff(uuid,text)'::regprocedure))>0,
+     and pg_catalog.strpos(pg_catalog.pg_get_functiondef('public.jb_b8_g3_reporter_prepare_manual_handoff(uuid,text)'::regprocedure),
+       'B8_T094_QUESTION_SOURCE_LINK_REQUIRED')>0,
      false),
    'official_send_by_app',false,
    'source_independently_verified',false
