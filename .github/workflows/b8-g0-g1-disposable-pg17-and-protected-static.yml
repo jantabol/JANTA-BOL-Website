@@ -73,6 +73,8 @@ on:
       - 'ci/phase4/b8-g9-due-followup-notification-regression.sql'
       - 'ci/phase4/b8-g9-due-dashboard-android.test.mjs'
       - 'ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_question_evidence_binding_REVIEW_ONLY.sql'
+      - 'ci/phase4/b8-t094-cp03-source-bound-question-regression-v2.sql'
       - 'ci/phase4/b8-spck-mime-regression.test.mjs'
       - 'ci/phase4/b8-database-readiness-android.test.mjs'
       - 'ci/phase4/b8-mobile-focused-workflow.test.mjs'
@@ -210,6 +212,10 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g9_due_followup_safe_notifications_REVIEW_ONLY.sql
       - name: REAL PG17 G9 overdue detection, private Founder role, B3 no-external notice, privacy and rollback
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g9-due-followup-notification-regression.sql
+      - name: T094 CP03 apply scoped question-source linkage AFTER preserved G0-G9 baselines
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_question_evidence_binding_REVIEW_ONLY.sql
+      - name: T094 CP03 actual PG17 unsupported R0 blocked, exact-case linkage, immutable and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-source-bound-question-regression-v2.sql
       - name: G0-G9 complete handshake permits UI only after EVERY expected database slice
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
