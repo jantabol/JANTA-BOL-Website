@@ -28,7 +28,7 @@ function showJSON(node,value){
 
 const B8_KIND_HI=Object.freeze({
  COST:'लागत',DEADLINE:'समयसीमा',GROUND:'जमीनी स्थिति',
- IMPACT:'जनता पर प्रभाव',ALTERNATIVE:'विकल्प',RESPONSIBILITY:'जिम्मेदार पद',
+ IMPACT:'जनता पर प्रभाव',ALTERNATIVE:'विकल्प',PURPOSE:'परियोजना का दस्तावेजी उद्देश्य',RESPONSIBILITY:'जिम्मेदार पद',
  CONFLICT:'हितों का टकराव'
 });
 const B8_FIELD_HI=Object.freeze({
@@ -41,6 +41,7 @@ const B8_FIELD_HI=Object.freeze({
  DOCUMENTED_PROJECTED:'ऐतिहासिक दस्तावेज में अनुमानित/संभावित प्रभाव (वास्तविक नुकसान साबित नहीं)',
  AUTHORITY_STATED:'अधिकारी द्वारा बताया गया प्रभाव',
  GROUND_REPORTED:'दर्ज जमीनी प्रभाव',
+ DOCUMENTED_STATED:'ऐतिहासिक दस्तावेज में बताया गया परियोजना उद्देश्य (आज की सरकारी पुष्टि नहीं)',
  DOCUMENTED_PROPOSAL:'दस्तावेज में दर्ज प्रस्ताव',
  UNVERIFIED_PROPOSAL:'अप्रमाणित प्रस्ताव',
  ROLE_MAP:'जिम्मेदार पद / भूमिका (दोष नहीं)',
@@ -323,7 +324,7 @@ function enablePhoneWorkflow(forRole){
 function updateG5Classification(){
  const kind=v('g5Kind'),field=$('g5Field');
  const labels={COST:'लागत',DEADLINE:'समयसीमा',GROUND:'जमीनी स्थिति',IMPACT:'जनता पर प्रभाव',
-  ALTERNATIVE:'विकल्प',RESPONSIBILITY:'अन्य',CONFLICT:'अन्य'};
+  ALTERNATIVE:'विकल्प',PURPOSE:'दस्तावेजी उद्देश्य',RESPONSIBILITY:'अन्य',CONFLICT:'अन्य'};
  for(const group of field.querySelectorAll('optgroup'))
   for(const option of group.querySelectorAll('option')){
    option.disabled=group.label!==labels[kind]||
