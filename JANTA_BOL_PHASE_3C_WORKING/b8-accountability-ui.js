@@ -355,6 +355,17 @@ async function boot(){
         ready?.contract!=='G0_G9_20261017'||ready?.db_ready!==true){
       throw Error('B8_DATABASE_NOT_DEPLOYED_OR_PARTIAL_G0_G9');
     }
+    // Fail CLOSED for Reporter if frontend includes source-linking but DB has not
+    // yet enabled the authoritative question-source handoff guard.
+    if(currentRole==='reporter'){
+      const {data:binding,error:bindingError}=await window.JBBackend.client.rpc(
+        'jb_b8_t094_source_binding_readiness');
+      if(bindingError||binding?.contract!=='B8_T094_SOURCE_BINDING_V1'||
+          binding?.server_guard_ready!==true||binding?.official_send_by_app!==false||
+          binding?.source_independently_verified!==false){
+        throw Error('B8_T094_QUESTION_SOURCE_SERVER_GUARD_NOT_READY');
+      }
+    }
     role=currentRole;
     // Upload UI remains initially OFF. Paired SQL G6 is server authority, not DOM.
     // Standalone JS never enables a bypass; server default is OFF.
