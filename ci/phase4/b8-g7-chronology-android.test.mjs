@@ -79,7 +79,9 @@ test('G7 Android Owner history, lock privacy and textContent rendering',async()=
   assert(html.includes('id="'+id+'"'));
  assert(html.indexOf('id="g7History"')<html.indexOf('<section id="reporter"'));
  assert(js.includes('ownerRecordG7History'));
- assert(js.includes('ownerG7PrivateHistory'));
+ assert(js.includes('ownerG7HistoryPage'));
+ assert(html.includes('id="g7HistoryMore"'));
+ assert(js.includes("g7HistoryMore').hidden="));
  assert(js.includes("g7HistoryOutput').textContent='Locked"));
  assert(js.includes("node.textContent=JSON.stringify(value,null,2)"));
  assert(!js.includes('.innerHTML='));
