@@ -101,6 +101,30 @@ begin
  then raise exception 'B9_RPC_GRANTS_WRONG';end if;
 end;$$;
 
+-- Synthetic lifecycle E4 regression: correction must replace public search snippet,
+-- unpublished story absent, republish SAME UUID/slug; Index REBUILD never generates identity.
+do $
+declare
+ oid uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ original_slug text; before_id uuid; result jsonb;
+begin
+ select id,slug into before_id,original_slug from public.articles where id=oid;
+ update public.articles set title='Updated corrected archive headline',body='Updated approved body' where id=oid;
+ result:=public.jb_b9_search(p_query=>'Updated corrected');
+ if jsonb_array_length(result->'items')<>1 or result#>>'{items,0,id}'<>oid::text then raise exception 'B9_CORRECTION_PURL_BROKEN';end if;
+ result:=public.jb_b9_search(p_query=>'Old approved archive story');
+ if jsonb_array_length(result->'items')<>0 then raise exception 'B9_STALE_CORRECTION_SNIPPET';end if;
+ update public.articles set status='unpublished' where id=oid;
+ if jsonb_array_length(public.jb_b9_search(p_query=>'Updated corrected')->'items')<>0 then raise exception 'B9_UNPUBLISHED_VISIBLE';end if;
+ update public.articles set status='published' where id=oid;
+ if (select slug from public.articles where id=oid)<>original_slug or
+    (select count(*) from public.articles where id=before_id)<>1 then
+  raise exception 'B9_REPUBLISH_NEW_IDENTITY';
+ end if;
+end;$;
+reindex index public.b9_articles_public_text_idx;
+reindex index public.b9_articles_public_archive_idx;
+
 -- Actual anon-ROLE invocation verifies public RLS-safe projection, no private disclosure.
 set local role anon;
 select public.jb_b9_search(p_query=>'Shivpuri');
