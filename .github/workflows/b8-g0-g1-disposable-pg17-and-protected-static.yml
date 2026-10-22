@@ -248,6 +248,9 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
     name: Full B0–B8 Source Master ZIP / all files / SHA256 / random test selector
+    # Source archive is intentionally bound to the original B8 integration branch.
+    # Do NOT relax its exact branch/SHA release gate for a soft-launch review.
+    if: github.ref_name == 'codex/b8-g5-main-based-integration-20261017'
     needs:
       - b8-g1-disposable-postgres
       - b8-g0-news-unchanged
