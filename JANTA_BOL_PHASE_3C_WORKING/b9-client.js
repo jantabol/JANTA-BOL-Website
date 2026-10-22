@@ -35,6 +35,7 @@ async function taxonomy(query=''){const result=await rpc('jb_b9_taxonomy_discove
 async function related(articleId){const result=await rpc('jb_b9_related_news',{p_article_id:id(articleId),p_limit:5});if(!Array.isArray(result))throw Error('B9_INVALID_RELATED');return result;}
 async function reporterDiscovery(query=''){const result=await rpc('jb_b9_reporter_discovery',{p_query:text(query,80),p_limit:40});if(!Array.isArray(result))throw Error('B9_INVALID_REPORTER_LIST');return result;}
 async function publicMetrics(articleId){return rpc('jb_b9_public_metrics',{p_article_id:id(articleId)});}
+async function publicAuthor(articleId){return rpc('jb_b9_public_article_author',{p_article:id(articleId)});}
 const requireOwner=async()=>{await global.JBBackend.requireOwner();};
 async function ownerAnalytics(start,end,order='views',limit=50){
  await requireOwner();if(!['views','shares','latest'].includes(order))throw Error('B9_SORT_INVALID');
@@ -55,6 +56,6 @@ async function ownerAssignTerm(articleId,kind,slug,label,action='add'){
  return rpc('jb_b9_owner_assign_term',{p_article:id(articleId),p_kind:kind,p_slug:slug,p_label:text(label),p_action:action});
 }
 const articleLink=articleId=>'article.html?id='+encodeURIComponent(id(articleId));
-global.JBB9=Object.freeze({search,cleanSearch,taxonomy,related,reporterDiscovery,publicMetrics,ownerAnalytics,
+global.JBB9=Object.freeze({search,cleanSearch,taxonomy,related,reporterDiscovery,publicMetrics,publicAuthor,ownerAnalytics,
  ownerMetricSettings,ownerAssignTerm,articleLink});
 })(window);
