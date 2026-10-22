@@ -3,7 +3,7 @@
 (function(global){
 'use strict';
 const sdk=()=>{if(!global.JBBackend?.client)throw Error('B9_BACKEND_NOT_READY');return global.JBBackend.client;};
-async function rpc(name,args){const {data,error}=await sdk().rpc(name,args);if(error)throw Error('B9_BACKEND_REJECTED_'+name+': '+String(error.code||error.message||'RPC_FAILED').slice(0,100));return data;}
+async function rpc(name,args){const {data,error}=await sdk().rpc(name,args);if(error)throw Error('B9_BACKEND_REJECTED_'+name+': '+String(error.code||'REMOTE_CHECK_FAILED').slice(0,24));return data;}
 const text=(v,max=120)=>String(v??'').trim().slice(0,max);
 const isoDate=v=>{if(!v)return null;const s=String(v);if(!/^\d{4}-\d{2}-\d{2}$/.test(s)||Number.isNaN(Date.parse(s+'T00:00:00Z')))throw Error('B9_INVALID_DATE');return s;};
 const UUID=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
