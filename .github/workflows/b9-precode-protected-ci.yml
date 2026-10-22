@@ -57,3 +57,40 @@ jobs:
           node ci/phase3-regression/static-p3-preprod-regression.cjs
           node ci/phase3-regression/static-p3-recovery-regression.cjs
           node ci/phase3-regression/static-p3-security-regression.cjs
+
+  b9_pg17_sql:
+    name: B9 isolated real PostgreSQL17 migration and security E2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: b9_local_fixture_only
+          POSTGRES_DB: jb_b9_synthetic
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_b9_synthetic"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: b9_local_fixture_only
+      PGDATABASE: jb_b9_synthetic
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Enforce zero production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: Load synthetic pg17 Article/Founder/events fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-fixture.sql
+      - name: Apply B9 REVIEW-ONLY migration strictly to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
