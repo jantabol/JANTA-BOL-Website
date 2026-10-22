@@ -98,3 +98,33 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
       - name: Run B9 PG17 negative search and analytics checks
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
+
+  b9_complete_source_zip:
+    name: Full B0-B9 ZIP only AFTER PG17, Source and old-B8 GREEN
+    needs: [protected_b0_to_b8, b9_source_contract, b9_pg17_sql]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Build immutable all-Git-tracked Phase 4 B9 Block Complete ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b9_full_source_zip.py --out dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+          python3 ci/phase4/build_b0_b9_full_source_zip.py --verify dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+          test "$(stat -c %s dist/PHASE_4_B9_BLOCK_COMPLETE.zip)" -gt 200000
+      - name: Downloadable B0-B9 ZIP plus SHA256 checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHASE_4_B9_BLOCK_COMPLETE
+          path: |
+            dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
