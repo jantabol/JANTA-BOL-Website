@@ -102,6 +102,7 @@ on:
       - 'START_HERE_JANTA_BOL_MASTER_B0_TO_B8.md'
       - 'JANTA_BOL_PHASE_4_WORKING/review/B8_G0_G9_CODING_CANDIDATE_COMPLETE_MANUAL_TESTS_DUE_20261017.md'
   workflow_dispatch:
+  workflow_call:
 permissions:
   contents: read
 jobs:
