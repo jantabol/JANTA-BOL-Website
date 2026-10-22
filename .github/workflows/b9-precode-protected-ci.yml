@@ -1,0 +1,46 @@
+name: B9 - Precode Base / Protected B0-B8 Gates
+on:
+  push:
+    branches:
+      - codex/b9-precode-frozen-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protected_b0_to_b8:
+    name: B0-B8 preserved PG17 / Phase3 News+Auth / B7 source gate
+    uses: ./.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml
+  b9_source_contract:
+    name: B9 baseline ancestry / original files / 109 original tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable Phase4 B8 ZIP starting commit and protected originals
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 77bd19639d8ffe173fcd109ca234e58aef6720dc HEAD
+          test "$(git hash-object index.html)" = "e82e88aee6e953f0eb0f817361cb87c3a5194aae"
+          test "$(git hash-object script.js)" = "8c3b52874b95fb84749c68654f385c76c7a6e1e8"
+          test "$(git hash-object style.css)" = "760f1bd96441f4717618b8b025c20228100191d8"
+          test -f JANTA_BOL_PHASE_3C_WORKING/TEST-REGISTER.md
+          test -f JANTA_BOL_PHASE_3C_WORKING/b8-staff-login.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          test -f JANTA_BOL_PHASE_3C_WORKING/phase2-client.js
+          echo "No live DB, deploy, role assignment, secret, or external message in this CI."
+      - name: Verify exact Phase 4 random test selector 001-109 and Section 100-109
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/jb_manual_test.py --list > /tmp/jb-tests.txt
+          test "$(grep -c '^P4-T[0-9][0-9][0-9] |' /tmp/jb-tests.txt)" -eq 109
+          for n in 001 004 034 092 099 100 101 102 103 104 105 106 107 108 109; do
+            python3 tools/jb_manual_test.py "P4-T$n" | grep -q 'ORIGINAL:'
+          done
+          echo "109 canonical IDs and all 10 B9 selectors present; TESTING NOT RUN."
