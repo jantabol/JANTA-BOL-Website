@@ -1,0 +1,43 @@
+<!doctype html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>B9 — Advanced Analytics | JANTA BOL</title>
+<link rel="stylesheet" href="b9-ui.css"></head><body class="b9-page">
+<header class="b9-header"><a href="admin.html" class="b9-brand">JANTA <span>BOL</span></a><a href="analytics.html">← पुराने Analytics</a><a href="admin.html">Dashboard</a></header>
+<main class="b9-shell">
+<section class="b9-panel"><h1>📊 खबरों के Views और Shares</h1>
+<p class="b9-note">केवल Founder/AAL2. Views और Share Button उपयोग के वास्तविक Events गिने जाते हैं। Unique Visitor का अनुमान नहीं लगाया जाता। Display Override असली रिकॉर्ड नहीं बदलता।</p>
+<form id="b9AnalyticsFilter">
+<div class="b9-grid">
+<div class="b9-field"><label for="period">अवधि</label><select id="period"><option value="today">आज (IST)</option><option value="7d">7 दिन</option><option value="30d" selected>30 दिन</option><option value="custom">अपनी तारीखें</option></select></div>
+<div class="b9-field"><label for="from">शुरुआत (IST)</label><input type="date" id="from"></div>
+<div class="b9-field"><label for="to">अंत (IST; शामिल)</label><input type="date" id="to"></div>
+<div class="b9-field"><label for="order">किस क्रम में</label><select id="order"><option value="views">सबसे ज़्यादा Views</option><option value="shares">सबसे ज़्यादा Shares</option><option value="latest">नई खबरें</option></select></div>
+</div><div class="b9-actions"><button type="submit" class="b9-btn">रिपोर्ट देखें</button></div>
+</form><p id="status" class="b9-status" aria-live="polite">सुरक्षित Session जाँची जा रही है…</p>
+<div id="summary"></div>
+<div style="overflow-x:auto"><table class="b9-table"><thead><tr><th>खबर</th><th>Views (raw)</th><th>Shares (raw)</th></tr></thead><tbody id="articleRows"></tbody></table></div>
+</section>
+<section class="b9-panel"><h2>🌐 Global Public Counter Defaults</h2>
+<p class="b9-muted">Default OFF है। केवल Founder निर्णय से जनता को सार्वजनिक गिनती दिखेगी। पुराने Article Override अलग से सुरक्षित रहते हैं।</p>
+<form id="globalDisplay"><label><input type="checkbox" id="globalViews"> जनता को Views दिखाएँ</label><br>
+<label><input type="checkbox" id="globalShares"> जनता को Shares दिखाएँ</label><br>
+<button type="submit" class="b9-btn">Global Controls सुरक्षित करें</button></form></section>
+<section class="b9-panel"><h2>📰 एक Article की Display Setting</h2>
+<form id="articleDisplay">
+<div class="b9-field"><label for="articleId">Published/Existing Article UUID</label><input required id="articleId" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" maxlength="36"></div>
+<label><input type="checkbox" id="articleViews"> Public Views ON</label><br><label><input type="checkbox" id="articleShares"> Public Shares ON</label>
+<div class="b9-field"><label for="viewOverride">वैकल्पिक Display Views (raw Events नहीं बदलेंगे)</label><input type="number" min="0" step="1" id="viewOverride" placeholder="खाली = वास्तविक Views"></div>
+<button type="submit" class="b9-btn">Article Display सुरक्षित करें</button></form>
+<p class="b9-note">बिना बदलाव के इस Form से बाहर जाएँ। हर Save का Owner Audit रिकॉर्ड बनेगा।</p></section>
+<section class="b9-panel"><h2>🏷️ Topic / Tag — Founder Final Approval</h2>
+<form id="taxonomyAssign">
+<div class="b9-grid">
+<div class="b9-field"><label for="termArticle">Article UUID</label><input required id="termArticle" maxlength="36"></div>
+<div class="b9-field"><label for="termKind">Type</label><select id="termKind"><option value="topic">Topic</option><option value="tag">Tag</option></select></div>
+<div class="b9-field"><label for="termSlug">Slug (English lowercase)</label><input required id="termSlug" pattern="[a-z0-9][a-z0-9-]{0,79}" maxlength="80"></div>
+<div class="b9-field"><label for="termLabel">सार्वजनिक नाम</label><input required id="termLabel" maxlength="120"></div>
+<div class="b9-field"><label for="termAction">कार्य</label><select id="termAction"><option value="add">स्वीकृति जोड़ें</option><option value="remove">पुराना Tag हटाएँ</option></select></div>
+</div><button type="submit" class="b9-btn">Founder Topic निर्णय दर्ज करें</button></form>
+<p class="b9-muted">अतीत की खबरों पर Tag भरना अनिवार्य नहीं है। कोई AI Suggestion स्वतः Approved नहीं होती।</p></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="b9-client.js"></script><script src="admin-auth.js"></script><script src="b9-analytics-ui.js"></script>
+</body></html>
