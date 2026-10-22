@@ -52,3 +52,13 @@ test('B8 private upload remains gated; publisher owner not replaced',async()=>{
  assert(!js.includes('.innerHTML='));
  assert(!html.includes('onclick='));
 });
+
+test('scoped / route reaches published-only UI without modifying protected root bytes',async()=>{
+ const config=JSON.parse(await read('vercel.json'));
+ assert.deepEqual(config.redirects,[{
+  source:'/',destination:'/JANTA_BOL_PHASE_3C_WORKING/index.html',permanent:false
+ }]);
+ const nested=await read('JANTA_BOL_PHASE_3C_WORKING/index.html');
+ assert(nested.includes('src="website-v3.js"'));
+ assert(!JSON.stringify(config).includes('b8-accountability'));
+});
