@@ -252,3 +252,11 @@ Status: WORKING COPY ONLY. Baseline folder remains untouched.
 - Social provider failure is isolated from article publication/PURL identity.
 - Added low-noise mobile workflow in existing `social.html`; no provider secret/token is stored in browser code.
 - Coding completion is not P4-T028–P4-T033 PASS. RUN-05 testing remains separate.
+
+## 2026-10-22 — B9 PROFESSIONAL PRE-CODING ONLY (NO FEATURE CODE)
+- Founder picked complete 608-file Phase-4 B8 source ZIP for B9 source-of-truth base `77bd19639d8ffe173fcd109ca234e58aef6720dc`. New `codex/b9-precode-frozen-20261022` begins exactly there. Unmerged softlaunch branch is **not** silently applied.
+- Added **CI trigger wiring only**: existing B8 PG17+old Phase3 News/Auth static+B7 closure workflow is callable; new B9 pre-code workflow on EVERY branch push reuses that full existing test job and additionally verifies source ancestry/original byte hashes and 109/109 test-selector IDs.
+- Recorded read-only 22 Oct JANTA BOL Supabase source snapshot (32 Articles: 16 published, 15 draft, 1 soft-deleted; 82 view/share events; 1 B8 private case and 0 released) in B9 gate report. NO migrations, SQL changes, new article, external communication, environment/production changes.
+- Appended truthful B8 E5 Android role/security observations and B9 T100–T109 NOT RUN into original canonical Phase-4 TEST-REGISTER; old evidence/status rows unchanged. B8 E9/Editor real-device tests remain pending, so B8 FINAL LOCK stays HOLD.
+- Completed original Topic14 requirement/evidence cross-map and affected-files list. Search/Topic/Tag/Related/Analytics implementation deliberately NOT STARTED. B9 features will be built from canonical Article/PURL/events only after this governance gate.
+- **Actual scoped pre-code CI:** GitHub Actions #39743852781 returned 3 executed jobs SUCCESS; canonical master archive job SKIPPED by intentional non-source branch guard. Full original LIVE Phase3 transactional suite NOT claimed.
