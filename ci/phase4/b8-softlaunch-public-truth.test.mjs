@@ -16,7 +16,7 @@ const banned=[
 test('protected original root stays byte-identical; root CUTOVER remains blocked',async()=>{
  const html=await read('index.html');
  const bytes=Buffer.from(html,'utf8');
- const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length+'\\0'),bytes])).digest('hex');
+ const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length),Buffer.from([0]),bytes])).digest('hex');
  assert.equal(sha,'e82e88aee6e953f0eb0f817361cb87c3a5194aae');
  // The protected demo root is not certified for soft launch; release is HOLD.
 });
