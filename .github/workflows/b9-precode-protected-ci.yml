@@ -44,3 +44,16 @@ jobs:
             python3 tools/jb_manual_test.py "P4-T$n" | grep -q 'ORIGINAL:'
           done
           echo "109 canonical IDs and all 10 B9 selectors present; TESTING NOT RUN."
+
+      - name: Extended historical static Phase3 coverage - no LIVE DB / no production secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p1-functional-regression.cjs
+          node ci/phase3-regression/static-p2-core-regression.cjs
+          node ci/phase3-regression/static-p2-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
