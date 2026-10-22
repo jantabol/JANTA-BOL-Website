@@ -273,7 +273,7 @@ as $fn$
 declare v_actor uuid:=auth.uid();v_before jsonb;v_after jsonb;
 begin
  if not private.current_owner_aal2() then raise exception 'B9_OWNER_AAL2_REQUIRED';end if;
- if p_display_override is not null and (p_display_override<0 or not p_global)
+ if p_display_override is not null and (p_display_override<0 or p_global)
  then raise exception 'B9_INVALID_OVERRIDE';end if;
  if p_global then
   if p_article_id is not null then raise exception 'B9_GLOBAL_ARTICLE_CONFLICT';end if;
