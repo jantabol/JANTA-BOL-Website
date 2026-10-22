@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>JANTA BOL — B8 Staff Login</title>
+<link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+<header class="topbar"><h1>JANTA BOL</h1><p>संवाददाता / संपादक — सुरक्षित लॉगिन</p></header>
+<main class="page">
+<section class="form-card" aria-label="B8 Staff Sign In">
+<h2>🔐 B8 कर्मचारी लॉगिन</h2>
+<p>यह केवल सक्रिय Reporter या Editor खाते के लिए है। संस्थापक के मौजूदा दूसरे डिवाइस के लॉगिन को नहीं बदलता।</p>
+<p id="state" role="status" aria-live="polite">पहले कर्मचारी की पहचान सत्यापित करें।</p>
+<form id="staffLogin" autocomplete="on">
+<div class="field"><label for="email">पंजीकृत Email</label><input id="email" type="email" autocomplete="username" required></div>
+<div class="field"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" required></div>
+<div class="actions"><button type="submit" class="btn primary" id="submit">Reporter / Editor Login</button></div>
+</form>
+<p>अपना पासवर्ड या OTP किसी को न भेजें। केवल इस डिवाइस पर दर्ज करें।</p>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+<script>
+'use strict';
+(()=>{
+const login=document.getElementById('staffLogin');
+const email=document.getElementById('email');
+const password=document.getElementById('password');
+const state=document.getElementById('state');
+const submit=document.getElementById('submit');
+const target='b8-accountability.html';
+const setStatus=(text)=>{state.textContent=text;};
+async function verifyStaff(){
+  if(!navigator.onLine)throw Error('NETWORK_REQUIRED');
+  const session=await JBBackend.session();
+  if(!session?.user)throw Error('LOGIN_REQUIRED');
+  const {data,error}=await JBBackend.client.auth.getUser();
+  if(error||data?.user?.id!==session.user.id)throw Error('AUTH_IDENTITY_NOT_VERIFIED');
+  const role=await JBBackend.role();
+  if(role!=='reporter'&&role!=='editor')throw Error('REPORTER_OR_EDITOR_ROLE_REQUIRED');
+  const {data:ready,error:readyError}=await JBBackend.client.rpc('jb_b8_g1_runtime_readiness');
+  if(readyError||ready?.component!=='JANTA_BOL_B8'||ready?.db_ready!==true||
+    ready?.contract!=='G0_G9_20261017')throw Error('B8_BACKEND_NOT_READY');
+  if(role==='reporter'){
+    const {data:binding,error:bindError}=await JBBackend.client.rpc(
+      'jb_b8_t094_source_binding_readiness');
+    if(bindError||binding?.contract!=='B8_T094_SOURCE_BINDING_V1'||
+      binding?.server_guard_ready!==true||
+      binding?.official_send_by_app!==false||
+      binding?.source_independently_verified!==false)throw Error('REPORTER_SERVER_GUARD_NOT_READY');
+  }
+  return role;
+}
+login.addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  if(submit.disabled)return;
+  submit.disabled=true;
+  const userEmail=email.value.trim();
+  const pw=password.value;
+  password.value='';
+  try{
+    if(!userEmail||!pw)throw Error('LOGIN_DETAILS_REQUIRED');
+    setStatus('सर्वर से कर्मचारी Login सत्यापित हो रहा है…');
+    await JBBackend.signIn(userEmail,pw);
+    const role=await verifyStaff();
+    setStatus('सत्यापित '+(role==='reporter'?'संवाददाता':'संपादक')+' — निजी काम खोल रहे हैं।');
+    location.replace(target);
+  }catch(err){
+    setStatus('लॉगिन/अधिकार सत्यापित नहीं हुए। कर्मचारी Email/Password और सक्रिय भूमिका जाँचें। '+String(err?.message||'LOGIN_NOT_VERIFIED'));
+  }finally{submit.disabled=false;}
+});
+(async()=>{
+ try{
+  const role=await verifyStaff();
+  setStatus('पहले से सत्यापित '+(role==='reporter'?'संवाददाता':'संपादक')+' Session है। B8 खोल रहे हैं।');
+  location.replace(target);
+ }catch(_){setStatus('Reporter / Editor खाते से Login करें। Founder वाले दूसरे डिवाइस को न छुएँ।');}
+})();
+})();
+</script>
+</body>
+</html>
