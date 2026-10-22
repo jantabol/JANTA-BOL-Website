@@ -14,6 +14,7 @@ async function display(){
  if(initialized||!root.querySelector('article.article'))return;
  initialized=true;observer.disconnect();
  const article=root.querySelector('article.article');
+ try{const approved=await JBB9.publicAuthor(id);if(approved){const meta=article.querySelector('.meta');if(meta)meta.appendChild(t('span',' • '+approved));}}catch(_){}
  try{
   const metric=await JBB9.publicMetrics(id);
   if(metric&&(metric.views_enabled||metric.shares_enabled)){
