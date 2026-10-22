@@ -45,6 +45,8 @@ jobs:
           done
           echo "109 canonical IDs and all 10 B9 selectors present; TESTING NOT RUN."
 
+      - name: Run B9 frontend/controller coding regression
+        run: node --test ci/phase4/b9-client-and-ui.test.mjs
       - name: Extended historical static Phase3 coverage - no LIVE DB / no production secrets
         shell: bash
         run: |
