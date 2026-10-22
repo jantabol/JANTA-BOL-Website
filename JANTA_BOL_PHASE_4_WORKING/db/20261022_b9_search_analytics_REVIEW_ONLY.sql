@@ -336,12 +336,26 @@ begin
  return jsonb_build_object('article_id',p_article,'kind',p_kind,'slug',p_slug,'action',p_action);
 end;$fn$;
 
+-- Reporter public-name switch applies to Article byline too; old Articles remain
+-- public after reporter opts out/departs. Never consult the private source identity.
+create or replace function public.jb_b9_public_article_author(p_article uuid)
+returns text language sql stable security definer set search_path=''
+as $fn$
+ select min(r.name)
+ from public.articles a
+ join public.reporters r on lower(r.name)=lower(a.reporter_name)
+ join public.team_accounts ta on ta.reporter_id=r.id
+ where a.id=p_article and a.status='published' and a.deleted_at is null
+   and r.public_name_enabled is true and ta.status in ('active','departed')
+$fn$;
+
 -- Fail closed on every RPC not explicitly public-facing.
 revoke all on function public.jb_b9_search(text,text,date,date,int,int,text,text,text,text,text,jsonb,int) from public,anon,authenticated;
 revoke all on function public.jb_b9_taxonomy_discover(text,int) from public,anon,authenticated;
 revoke all on function public.jb_b9_related_news(uuid,int) from public,anon,authenticated;
 revoke all on function public.jb_b9_reporter_discovery(text,int) from public,anon,authenticated;
 revoke all on function public.jb_b9_public_metrics(uuid) from public,anon,authenticated;
+revoke all on function public.jb_b9_public_article_author(uuid) from public,anon,authenticated;
 revoke all on function public.jb_b9_owner_analytics(timestamptz,timestamptz,text,int) from public,anon,authenticated;
 revoke all on function public.jb_b9_owner_metric_settings(boolean,uuid,boolean,boolean,bigint) from public,anon,authenticated;
 revoke all on function public.jb_b9_owner_assign_term(uuid,text,text,text,text) from public,anon,authenticated;
@@ -350,6 +364,7 @@ grant execute on function public.jb_b9_taxonomy_discover(text,int) to anon,authe
 grant execute on function public.jb_b9_related_news(uuid,int) to anon,authenticated;
 grant execute on function public.jb_b9_reporter_discovery(text,int) to anon,authenticated;
 grant execute on function public.jb_b9_public_metrics(uuid) to anon,authenticated;
+grant execute on function public.jb_b9_public_article_author(uuid) to anon,authenticated;
 grant execute on function public.jb_b9_owner_analytics(timestamptz,timestamptz,text,int) to authenticated;
 grant execute on function public.jb_b9_owner_metric_settings(boolean,uuid,boolean,boolean,bigint) to authenticated;
 grant execute on function public.jb_b9_owner_assign_term(uuid,text,text,text,text) to authenticated;
