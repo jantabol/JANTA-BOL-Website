@@ -1,0 +1,94 @@
+name: Phase 4 B8 Block - COMPLETE source archive
+on:
+  push:
+    branches:
+      - codex/b8-e5-owner-idle-lock-20261022
+    paths:
+      - '.github/workflows/b8-e5-full-source-archive.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  full_b0_to_b8_snapshot:
+    name: Full tracked source + 109-test random selector + SHA256 verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: No production secrets and unchanged source baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ github.ref_name }}" = "codex/b8-e5-owner-idle-lock-20261022"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${B2_APPLICATION_KEY:-}"
+          test "$(git hash-object index.html)" = "e82e88aee6e953f0eb0f817361cb87c3a5194aae"
+          test "$(git hash-object script.js)" = "8c3b52874b95fb84749c68654f385c76c7a6e1e8"
+          test "$(git hash-object style.css)" = "760f1bd96441f4717618b8b025c20228100191d8"
+          test -f JANTA_BOL_PHASE_3C_WORKING/b8-staff-login.html
+          test -f ci/phase4/b8-e5-staff-login-security.test.mjs
+          echo "SOURCE SNAPSHOT ONLY: no database, live media, deploy, domain, secrets or merges."
+      - name: Verify B8 E5 and protected Phase 3 source
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b8-e5-staff-login-security.test.mjs
+          node --test ci/phase4/b8-mobile-focused-workflow.test.mjs
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+      - name: Generate exact FULL tracked source ZIP from this single Git HEAD
+        shell: bash
+        env:
+          SOURCE_REF_NAME: ${{ github.ref_name }}
+          SOURCE_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --out "dist/B8_BASE_${SOURCE_SHA:0:12}.zip"
+          python3 - <<'PY'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import zipfile
+
+          sha=os.environ['SOURCE_SHA']
+          original=Path('dist')/f'B8_BASE_{sha[:12]}.zip'
+          dest=Path('dist')/f'Phase_4_B8_Block_{sha[:12]}.zip'
+          manifest_name='JANTA_BOL_MASTER_SOURCE/MASTER_SHA256_MANIFEST.json'
+          with zipfile.ZipFile(original) as source, zipfile.ZipFile(dest,'w',compression=zipfile.ZIP_DEFLATED,compresslevel=7,allowZip64=True) as target:
+              for info in source.infolist():
+                  raw=source.read(info.filename)
+                  if info.filename==manifest_name:
+                      manifest=json.loads(raw)
+                      assert manifest['exact_commit_sha']==sha
+                      manifest['source_branch']=os.environ['SOURCE_REF_NAME']
+                      manifest['official_b8_final_pass']='HOLD_E4_OPERATIONAL_E5_EDITOR_E9_EXTERNAL_EVIDENCE'
+                      manifest['source_note']='Latest E5 review branch: NOT merged, NOT production approved. Original B0-B7 root protected. B8 CI may pass without Android E5/editor/E9.'
+                      raw=(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n').encode('utf-8')
+                  target.writestr(info,raw)
+          digest=hashlib.sha256(dest.read_bytes()).hexdigest()
+          (Path('dist')/'MASTER_ZIP_SHA256.txt').write_text(digest+'  '+dest.name+'\n')
+          original.unlink()
+          print('PHASE 4 B8 COMPLETE SHA256:',digest)
+          PY
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --verify "dist/Phase_4_B8_Block_${SOURCE_SHA:0:12}.zip"
+          test "$(python3 tools/jb_manual_test.py --list | grep -c '^P4-T[0-9][0-9][0-9] |')" -eq 109
+          for t in P4-T001 P4-T034 P4-T098 P4-T109; do
+             python3 tools/jb_manual_test.py "$t" | grep "ORIGINAL:"
+          done
+          ls -lh dist/Phase_4_B8_Block_*.zip dist/MASTER_ZIP_SHA256.txt
+      - name: Upload immutable full B8 source and integrity SHA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Phase_4_B8_Block_COMPLETE
+          path: |
+            dist/Phase_4_B8_Block_*.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
