@@ -31,6 +31,7 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/website-v3.js'
       - 'index.html'
       - 'ci/phase4/b8-softlaunch-public-truth.test.mjs'
+      - 'vercel.json'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
       - 'ci/phase4/b8-g3-cp01-android-workflow.test.mjs'
