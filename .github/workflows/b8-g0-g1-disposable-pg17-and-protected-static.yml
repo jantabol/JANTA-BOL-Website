@@ -4,6 +4,7 @@ on:
     branches:
       - codex/b8-g0-g1-accountability-20261017
       - codex/b8-g5-main-based-integration-20261017
+      - codex/b8-e5-owner-idle-lock-20261022
     paths:
       - '.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql'
@@ -26,6 +27,8 @@ on:
       - 'ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs'
       - 'ci/phase4/b8-g2-cp02-race-isolated-pg17.sh'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-staff-login.html'
+      - 'ci/phase4/b8-e5-staff-login-security.test.mjs'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
       - 'ci/phase4/b8-g3-cp01-android-workflow.test.mjs'
@@ -243,6 +246,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
     name: Full B0–B8 Source Master ZIP / all files / SHA256 / random test selector
+    # Master archive is only for exact authoritative B8 integration branch.
+    if: github.ref_name == 'codex/b8-g5-main-based-integration-20261017'
     needs:
       - b8-g1-disposable-postgres
       - b8-g0-news-unchanged
@@ -339,6 +344,7 @@ jobs:
           node --test ci/phase4/b8-g5-t093-android-document-projection.test.mjs
           node --test ci/phase4/b8-g5-t093-purpose-mobile-contract.test.mjs
           node --test ci/phase4/b8-live-parity-static.test.mjs
+          node --test ci/phase4/b8-e5-staff-login-security.test.mjs
       - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js
