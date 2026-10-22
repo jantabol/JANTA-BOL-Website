@@ -28,12 +28,13 @@ Date: 22 Oct 2026 (IST). Review-only; **not a release approval and not an offici
 ## Mandatory release decisions
 - `P4-T092…T099`: remain **FINAL HOLD** according to original 321-page Phase-4 Master (pp312–314) and R3. Founder-only final signature is absent. New code and isolated CI are NOT equivalent to E4/E5/E9.
 - Root production homepage currently advertises hard-coded non-Supabase demonstration headlines. **Do not call that root news site soft-launched.** It is protected by byte-lock CI; a separate Founder-reviewed root cutover plan and valid source/route evidence are needed. No silent root replacement / old URL loss.
-- A **scoped public-only contact-first soft-launch** can be considered separately from finishing B8 E9, but only after real public route and content verification, Ads contact-only exposure review, launch domain confirmation and Founder explicit release acceptance. B8 private and official-send workflows stay restricted. Not yet approved.
+- A **scoped public-only contact-first soft-launch** can be considered separately from finishing B8 E9. Review branch now stages `vercel.json` redirect for `/` **only** to the existing nested published-news UI; the protected root HTML blob remains byte-identical. Real hosted redirect/route/content verification, Ads contact-only exposure review, launch domain confirmation and Founder explicit release acceptance are still mandatory. No redirect is promoted to production. B8 private and official-send workflows stay restricted. Not yet approved.
 - No extra spending, no fake PASS, no public Article correction/new story, no Government outbound message, no touching Cricket project.
 
 ## Verification statuses
 - Protected root lock: PASS preserved.
-- Candidate homepage samples removed: static candidate PASS, real public Android/production launch **HOLD**.
+- Candidate homepage samples removed: static candidate PASS; Vercel preview deploy READY for reviewed SHA, browser redirect response not independently proved; real production launch **HOLD**.
+- Protected CI run `39721785453` at code SHA `0c42692995208d5ada926358f208504da1cc61d1`: G0 protected News/Auth/B7 SUCCESS + G1 disposable PG17 B8 SUCCESS; original B0-B8 master ZIP correctly SKIPPED on this review branch. No E3/E4/E5/E9 upgrade from this result.
 - All B8 backend fixes and original protected regression: see corresponding current GitHub CI run; wait for completed result before claiming.
 - E4: source/isolated PASS, LIVE case-linked URL **NOT RUN/HOLD**.
 - E5: database privilege/isolated PASS, live cross-role AAL2 **NOT RUN/HOLD**.
