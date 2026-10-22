@@ -94,3 +94,5 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-fixture.sql
       - name: Apply B9 REVIEW-ONLY migration strictly to disposable PG17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
+      - name: Run B9 PG17 negative search and analytics checks
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
