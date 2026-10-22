@@ -1,6 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 const root=new URL('../../',import.meta.url);
 const read=async path=>readFile(new URL(path,root),'utf8');
 const banned=[
@@ -12,12 +13,12 @@ const banned=[
  '18.6K व्यूज़','15.1K व्यूज़',
  'https://picsum.photos','https://images.unsplash.com'
 ];
-test('public root routes to existing canonical published-news UI, no demo headlines',async()=>{
+test('protected original root stays byte-identical; root CUTOVER remains blocked',async()=>{
  const html=await read('index.html');
- assert.match(html,/JANTA_BOL_PHASE_3C_WORKING\/index\.html/);
- assert.match(html,/location\.replace/);
- for(const literal of banned)assert(!html.includes(literal),'false root story: '+literal);
- assert(!html.includes('🔴 LIVE'));
+ const bytes=Buffer.from(html,'utf8');
+ const sha=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+bytes.length+'\\0'),bytes])).digest('hex');
+ assert.equal(sha,'e82e88aee6e953f0eb0f817361cb87c3a5194aae');
+ // The protected demo root is not certified for soft launch; release is HOLD.
 });
 test('public homepage has no invented public headlines / view counts / fake video',async()=>{
  const html=await read('JANTA_BOL_PHASE_3C_WORKING/index.html');
