@@ -70,3 +70,12 @@
 - Frontend: `add-news.html` persists its social controls to canonical social_distribution after article save/publish; `social.html` reads backend global setting, displays independent states and provides manual-share fallback.
 - Client: `phase2-client.js` social settings/save/attempt/history RPC adapters; authenticated direct INSERT/UPDATE/DELETE on `social_distribution` is revoked and preference writes use `jb_social_save_preferences_internal`, preventing client-forged Posted/provider state.
 - Provider credentials are not stored/exposed in frontend; real API/provider execution remains dependency-gated for testing.
+
+## Phase-4 B9 — PRE-CODE ownership map (2026-10-22, NOT IMPLEMENTED)
+- **Authority:** Current `public.articles` owns Article identity, status, publication and permanent URL. `analytics_events`/security-invoker `article_stats` own real views/shares; `article_public_view_settings` owns current article display settings. No competing article/search/analytics source allowed.
+- **Existing frontend (PROTECTED):** `index.html`, `website-v3.js` (homepage+district/category), `article.html`, `backend-client.js`, `analytics.html`, `phase2-client.js`, `records.html`, `reporters.html` (Reporter ON/OFF). These are candidate integration locations, not edits.
+- **New additions only after explicit coding gate:** public-safe search/Archive and taxonomy/related endpoints, scoped PG17 migration(s), tests `ci/phase4/b9-*`, guarded time-range analytics. All actual paths/contracts must be derived at first source-change review, not guessed.
+- **Privacy:** NEVER index private B8 cases, Article internal Source/Government IDs, audit/history, grievance private evidence, or raw analytics. B8 public approved projection alone may participate when populated (0 releases on audited date).
+- **Branch conflict watch:** `review/b8-softlaunch-factual-public-20261022` changed `JANTA_BOL_PHASE_3C_WORKING/index.html` + `website-v3.js`; inspect its full delta before any B9 homepage/feed edit.
+- **CI owner:** `.github/workflows/b9-precode-protected-ci.yml` calls ORIGINAL reusable `b8-g0-g1-disposable-pg17-and-protected-static.yml`; the Phase3 historical LIVE suites are additional release gates, not silently classified as complete.
+- **Source gate:** `JANTA_BOL_PHASE_4_WORKING/review/B9_PRECODING_GATE_AND_SOURCE_FREEZE_20261022.md`; immutable base `77bd19639d8ffe173fcd109ca234e58aef6720dc`. NO B9 FEATURE CODE exists at this checkpoint.
