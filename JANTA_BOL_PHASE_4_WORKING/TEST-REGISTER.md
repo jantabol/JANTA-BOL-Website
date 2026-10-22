@@ -1387,3 +1387,10 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - Divergent soft-launch review `review/b8-softlaunch-factual-public-20261022` has homepage/feed/alias diffs not contained in this frozen ZIP; mandatory inspection/reconciliation **before touching** `JANTA_BOL_PHASE_3C_WORKING/index.html` or `website-v3.js`. No automatic merge/cherry-pick. Review source `review/B9_PRECODING_GATE_AND_SOURCE_FREEZE_20261022.md`.
 - Next code authority: Founder must explicitly release first B9 test batch T100/T106, and all B9 source pushes must rerun this protected CI. Stop if RED; no false PASS.
 
+
+## B9 CODING-CANDIDATE CHECKPOINT — 22 OCT 2026
+- **Source status**: P4-T100..T109 (10/10) have implementation paths in `JANTA_BOL_PHASE_3C_WORKING/b9-*.*` and review-only `JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql`. `JANTA_BOL_PHASE_4_WORKING/review/B9_COMPLETE_CODING_CANDIDATE_20261022.md` is the coding/evidence map.
+- **NO FAKE PASS:** All ten official RUN-13 tests remain **NOT RUN / NOT LOCKED** pending actual real-device/production API/Article version/audit proofs. CI success = isolated synthetic E1/E2 coding verification, not user/device E3, real LIVE E2/E4/E5.
+- **Security:** owner/AAL2 controls, RLS + function EXECUTE boundaries, published-only index, private B8 unchanged; live migration, Vercel production rollout and Main merge **NOT RUN / NOT AUTHORIZED**.
+- **Prior status preservation:** B8 FINAL HOLD (real Editor/E9 and case-linked operational Article E4 pending). Historic B0–B8 TEST-REGISTER entries not overwritten.
+- **B9 exit gate:** release only after E1 + E2 + E3 + E4 + E5 + E7 as prescribed per test, including P4-T109 old regressions and official evidence ledger. Do not enter B10 before B9 verified lock.
