@@ -4,6 +4,7 @@ on:
     branches:
       - codex/b8-g0-g1-accountability-20261017
       - codex/b8-g5-main-based-integration-20261017
+      - review/b8-softlaunch-factual-public-20261022
     paths:
       - '.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql'
@@ -26,6 +27,11 @@ on:
       - 'ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs'
       - 'ci/phase4/b8-g2-cp02-race-isolated-pg17.sh'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/website-v3.js'
+      - 'index.html'
+      - 'ci/phase4/b8-softlaunch-public-truth.test.mjs'
+      - 'vercel.json'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
       - 'ci/phase4/b8-g3-cp01-android-workflow.test.mjs'
@@ -243,6 +249,9 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
   b8-master-source-backup:
     name: Full B0–B8 Source Master ZIP / all files / SHA256 / random test selector
+    # Source archive is intentionally bound to the original B8 integration branch.
+    # Do NOT relax its exact branch/SHA release gate for a soft-launch review.
+    if: github.ref_name == 'codex/b8-g5-main-based-integration-20261017'
     needs:
       - b8-g1-disposable-postgres
       - b8-g0-news-unchanged
@@ -330,6 +339,7 @@ jobs:
           node --test ci/phase4/b8-g6-release-ready-android.test.mjs
           node --test ci/phase4/b8-g7-chronology-android.test.mjs
           node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-softlaunch-public-truth.test.mjs
           node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
           node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
           node --test ci/phase4/b8-spck-mime-regression.test.mjs
