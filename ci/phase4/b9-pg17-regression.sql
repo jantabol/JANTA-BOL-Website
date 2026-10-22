@@ -24,6 +24,8 @@ begin
  if jsonb_array_length(y->'items')<>1 then raise exception 'B9_KEYSET_SECOND_PAGE';end if;
  x:=public.jb_b9_related_news(vid,5);
  if jsonb_array_length(x)<>2 or x::text like '%SENSITIVE_DRAFT%' then raise exception 'B9_RELATED_PRIVACY';end if;
+ if public.jb_b9_public_article_author(vid)<>'Opted-in Reporter' then raise exception 'B9_OPTIN_ARTICLE_AUTHOR_MISSING';end if;
+ if public.jb_b9_public_article_author(did) is not null then raise exception 'B9_PRIVATE_DRAFT_AUTHOR_LEAK';end if;
  x:=public.jb_b9_reporter_discovery();
  if jsonb_array_length(x)<>1 or x::text like '%Private Reporter%' then raise exception 'B9_REPORTER_OPT_OUT_LEAK';end if;
  x:=public.jb_b9_public_metrics(vid);
@@ -87,6 +89,7 @@ update public.reporters set public_name_enabled=false where name='Opted-in Repor
 do $$
 begin
  if public.jb_b9_reporter_discovery()<>'[]'::jsonb then raise exception 'B9_REPORTER_OFF_STILL_VISIBLE';end if;
+ if public.jb_b9_public_article_author('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa') is not null then raise exception 'B9_REPORTER_OFF_BYLINE_LEAK';end if;
  if jsonb_array_length(public.jb_b9_search(p_query=>'archive')->'items')<>1 then raise exception 'B9_REPORTER_OFF_DELETED_NEWS';end if;
 end;$$;
 
