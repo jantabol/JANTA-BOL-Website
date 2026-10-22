@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/",
+      "destination": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
+      "permanent": false
+    }
+  ]
+}
