@@ -103,7 +103,7 @@ end;$$;
 
 -- Synthetic lifecycle E4 regression: correction must replace public search snippet,
 -- unpublished story absent, republish SAME UUID/slug; Index REBUILD never generates identity.
-do $
+do $$
 declare
  oid uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
  original_slug text; before_id uuid; result jsonb;
@@ -121,7 +121,7 @@ begin
     (select count(*) from public.articles where id=before_id)<>1 then
   raise exception 'B9_REPUBLISH_NEW_IDENTITY';
  end if;
-end;$;
+end;$$;
 reindex index public.b9_articles_public_text_idx;
 reindex index public.b9_articles_public_archive_idx;
 
