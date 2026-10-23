@@ -130,6 +130,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t063_recovery_revoked_session_guard_SAFE.sql
       - name: "T063 NEGATIVES - revoked JWT, Reporter, anon denied; AAL1 valid password recovery permitted"
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-regression.sql
+      - name: "T065 RED: reproduce stale Editor JWT direct Article UPDATE/INSERT on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-repro-pg17.sql
+      - name: "T065 minimum Article mutation session guard on PG17 ONLY, not LIVE"
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t065_stale_article_write_session_guard_REVIEW_ONLY.sql
+      - name: "T065 GREEN: revoked Editor/Reporter denied; active Owner/Editor/Reporter mutations preserved"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-guard-regression-pg17.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
