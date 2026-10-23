@@ -71,3 +71,47 @@ test('Public Article failure isolation and PURL identity preserved',async()=>{
  assert.match(backend,/async function listPublishedPublic/);
  assert.match(backend,/async function requireOwner/);
 });
+
+
+test('T101 invalid date after successful Search clears stale list, blocks RPC and speaks Hindi',async()=>{
+ const code=await load('b9-search-ui.js');
+ const elements=new Map();
+ const createNode=()=>({children:[],hidden:false,disabled:false,textContent:'',className:'',
+    replaceChildren(){this.children=[];},
+    appendChild(x){this.children.push(x);},
+    get childElementCount(){return this.children.length;}});
+ for(const id of ['b9Filters','b9Status','b9Results','b9More','b9Submit','b9Terms','b9Reporters'])elements.set(id,createNode());
+ const form=elements.get('b9Filters');
+ form.events={};
+ form.addEventListener=(name,fn)=>{form.events[name]=fn;};
+ form.querySelectorAll=()=>[];
+ const buttons=elements.get('b9More');
+ buttons.addEventListener=()=>{};
+ let input={query:'test',from:'',to:''},queries=0;
+ const ctx={
+  document:{getElementById:id=>elements.get(id),createElement:()=>createNode()},
+  location:{pathname:'/b9-search.html',search:''},
+  history:{replaceState(){}},
+  URLSearchParams,
+  FormData:class{entries(){return Object.entries(input);}},
+  setTimeout,
+  JBB9:{
+    cleanSearch(f){if(f.from&&f.to&&f.from>f.to)throw Error('B9_INVALID_DATE_RANGE');return f;},
+    search:async()=>{queries++;return {items:[],next_cursor:null};},
+    taxonomy:async()=>[],
+    reporterDiscovery:async()=>[]
+  }
+ };
+ vm.runInNewContext(code,ctx);
+ await new Promise(resolve=>setImmediate(resolve));
+ const results=elements.get('b9Results');
+ results.appendChild(createNode()); // previous successful results should not persist.
+ input={query:'',from:'2026-10-20',to:'2026-10-10'};
+ const before=queries;
+ form.events.submit({preventDefault(){}});
+ assert.equal(queries,before,'bad date must not call backend');
+ assert.equal(results.childElementCount,0,'old items must be removed on invalid date');
+ assert.equal(buttons.hidden,true,'paging must be hidden after invalid date');
+ assert.match(elements.get('b9Status').textContent,/गलत तारीख सीमा/);
+ assert.doesNotMatch(elements.get('b9Status').textContent,/B9_INVALID_DATE_RANGE/);
+});
