@@ -74,6 +74,27 @@ BEGIN
 END $editor$;
 RESET ROLE;
 
+-- Synthetic active Admin/Team actor: newsroom read as before, no Owner history.
+INSERT INTO public.user_roles(user_id,role)
+ VALUES('44444444-4444-4444-8444-444444444444','admin'::public.app_role);
+INSERT INTO public.team_accounts(user_id,reporter_id,assigned_role,status)
+ VALUES('44444444-4444-4444-8444-444444444444',NULL,'admin'::public.app_role,'active');
+SELECT set_config('b9.test_uid','44444444-4444-4444-8444-444444444444',true),
+set_config('b9.test_aal','aal2',true),set_config('b10.session_active','on',true);
+SET LOCAL ROLE authenticated;
+DO $admin$
+BEGIN
+ IF private.current_app_role()<>'admin'::public.app_role
+ THEN RAISE EXCEPTION 'T062_ACTIVE_ADMIN_CONTEXT_MISSING';END IF;
+ IF (SELECT count(*) FROM public.articles)<>6
+ THEN RAISE EXCEPTION 'T062_ACTIVE_ADMIN_EDITORIAL_READ_REGRESSED';END IF;
+ IF (SELECT count(*) FROM public.article_versions)<>0
+ THEN RAISE EXCEPTION 'T062_ADMIN_SELF_PROMOTED_TO_OWNER_HISTORY';END IF;
+ IF private.current_owner_aal2()
+ THEN RAISE EXCEPTION 'T062_ADMIN_HAS_OWNER_AAL2';END IF;
+END $admin$;
+RESET ROLE;
+
 -- Editor inactive session cannot keep reading nonpublic.
 SELECT set_config('b10.session_active','off',true);
 SET LOCAL ROLE authenticated;
