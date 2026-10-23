@@ -41,6 +41,51 @@ begin
 end;
 $$;
 
+-- P4-T107 complete functional/search matrix on ISOLATED PG17 only (ROLLBACK).
+-- Demonstrates optional untagged 2024 history; approval/privacy remain backend gates.
+do $t107_search_matrix$
+declare
+  r jsonb;
+  id_archive uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+  id_recent uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+begin
+  if jsonb_array_length(public.jb_b9_search(p_query=>'Old approved archive story')->'items')<>1
+      then raise exception 'T107_HEADLINE_SEARCH'; end if;
+  if public.jb_b9_search(p_query=>'Shivpuri public body')#>>'{items,0,id}'<>id_recent::text
+      then raise exception 'T107_BODY_SEARCH'; end if;
+  if public.jb_b9_search(p_id=>id_archive::text)#>>'{items,0,permanent_url}'<>'article.html?id='||id_archive::text
+      then raise exception 'T107_EXACT_UUID_PURL'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_year=>2024,p_month=>8)->'items')<>1
+      then raise exception 'T107_OLD_UNTAGGED_ARCHIVE'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_date_from=>'2024-08-22',p_date_to=>'2024-08-22')->'items')<>1
+      then raise exception 'T107_INCLUSIVE_DATE'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_date_from=>'2024-08-01',p_date_to=>'2024-08-31',p_district=>'Shivpuri',p_location=>'Pichhore',p_category=>'Education')->'items')<>1
+      then raise exception 'T107_COMBINED_DATE_DISTRICT_LOCATION_CATEGORY'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_district=>'Guna')->'items')<>1
+      then raise exception 'T107_DISTRICT'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_location=>'Karera')->'items')<>1
+      then raise exception 'T107_LOCATION'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_category=>'Health')->'items')<>1
+      then raise exception 'T107_CATEGORY'; end if;
+  if public.jb_b9_search(p_sort=>'latest')#>>'{items,0,id}'<>id_recent::text
+      then raise exception 'T107_SORT_LATEST'; end if;
+  if public.jb_b9_search(p_sort=>'oldest')#>>'{items,0,id}'<>id_archive::text
+      then raise exception 'T107_SORT_OLDEST'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_term=>'unapproved-auto-tag')->'items')<>0
+      then raise exception 'T107_NO_AUTOMATIC_TOPIC_APPROVAL'; end if;
+  if jsonb_array_length(public.jb_b9_search(p_id=>'dddddddd-dddd-4ddd-8ddd-dddddddddddd'::text)->'items')<>0
+      or jsonb_array_length(public.jb_b9_search(p_id=>'eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee'::text)->'items')<>0
+      or jsonb_array_length(public.jb_b9_search(p_id=>'ffffffff-ffff-4fff-8fff-ffffffffffff'::text)->'items')<>0
+      then raise exception 'T107_DRAFT_UNPUBLISHED_DELETED_UUID_LEAK'; end if;
+  r:=public.jb_b9_search(p_id=>id_archive::text);
+  if exists(select 1 from jsonb_object_keys(r#>'{items,0}') k
+      where k not in ('id','title','excerpt','category','district','location','news_date','published_at','terms','permanent_url'))
+      then raise exception 'T107_PRIVATE_FIELD_IN_PUBLIC_PROJECTION'; end if;
+  if jsonb_array_length(public.jb_b9_related_news(id_archive,5))<>2
+      then raise exception 'T107_RELATED_PUBLIC_ONLY'; end if;
+end;
+$t107_search_matrix$;
+
 -- Protected modifications strictly require existing Owner + fresh AAL2. Verify negative.
 select set_config('b9.test_uid','22222222-2222-2222-2222-222222222222',false);
 select set_config('b9.test_aal','aal1',false);
