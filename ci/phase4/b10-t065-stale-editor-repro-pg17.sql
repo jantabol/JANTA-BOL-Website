@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 -- T065 isolated PG17 - reproduce LIVE stale-JWT editor write boundary, never LIVE.
 -- Input: T062 fixed Article SELECT + T063 auth.sessions fixture. No production tokens.
 GRANT INSERT,UPDATE ON public.articles TO authenticated;
@@ -37,4 +37,4 @@ BEGIN
  VALUES('99990000-0000-4000-8000-000000000065','t065-old-stale-editor','draft','T065 Disposable','T065',auth.uid());
 END $red$;
 ROLLBACK;
-\\echo 'T065 RED verified on disposable PG17: stale editor JWT could UPDATE public content and INSERT a draft; transaction ROLLBACK.'
+\echo 'T065 RED verified on disposable PG17: stale editor JWT could UPDATE public content and INSERT a draft; transaction ROLLBACK.'

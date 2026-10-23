@@ -1,4 +1,4 @@
-\\set ON_ERROR_STOP on
+\set ON_ERROR_STOP on
 -- T065 GREEN regression - after REVIEW_ONLY migration in isolated PG17; NOTHING permanent.
 BEGIN;
 SET LOCAL statement_timeout='20s';
@@ -81,4 +81,4 @@ BEGIN
 END $owner_positive$;
 RESET ROLE;
 ROLLBACK;
-\\echo 'T065 GREEN: stale Editor/Reporter INSERT+UPDATE DENIED; valid Editor/Reporter/Owner positive paths PASS; no fixture writes retained.'
+\echo 'T065 GREEN: stale Editor/Reporter INSERT+UPDATE DENIED; valid Editor/Reporter/Owner positive paths PASS; no fixture writes retained.'
