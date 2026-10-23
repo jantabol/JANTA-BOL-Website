@@ -214,7 +214,7 @@ test('B9 UI fix: every viewer sees a Search/archive entry before the giant homep
 
 test('B9 UI fix: Related News links readable on dark Article, no default browser blue',async()=>{
  const [article,related]=await Promise.all([load('article.html'),load('b9-article-ui.js')]);
- assert.match(article,/\.b9-related a,\.b9-related a:visited\{color:#ffd1c9/,'regular and visited links share accessible high contrast');
+ assert.match(article,/\.b9-related a,\.b9-related a:visited\{color:#ffe08a/,'regular and visited links share accessible high contrast');
  assert.match(article,/\.b9-related a:hover,\.b9-related a:focus-visible\{color:#fff/);
  assert.match(article,/\.b9-related a:focus-visible\{outline:2px solid #fff/);
  assert.match(related,/a\.href=link/,'each related Article still uses original permanent URL');
@@ -223,7 +223,7 @@ test('B9 UI fix: Related News links readable on dark Article, no default browser
   const n=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4);
   return n[0]*0.2126+n[1]*0.7152+n[2]*0.0722;
  };
- const l1=lum('#ffd1c9'),l2=lum('#191b20');
+ const l1=lum('#ffe08a'),l2=lum('#191b20');
  const contrast=(Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);
  assert.ok(contrast>=7,`Related News text contrast must exceed WCAG AAA 7:1; got ${contrast.toFixed(2)}`);
 });
