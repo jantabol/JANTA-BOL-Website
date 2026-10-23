@@ -68,7 +68,7 @@ test('P4-T066 — old session/device revocation and advertiser isolation hooks p
  assert.ok(has(app+'b7-ad-revocation-bridge.js'));
  assert.match(read(app+'b7-ad-revocation-bridge.js'),/jb_ad_visibility_alive_public/);
  assert.match(read(app+'b7-ad-revocation-bridge.js'),/if\(error\|\|data!==true\)remove\(\)/);
- assert.match(migration,/revoke all on public\.b9_article_terms/);
+ assert.match(migration,/revoke all on public\.b9_taxonomy_terms,public\.b9_article_terms/);
 });
 test('P4-T067 — incident RCA and governed audit baseline is preserved',()=>{
  for(const p of ['ci/phase3-regression/static-p3-incident-regression.cjs',
