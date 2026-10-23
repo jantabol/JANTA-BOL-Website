@@ -93,6 +93,44 @@ begin
  if jsonb_array_length(public.jb_b9_search(p_query=>'archive')->'items')<>1 then raise exception 'B9_REPORTER_OFF_DELETED_NEWS';end if;
 end;$$;
 
+-- B9_T105_COMPLETE_KEYSET_PAGINATION: synthetic 3-page exhaustive traversal, no duplicates.
+-- Explicitly check JSONB null cursor (distinct from SQL NULL): never call next page
+-- once a terminal page has no cursor. This exercises all three public sort modes.
+do $b9_full_cursor$
+declare
+  mode text;
+  response jsonb;
+  next_cursor jsonb;
+  seen uuid[];
+  article_id uuid;
+  n integer;
+begin
+  foreach mode in array array['latest','oldest','relevance'] loop
+    seen:=array[]::uuid[];
+    next_cursor:=null;
+    n:=0;
+    loop
+      response:=public.jb_b9_search(p_sort=>mode,p_limit=>1,p_cursor=>next_cursor);
+      if jsonb_array_length(response->'items')<>1 then
+        raise exception 'B9_T105_KEYSET_EARLY_EMPTY_%',mode;
+      end if;
+      article_id:=(response#>>'{items,0,id}')::uuid;
+      if article_id=any(seen) then
+        raise exception 'B9_T105_KEYSET_DUPLICATE_%',mode;
+      end if;
+      seen:=array_append(seen,article_id);
+      n:=n+1;
+      if n>4 then raise exception 'B9_T105_KEYSET_LOOP_%',mode; end if;
+      next_cursor:=response->'next_cursor';
+      exit when jsonb_typeof(next_cursor) is distinct from 'object';
+    end loop;
+    if n<>3 or array_length(seen,1) is distinct from 3 then
+      raise exception 'B9_T105_KEYSET_MISSING_%: got %',mode,n;
+    end if;
+  end loop;
+end;
+$b9_full_cursor$;
+
 -- New public search grant but no direct access to original private source/movement.
 do $$
 begin
