@@ -96,7 +96,8 @@ END $admin$;
 RESET ROLE;
 
 -- Editor inactive session cannot keep reading nonpublic.
-SELECT set_config('b10.session_active','off',true);
+SELECT set_config('b9.test_uid','33333333-3333-3333-3333-333333333333',true),
+set_config('b10.session_active','off',true);
 SET LOCAL ROLE authenticated;
 DO $editor_off$
 BEGIN
