@@ -81,7 +81,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T058 | Audit/Retention | Records Implementation + Migration Integrity | B2 | PASS |
 | P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | IN PROGRESS |
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
-| P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | IN PROGRESS — E2/E5 PARTIAL; LIVE public_live_updates anon SQLSTATE 42501, FINAL HOLD |
+| P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | PASS + LOCK — E1+E2+E5; LIVE public_live_updates SQLSTATE 42501 repaired with scoped boolean RLS helper; 12/12 anon public updates, private ACL unchanged |
 | P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | NOT RUN |
 | P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | NOT RUN |
 | P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
@@ -1490,3 +1490,10 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - New source paths: `ci/phase4/b10-whole-platform-security-source.test.mjs` (9 source contracts), `ci/phase4/b10-whole-platform-security-pg17.sql` (real disposable PostgreSQL17 Authority/RLS/IDOR/Audit negative probes), `.github/workflows/b10-whole-platform-security-candidate.yml` (old protected G0/G1/Auth/Recovery/Incident + B9 + B10), `ci/phase4/build_b0_b10_full_source_zip.py` (all Git tracked SHA manifest, exact commit identity), and `review/B10_ONE_SHOT_CODING_CANDIDATE_T060_T068_SCOPE_AND_TEST_HANDOFF_20261023.md` (evidence map).
 - Production host, Supabase users, RLS/DDL/grants, session tokens, Vercel Alias/main untouched. 21 anon-callable SECURITY DEFINER and 116 authenticated security-definer Advisor warnings are review gates, NOT presumed defects/no batch revoke; 43 no-policy RLS INFO and 1 leaked-password-protection WARN require scoped investigation.
 - **Legacy B9-T105 FINAL HOLD**: real 1–2-year-old Article/at-scale Android E3 not supplied by synthetic 5000-row PG17. B8 historic final gate stays independent HOLD. **B10 CODING != B10 FINAL LOCK**, B11 not started.
+
+
+## P4-T061 FINAL PASS + LOCK — B10 RUN-09 (23 OCT 2026)
+- Original 42501 on anonymous `public_live_updates` reproduced on real backend and disposable PG17; fixed by one scoped private-table-checking boolean-only SECURITY DEFINER, preserving original 1 public SELECT policy name, session+Article binding, public visibility and RLS without any anon SELECT on `live_sessions`.
+- **E1**: PG17 red→green 8-case privacy/hidden session/Article mismatch/soft deletion/revocation; source tests and B0–B8 protection GREEN, GitHub CI `39962519186` SUCCESS. **E2**: fully rolled-back LIVE transaction canary then approved atomic LIVE migration with guards; fresh post-COMMIT anon+guest queries show **12/12 actual LIVE updates**, old private Live rows 0, external Article/Source/Audit/Grievance boundaries intact. **E5**: original 1560 audit logs, 878 Article Versions, 31 private Source records and related real Grievance/Compliance history preserved; change/revert provenance source-bound. Full report `review/P4_T061_RUN09_FINAL_E1_E2_E5_SAFE_LIVE_UPDATES_20261023.md`.
+- ⚠️ One newly scoped public boolean-only SECURITY DEFINER leads Supabase Advisor 21→22 anonymous callable WARN, intentionally security-audited under T061; broader advisor/secret/auth topics are **T064/T068**, not an excuse to revoke existing public feeds. T063 Android E3 still DUE.
+- **T061 ONLY = PASS + LOCK.** T060/T062–T068 not locked. B10 global still HOLD. B9 T105 actual-old Android E3 still HOLD. No Cricket touch.
