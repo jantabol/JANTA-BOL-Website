@@ -1,0 +1,41 @@
+/* JANTA BOL B9 public Search CTA: scoped, never changes Phase 3/B8 header or feed. */
+.b9-search-entry{
+  box-sizing:border-box;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:10px 16px;
+  padding:12px 14px;
+  background:#17191c;
+  color:#f5f5f5;
+  border-bottom:1px solid #454950;
+  font-family:Arial,sans-serif;
+}
+.b9-search-entry a{
+  box-sizing:border-box;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:46px;
+  max-width:100%;
+  padding:10px 17px;
+  border-radius:10px;
+  border:2px solid #ef7d82;
+  background:#99151e;
+  color:#fff;
+  text-decoration:none;
+  font-size:17px;
+  font-weight:800;
+  line-height:1.35;
+  text-align:center;
+  overflow-wrap:anywhere;
+}
+.b9-search-entry a:visited{color:#fff}
+.b9-search-entry a:hover{background:#bd1b27;color:#fff}
+.b9-search-entry a:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.b9-search-entry-hint{font-size:14px;color:#ececef;text-align:center}
+@media(max-width:540px){
+  .b9-search-entry{padding:10px 12px}
+  .b9-search-entry a{width:100%;font-size:16px}
+}
