@@ -1429,3 +1429,13 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - Bad date range, malformed cursor, invalid month all rejected fail-closed; subsequent normal anon Search remained healthy with 16 public articles; permanent URL unchanged.
 - Existing Supabase Advisor warns on intended `SECURITY DEFINER` public projections and RLS-enabled private B9 tables with no policies; explicit anon RPC grants and deny-by-default table ACL are checked, no direct data leak established. Security review remains visible; no blind grant/RLS rewrites.
 - No changes in LIVE DB, original editorial source, Founder settings, main branch, production site, reporter roles or Cricket. **T103–T109 require other original mandatory E3/E4/E5/scale/failure-evidence gates and must not be LOCKED on these backend-only checks.**
+
+
+## P4-T105 DUE / P4-T106 E2+E7 FINAL — RUN-13 / 23 OCT 2026
+- **P4-T105 = DUE (not PASS, not LOCKED):** Real Android phone/tablet performance, large archive, and old 1–2-year story search E3 remain outstanding. Must not be auto-closed by T106 historical static/synthetic results.
+- **P4-T106 = PASS + LOCK (E2 + E7):** Original Topic-14 SRCH-051..052/sections 1015–1017. Final report: `review/P4_T106_RUN13_FINAL_E2_E7_HISTORICAL_UNTAGGED_AUDIT_20261023.md`. Tested against LIVE JANTA BOL read-only schema and current exact GitHub source; Founder Android step is **not required** by original T106 evidence classes.
+- Real JANTA BOL Project has 32 Articles/16 Published. **15/16** currently Published Articles have no assigned Topic/Tag; all **15/15** show up when searched by permanent UUID. **7** prior-dated (Aug–Sep 2026) public untagged Articles all searchable; **2/2** August 2026 untagged records returned in year+month filter. Exactly **1** current approved Topic/Tag mapping is optional; other Articles remain fully valid.
+- Reuse/extension proof: original `public.articles` PK and `article.html?id=<UUID>`; original `analytics_events` and `article_public_view_settings`; B9 term FK points to existing Articles, no competing news store; existing reporting/navigation remain in place, B9 public indexes applied and RLS/ACL safe.
+- Actual B9 source and existing real PG17 regression include isolated 2024 Article fixture. **Real 2024/25 production Article corpus absent**, therefore do not infer T105 Android large-history PASS.
+- Previous protected G0/G1+B9 PG17/source ZIP CI `39934988365` GREEN. Record does not fake inherited B8-only ZIP (SKIPPED) or B8 final signoff. Documentation-only changes on the B9 branch; main/production/business records unchanged.
+- **B9 block HOLD**, T107–T109 future formal proof gates retained. T105 is deliberately sequenced after T106 without being waived.
