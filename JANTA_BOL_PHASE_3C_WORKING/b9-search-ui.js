@@ -40,8 +40,9 @@ async function search(append=false){
  }catch(e){
    if(current!==request)return;
    more.hidden=true;cursor=null;
+   results.replaceChildren(); // RPC outage: never mislabel old results as the new filter response.
    status.className='b9-status b9-error';
-   status.textContent='खोज अभी उपलब्ध नहीं है। Direct Article URL सुरक्षित और स्वतंत्र रहेगा। '+String(e?.message||'B9_SEARCH_ERROR').slice(0,140);
+   status.textContent='खोज अभी उपलब्ध नहीं है। पुराने परिणाम हटाए गए हैं। Direct Article URL सुरक्षित और स्वतंत्र रहेगा।';
  }finally{busy=false;$('b9Submit').disabled=false;more.disabled=false;}
 }
 function cleanUrlState(){
