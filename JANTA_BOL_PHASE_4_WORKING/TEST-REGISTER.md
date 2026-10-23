@@ -1394,3 +1394,13 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - **Security:** owner/AAL2 controls, RLS + function EXECUTE boundaries, published-only index, private B8 unchanged; live migration, Vercel production rollout and Main merge **NOT RUN / NOT AUTHORIZED**.
 - **Prior status preservation:** B8 FINAL HOLD (real Editor/E9 and case-linked operational Article E4 pending). Historic B0–B8 TEST-REGISTER entries not overwritten.
 - **B9 exit gate:** release only after E1 + E2 + E3 + E4 + E5 + E7 as prescribed per test, including P4-T109 old regressions and official evidence ledger. Do not enter B10 before B9 verified lock.
+
+
+## P4-T100 FINAL LOCK — RUN-13 / 23 OCT 2026
+- **P4-T100: PASS + LOCK**, not just coding coverage. Required E1/E2/E4/E7 collected; reproducible independent report: `JANTA_BOL_PHASE_4_WORKING/review/P4_T100_RUN13_FINAL_E1_E2_E4_E7_20261023.md`.
+- **E1**: genuine GitHub Actions run `39905550544`, 5/5 executed jobs SUCCESS; B9 synthetic PG17 public-state + correction + unpublished/republish + retired-UUID negative passed, old protected G0/G1 green. Synthetic test is **not live hard deletion**.
+- **E2**: JANTA BOL LIVE `vrffsnkycvjithwtiylt` verified 16 anonymous published-only results, 0 private UUID hits, original 32 Article IDs/states unchanged, original analytics 82, versions 878, audit 1552, identity digest unchanged `ac0da5c628ffc7e8efaaec9e09d9800c`, retired identity trigger enabled; B9 migration additive and separately approved.
+- **E4**: real Article `df97df06-a246-4e4e-ac5d-1f965fa6b381` historical snapshots show public→nonpublic→public with unchanged slug/UUID, and current search returns exact same `article.html?id=<UUID>` permanent link. Live historical intermediate states were Draft/Soft Deleted; synthetic PG17 specifically tested Unpublished → Republish and retired-ID insert rejection. **No actual LIVE Article update/delete was done during this T100 verification.**
+- **E7**: B9 RPC uses canonical `public.articles`, no separate news source, public-only current state, no arbitrary year cutoff; linked immutable B2 retention deletion identity guard and reviewed SQL/index. Actual 2024 LIVE news is absent and MUST NOT be claimed as tested; future large archive/Android gate belongs to T105.
+- **P4-T101 through P4-T109: NOT RUN / NOT LOCKED**. T101 physical Android E3 is next. **B9 FINAL LOCK and B8 FINAL LOCK remain HOLD.** Do not treat T100 PASS as release authorization, Main branch merge, new production deployment or B10 authorization.
+
