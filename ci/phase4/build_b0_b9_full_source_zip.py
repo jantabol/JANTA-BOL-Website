@@ -79,7 +79,7 @@ def build(path):
    'exact_commit_sha':head,
    'files_count':len(record),'files':record,
    'b9_implementation':'CODING_CANDIDATE_COMPLETE__EXTERNAL_REAL_TESTS_NOT_RUN',
-   'b9_test_status':'P4-T100_TO_T109_NOT_FINAL_PASS',
+   'b9_test_status':'P4-T100_PASS_LOCK_E1_E2_E4_E7__P4-T101_TO_T109_NOT_RUN',
    'b8_final':'HOLD_PENDING_EDITOR_E9_AND_OPERATIONAL_EVIDENCE',
    'notes':'Includes all tracked B0-B9 code, HTML, CSS, JS, SQL, CI and tests; no live Supabase migration applied.',
    'excluded':['live_database','private_evidence','untracked_secrets','login_credentials','device_recordings','live_media']
