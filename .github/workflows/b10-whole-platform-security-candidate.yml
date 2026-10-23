@@ -112,6 +112,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_article_version_owner_aal2_SAFE.sql
       - name: "T062 role matrix - public, Editor, Reporter, Advertiser, Owner stale AAL1, revoked session and real AAL2 positive"
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-cross-module-role-negative-regression.sql
+      - name: Reproduce LIVE T062 reporter cross-author private Article visibility on isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-draft-exposure-fixture.sql
+      - name: Apply minimal Reporter/staff/public SELECT policy repair ONLY to PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_reporter_cross_draft_read_SAFE.sql
+      - name: T062 all-actor draft privacy positive, negative and revocation matrix
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-scope-regression.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
