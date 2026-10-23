@@ -236,6 +236,43 @@ $t108_wrong_actor$;
 select set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',false);
 select set_config('b9.test_aal','aal2',false);
 
+-- T108 negative control tests: Owner at AAL1 and invalid override forms MUST fail.
+select set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',false);
+select set_config('b9.test_aal','aal1',false);
+do $t108_aal1_block$
+begin
+ begin
+  perform public.jb_b9_owner_metric_settings(true,null,true,true,null);
+  raise exception 'T108_AAL1_MUST_NOT_CHANGE_GLOBAL';
+ exception when raise_exception then
+  if SQLERRM<>'B9_OWNER_AAL2_REQUIRED' then raise;end if;
+ end;
+end;
+$t108_aal1_block$;
+select set_config('b9.test_aal','aal2',false);
+do $t108_invalid_control$
+begin
+ begin
+  perform public.jb_b9_owner_metric_settings(true,null,true,true,1);
+  raise exception 'T108_GLOBAL_OVERRIDE_MUST_REJECT';
+ exception when raise_exception then
+  if SQLERRM<>'B9_INVALID_OVERRIDE' then raise;end if;
+ end;
+ begin
+  perform public.jb_b9_owner_metric_settings(false,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',true,true,-1);
+  raise exception 'T108_NEGATIVE_OVERRIDE_MUST_REJECT';
+ exception when raise_exception then
+  if SQLERRM<>'B9_INVALID_OVERRIDE' then raise;end if;
+ end;
+ begin
+  perform public.jb_b9_owner_metric_settings(true,'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',true,true,null);
+  raise exception 'T108_GLOBAL_ARTICLE_CONFLICT_MUST_REJECT';
+ exception when raise_exception then
+  if SQLERRM<>'B9_GLOBAL_ARTICLE_CONFLICT' then raise;end if;
+ end;
+end;
+$t108_invalid_control$;
+
 -- Turn reporter OFF, existing published stories continue but directory name disappears.
 update public.reporters set public_name_enabled=false where name='Opted-in Reporter';
 do $$
