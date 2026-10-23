@@ -197,3 +197,33 @@ test('T109 optional Reporter/Analytics/Related RPC failures do not erase direct 
  assert.equal(root.querySelector('article.article'),article,'canonical article remains mounted');
  assert.equal(attempts,3,'all optional calls tried, each failure isolated');
 });
+
+test('B9 UI fix: every viewer sees a Search/archive entry before the giant homepage hero',async()=>{
+ const [home,style,addon,search]=await Promise.all([load('index.html'),load('b9-home-entry.css'),load('b9-home-link.js'),load('b9-search.html')]);
+ assert.equal((home.match(/id="b9SearchNav"/g)||[]).length,1,'single stable Search link');
+ assert.match(home,/<nav class="b9-search-entry"[^>]*aria-label="समाचार खोज">[\s\S]*?href="b9-search\.html"/);
+ assert.ok(home.indexOf('b9SearchNav')>home.indexOf('</header>'),'do not disturb legacy header/menu');
+ assert.ok(home.indexOf('b9SearchNav')<home.indexOf('<section class="hero">'),'search visible without scrolling 85vh hero');
+ assert.match(home,/b9-home-entry\.css/,'scoped accessible CTA CSS must be linked');
+ assert.match(style,/min-height:46px/,'tap target greater than 44px');
+ assert.match(style,/focus-visible/,'keyboard focus visible');
+ assert.match(style,/@media\(max-width:540px\)/,'small screen CTA takes full width');
+ assert.match(addon,/getElementById\('b9SearchNav'\)\)return/,'legacy dynamic enhancement avoids double link');
+ assert.match(search,/id="b9Filters"/,'search target is the real public filter page');
+});
+
+test('B9 UI fix: Related News links readable on dark Article, no default browser blue',async()=>{
+ const [article,related]=await Promise.all([load('article.html'),load('b9-article-ui.js')]);
+ assert.match(article,/\.b9-related a,\.b9-related a:visited\{color:#ffd1c9/,'regular and visited links share accessible high contrast');
+ assert.match(article,/\.b9-related a:hover,\.b9-related a:focus-visible\{color:#fff/);
+ assert.match(article,/\.b9-related a:focus-visible\{outline:2px solid #fff/);
+ assert.match(related,/a\.href=link/,'each related Article still uses original permanent URL');
+ assert.match(related,/all\.href='b9-search.html'/,'all stories points to same public Search URL');
+ const lum=hex=>{
+  const n=[1,3,5].map(i=>parseInt(hex.slice(i,i+2),16)/255).map(v=>v<=0.04045?v/12.92:((v+0.055)/1.055)**2.4);
+  return n[0]*0.2126+n[1]*0.7152+n[2]*0.0722;
+ };
+ const l1=lum('#ffd1c9'),l2=lum('#191b20');
+ const contrast=(Math.max(l1,l2)+0.05)/(Math.min(l1,l2)+0.05);
+ assert.ok(contrast>=7,`Related News text contrast must exceed WCAG AAA 7:1; got ${contrast.toFixed(2)}`);
+});
