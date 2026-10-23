@@ -98,6 +98,8 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
       - name: Run B9 PG17 negative search and analytics checks
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
+      - name: P4-T105 5000 synthetic historical Articles performance and privacy (NEVER LIVE)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-t105-large-archive-pg17.sql
 
   b9_complete_source_zip:
     name: Full B0-B9 ZIP only AFTER PG17, Source and old-B8 GREEN
