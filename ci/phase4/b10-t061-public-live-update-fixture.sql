@@ -14,6 +14,12 @@ CREATE TABLE public.public_live_updates(
  article_id uuid NOT NULL,
  public_text text
 );
+CREATE TABLE public.live_contributions (
+  contribution_id uuid PRIMARY KEY, session_id uuid,
+  public_visibility text NOT NULL DEFAULT 'PRIVATE'
+);
+ALTER TABLE public.live_contributions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.live_contributions FROM PUBLIC,anon,authenticated;
 ALTER TABLE public.live_sessions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.public_live_updates ENABLE ROW LEVEL SECURITY;
 REVOKE ALL ON public.live_sessions,public.public_live_updates FROM PUBLIC,anon,authenticated;
