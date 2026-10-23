@@ -163,6 +163,49 @@ end;$$;
 reindex index public.b9_articles_public_text_idx;
 reindex index public.b9_articles_public_archive_idx;
 
+-- P4-T104 (E1/E2 isolated PG17 only): simulate unavailable public full-text index.
+-- Public search must continue to serve current approved text via safe fallback;
+-- rebuilding the index must NOT create a new article/PURL or reveal draft content.
+-- Never run this DROP/CREATE scenario against LIVE JANTA BOL.
+drop index public.b9_articles_public_text_idx;
+do $b9_t104_index_down$
+declare
+  result jsonb;
+  stable_id uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+begin
+  result:=public.jb_b9_search(p_query=>'Updated corrected');
+  if jsonb_array_length(result->'items')<>1 or result#>>'{items,0,id}'<>stable_id::text
+     or result#>>'{items,0,permanent_url}'<>'article.html?id='||stable_id::text then
+    raise exception 'B9_T104_MISSING_INDEX_BREAKS_PUBLIC_SEARCH_OR_IDENTITY';
+  end if;
+  if jsonb_array_length(public.jb_b9_search(p_query=>'Old approved archive story')->'items')<>0 then
+    raise exception 'B9_T104_MISSING_INDEX_STALE_CORRECTION';
+  end if;
+  if jsonb_array_length(public.jb_b9_search(p_query=>'SECRET_UNPUBLISHED')->'items')<>0 then
+    raise exception 'B9_T104_MISSING_INDEX_PRIVATE_LEAK';
+  end if;
+end;
+$b9_t104_index_down$;
+create index b9_articles_public_text_idx on public.articles
+ using gin (to_tsvector('simple',coalesce(title,'')||' '||coalesce(excerpt,'')||' '||coalesce(body,'')))
+ where status='published' and deleted_at is null;
+reindex index public.b9_articles_public_text_idx;
+do $b9_t104_index_recovered$
+declare
+  result jsonb;
+  stable_id uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+begin
+  result:=public.jb_b9_search(p_query=>'Updated corrected');
+  if jsonb_array_length(result->'items')<>1 or result#>>'{items,0,id}'<>stable_id::text
+      or result#>>'{items,0,permanent_url}'<>'article.html?id='||stable_id::text then
+    raise exception 'B9_T104_REBUILD_CHANGED_ARTICLE_IDENTITY';
+  end if;
+  if (select count(*) from public.articles where id=stable_id)<>1 then
+    raise exception 'B9_T104_REBUILD_DUPLICATED_ARTICLE';
+  end if;
+end;
+$b9_t104_index_recovered$;
+
 -- T100 E2/E4 negative: retire an isolated synthetic Article ID using the
 -- identical guard SQL observed read-only on live JANTA BOL 2026-10-23.
 -- Never delete LIVE Articles or reinsert their UUIDs; all of this ROLLS BACK.
