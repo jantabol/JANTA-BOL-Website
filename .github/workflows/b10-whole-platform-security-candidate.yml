@@ -112,3 +112,30 @@ jobs:
           echo "P4-T063 REAL device/MFA/recovery evidence remains DUE."
           echo "P4-T068 FINAL PASS+LOCK remains DUE until E1 E2 E5 E7 reconciled."
           echo "B9 P4-T105 REAL 1–2-year old Android performance evidence remains DUE."
+
+  b10_complete_candidate_zip:
+    name: Assemble B0-B10 SHA256 ZIP (development candidate only)
+    needs: [b10_coding_gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create and verify all tracked source files, SHA256, no secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --out dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --verify dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PHASE_4_B10_CODING_CANDIDATE
+          path: |
+            dist/PHASE_4_B10_CODING_CANDIDATE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
