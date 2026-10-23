@@ -120,6 +120,12 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_reporter_cross_draft_read_SAFE.sql
       - name: T062 all-actor draft privacy positive, negative and revocation matrix
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-scope-regression.sql
+      - name: "T063 RED - reproduce revoked-session recovery JWT bypass only on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-fixture.sql
+      - name: "T063 GREEN - minimum recovery session guard only on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t063_recovery_revoked_session_guard_SAFE.sql
+      - name: "T063 NEGATIVES - revoked JWT, Reporter, anon denied; AAL1 valid password recovery permitted"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-regression.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
