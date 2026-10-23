@@ -45,6 +45,8 @@ jobs:
         run: node --test ci/phase4/b9-client-and-ui.test.mjs
       - name: B10 all nine Source contracts
         run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+      - name: T063 Auth/MFA/Recovery/Redirect source security preflight (manual device E3 separate)
+        run: node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
       - name: Protected original Phase3 Auth/Security/Incident and recovery contracts
         shell: bash
         run: |
