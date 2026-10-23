@@ -83,7 +83,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
 | P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | PASS + LOCK — E1+E2+E5; LIVE public_live_updates SQLSTATE 42501 repaired with scoped boolean RLS helper; 12/12 anon public updates, private ACL unchanged |
 | P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | PASS + LOCK — E1+E2+E5; Reporter cross-author nonpublic read FIX, Founder AAL2 Article history FIX, multi-role PG17 + real LIVE role checks + audit provenance |
-| P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | IN PROGRESS: E1 CI + E2 SAFE PRECHECK PASS; E3 ANDROID + E5 CONTROLLED REVOKE/RECOVERY DUE, FINAL HOLD |
+| P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | BACKEND E1+E2 VERIFIED PASS; E3 ANDROID LOGIN/MFA/LOGOUT/RELOGIN PARTIAL; E5 HISTORY PARTIAL; LOST-DEVICE/RECOVERY DEVICE PROOF DUE — FINAL HOLD |
 | P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
 | P4-T065 | Security | Direct Attack / IDOR / Tampering / Cross-Account Test Family | B10 | NOT RUN |
 | P4-T066 | Security | Revocation + Suspension + Super-Admin-Only + Advertiser/Search Isolation | B10 | NOT RUN |
@@ -1511,3 +1511,12 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - E1 source regression + redirect hardening only in `JANTA_BOL_PHASE_3C_WORKING/admin-login.html`; no Vercel deploy, no production Auth changed. CI `39972604263` SUCCESS. E2 actual JANTA BOL Owner guard checked: 2 verified TOTP, 1 Owner, backend AAL2 and session match required, anon Owner revocation denied; simulated AAL2 owner missing session returns 0 private data. Historical session count 52 is NOT number of active devices.
 - A single external `?next=` post-login/open-unlock redirect was fixed in B10 source by validating relative same-directory HTML URL. Note old SPCK B10 import / Vercel may not include new source fix until reviewed release.
 - Full report: `review/P4_T063_RUN09_AUTH_MFA_RECOVERY_E1_E2_STARTED_E3_E5_HOLD_20261023.md`. T061 and T062 remain PASS+LOCK. T063 **HOLD**; no T064 start and no intermediate ZIP.
+
+
+## P4-T063 Backend Security Checkpoint after Android Logout+Re-login — 23 OCT 2026
+- E1 **PASS**: protected B0–B8 Phase3 Auth/Incident/Security + B9/T061/T062, synthetic PG17 T063 old recovery RPC revoked-JWT RED→GREEN and six source rules, GitHub CI `39981508825` SUCCESS; latest source branch preview has strict same-directory login redirect.
+- E2 **PASS**: real read-only anonymous, forged AAL2+fresh AMR but deleted/nonexistent session, and active real Owner AAL1 role tests all denied protected sensitive Owner RPCs. Found and fixed **one production risk**: `jb_verify_owner_recovery_key` previously accepted Owner role without checking `auth.sessions`. Scoped guarded SQL function update now requires `private.current_session_active()` before touching recovery hashes/cooldown. Rollback canary then atomic migration deployed; post-commit SQL fake revoked JWT rejected, unchanged 2 Founder TOTP + 1 active recovery credential, 24 total historic recovery attempts, 32 Articles/878 Versions/1560 Audit, Search16/Live Updates12/Feed7.
+- E3 **PARTIAL**: authentic Android preview screenshots prove correct login+password/MFA prompt, AAL2 Dashboard, Incognito forced login, Security Center two factors, local Logout followed by blocked direct Admin, and successful normal relogin with original factor. Founder reports prior 15min lock, but no new screenshot. No new wrong-MFA, brute-force, lost-device other-session revoke, fresh MFA-sensitive action, and emergency factor recovery real-device test.
+- E5 **PARTIAL**: actual historical security MFA/session/recovery audit inspected; source bound but no new authenticated lost-device/factor-reset incident.
+- Supabase Advisor still warns leaked password protection disabled; do not conflate platform MFA/attempt protection with full real repeated-failure proof.
+- Detail: `review/P4_T063_RUN09_BACKEND_SECURITY_FINAL_E1_E2_E3_PARTIAL_HOLD_20261023.md`. **T063 FINAL HOLD.** T064 NOT STARTED. No intermediate ZIP. No Cricket changes.
