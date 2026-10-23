@@ -3,6 +3,8 @@
 -- Reproduce real LIVE flaw: authenticated Reporter can read others' 16 private Articles.
 -- Fixture uses three Published, one own Draft, two other nonpublic.
 ALTER TABLE public.articles ADD COLUMN created_by uuid;
+-- Existing LIVE JANTA BOL grants authenticated SELECT, but early B9 tiny fixture only grants anon.
+GRANT SELECT ON public.articles TO authenticated;
 UPDATE public.articles SET created_by=CASE
  WHEN id='dddddddd-dddd-4ddd-8ddd-dddddddddddd' THEN '22222222-2222-2222-2222-222222222222'::uuid
  WHEN id='eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee' THEN '11111111-1111-1111-1111-111111111111'::uuid
