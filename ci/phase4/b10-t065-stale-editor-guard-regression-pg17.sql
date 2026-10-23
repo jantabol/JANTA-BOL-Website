@@ -77,7 +77,7 @@ BEGIN
  UPDATE public.articles SET excerpt='T065_OWNER_VALID_ROLLBACK_ONLY'
  WHERE id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
  GET DIAGNOSTICS n=ROW_COUNT;
- IF n<>1 THEN RAISE EXCEPTION 'T065_OWNER_UPDATE_REGRESSED';END IF;
+ IF n<>1 THEN RAISE EXCEPTION 'T065_OWNER_UPDATE_REGRESSED rows=% role=% backend_session=% owner_aal2=% visible_bbb=% b10_session_flag=%',n,private.current_app_role(),private.current_session_active(),private.current_owner_aal2(),(SELECT count(*) FROM public.articles WHERE id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'),current_setting('b10.session_active',true);END IF;
 END $owner_positive$;
 RESET ROLE;
 ROLLBACK;
