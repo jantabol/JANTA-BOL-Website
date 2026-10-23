@@ -1,6 +1,8 @@
 /* JANTA BOL B9 public Search CTA: scoped, never changes Phase 3/B8 header or feed. */
 .b9-search-entry{
   box-sizing:border-box;
+  width:100%;
+  margin:0;
   display:flex;
   align-items:center;
   justify-content:center;
