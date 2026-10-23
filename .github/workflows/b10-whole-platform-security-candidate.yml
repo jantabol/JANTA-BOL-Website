@@ -49,6 +49,8 @@ jobs:
         run: node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
       - name: T064 all tracked runtime/Edge/workflow source secret and environment config E1 E7 gate
         run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+      - name: T064 inspect historical tracked ZIP source member secret and file-path integrity
+        run: python3 ci/phase4/b10-t064-archive-secret-inventory.py
       - name: Protected original Phase3 Auth/Security/Incident and recovery contracts
         shell: bash
         run: |
