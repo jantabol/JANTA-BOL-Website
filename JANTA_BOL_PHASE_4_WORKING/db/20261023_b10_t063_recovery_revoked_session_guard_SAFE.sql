@@ -16,7 +16,7 @@ BEGIN
     AND p.prosecdef AND pg_get_userbyid(p.proowner)='postgres'
     AND p.prolang=(SELECT oid FROM pg_language WHERE lanname='plpgsql')
     AND p.provolatile='v' AND 'search_path=""'=ANY(p.proconfig)
-    AND p.prosrc LIKE '%select * from private.verify_owner_recovery_key%'
+    AND p.prosrc ILIKE '%select * from private.verify_owner_recovery_key%'
     AND p.prosrc NOT LIKE '%private.current_session_active%'
  ) THEN RAISE EXCEPTION 'T063_EXPECTED_ORIGINAL_RECOVERY_SOURCE_CHANGED_ABORT'; END IF;
  IF NOT has_function_privilege('authenticated','public.jb_verify_owner_recovery_key(text)','EXECUTE')
