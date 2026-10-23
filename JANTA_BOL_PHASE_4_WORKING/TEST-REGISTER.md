@@ -81,7 +81,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T058 | Audit/Retention | Records Implementation + Migration Integrity | B2 | PASS |
 | P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | IN PROGRESS |
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
-| P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | NOT RUN |
+| P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | IN PROGRESS — E2/E5 PARTIAL; LIVE public_live_updates anon SQLSTATE 42501, FINAL HOLD |
 | P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | NOT RUN |
 | P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | NOT RUN |
 | P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
