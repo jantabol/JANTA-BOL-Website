@@ -83,7 +83,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
 | P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | PASS + LOCK — E1+E2+E5; LIVE public_live_updates SQLSTATE 42501 repaired with scoped boolean RLS helper; 12/12 anon public updates, private ACL unchanged |
 | P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | PASS + LOCK — E1+E2+E5; Reporter cross-author nonpublic read FIX, Founder AAL2 Article history FIX, multi-role PG17 + real LIVE role checks + audit provenance |
-| P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | NOT RUN |
+| P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | IN PROGRESS: E1 CI + E2 SAFE PRECHECK PASS; E3 ANDROID + E5 CONTROLLED REVOKE/RECOVERY DUE, FINAL HOLD |
 | P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
 | P4-T065 | Security | Direct Attack / IDOR / Tampering / Cross-Account Test Family | B10 | NOT RUN |
 | P4-T066 | Security | Revocation + Suspension + Super-Admin-Only + Advertiser/Search Isolation | B10 | NOT RUN |
@@ -1504,3 +1504,10 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - LIVE Source/History/Audit Article identity/count unchanged (31 / 878 / 1560; 32 UUIDs and Slugs unchanged); anonymous Search16, LIVE Feed7, Updates12, B8 public projection safe. Reporter backend matching active session sees 0 cross-author hidden/Source/Audit/Ads/Grievance/Compliance/Social; fake Owner AAL1 denied. Protected original Phase3/B0–B9 and B10 T061 tests GREEN on GitHub CI 39970471279. Admin/Editor active positive and Advertiser external negative simulated with real PG17 security role checks; no active Editor production session at audit, do NOT describe as real HTTP actor.
 - Historical audit E5 actor provenance: 598 Owner,139 Reporter,17 Editor,806 System/unmapped. Fix/migration provenance and two REVIEW_ONLY rollback scripts retained. Full detailed report: review/P4_T062_RUN09_FINAL_ROLE_MATRIX_E1_E2_E5_PASS_LOCK_20261023.md.
 - **ONLY T061 and T062 are FINAL PASS+LOCK**. T060/T063–T068 not autolocked; T063 real Android signed MFA/device E3 requires separate test. B8/B9-T105 earlier HOLD remain. No user-visible intermediate ZIP — one B0–B10 master after entire block completion.
+
+
+## B10 P4-T063 STARTED — 23 OCT 2026
+- Original RUN-09 MANUAL/REAL-DEVICE requires E1/E2/E3/E5; do not PASS until real device MFA, 15-minute lock, safe revocation, recovery, fail-closed brute-force and authenticated session evidence.
+- E1 source regression + redirect hardening only in `JANTA_BOL_PHASE_3C_WORKING/admin-login.html`; no Vercel deploy, no production Auth changed. CI `39972604263` SUCCESS. E2 actual JANTA BOL Owner guard checked: 2 verified TOTP, 1 Owner, backend AAL2 and session match required, anon Owner revocation denied; simulated AAL2 owner missing session returns 0 private data. Historical session count 52 is NOT number of active devices.
+- A single external `?next=` post-login/open-unlock redirect was fixed in B10 source by validating relative same-directory HTML URL. Note old SPCK B10 import / Vercel may not include new source fix until reviewed release.
+- Full report: `review/P4_T063_RUN09_AUTH_MFA_RECOVERY_E1_E2_STARTED_E3_E5_HOLD_20261023.md`. T061 and T062 remain PASS+LOCK. T063 **HOLD**; no T064 start and no intermediate ZIP.
