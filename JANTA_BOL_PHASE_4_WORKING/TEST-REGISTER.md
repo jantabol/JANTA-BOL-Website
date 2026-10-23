@@ -1404,3 +1404,11 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - **E7**: B9 RPC uses canonical `public.articles`, no separate news source, public-only current state, no arbitrary year cutoff; linked immutable B2 retention deletion identity guard and reviewed SQL/index. Actual 2024 LIVE news is absent and MUST NOT be claimed as tested; future large archive/Android gate belongs to T105.
 - **P4-T101 through P4-T109: NOT RUN / NOT LOCKED**. T101 physical Android E3 is next. **B9 FINAL LOCK and B8 FINAL LOCK remain HOLD.** Do not treat T100 PASS as release authorization, Main branch merge, new production deployment or B10 authorization.
 
+
+## P4-T101 FINAL LOCK — RUN-13 / 23 OCT 2026
+- **P4-T101: PASS + LOCK** on real Android SPCK + Chrome Owner/AAL2 Tag creation + LIVE anon search + GitHub CI, with scoped limitations. Full evidence `review/P4_T101_RUN13_ANDROID_E1_E2_E3_TAG_LOCK_20261023.md`; Android screenshots remain in Founder chat, not yet embedded in Git ZIP.
+- Search Android: keyword/body/ID/district/category/location/year/month/date interval/exact-date, oldest/latest, relevance result order, missing keyword/tag, malformed UUID and invalid date error/recovery all observed. One Android bug in invalid-range stale results traced, fixed in `b9-search-ui.js`, retested PASS after manual SPCK replacement; GitHub VM regression passed CI.
+- Live Founder/AAL2 approved tag `b9-qa-test` on unchanged published `T032 Android Social Test`, ID `d943e80f-1d58-4f5c-8d8f-75e772955d56`, version 7; public anon B9 tag search exactly 1 correct result, no unrelated results, `#B9 QA Test` visible on Android.
+- LIVE read-only privacy: 16 published / 16 nonpublic, hidden UUID exposures 0; no-result year2025/tag negative 0; pagination 3+3 with 0 duplicates; CI `39914436555` SUCCESS including inherited source/security jobs. No live 2-year data or >20-match Android pagination sample exists; those scale demonstrations remain T105/next suitable gate, do not invent.
+- **P4-T102–P4-T109 remain NOT RUN / NOT LOCKED. B9 FINAL LOCK remains HOLD. Existing B8 FINAL HOLD is unaffected.** No Main merge, production website deploy or live Article content/status change authorized. Source code in SPCK is logically equivalent to branch fix but byte identity not verified.
+
