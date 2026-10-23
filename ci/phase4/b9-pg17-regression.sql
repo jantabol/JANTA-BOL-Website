@@ -125,6 +125,46 @@ end;$$;
 reindex index public.b9_articles_public_text_idx;
 reindex index public.b9_articles_public_archive_idx;
 
+-- T100 E2/E4 negative: retire an isolated synthetic Article ID using the
+-- identical guard SQL observed read-only on live JANTA BOL 2026-10-23.
+-- Never delete LIVE Articles or reinsert their UUIDs; all of this ROLLS BACK.
+create table public.record_disposition_ledger(
+ record_type text not null,record_id text not null,
+ primary key(record_type,record_id)
+);
+create or replace function private.jb_article_retired_identity_guard()
+returns trigger language plpgsql security definer set search_path=''
+as $guard$
+begin
+ if exists(select 1 from public.record_disposition_ledger
+           where record_type='article' and record_id=new.id::text)
+ then raise exception 'ARTICLE_ID_RETIRED'; end if;
+ return new;
+end;
+$guard$;
+create trigger trg_jb_article_retired_identity_guard
+ before insert on public.articles for each row
+ execute function private.jb_article_retired_identity_guard();
+do $t100_guard$
+declare
+ x uuid:='00000000-0000-4000-8000-00000000b910';
+ blocked boolean:=false;
+begin
+ insert into public.record_disposition_ledger(record_type,record_id)
+ values('article',x::text);
+ begin
+   insert into public.articles(id,status,slug,title,body)
+   values(x,'draft','synthetic-retired-t100','MUST NEVER INSERT','never public');
+ exception when others then
+   if SQLERRM='ARTICLE_ID_RETIRED' then blocked:=true;
+   else raise;end if;
+ end;
+ if not blocked then raise exception 'B9_RETIRED_ARTICLE_ID_REUSE_NOT_BLOCKED';end if;
+ if exists(select 1 from public.articles where id=x)
+ then raise exception 'B9_RETIRED_ARTICLE_NEW_ROW_EXISTS';end if;
+end;
+$t100_guard$;
+
 -- Actual anon-ROLE invocation verifies public RLS-safe projection, no private disclosure.
 set local role anon;
 select public.jb_b9_search(p_query=>'Shivpuri');
