@@ -30,6 +30,17 @@ test('P4-T061 — public/private data source contracts and safe Search projectio
  assert.match(migration,/status='published'/);
  assert.match(migration,/deleted_at is null/);
  assert.match(read('ci/phase4/b9-pg17-regression.sql'),/B9_PRIVATE_BODY_SEARCH_LEAK/);
+ const t061=read('JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t061_public_live_updates_privilege_SAFE_FIX.sql');
+ assert.match(t061,/SECURITY DEFINER/i);
+ assert.match(t061,/SET search_path = ''/);
+ assert.match(t061,/s\.id=p_session_id/);
+ assert.match(t061,/s\.article_id=p_article_id/);
+ assert.match(t061,/a\.deleted_at IS NULL/);
+ assert.match(t061,/live_updates_public_visible IS TRUE/);
+ assert.match(t061,/ALTER POLICY public_live_updates_read/i);
+ assert.doesNotMatch(t061,/GRANT SELECT ON (?:public\.)?live_sessions/i);
+ assert.match(read('ci/phase4/b10-t061-public-live-update-regression.sql'),/T061_CROSS_ARTICLE_SESSION_TAMPER_TRUE/);
+
 });
 test('P4-T062 — Role-matrix module entry points exist, no client-side role alone is proof',()=>{
  for(const p of ['admin-auth.js','grievances.html','compliance.html','advertiser-portal.html',
