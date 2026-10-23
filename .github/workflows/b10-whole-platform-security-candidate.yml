@@ -110,7 +110,7 @@ jobs:
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-article-version-fixture.sql
       - name: Apply T062 minimum Owner AAL2 RLS tightening ONLY to PG17
         run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_article_version_owner_aal2_SAFE.sql
-      - name: T062 role matrix: public, Editor, Reporter, Advertiser, Owner stale AAL1, revoked session and real AAL2 positive
+      - name: "T062 role matrix - public, Editor, Reporter, Advertiser, Owner stale AAL1, revoked session and real AAL2 positive"
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-cross-module-role-negative-regression.sql
 
   b10_coding_gate:
