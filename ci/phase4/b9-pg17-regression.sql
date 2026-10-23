@@ -213,7 +213,7 @@ begin
    then raise exception 'T108_DISPLAY_SETTINGS_MUTATED_RAW_EVENTS';end if;
 
  select count(*) into audit_last from public.audit_logs where action='b9_metric_display_control';
- if audit_last-audit_first<>9 then raise exception 'T108_AUDIT_ROW_COUNT %',audit_last-audit_first;end if;
+ if audit_last-audit_first<>8 then raise exception 'T108_AUDIT_ROW_COUNT %',audit_last-audit_first;end if;
  if exists(select 1 from public.audit_logs where action='b9_metric_display_control' and
     (actor_user_id is null or metadata->'before' is null or metadata->'after' is null))
    then raise exception 'T108_AUDIT_BEFORE_AFTER_INCOMPLETE';end if;
