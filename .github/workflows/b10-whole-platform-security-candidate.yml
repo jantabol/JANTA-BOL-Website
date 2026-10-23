@@ -100,6 +100,12 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-t105-large-archive-pg17.sql
       - name: Execute B10 isolated authority cross-role negative contract tests
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-whole-platform-security-pg17.sql
+      - name: Reproduce T061 old 42501 on disposable PUBLIC Live fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-fixture.sql
+      - name: Apply reviewed minimal Live policy fix ONLY to isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t061_public_live_updates_privilege_SAFE_FIX.sql
+      - name: Verify T061 8-case private boundary, session binding, soft delete and revoked visibility
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-regression.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
