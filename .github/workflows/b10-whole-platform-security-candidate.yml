@@ -47,6 +47,8 @@ jobs:
         run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
       - name: T063 Auth/MFA/Recovery/Redirect source security preflight (manual device E3 separate)
         run: node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
+      - name: T064 all tracked runtime/Edge/workflow source secret and environment config E1 E7 gate
+        run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
       - name: Protected original Phase3 Auth/Security/Incident and recovery contracts
         shell: bash
         run: |
