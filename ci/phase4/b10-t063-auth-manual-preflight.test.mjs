@@ -78,3 +78,22 @@ test('T063 emergency recovery is limited, revokes factor only on consent, key no
   assert.match(recoverySetup,/await ensureRecentMfa\(\)/);
   assert.match(backend,/client\.auth\.mfa\.challengeAndVerify/);
 });
+
+
+test('T063 revoked JWT cannot use recovery verifier and valid-password limited recovery stays available',()=>{
+  const migration=get('JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t063_recovery_revoked_session_guard_SAFE.sql');
+  assert.match(migration,/CREATE OR REPLACE FUNCTION public\.jb_verify_owner_recovery_key/);
+  assert.match(migration,/IF NOT private\.current_session_active\(\) THEN/);
+  assert.match(migration,/AUTH_SESSION_REVOKED/);
+  assert.match(migration,/private\.verify_owner_recovery_key\(v_uid,p_recovery_key\)/);
+  assert.doesNotMatch(migration,/require_owner_aal2\(\)|current_owner_aal2\(\)/,
+     'lost-MFA owner must still be able to recover with a newly password-authenticated active session');
+  assert.doesNotMatch(migration,/GRANT\s+(ALL|EXECUTE)\s+ON.+\s+TO\s+anon/i);
+  const fixture=get('ci/phase4/b10-t063-recovery-revocation-fixture.sql');
+  const regression=get('ci/phase4/b10-t063-recovery-revocation-regression.sql');
+  assert.match(fixture,/T063_ORIGINAL_REVOKED_SESSION_RECOVERY_BYPASS_NOT_REPRODUCED/);
+  assert.match(regression,/T063_VALID_AAL1_LIMITED_RECOVERY_BLOCKED/);
+  assert.match(regression,/T063_REVOKED_SESSION_KEY_VERIFY_BYPASS/);
+  assert.match(regression,/T063_REPORTER_RECOVERY_BYPASS/);
+  assert.match(regression,/T063_ANON_RECOVERY_EXEC_ALLOWED/);
+});
