@@ -36,7 +36,11 @@ async function report(){
   }
   if(!tbody.childElementCount){const tr=document.createElement('tr');const td=text('td','इस अवधि में कोई रिकॉर्ड नहीं मिला।');td.colSpan=3;tr.appendChild(td);tbody.appendChild(tr);}
   msg('सुरक्षित Analytics रिपोर्ट खुल गई। Raw Count केवल Founder को दिखता है।');
- }catch(e){msg('सुरक्षित Analytics उपलब्ध नहीं है। News/Article publishing स्वतंत्र है। '+String(e?.message||e).slice(0,140),true);}
+ }catch(e){
+  $('summary').replaceChildren();
+  $('articleRows').replaceChildren(); // Old period totals must never be mistaken for the failed range.
+  msg('सुरक्षित Analytics उपलब्ध नहीं है। पुरानी रिपोर्ट हटाई गई है। News/Article publishing स्वतंत्र है।',true);
+ }
 }
 $('b9AnalyticsFilter').addEventListener('submit',e=>{e.preventDefault();report();});
 $('globalDisplay').addEventListener('submit',async e=>{
