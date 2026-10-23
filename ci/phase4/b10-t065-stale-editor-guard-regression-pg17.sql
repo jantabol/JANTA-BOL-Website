@@ -67,12 +67,13 @@ END $active_reporter$;
 RESET ROLE;
 SELECT set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',true),
        set_config('b9.test_aal','aal2',true),
+       set_config('b10.session_active','on',true),
        set_config('request.jwt.claims','{"session_id":"10000000-0000-4000-8000-000000000063","aal":"aal2"}',true);
 SET LOCAL ROLE authenticated;
 DO $owner_positive$
 DECLARE n int;
 BEGIN
- IF NOT private.current_session_active() OR NOT private.current_owner_aal2()
+ IF private.current_session_active() IS DISTINCT FROM TRUE OR private.current_owner_aal2() IS DISTINCT FROM TRUE
  THEN RAISE EXCEPTION 'T065_OWNER_SESSION_AAL2_POSITIVE_MISSING';END IF;
  UPDATE public.articles SET excerpt='T065_OWNER_VALID_ROLLBACK_ONLY'
  WHERE id='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
