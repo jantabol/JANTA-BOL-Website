@@ -50,7 +50,32 @@ function cleanUrlState(){
  params.delete('limit');
  history.replaceState(null,'',location.pathname+(params.size?'?'+params.toString():''));
 }
-form.addEventListener('submit',e=>{e.preventDefault();try{filters=values();JBB9.cleanSearch(filters);cleanUrlState();cursor=null;search(false);}catch(error){status.className='b9-status b9-error';status.textContent=String(error.message||error);}});
+/* Invalid input MUST invalidate old successful results, not present stale articles as the invalid query's answer. */
+function invalidFilters(error){
+ request++; // Ignore any in-flight search response for the previous filters.
+ cursor=null;
+ results.replaceChildren();
+ more.hidden=true;
+ status.className='b9-status b9-error';
+ const code=String(error?.message||'');
+ const messages={
+  B9_INVALID_DATE_RANGE:'गलत तारीख सीमा: शुरुआती तारीख आखिरी तारीख से बाद की नहीं हो सकती। कृपया तारीखें सही करें।',
+  B9_INVALID_DATE:'तारीख सही प्रारूप में चुनें।',
+  B9_INVALID_ARTICLE_ID:'Article ID गलत है। कृपया पूरी सही ID दर्ज करें।',
+  B9_INVALID_YEAR:'वर्ष 1900 से 2200 के बीच होना चाहिए।',
+  B9_INVALID_MONTH:'सही महीना चुनें।',
+  B9_INVALID_CURSOR:'खोज पेज रीसेट करके दोबारा प्रयास करें।'
+ };
+ status.textContent=(messages[code]||'Filter सही नहीं है। कृपया दर्ज जानकारी जाँचें।')+' पुराने Search Results छिपा दिए गए हैं।';
+}
+form.addEventListener('submit',e=>{e.preventDefault();try{
+ const next=values();
+ JBB9.cleanSearch(next);
+ filters=next;
+ cleanUrlState();
+ cursor=null;
+ search(false);
+}catch(error){invalidFilters(error);}});
 form.addEventListener('reset',()=>{setTimeout(()=>{filters=values();cursor=null;cleanUrlState();search(false);},0);});
 more.addEventListener('click',()=>search(true));
 async function extras(){
