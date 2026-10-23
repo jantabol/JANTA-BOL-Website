@@ -129,6 +129,113 @@ begin
  if (select count(*) from public.audit_logs where action='b9_metric_display_control')<2 then raise exception 'B9_DISPLAY_AUDIT_MISSING';end if;
 end;$$;
 
+-- T108 Complete Analytics matrix in disposable PG17 ONLY. This block performs
+-- ALL data/control mutations on SYNTHETIC rows in a transaction that ROLLS BACK.
+-- Actual production T108 verification is limited to READ-ONLY queries/audit history.
+do $b9_t108_period_controls$
+declare
+ a uuid:='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ b uuid:='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+ result jsonb;
+ raw_first text;
+ raw_last text;
+ audit_first bigint;
+ audit_last bigint;
+begin
+ select md5(coalesce(string_agg(id::text||':'||coalesce(article_id::text,'')||':'||event_type||':'||created_at::text,'|' order by id),'')) into raw_first
+ from public.analytics_events;
+ select count(*) into audit_first from public.audit_logs where action='b9_metric_display_control';
+
+ -- Period ranges are [inclusive IST day start, next-day IST-exclusive end).
+ result:=public.jb_b9_owner_analytics('2026-10-23 00:00:00+05:30','2026-10-24 00:00:00+05:30','views');
+ if (result#>>'{summary,total}')::int<>0 then raise exception 'T108_TODAY_IST';end if;
+ result:=public.jb_b9_owner_analytics('2026-10-17 00:00:00+05:30','2026-10-24 00:00:00+05:30','views');
+ if (result#>>'{summary,total}')::int<>4 or (result#>>'{summary,views}')::int<>3
+  or (result#>>'{summary,shares}')::int<>1 then raise exception 'T108_7DAY_IST';end if;
+ result:=public.jb_b9_owner_analytics('2026-09-24 00:00:00+05:30','2026-10-24 00:00:00+05:30','shares');
+ if (result#>>'{summary,total}')::int<>4 or (result#>>'{summary,shares}')::int<>1
+  then raise exception 'T108_30DAY_IST';end if;
+ result:=public.jb_b9_owner_analytics('2026-10-22 00:00:00+05:30','2026-10-23 00:00:00+05:30','views');
+ if (result#>>'{summary,total}')::int<>3 or (result#>>'{summary,views}')::int<>2
+   or (result#>>'{summary,shares}')::int<>1 then raise exception 'T108_CUSTOM_IST';end if;
+
+ -- Both ranking modes need stable top Article; no invented unique viewers.
+ result:=public.jb_b9_owner_analytics('2026-10-01 00:00:00+05:30','2026-11-01 00:00:00+05:30','views');
+ if result#>>'{articles,0,id}'<>a::text then raise exception 'T108_MOST_VIEWED_ORDER';end if;
+ result:=public.jb_b9_owner_analytics('2026-10-01 00:00:00+05:30','2026-11-01 00:00:00+05:30','shares');
+ if result#>>'{articles,0,id}'<>a::text then raise exception 'T108_MOST_SHARED_ORDER';end if;
+
+ -- Existing Article A has per-Article ON/ON override=999 from previous synthetic case.
+ -- Article B has no per-Article controls; it follows global defaults.
+ perform public.jb_b9_owner_metric_settings(true,null,false,false,null);
+ result:=public.jb_b9_public_metrics(b);
+ if (result->>'views') IS NOT NULL or (result->>'shares') IS NOT NULL
+   then raise exception 'T108_BOTH_OFF_LEAK';end if;
+ result:=public.jb_b9_public_metrics(a);
+ if result->>'views'<>'999' or result->>'shares'<>'1'
+   then raise exception 'T108_ARTICLE_OVERRIDE_LOST_WITH_GLOBAL_OFF';end if;
+
+ perform public.jb_b9_owner_metric_settings(true,null,true,false,null);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views'<>'1' or result->>'shares' IS NOT NULL
+   then raise exception 'T108_GLOBAL_VIEWS_ONLY';end if;
+ perform public.jb_b9_owner_metric_settings(true,null,false,true,null);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views' IS NOT NULL or result->>'shares'<>'0'
+   then raise exception 'T108_GLOBAL_SHARES_ONLY';end if;
+ perform public.jb_b9_owner_metric_settings(true,null,true,true,null);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views'<>'1' or result->>'shares'<>'0'
+   then raise exception 'T108_GLOBAL_BOTH_ON';end if;
+
+ perform public.jb_b9_owner_metric_settings(false,b,true,false,1234);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views'<>'1234' or result->>'shares' IS NOT NULL
+   then raise exception 'T108_VIEW_OVERRIDE_WITH_SHARES_OFF';end if;
+ perform public.jb_b9_owner_metric_settings(false,b,false,true,1234);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views' IS NOT NULL or result->>'shares'<>'0'
+   then raise exception 'T108_HIDDEN_VIEW_OVERRIDE_AND_SHARES_ON';end if;
+ perform public.jb_b9_owner_metric_settings(false,b,true,true,null);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views'<>'1' or result->>'shares'<>'0'
+   then raise exception 'T108_CLEAR_OVERRIDE_RESTORES_RAW';end if;
+
+ -- An Article-specific OFF must beat global default ON; both controls independent.
+ perform public.jb_b9_owner_metric_settings(false,b,false,false,null);
+ result:=public.jb_b9_public_metrics(b);
+ if result->>'views' IS NOT NULL or result->>'shares' IS NOT NULL
+   then raise exception 'T108_ARTICLE_BOTH_OFF_BEATS_GLOBAL_ON';end if;
+
+ select md5(coalesce(string_agg(id::text||':'||coalesce(article_id::text,'')||':'||event_type||':'||created_at::text,'|' order by id),'')) into raw_last
+ from public.analytics_events;
+ if raw_first IS DISTINCT FROM raw_last
+   then raise exception 'T108_DISPLAY_SETTINGS_MUTATED_RAW_EVENTS';end if;
+
+ select count(*) into audit_last from public.audit_logs where action='b9_metric_display_control';
+ if audit_last-audit_first<>9 then raise exception 'T108_AUDIT_ROW_COUNT %',audit_last-audit_first;end if;
+ if exists(select 1 from public.audit_logs where action='b9_metric_display_control' and
+    (actor_user_id is null or metadata->'before' is null or metadata->'after' is null))
+   then raise exception 'T108_AUDIT_BEFORE_AFTER_INCOMPLETE';end if;
+end;
+$b9_t108_period_controls$;
+
+-- A fresh AAL2 string on a non-owner must NOT authorize display changes.
+select set_config('b9.test_uid','22222222-2222-2222-2222-222222222222',false);
+select set_config('b9.test_aal','aal2',false);
+do $t108_wrong_actor$
+begin
+ begin
+  perform public.jb_b9_owner_metric_settings(true,null,true,true,null);
+  raise exception 'T108_NONOWNER_AAL2_BYPASS';
+ exception when raise_exception then
+  if SQLERRM<>'B9_OWNER_AAL2_REQUIRED' then raise;end if;
+ end;
+end;
+$t108_wrong_actor$;
+select set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',false);
+select set_config('b9.test_aal','aal2',false);
+
 -- Turn reporter OFF, existing published stories continue but directory name disappears.
 update public.reporters set public_name_enabled=false where name='Opted-in Reporter';
 do $$
