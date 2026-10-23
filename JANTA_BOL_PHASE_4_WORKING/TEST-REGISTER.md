@@ -82,7 +82,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T059 | Audit/Retention | Retention/Security/Cross-Module/Failure Regression + Topic Lock | B2 | IN PROGRESS |
 | P4-T060 | Security | Existing Security Baseline + Backend Authority + Fail-Closed | B10 | NOT RUN |
 | P4-T061 | Security | Public/Private/Sensitive Data Boundary Matrix | B10 | PASS + LOCK — E1+E2+E5; LIVE public_live_updates SQLSTATE 42501 repaired with scoped boolean RLS helper; 12/12 anon public updates, private ACL unchanged |
-| P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | NOT RUN |
+| P4-T062 | Security | Cross-Module Authority + Privilege Boundary | B10 | E1/E2 BACKEND PARTIAL PASS; E5 REAL AUTHENTICATED CROSS-MODULE ACTOR NEGATIVES DUE; FINAL HOLD |
 | P4-T063 | Security | Authentication + MFA + Session + Lost Device + Recovery Lifecycle | B10 | NOT RUN |
 | P4-T064 | Security | Secrets + Environment + RLS + Data Minimization + File Controls | B10 | NOT RUN |
 | P4-T065 | Security | Direct Attack / IDOR / Tampering / Cross-Account Test Family | B10 | NOT RUN |
