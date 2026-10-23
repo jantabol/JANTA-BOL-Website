@@ -115,3 +115,85 @@ test('T101 invalid date after successful Search clears stale list, blocks RPC an
  assert.match(elements.get('b9Status').textContent,/गलत तारीख सीमा/);
  assert.doesNotMatch(elements.get('b9Status').textContent,/B9_INVALID_DATE_RANGE/);
 });
+
+test('T109 injected search RPC failure clears stale results; next successful search recovers',async()=>{
+ const code=await load('b9-search-ui.js');
+ const elements=new Map();
+ const node=()=>({children:[],textContent:'',hidden:false,disabled:false,className:'',style:{},
+   appendChild(x){this.children.push(x);},
+   replaceChildren(){this.children=[];},
+   get childElementCount(){return this.children.length;}});
+ for(const id of ['b9Filters','b9Status','b9Results','b9More','b9Submit','b9Terms','b9Reporters'])elements.set(id,node());
+ const form=elements.get('b9Filters');form.events={};form.addEventListener=(n,fn)=>{form.events[n]=fn;};form.querySelectorAll=()=>[];
+ elements.get('b9More').addEventListener=()=>{};
+ let current={query:'initial'};
+ let mode='success',queryCount=0;
+ const ctx={document:{getElementById:id=>elements.get(id),createElement:()=>node()},
+  location:{pathname:'/b9-search.html',search:''},history:{replaceState(){}},
+  URLSearchParams,setTimeout,FormData:class{entries(){return Object.entries(current);}},
+  JBB9:{
+    cleanSearch:()=>true,
+    articleLink:id=>'article.html?id='+id,
+    search:async()=>{queryCount++;if(mode==='failure')throw Error('INJECTED_REMOTE_503');
+      return {items:[{id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',title:'Old approved story'}],next_cursor:null};},
+    taxonomy:async()=>[],reporterDiscovery:async()=>[]
+  }};
+ vm.runInNewContext(code,ctx);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(elements.get('b9Results').childElementCount,1,'initial public result present');
+ mode='failure';current={query:'different'};
+ form.events.submit({preventDefault(){}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(elements.get('b9Results').childElementCount,0,'backend failure MUST NOT retain stale results');
+ assert.equal(elements.get('b9More').hidden,true,'pagination disabled on backend outage');
+ assert.match(elements.get('b9Status').textContent,/खोज अभी उपलब्ध नहीं/);
+ assert.doesNotMatch(elements.get('b9Status').textContent,/INJECTED_REMOTE_503/,'hide internal error detail');
+ mode='success';current={query:'recovered'};
+ form.events.submit({preventDefault(){}});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(elements.get('b9Results').childElementCount,1,'healthy search recovers without reload');
+ assert.equal(queryCount,3);
+});
+
+test('T109 injected Analytics RPC failure clears previous Founder report and does not touch publishing',async()=>{
+ const code=await load('b9-analytics-ui.js');
+ const m=new Map();
+ const node=()=>({children:[],textContent:'',className:'',value:'',checked:false,events:{},
+  appendChild(x){this.children.push(x);},
+  replaceChildren(){this.children=[];},
+  addEventListener(n,fn){this.events[n]=fn;},
+  get childElementCount(){return this.children.length;}});
+ for(const id of ['period','from','to','order','status','summary','articleRows','globalDisplay','articleDisplay','taxonomyAssign','b9AnalyticsFilter'])m.set(id,node());
+ m.get('period').value='today';m.get('order').value='views';
+ m.get('summary').appendChild(node());m.get('articleRows').appendChild(node());
+ let publishCalls=0;
+ const ctx={document:{getElementById:id=>m.get(id),createElement:()=>node(),documentElement:{dataset:{jbAuth:'ready'}}},
+  JBBackend:{requireOwner:async()=>{},publishNews:()=>{publishCalls++;}},
+  JBB9:{ownerAnalytics:async()=>{throw Error('INJECTED_ANALYTICS_DB_DOWN');}},
+  addEventListener:()=>{},Intl,Date};
+ vm.runInNewContext(code,ctx);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(m.get('summary').childElementCount,0,'old summary must be cleared on failed report');
+ assert.equal(m.get('articleRows').childElementCount,0,'old Article counts must be cleared on failed report');
+ assert.match(m.get('status').textContent,/News\/Article publishing स्वतंत्र है/);
+ assert.equal(publishCalls,0);
+});
+
+test('T109 optional Reporter/Analytics/Related RPC failures do not erase direct Article',async()=>{
+ const code=await load('b9-article-ui.js');
+ const makeNode=()=>({children:[],textContent:'',className:'',
+  appendChild(x){this.children.push(x);},disconnect(){},querySelector:()=>null});
+ const article=makeNode();
+ const root={querySelector:selector=>selector==='article.article'?article:null};
+ let attempts=0;
+ const ctx={URLSearchParams,location:{search:'?id=aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'},
+   document:{getElementById:()=>root,createElement:()=>makeNode()},
+   MutationObserver:class{observe(){}disconnect(){}},
+   JBB9:{publicAuthor:async()=>{attempts++;throw Error('reporter down');},
+     publicMetrics:async()=>{attempts++;throw Error('analytics down');},
+     related:async()=>{attempts++;throw Error('related down');}}};
+ vm.runInNewContext(code,ctx);
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(root.querySelector('article.article'),article,'canonical article remains mounted');
+ assert.equal(attempts,3,'all optional calls tried, each failure isolated');
+});
