@@ -149,7 +149,7 @@ jobs:
             -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
             -e PGRST_DB_SCHEMAS=public \
             -e PGRST_DB_ANON_ROLE=anon \
-            -e PGRST_JWT_SECRET \
+            -e PGRST_JWT_SECRET="$JB_T065_DISPOSABLE_JWT_SECRET" \
             postgrest/postgrest:v12.2.3 >/dev/null
           trap 'docker stop jb-t065-disposable-postgrest >/dev/null 2>&1 || true' EXIT
           for i in $(seq 1 40); do
