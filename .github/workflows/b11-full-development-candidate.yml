@@ -67,6 +67,8 @@ jobs:
           bash ci/phase4/b11/media-offsite-companion.sh synthetic-local "$d/fake_source" "$d/signature.json" "$d/founder-public.pem" > "$d/media-proof.txt"
           grep -Fxq 'B11_MEDIA_ENCRYPTED_OFFSITE_ROUNDTRIP=PASS' "$d/media-proof.txt"
           grep -Fxq 'B11_MEDIA_EVIDENCE_KIND=SYNTHETIC_LOCAL_NOT_REAL_B2' "$d/media-proof.txt"
+      - name: "T074 direct private Storage object 3-bucket byte export plus double-list drift/404 deny synthetic API"
+        run: node --test ci/phase4/b11/storage-readonly-export.test.mjs
       - name: End-to-end command interface on disposable fake backup/media bytes
         shell: bash
         run: |
