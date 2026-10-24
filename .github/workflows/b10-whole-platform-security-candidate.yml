@@ -49,6 +49,8 @@ jobs:
         run: node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
       - name: T065 real public HTTPS wire test against Preview and public JANTA BOL API (read-only)
         run: node ci/phase4/b10-t065-public-http-actual-preview.test.mjs
+      - name: "T067 incident authority/RCA/source regression (no Founder Android step)"
+        run: node --test ci/phase4/b10-t067-incident-source-and-rca.test.mjs
       - name: T064 all tracked runtime/Edge/workflow source secret and environment config E1 E7 gate
         run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
       - name: T064 inspect historical tracked ZIP source member secret and file-path integrity
@@ -180,6 +182,8 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql
           node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs green
 
+      - name: "T067 controlled incident audit-notification-contained scoped rollback-only PG17 drill"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)

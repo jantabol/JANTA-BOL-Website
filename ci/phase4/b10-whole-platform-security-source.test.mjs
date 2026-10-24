@@ -95,6 +95,8 @@ test('P4-T067 — incident RCA and governed audit baseline is preserved',()=>{
                    'ci/phase4/b9-client-and-ui.test.mjs'])assert.ok(has(p));
  assert.match(read('ci/phase4/b9-client-and-ui.test.mjs'),/T109 injected|T109 optional/);
  assert.match(migration,/audit_logs/);
+ assert.ok(has('ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql'));
+ assert.ok(has('ci/phase4/b10-t067-incident-source-and-rca.test.mjs'));
 });
 test('P4-T068 — 109 old tests and unresolved E3 must never become auto-PASS',()=>{
  for(const p of protectedFiles)assert.ok(has(p),'protected original test absent '+p);
