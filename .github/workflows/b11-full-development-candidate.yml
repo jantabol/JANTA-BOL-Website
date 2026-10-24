@@ -73,6 +73,11 @@ jobs:
           bash ci/phase4/b11/media-offsite-companion.sh synthetic-local "$d/fake_source" "$d/signature.json" "$d/founder-public.pem" > "$d/media-proof.txt"
           grep -Fxq 'B11_MEDIA_ENCRYPTED_OFFSITE_ROUNDTRIP=PASS' "$d/media-proof.txt"
           grep -Fxq 'B11_MEDIA_EVIDENCE_KIND=SYNTHETIC_LOCAL_NOT_REAL_B2' "$d/media-proof.txt"
+      - name: T069 current backend health vs historical B2 and missing real original-proof fail-closed
+        run: |
+          node --test ci/phase4/b11/t069-backup-health-evidence.test.mjs
+          node ci/phase4/b11/t069-backup-health-evidence.mjs > /tmp/b11-t069-asof-readonly.json
+          node -e "const a=require('/tmp/b11-t069-asof-readonly.json'); if(a.final_t069!=='HOLD'||a.development_backend_precheck!=='PASS'||a.production_backup_dispatched)process.exit(1)"
       - name: "T074 direct private Storage object 3-bucket byte export plus double-list drift/404 deny synthetic API"
         run: node --test ci/phase4/b11/storage-readonly-export.test.mjs
       - name: End-to-end command interface on disposable fake backup/media bytes
