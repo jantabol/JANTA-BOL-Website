@@ -59,6 +59,7 @@ async function query(path,token,method='GET',body){
 }
 async function visible(id,token,expected,label){
  const r=await query('/articles?id=eq.'+id+'&select=id,status',token);
+ if(r.status!==200)console.error('DISPOSABLE_SIGNED_HTTP_ERROR',label,r.status,r.data?.code, r.data?.message);
  assert.equal(r.status,200,label+' HTTP status');
  assert.ok(Array.isArray(r.data),label+' HTTP payload');
  assert.equal(r.data.length,expected,label+' RLS result count');
