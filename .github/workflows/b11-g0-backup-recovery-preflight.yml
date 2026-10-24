@@ -1,0 +1,33 @@
+name: B11 Backup Recovery G0 Source Precheck (Never LIVE)
+on:
+  push:
+    branches: [codex/b11-backup-recovery-g0-preflight-20261024]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  b11_precheck:
+    name: B11 exact T069-T075 source+backup reuse / fail-closed release precheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Original locked test contract and manual-only backup gates
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b11-g0-readonly-source-and-release-gates.test.mjs
+          node ci/phase4/b11-g0-readonly-source-and-release-gates.mjs --report > /tmp/jb-b11-readonly-precheck.json
+          node -e "const a=require('/tmp/jb-b11-readonly-precheck.json');if(a.release_authorized||a.b11_final_lock!=='NOT_RUN'||a.b11_test_count!==7)process.exit(1)"
+      - name: Preserve existing B10 original source nine checks
+        run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+      - name: Preserve old JANTA BOL backup safety diagnostics on dummy fixtures
+        run: |
+          python3 -m unittest discover -s ci/backup -p 'test_*.py'
+      - name: Require NO GitHub secrets or LIVE tokens in precheck
+        run: |
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'B11 G0 ONLY: no real backup, no restore, no bypass of B10 final HOLD.'
