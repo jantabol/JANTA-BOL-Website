@@ -24,3 +24,9 @@
 - `P4-T066 E5`: historical production audit records can be inventoried read-only, but full real suspended/revoked staged QA actor audit proof not yet performed.
 - **T066 FINAL: HOLD** until a safe hosted E2+E5 real QA identity proof and approved release/verification of the fix. Source/isolated PASS is not full live closure.
 - `T063 HOLD`, `T064 DUE`, `T065 hosted HOLD`; don't re-label any. `T061` and `T062` stay PASS+LOCK.
+
+## Actual green run and final evidence (verified)
+- GitHub Actions `40067901851`, commit `ded4e908ae1287d4fddd5672cc7d1b9cbfb3d2f6`, **SUCCESS**: T066 RED 3/3 (expected vulnerability recreation), T066 GREEN 12/12, prior T065 signed HTTP 25/25, B10 original nine Source contracts, B9 and B0–B8 protected suites all succeeded. Green signals isolated CI, not LIVE security certification.
+- Production read-only T066 audit: 9 rows with session revocation actions; 2 suspension-action rows; 1 role-change event; total 1560 audit rows. Live data invariants: 32 Articles, 7 Advertisement Campaigns, 6 Grievances, 4 Role assignments, 72 Auth session rows. No production DDL, mutation, session revoke or global Founder settings changed.
+- `jb-team-api` is deployed with verify_jwt=true. Server authorizes live `auth.getUser(token)`, backend user+session context, actual Owner role, AAL2 and *recent MFA* for mutations; service-role API is called only after server-side validation. This is source evidence, not a live revoked-admin negative trial.
+- A read-only low-role transaction found no public Search private-ID exposure for random UUID. Does not replace a full signed Production E5 proof.
