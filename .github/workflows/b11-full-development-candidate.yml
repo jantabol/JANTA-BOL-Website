@@ -43,6 +43,30 @@ jobs:
           node --test ci/phase4/b11/signed-evidence.test.mjs
           node --test ci/phase4/b11/restore-bridge.test.mjs
           bash -n ci/phase4/b11/t034-networkless-restore-bridge.sh
+      - name: B11 encrypt a real AGE dual-recipient synthetic media+signed identity bundle, decrypt/compare bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y age zstd > /dev/null
+          node --test ci/phase4/b11/media-offsite-companion.test.mjs
+          bash -n ci/phase4/b11/media-offsite-companion.sh
+          d="$(mktemp -d)"
+          trap 'rm -rf -- "$d"' EXIT
+          node ci/phase4/b11/cli.mjs fixture --path "$d/fake_source" >/dev/null
+          node - "$d" <<'NODE'
+          const {generateKeyPairSync}=require('node:crypto');
+          const {writeFileSync}=require('node:fs');
+          const x=generateKeyPairSync('ed25519');
+          writeFileSync(process.argv[2]+'/founder-private.pem',x.privateKey.export({type:'pkcs8',format:'pem'}),{mode:0o600});
+          writeFileSync(process.argv[2]+'/founder-public.pem',x.publicKey.export({type:'spki',format:'pem'}));
+          NODE
+          node ci/phase4/b11/cli.mjs sign-offline --path "$d/fake_source" --private-key "$d/founder-private.pem" --signature "$d/signature.json" --confirm JANTA_BOL_OFFLINE_SIGN_ONLY >/dev/null
+          age-keygen -o "$d/age-founder" >/dev/null 2>&1
+          export JB_BACKUP_AGE_RECIPIENT="$(age-keygen -y "$d/age-founder")"
+          bash ci/phase4/b11/media-offsite-companion.sh synthetic-local "$d/fake_source" "$d/signature.json" "$d/founder-public.pem" > "$d/media-proof.txt"
+          grep -Fxq 'B11_MEDIA_ENCRYPTED_OFFSITE_ROUNDTRIP=PASS' "$d/media-proof.txt"
+          grep -Fxq 'B11_MEDIA_EVIDENCE_KIND=SYNTHETIC_LOCAL_NOT_REAL_B2' "$d/media-proof.txt"
       - name: End-to-end command interface on disposable fake backup/media bytes
         shell: bash
         run: |
