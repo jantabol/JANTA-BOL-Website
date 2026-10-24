@@ -53,6 +53,8 @@ AS $ad$
 $ad$;
 REVOKE ALL ON FUNCTION public.jb_ad_my_campaigns() FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.jb_ad_my_campaigns() TO authenticated;
+-- Mirror actual LIVE ACL: both authenticated and service_role EXECUTE, not anon.
+GRANT EXECUTE ON FUNCTION public.jb_ad_my_campaigns() TO service_role;
 
 -- CI-only visibility probe, NO production equivalent. Tests real JWT
 -- sub/session/Owner AAL2, suspension from DB rather than client role metadata.
