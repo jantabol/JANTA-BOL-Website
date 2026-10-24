@@ -86,6 +86,31 @@ age -d -i "$tmp/disposable.age.key" -o "$tmp/recovered.tar.zst" "$tmp/offsite-do
  fail 'downloaded ciphertext not decryptable with independent identity'
 cmp -s "$tmp/source.tar.zst" "$tmp/recovered.tar.zst" ||
  fail 'original signed media archive not byte identical after roundtrip'
+# Independently reconstruct the downloaded encrypted archive into disposable
+# offline files. A ciphertext/compressed-tar equality check ALONE is not a real
+# original-file recovery verification. Never extract into production or runner home.
+mkdir -m 700 "$tmp/restored-original-bytes"
+zstd -q -d -f "$tmp/recovered.tar.zst" -o "$tmp/recovered.tar" ||
+ fail 'readback decrypted payload cannot be decompressed'
+tar --extract --file "$tmp/recovered.tar" --directory "$tmp/restored-original-bytes" \
+ --no-same-owner --no-same-permissions ||
+ fail 'readback archive cannot be extracted to isolated temp'
+if [[ "$mode" == manual-storage ]]; then
+  # Real original source receipts include exact per-object bytes and SHA256.
+  node ci/phase4/b11/cli.mjs storage-verify-offline --out "$tmp/restored-original-bytes" >/dev/null ||
+   fail 'readback restoration media byte-by-byte SHA/content verification failed'
+  echo 'B11_MEDIA_RESTORED_ORIGINAL_STORAGE_FILE_BYTES=VERIFIED_FROM_DOWNLOADED_CIPHERTEXT'
+else
+  # A detached signature from the archive becomes an INDEPENDENT file, not
+  # accepted as an alternate trust anchor. Trusted public key supplied outside.
+  mv -- "$tmp/restored-original-bytes/signature.json" "$tmp/readback-detached.json" ||
+   fail 'detached signer missing from recovered archive'
+  node ci/phase4/b11/cli.mjs verify-trusted \
+   --path "$tmp/restored-original-bytes" --signature "$tmp/readback-detached.json" \
+   --trust-key "$trusted_pub" >/dev/null ||
+   fail 'readback restored original files failed independent Owner-signed manifest'
+  echo 'B11_MEDIA_RESTORED_SOURCE_CONTENT_SIGNATURE=PASS'
+fi
 sha="$(sha256sum "$tmp/offsite-downloaded.age" | cut -d' ' -f1)"
 [[ "$sha" =~ ^[a-f0-9]{64}$ ]] || fail 'invalid verified hash'
 echo "B11_MEDIA_ENCRYPTED_OFFSITE_ROUNDTRIP=PASS"

@@ -34,6 +34,21 @@ test('T074 Founder-only media backup workflow remains manual and never produces 
   assert.ok(s.includes(required),required);
  assert.doesNotMatch(s,/upload-artifact|pg_restore|supabase db dump/);
 });
+test('T069/T074 ciphertext readback is unpacked and original media bytes independently checked before positive log',()=>{
+ const m=readFileSync('ci/phase4/b11/media-offsite-companion.sh','utf8');
+ for(const token of ['zstd -q -d -f','--directory "$tmp/restored-original-bytes"',
+   'storage-verify-offline --out "$tmp/restored-original-bytes"',
+   'B11_MEDIA_RESTORED_ORIGINAL_STORAGE_FILE_BYTES=VERIFIED_FROM_DOWNLOADED_CIPHERTEXT'])
+  assert.ok(m.includes(token),token);
+});
+test('T069 production service-role/B2 keys are FINAL-STEP-ONLY, not job/checkout/install exposed',()=>{
+ const w=readFileSync('.github/workflows/b11-storage-media-MANUAL.yml','utf8');
+ const env=w.split('    steps:')[0];
+ assert.doesNotMatch(env,/secrets\./);
+ const final=w.slice(w.indexOf('Read-only original media 3-bucket'));
+ assert.ok(final.includes('secrets.JB_B11_SERVICE_ROLE_KEY'));
+ assert.ok(final.includes('secrets.JB_BACKUP_B2_APPLICATION_KEY'));
+});
 test('T073 refuse real media invocation without source or independent signer',()=>{
  const r=spawnSync('bash',[path,'manual-offsite','/not_found',
  '/not_found.sig','/not_found.pem'],{encoding:'utf8'});

@@ -23,34 +23,38 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     env:
-      JB_B11_SERVICE_ROLE_KEY: ${{ secrets.JB_B11_SERVICE_ROLE_KEY }}
-      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
-      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
-      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
-      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
       B11_MEDIA_EXPORT_CONFIRMATION: JANTA_BOL_MEDIA_EXPORT_ONLY
       B11_FOUNDER_APPROVED_MEDIA_OFFSITE: JANTA_BOL_MEDIA_EXPORT_ONLY
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Refuse incomplete protected secret gate before any live read
+      - name: Protected main/actor/input preflight without receiving production secrets
         run: |
           set -euo pipefail
-          test -n "$JB_B11_SERVICE_ROLE_KEY"
-          test -n "$JB_BACKUP_AGE_RECIPIENT"
-          test -n "$JB_BACKUP_B2_KEY_ID"
-          test -n "$JB_BACKUP_B2_APPLICATION_KEY"
-          test -n "$JB_BACKUP_REMOTE_PREFIX"
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_ACTOR" = jantabol
+          test "$B11_MEDIA_EXPORT_CONFIRMATION" = JANTA_BOL_MEDIA_EXPORT_ONLY
       - name: Install AGE, zstd and rclone clients
         run: |
           sudo apt-get update -qq
           sudo apt-get install -qq -y age zstd rclone >/dev/null
       - name: Read-only original media 3-bucket encrypted B2 upload and independently decrypt restored bytes
         shell: bash
+        env:
+          JB_B11_SERVICE_ROLE_KEY: ${{ secrets.JB_B11_SERVICE_ROLE_KEY }}
+          JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+          JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+          JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+          JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
         run: |
           set -euo pipefail
           umask 077
+          test -n "$JB_B11_SERVICE_ROLE_KEY"
+          test -n "$JB_BACKUP_AGE_RECIPIENT"
+          test -n "$JB_BACKUP_B2_KEY_ID"
+          test -n "$JB_BACKUP_B2_APPLICATION_KEY"
+          test -n "$JB_BACKUP_REMOTE_PREFIX"
           d="$(mktemp -d)"
           trap 'rm -rf -- "$d"' EXIT
           mkdir -m 700 "$d/collect"

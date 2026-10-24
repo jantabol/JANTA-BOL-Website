@@ -161,6 +161,9 @@ export function verifyStorageExportReceipt(rootDir){
  const p=join(root,'config/storage-export-readonly-summary.json');
  let receipt;try{receipt=JSON.parse(readFileSync(p,'utf8'))}
  catch{fail('RECEIPT_MISSING_OR_INVALID')}
+ const storageBase=join(root,'storage');
+ if(!existsSync(storageBase)||lstatSync(storageBase).isSymbolicLink()||
+  !statSync(storageBase).isDirectory())fail('RECEIPT_SOURCE_STORAGE_SYMLINK_OR_MISSING');
  if(receipt.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||
  receipt.project_ref!==REF||receipt.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
  receipt.stable_double_listing!==true||receipt.db_snapshot_bound!==false||
@@ -179,6 +182,12 @@ export function verifyStorageExportReceipt(rootDir){
  !Number.isSafeInteger(a.size)||a.size<0||a.size>MAX_FILE)fail('RECEIPT_DIGEST_INVALID');
   const file=join(root,'storage',a.bucket,...a.key.split('/'));
   if(!under(file,join(root,'storage')))fail('RECEIPT_PATH_ESCAPE');
+  let parent=storageBase;
+  for(const part of [a.bucket,...a.key.split('/').slice(0,-1)]){
+   parent=join(parent,part);
+   if(!existsSync(parent)||lstatSync(parent).isSymbolicLink()||!statSync(parent).isDirectory())
+     fail('RECEIPT_PARENT_SYMLINK_OR_MISSING');
+  }
   if(!existsSync(file)||lstatSync(file).isSymbolicLink()||
  !statSync(file).isFile())fail('RECEIPT_OBJECT_MISSING_OR_SYMLINK');
   const b=readFileSync(file);
