@@ -19,6 +19,8 @@ jobs:
         run: |
           npm install --no-save --ignore-scripts --no-package-lock age-encryption@0.3.1
           node --test ci/phase4/b11/t069-media-age-b2-roundtrip.test.mjs
+      - name: Verify exact B2 bucket and ciphertext-only readback transport
+        run: node --test ci/phase4/b11/t069-b2-s3-transport.test.mjs
       - name: Retain original T069 negative tests
         run: |
           node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
