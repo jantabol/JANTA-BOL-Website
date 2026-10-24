@@ -1,0 +1,60 @@
+# NEVER PUSH/SCHEDULE. Review/merge into main ONLY after Founder authorizes this new workflow.
+name: JANTA BOL B11 Original Storage Media Encrypted Offsite (Founder manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type JANTA_BOL_MEDIA_EXPORT_ONLY to read and back up original Storage bytes
+        type: string
+        required: true
+      reviewed_sha:
+        description: Exact security-reviewed main commit SHA
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-storage-media-manual
+  cancel-in-progress: false
+jobs:
+  backup_media_only:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_MEDIA_EXPORT_ONLY' && github.event.inputs.reviewed_sha == github.sha }}
+    environment: janta-bol-production-backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      JB_B11_SERVICE_ROLE_KEY: ${{ secrets.JB_B11_SERVICE_ROLE_KEY }}
+      JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+      JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+      JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+      JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+      B11_MEDIA_EXPORT_CONFIRMATION: JANTA_BOL_MEDIA_EXPORT_ONLY
+      B11_FOUNDER_APPROVED_MEDIA_OFFSITE: JANTA_BOL_MEDIA_EXPORT_ONLY
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Refuse incomplete protected secret gate before any live read
+        run: |
+          set -euo pipefail
+          test -n "$JB_B11_SERVICE_ROLE_KEY"
+          test -n "$JB_BACKUP_AGE_RECIPIENT"
+          test -n "$JB_BACKUP_B2_KEY_ID"
+          test -n "$JB_BACKUP_B2_APPLICATION_KEY"
+          test -n "$JB_BACKUP_REMOTE_PREFIX"
+      - name: Install AGE, zstd and rclone clients
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -qq -y age zstd rclone >/dev/null
+      - name: Read-only original media 3-bucket encrypted B2 upload and independently decrypt restored bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          d="$(mktemp -d)"
+          trap 'rm -rf -- "$d"' EXIT
+          mkdir -m 700 "$d/collect"
+          node ci/phase4/b11/cli.mjs storage-export-manual --out "$d/collect" > "$d/private-report.json"
+          node -e "const a=require(process.argv[1]); if(a.object_count<1||a.atomic_database_media_snapshot!==false)process.exit(1)" "$d/private-report.json"
+          bash ci/phase4/b11/media-offsite-companion.sh manual-storage "$d/collect" - -
+          echo 'B11_REAL_MEDIA_ONLY=YES; DB_SNAPSHOT_ATOMICITY_NOT_CLAIMED; NO_PRODUCTION_WRITE'

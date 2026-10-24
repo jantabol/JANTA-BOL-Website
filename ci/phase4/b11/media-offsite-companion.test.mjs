@@ -24,6 +24,16 @@ test('T074 packaging and media decrypt readback SHA compare, never send plaintex
  assert.ok(content.includes(marker),marker);
  assert.doesNotMatch(content,/upload-artifact|artifact_tool/);
 });
+test('T074 Founder-only media backup workflow remains manual and never produces plaintext GitHub artifact',()=>{
+ const s=readFileSync('.github/workflows/b11-storage-media-MANUAL.yml','utf8');
+ assert.match(s,/^on:\n  workflow_dispatch:/m);
+ assert.doesNotMatch(s,/^  (push|schedule|pull_request):/m);
+ for(const required of ['github.actor == \'jantabol\'','github.ref == \'refs/heads/main\'',
+   'github.run_attempt == 1','reviewed_sha == github.sha','janta-bol-production-backup',
+   'JB_B11_SERVICE_ROLE_KEY','JANTA_BOL_MEDIA_EXPORT_ONLY'])
+  assert.ok(s.includes(required),required);
+ assert.doesNotMatch(s,/upload-artifact|pg_restore|supabase db dump/);
+});
 test('T073 refuse real media invocation without source or independent signer',()=>{
  const r=spawnSync('bash',[path,'manual-offsite','/not_found',
  '/not_found.sig','/not_found.pem'],{encoding:'utf8'});

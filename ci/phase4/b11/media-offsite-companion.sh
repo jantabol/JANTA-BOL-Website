@@ -6,27 +6,45 @@ set -Eeuo pipefail
 set +x
 umask 077
 fail(){ echo "B11_MEDIA_HOLD: $1" >&2; exit 3; }
-[[ "$#" == 4 ]] || fail 'usage: synthetic-local|manual-offsite SOURCE SIGNATURE TRUSTED_PUB'
+[[ "$#" == 4 ]] || fail 'usage: synthetic-local|manual-offsite|manual-storage SOURCE SIGNATURE TRUSTED_PUB'
 mode="$1";source_dir="$2";signature="$3";trusted_pub="$4"
-[[ "$mode" == synthetic-local || "$mode" == manual-offsite ]] || fail 'invalid mode'
-[[ -d "$source_dir" && -f "$signature" && -f "$trusted_pub" ]] ||
+[[ "$mode" == synthetic-local || "$mode" == manual-offsite || "$mode" == manual-storage ]] || fail 'invalid mode'
+[[ -d "$source_dir" ]] || fail 'source offline folder required'
+if [[ "$mode" == manual-storage ]]; then
+  [[ -s "$source_dir/config/storage-export-readonly-summary.json" && -d "$source_dir/storage" ]] ||
+   fail 'exact live read-only original Storage export receipt required'
+  node - "$source_dir/config/storage-export-readonly-summary.json" <<'NODE'
+const {readFileSync}=require('node:fs');
+const v=JSON.parse(readFileSync(process.argv[2],'utf8'));
+if(v.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||v.project_ref!=='vrffsnkycvjithwtiylt'||
+ v.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
+ v.stable_double_listing!==true||v.db_snapshot_bound!==false||
+ !Number.isInteger(v.object_count)||v.object_count<1||
+ !Array.isArray(v.sha_records)||v.sha_records.length!==v.object_count)process.exit(3);
+NODE
+else
+ [[ -f "$signature" && -f "$trusted_pub" ]] ||
  fail 'source plus independent Owner attestation required'
+fi
 for name in age age-keygen tar zstd sha256sum node; do
  command -v "$name" >/dev/null || fail 'required offline encryption tool missing'
 done
-node ci/phase4/b11/cli.mjs verify-trusted  --path "$source_dir" --signature "$signature" --trust-key "$trusted_pub" >/dev/null ||
- fail 'cryptographic media and identity attestation failure'
+if [[ "$mode" != manual-storage ]]; then
+  node ci/phase4/b11/cli.mjs verify-trusted --path "$source_dir" --signature "$signature" --trust-key "$trusted_pub" >/dev/null ||
+   fail 'cryptographic media and identity attestation failure'
+fi
 tmp="$(mktemp -d)"
 cleanup(){ rm -rf -- "$tmp"; }
 trap cleanup EXIT
-[[ "$mode" != manual-offsite ]] || {
+[[ "$mode" == synthetic-local ]] || {
  [[ "${GITHUB_ACTIONS:-}" == true &&
     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
     "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
     "${GITHUB_ACTOR:-}" == jantabol &&
     "${GITHUB_REF:-}" == refs/heads/main &&
     "${GITHUB_RUN_ATTEMPT:-}" == 1 &&
-    "${B11_FOUNDER_APPROVED_MEDIA_OFFSITE:-}" == JANTA_BOL_MEDIA_ONLY &&
+    ( ( "$mode" == manual-offsite && "${B11_FOUNDER_APPROVED_MEDIA_OFFSITE:-}" == JANTA_BOL_MEDIA_ONLY ) ||
+      ( "$mode" == manual-storage && "${B11_FOUNDER_APPROVED_MEDIA_OFFSITE:-}" == JANTA_BOL_MEDIA_EXPORT_ONLY ) ) &&
     -n "${GITHUB_RUN_ID:-}" ]] || fail 'manual Owner/main release not authorized'
 }
 primary="${JB_BACKUP_AGE_RECIPIENT:-}"
@@ -36,11 +54,13 @@ age-keygen -o "$tmp/disposable.age.key" >/dev/null 2>&1 ||
 tmp_pub="$(age-keygen -y "$tmp/disposable.age.key")"
 [[ "$tmp_pub" =~ ^age1[0-9a-z]+$ && "$tmp_pub" != "$primary" ]] ||
  fail 'independent encryption recipient required'
-cp -- "$signature" "$tmp/signature.json"
 tar --format=posix -C "$source_dir" -cf "$tmp/source.tar" . ||
  fail 'source packaging error'
-tar --append --format=posix -f "$tmp/source.tar" -C "$tmp" signature.json ||
- fail 'cannot include external detached signature'
+if [[ "$mode" != manual-storage ]]; then
+ cp -- "$signature" "$tmp/signature.json"
+ tar --append --format=posix -f "$tmp/source.tar" -C "$tmp" signature.json ||
+  fail 'cannot include external detached signature'
+fi
 zstd -q -f -T1 "$tmp/source.tar" -o "$tmp/source.tar.zst" ||
  fail 'media compression error'
 age -r "$primary" -r "$tmp_pub" -o "$tmp/offsite.age" "$tmp/source.tar.zst" ||
@@ -79,6 +99,8 @@ echo "B11_MEDIA_ENCRYPTED_OFFSITE_ROUNDTRIP=PASS"
 echo "B11_MEDIA_CIPHERTEXT_SHA256=$sha"
 if [[ "$mode" == synthetic-local ]]; then
  echo 'B11_MEDIA_EVIDENCE_KIND=SYNTHETIC_LOCAL_NOT_REAL_B2'
+elif [[ "$mode" == manual-storage ]]; then
+ echo 'B11_MEDIA_EVIDENCE_KIND=MANUAL_STORAGE_BYTES_REAL_B2_NO_DB_SNAPSHOT_OR_FOUNDER_SIGNATURE'
 else
  echo 'B11_MEDIA_EVIDENCE_KIND=MANUAL_BACKBLAZE_B2_REAL_NO_CREDENTIALS_EXPOSED'
 fi
