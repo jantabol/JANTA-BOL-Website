@@ -71,11 +71,12 @@ export async function verifyBundle(bytes,expected){
  if(base+cursor!==raw.length)reject();
  return {objects:data.objects.length,bytes:cursor,archive_sha256:await hash(raw)};
 }
-export async function encryptedB2MediaRoundTrip({inventory,readOriginal,age,b2,founderRecipient,now=()=>new Date(),uuid=()=>crypto.randomUUID()}){
- if(typeof inventory!=='function'||typeof readOriginal!=='function'||
+export async function encryptedB2MediaRoundTrip({authorizeFounder,inventory,readOriginal,age,b2,founderRecipient,now=()=>new Date(),uuid=()=>crypto.randomUUID()}){
+ if(typeof authorizeFounder!=='function'||typeof inventory!=='function'||typeof readOriginal!=='function'||
  !age||typeof age.generateIdentity!=='function'||
  typeof b2?.put!=='function'||typeof b2?.get!=='function'||
  !/^age1[0-9ac-hj-np-z]{30,150}$/.test(founderRecipient||''))reject();
+ if(await authorizeFounder()!==true)reject();
  // Two independent inventory reads: don't silently skip files.
  const first=sortedDescriptors(await inventory());
  const entries=[];
@@ -86,6 +87,7 @@ export async function encryptedB2MediaRoundTrip({inventory,readOriginal,age,b2,f
  }
  const last=sortedDescriptors(await inventory());
  if(JSON.stringify(first)!==JSON.stringify(last))reject();
+ if(await authorizeFounder()!==true)reject(); // expired/revoked Owner AAL2 gate before B2 write
  const plain=encode(entries);
  const ephemeral=await age.generateIdentity();
  const ephemeralRecipient=await age.identityToRecipient(ephemeral);
