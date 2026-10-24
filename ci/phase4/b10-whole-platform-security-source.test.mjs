@@ -84,6 +84,10 @@ test('P4-T066 — old session/device revocation and advertiser isolation hooks p
  assert.match(scoped,/private\.current_session_active\(\)/);
  assert.match(scoped,/T066_REVIEW_ONLY_DO_NOT_APPLY_TO_LIVE/);
  assert.ok(has('ci/phase4/b10-t066-disposable-signed-revocation.test.mjs'));
+ const production=read('JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql');
+ assert.match(production,/T066_ORIGINAL_FUNCTION_SOURCE_DRIFT/);
+ assert.match(production,/private\.current_session_active\(\)/);
+ assert.doesNotMatch(production,/GRANT EXECUTE|GRANT SELECT/i);
 });
 test('P4-T067 — incident RCA and governed audit baseline is preserved',()=>{
  for(const p of ['ci/phase3-regression/static-p3-incident-regression.cjs',

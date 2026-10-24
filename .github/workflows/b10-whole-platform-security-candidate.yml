@@ -177,7 +177,7 @@ jobs:
             sleep 1
           done
           node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs red
-          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_session_guard_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql
           node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs green
 
 
