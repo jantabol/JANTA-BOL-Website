@@ -1,0 +1,54 @@
+# T069 READ-ONLY, no schedule/live backup, Storage, credentials or B2 mutation.
+name: JANTA BOL B11 T069 GitHub Backup Run Health Probe (manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      approved_max_age_hours:
+        description: Founder-approved max hours; empty means HOLD
+        type: string
+        required: false
+permissions:
+  actions: read
+  contents: read
+jobs:
+  read_only_health:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Test read-only source and negative alarms
+        run: node --test ci/phase4/b11/t069-backup-run-health.test.mjs
+      - name: Read genuine protected T034 GitHub run history (no B2/database/Storage calls)
+        env:
+          GH_T069_TOKEN: ${{ github.token }}
+          FOUNDER_MAX_AGE_HOURS: ${{ inputs.approved_max_age_hours }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(--live-github)
+          if [[ -n "$FOUNDER_MAX_AGE_HOURS" ]]; then
+            args+=(--max-age-hours "$FOUNDER_MAX_AGE_HOURS")
+          fi
+          set +e
+          node ci/phase4/b11/t069-backup-run-health.mjs "${args[@]}" > /tmp/t069-health-report.json
+          result=$?
+          set -e
+          if [[ "$result" == 2 ]]; then
+            echo '::error::T069 backup run failed or is overdue. Investigate!'
+            exit 2
+          fi
+          if [[ "$result" != 0 && "$result" != 3 ]]; then
+            echo '::error::T069 monitor could not verify history'
+            exit 2
+          fi
+          node - <<'NODE'
+          const a=require('/tmp/t069-health-report.json');
+          if(a.final_t069!=='HOLD'||a.production_mutation||a.b2_object_retention_now_verified)process.exit(1);
+          console.log('T069_GITHUB_RUN_HEALTH='+a.status);
+          console.log('T069_LAST_GOOD_RUN='+String(a.last_good_run_id));
+          console.log('T069_FINAL_PASS_LOCK=HOLD: media and B2 current-byte proof due');
+          NODE
+          if [[ "$result" == 3 ]]; then echo '::notice::T069 health policy/current run not proved, HOLD'; fi

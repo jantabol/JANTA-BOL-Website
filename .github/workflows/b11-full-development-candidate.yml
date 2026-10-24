@@ -78,6 +78,8 @@ jobs:
           node --test ci/phase4/b11/t069-backup-health-evidence.test.mjs
           node ci/phase4/b11/t069-backup-health-evidence.mjs > /tmp/b11-t069-asof-readonly.json
           node -e "const a=require('/tmp/b11-t069-asof-readonly.json'); if(a.final_t069!=='HOLD'||a.development_backend_precheck!=='PASS'||a.production_backup_dispatched)process.exit(1)"
+      - name: T069 monitor fallback, age policy and wrong actor/Cricket negative regression
+        run: node --test ci/phase4/b11/t069-backup-run-health.test.mjs
       - name: "T074 direct private Storage object 3-bucket byte export plus double-list drift/404 deny synthetic API"
         run: node --test ci/phase4/b11/storage-readonly-export.test.mjs
       - name: End-to-end command interface on disposable fake backup/media bytes
