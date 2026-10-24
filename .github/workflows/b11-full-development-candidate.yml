@@ -38,6 +38,11 @@ jobs:
           persist-credentials: false
       - name: One-shot T069-T075 deterministic offline recovery test suite
         run: node --test ci/phase4/b11/recovery-engine.test.mjs
+      - name: Verify detached signer, tampering, wrong-key and old T034 restore bridge safeguards
+        run: |
+          node --test ci/phase4/b11/signed-evidence.test.mjs
+          node --test ci/phase4/b11/restore-bridge.test.mjs
+          bash -n ci/phase4/b11/t034-networkless-restore-bridge.sh
       - name: End-to-end command interface on disposable fake backup/media bytes
         shell: bash
         run: |
