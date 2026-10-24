@@ -16,7 +16,11 @@ BEGIN
  THEN RAISE EXCEPTION 'T068_T067_SIMULATED_INCIDENT_NOT_ROLLED_BACK';END IF;
  IF (SELECT count(*) FROM public.articles) < 6
  THEN RAISE EXCEPTION 'T068_EXISTING_ARTICLES_MISSING';END IF;
- IF (SELECT count(*) FROM public.user_roles) <> 3
+ -- T066 disposable test adds a 4th synthetic suspended Reporter principal.
+ -- Do not mistake this deliberately persisted fixture for a T067 rollback leak.
+ IF (SELECT count(*) FROM public.user_roles) <> 4
+ OR NOT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id='11111111-1111-1111-1111-111111111111'::uuid AND role='owner')
+ OR NOT EXISTS(SELECT 1 FROM public.user_roles WHERE user_id='33333333-3333-3333-3333-333333333333'::uuid AND role='editor')
  THEN RAISE EXCEPTION 'T068_EXISTING_ROLE_FIXTURE_UNEXPECTED';END IF;
  IF NOT EXISTS(SELECT 1 FROM pg_proc
   WHERE oid='public.jb_ad_my_campaigns()'::regprocedure
