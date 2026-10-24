@@ -103,5 +103,7 @@ test('P4-T068 — 109 old tests and unresolved E3 must never become auto-PASS',(
  const r=read('JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md');
  assert.match(r,/T105 FINAL HOLD|T105.*HOLD/);
  assert.ok(has('tools/jb_manual_test.py'));
+ assert.ok(has('ci/phase4/b10-t068-evidence-reconciliation.mjs'));
+ assert.ok(has('ci/phase4/b10-t068-rollback-safety-final-pg17.sql'));
  assert.ok(has('JANTA_BOL_PHASE_4_WORKING/review/B10_G0_SECURITY_PRECHECK_SCOPE_AND_HOLD_20261023.md'));
 });

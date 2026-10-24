@@ -51,6 +51,11 @@ jobs:
         run: node ci/phase4/b10-t065-public-http-actual-preview.test.mjs
       - name: "T067 incident authority/RCA/source regression (no Founder Android step)"
         run: node --test ci/phase4/b10-t067-incident-source-and-rca.test.mjs
+      - name: "T068 final evidence reconciliation (HOLD if incomplete, never fake official lock)"
+        run: |
+          node --test ci/phase4/b10-t068-evidence-reconciliation.test.mjs
+          node ci/phase4/b10-t068-evidence-reconciliation.mjs --audit > /tmp/b10-t068-gated-result.json
+          node -e "const r=require('/tmp/b10-t068-gated-result.json'); if(r.official_final_lock!=='HOLD'||r.outstanding_b10.length<1)process.exit(1)"
       - name: T064 all tracked runtime/Edge/workflow source secret and environment config E1 E7 gate
         run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
       - name: T064 inspect historical tracked ZIP source member secret and file-path integrity
@@ -184,6 +189,8 @@ jobs:
 
       - name: "T067 controlled incident audit-notification-contained scoped rollback-only PG17 drill"
         run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
+      - name: "T068 final disposable PG17 post-T067 rollback and prior boundary validation"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t068-rollback-safety-final-pg17.sql
 
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
