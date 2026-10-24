@@ -1,0 +1,1 @@
+JANTA BOL B11 T069 keyless options verification: no secrets, no production changes. Current RLS keeps grievance-private restricted to the original secure gateway.
