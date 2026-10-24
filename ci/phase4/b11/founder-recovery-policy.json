@@ -1,0 +1,17 @@
+{
+  "schema": "janta-bol-b11-founder-recovery-policy-v1",
+  "project_ref": "vrffsnkycvjithwtiylt",
+  "automatic_live_restore": false,
+  "automatic_live_token_rotation": false,
+  "automatic_live_delete": false,
+  "manual_real_backup_approval": "REQUIRED_SEPARATE_FOUNDER_DECISION",
+  "encrypted_offsite_reuse": "EXISTING_B7_T034_AGE_BACKBLAZE_B2_ONLY",
+  "approved_rpo_seconds": null,
+  "approved_rto_seconds": null,
+  "backup_recency_target_seconds": null,
+  "storage_file_byte_recovery": "PROOF_REQUIRED",
+  "platform_config_recovery": "PROOF_REQUIRED",
+  "independent_owner_factor": "PROOF_REQUIRED",
+  "historical_db_restore": "2026-10-15_RUN_38778388127_SCOPED_PASS",
+  "release_gate": "T069_T075_REAL_PROOFS_PLUS_OLDER_B10_FINAL_GATE"
+}
