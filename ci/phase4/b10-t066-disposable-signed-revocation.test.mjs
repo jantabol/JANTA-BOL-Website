@@ -69,7 +69,7 @@ if(phase==='red'){
  await rows(t.AClaimOwner,null,'revoked advertiser metadata/aal claim no promotion');
  await rows(t.Owner,null,'Owner has no advertiser linkage; never cross-account');
  await state(t.Owner,{owner_aal2:true,active_session:true,app_role:'owner'},'real synthetic Owner AAL2 current session');
- await state(t.Suspended,{owner_aal2:false,active_session:true,app_role:null},'suspended Reporter loses backend application role despite Owner claim');
+ await state(t.Suspended,{owner_aal2:null,active_session:true,app_role:null},'suspended Reporter loses backend application role despite Owner claim');
  await state(t.AClaimOwner,{owner_aal2:false,active_session:false,app_role:null},'revoked advertiser cannot become Founder via JWT metadata');
  const anon=await request('/rpc/jb_ad_my_campaigns');
  assert.ok([401,403].includes(anon.status),'anonymous advertiser API must be denied');count++;
