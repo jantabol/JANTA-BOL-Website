@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync,readFileSync,existsSync,rmSync,readdirSync} from 'node:fs';
+import {mkdtempSync,readFileSync,writeFileSync,existsSync,rmSync,readdirSync,mkdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
-import {exportStorageBytes,guardManual,REF,BUCKETS,HOST} from './storage-readonly-export.mjs';
+import {exportStorageBytes,guardManual,verifyStorageExportReceipt,REF,BUCKETS,HOST} from './storage-readonly-export.mjs';
 const token='FAKE_TEST_TOKEN_NEVER_A_SUPABASE_SECRET_0'.repeat(2);
 function fakeApi({drift=false,missing=false,mutate=false}={}){
  const calls=[];let scans=0;
@@ -96,4 +96,21 @@ test('T074 separate Cricket project/user-supplied remote host never selectable',
  assert.equal(HOST,'https://vrffsnkycvjithwtiylt.supabase.co');
  assert.notEqual(HOST,'https://hriakdazkcvplsdwgfle.supabase.co');
  assert.throws(()=>guardManual({GITHUB_ACTOR:'attacker'}),/FOUNDER_EXACT_MANUAL_APPROVAL_REQUIRED/);
+});
+
+test('T074 media bytes receipt rejects tampered media even when exporter already completed',async()=>{
+ const t=temp(),api=fakeApi();try{
+  const r=await exportStorageBytes({outDir:t.dir,fetchImpl:api.fake,token,manual:false});
+  mkdirSync(join(t.dir,'config'),{recursive:true});
+  writeFileSync(join(t.dir,'config/storage-export-readonly-summary.json'),JSON.stringify({
+   schema:'janta-bol-b11-storage-readonly-receipt-v1',project_ref:REF,
+   capture_method:'MANUAL_OWNER_SERVICE_ROLE_READ_ONLY',
+   stable_double_listing:true,db_snapshot_bound:false,
+   object_count:r.object_count,byte_count:r.byte_count,buckets:r.buckets,
+   sha_records:r.storage_manifest_records
+  }));
+  assert.equal(verifyStorageExportReceipt(t.dir).file_count,5);
+  writeFileSync(join(t.dir,'storage/public-media/cover.jpg'),'MALICIOUS_NEW_MEDIA');
+  assert.throws(()=>verifyStorageExportReceipt(t.dir),/RECEIPT_STORAGE_BYTES_TAMPERED/);
+ }finally{t.clean()}
 });

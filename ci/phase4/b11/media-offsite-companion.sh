@@ -12,16 +12,9 @@ mode="$1";source_dir="$2";signature="$3";trusted_pub="$4"
 [[ -d "$source_dir" ]] || fail 'source offline folder required'
 if [[ "$mode" == manual-storage ]]; then
   [[ -s "$source_dir/config/storage-export-readonly-summary.json" && -d "$source_dir/storage" ]] ||
-   fail 'exact live read-only original Storage export receipt required'
-  node - "$source_dir/config/storage-export-readonly-summary.json" <<'NODE'
-const {readFileSync}=require('node:fs');
-const v=JSON.parse(readFileSync(process.argv[2],'utf8'));
-if(v.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||v.project_ref!=='vrffsnkycvjithwtiylt'||
- v.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
- v.stable_double_listing!==true||v.db_snapshot_bound!==false||
- !Number.isInteger(v.object_count)||v.object_count<1||
- !Array.isArray(v.sha_records)||v.sha_records.length!==v.object_count)process.exit(3);
-NODE
+    fail 'exact protected original Supabase Storage export receipt required'
+  node ci/phase4/b11/cli.mjs storage-verify-offline --out "$source_dir" >/dev/null ||
+    fail 'private receipt object SHA/count/path does not match supplied media file bytes'
 else
  [[ -f "$signature" && -f "$trusted_pub" ]] ||
  fail 'source plus independent Owner attestation required'

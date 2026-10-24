@@ -3,7 +3,7 @@
 // NEVER runs in B11 CI against LIVE. Requires separately authorized manual Owner context.
 // No mutation, S3 delete, generation of signed URLs, shared public-media endpoints, or
 // reading the separate Cricket project. Source may change during export: double-scan HOLD.
-import {mkdirSync,existsSync,lstatSync,writeFileSync,rmSync,renameSync,createWriteStream} from 'node:fs';
+import {mkdirSync,existsSync,lstatSync,statSync,readFileSync,readdirSync,writeFileSync,rmSync,renameSync,createWriteStream} from 'node:fs';
 import {Readable,Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
 import {createHash,randomUUID} from 'node:crypto';
@@ -152,4 +152,55 @@ export async function exportStorageBytes({outDir,fetchImpl=globalThis.fetch,toke
   rmSync(stage,{recursive:true,force:true});
   throw e;
  }
+}
+
+export function verifyStorageExportReceipt(rootDir){
+ const root=resolve(rootDir);
+ if(!under(root,resolve(tmpdir()))||!existsSync(root)||lstatSync(root).isSymbolicLink())
+ fail('RECEIPT_SOURCE_NOT_TEMP');
+ const p=join(root,'config/storage-export-readonly-summary.json');
+ let receipt;try{receipt=JSON.parse(readFileSync(p,'utf8'))}
+ catch{fail('RECEIPT_MISSING_OR_INVALID')}
+ if(receipt.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||
+ receipt.project_ref!==REF||receipt.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
+ receipt.stable_double_listing!==true||receipt.db_snapshot_bound!==false||
+ !Array.isArray(receipt.sha_records)||!Number.isSafeInteger(receipt.object_count)||
+ receipt.object_count<1||receipt.sha_records.length!==receipt.object_count||
+ JSON.stringify(receipt.buckets)!==JSON.stringify(BUCKETS)||
+ !Number.isSafeInteger(receipt.byte_count))fail('RECEIPT_SCOPE_INVALID');
+ const paths=new Set();let counted=0,bytes=0;
+ for(const a of receipt.sha_records){
+  if(!a||!BUCKETS.includes(a.bucket))fail('RECEIPT_BUCKET_INVALID');
+  cleanKey(a.key);
+  const name=a.bucket+'/'+a.key;
+  if(paths.has(name))fail('RECEIPT_DUPLICATE_OBJECT');
+  paths.add(name);
+  if(!/^[a-f0-9]{64}$/.test(a.sha256)||
+ !Number.isSafeInteger(a.size)||a.size<0||a.size>MAX_FILE)fail('RECEIPT_DIGEST_INVALID');
+  const file=join(root,'storage',a.bucket,...a.key.split('/'));
+  if(!under(file,join(root,'storage')))fail('RECEIPT_PATH_ESCAPE');
+  if(!existsSync(file)||lstatSync(file).isSymbolicLink()||
+ !statSync(file).isFile())fail('RECEIPT_OBJECT_MISSING_OR_SYMLINK');
+  const b=readFileSync(file);
+  if(b.length!==a.size||createHash('sha256').update(b).digest('hex')!==a.sha256)
+ fail('RECEIPT_STORAGE_BYTES_TAMPERED');
+  counted++;bytes+=b.length;
+ }
+ if(counted!==receipt.object_count||bytes!==receipt.byte_count)
+ fail('RECEIPT_COUNT_OR_BYTE_SUM_MISMATCH');
+ const seenFiles=[];
+ function walk(p){
+  for(const item of readdirSync(p,{withFileTypes:true})){
+   if(item.isSymbolicLink())fail('RECEIPT_SYMLINK');
+   const at=join(p,item.name);
+   if(item.isDirectory())walk(at);
+   else if(item.isFile())seenFiles.push(relative(join(root,'storage'),at).split(sep).join('/'));
+   else fail('RECEIPT_NON_FILE');
+  }
+ }
+ walk(join(root,'storage'));
+ if(seenFiles.length!==counted||seenFiles.some(p=>!paths.has(p)))
+ fail('RECEIPT_UNLISTED_FILE');
+ return {verified:true,original_storage_bytes:true,project_ref:REF,
+  file_count:counted,byte_count:bytes,source_atomic_with_database:false};
 }

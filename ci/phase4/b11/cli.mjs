@@ -3,7 +3,7 @@
 import {readFileSync} from 'node:fs';
 import {seal,verify,stageDisposable,evaluateHealth,recoveryDecision,syntheticFixture} from './recovery-engine.mjs';
 import {attest,verifyTrusted} from './signed-evidence.mjs';
-import {exportStorageBytes} from './storage-readonly-export.mjs';
+import {exportStorageBytes,verifyStorageExportReceipt} from './storage-readonly-export.mjs';
 const [cmd,...rest]=process.argv.slice(2);
 function flag(name){const pos=rest.indexOf('--'+name);return pos>=0?rest[pos+1]:undefined}
 function output(v){process.stdout.write(JSON.stringify(v,null,2)+'\n')}
@@ -45,6 +45,7 @@ try{
    byte_count:raw.byte_count,source_read_only:true,atomic_database_media_snapshot:false,
    secret_rows_not_logged:true});break;
  }
+ case 'storage-verify-offline':output(verifyStorageExportReceipt(flag('out')));break;
  case 'health':output(evaluateHealth(JSON.parse(readFileSync(flag('input'),'utf8'))));break;
  case 'incident':output(recoveryDecision(flag('type'),
   {known_clean_device:flag('known-clean')==='YES',verified_restore:flag('verified-restore')==='YES'}));break;
