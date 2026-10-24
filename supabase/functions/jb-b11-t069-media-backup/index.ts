@@ -33,8 +33,9 @@ function settings(){
 Deno.serve(async request=>{
  const cfg=settings(),origin=request.headers.get('origin');
  if(!cfg.live)return fail(503,'OWNER_BACKUP_GATE_CLOSED');
- if(!cfg.allowedOrigin||!(new URL(cfg.allowedOrigin).protocol==='https:'))
-  return fail(503,'OWNER_BACKUP_ORIGIN_UNSET');
+ let originConfigured=false;
+ try{const u=new URL(cfg.allowedOrigin);originConfigured=u.protocol==='https:'&&u.origin===cfg.allowedOrigin}catch{}
+ if(!originConfigured)return fail(503,'OWNER_BACKUP_ORIGIN_UNSET');
  if(origin&&origin!==cfg.allowedOrigin)return fail(403,'ORIGIN_DENIED');
  if(request.method==='OPTIONS'){
   if(!origin)return fail(403,'PREFLIGHT_DENIED');
