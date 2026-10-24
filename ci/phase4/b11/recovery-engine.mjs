@@ -124,6 +124,8 @@ export function seal(rootDir,{generation=randomUUID(),clock=new Date().toISOStri
 export function verify(rootDir){
  const root=rootFolder(rootDir);
  const m=json(join(root,MANIFEST));assertManifest(m);
+ // Check project/credential boundary before evaluating arbitrary backup bytes.
+ const {identity,config}=safeSemantic(root);
  const files=filesUnder(root);
  if(files.length!==m.files.length)fail('ADDED_OR_DELETED_FILE');
  for(let i=0;i<files.length;i++){
@@ -131,7 +133,6 @@ export function verify(rootDir){
   if(actual.path!==expected.path||actual.size!==expected.size||actual.sha256!==expected.sha256)
    fail('FILE_HASH_OR_IDENTITY_MISMATCH');
  }
- const {identity,config}=safeSemantic(root);
  if(hash(Buffer.from(JSON.stringify(identity)))!==m.identity_digest||
  hash(Buffer.from(JSON.stringify(config)))!==m.config_digest)fail('SEMANTIC_DIGEST_DRIFT');
  return m;

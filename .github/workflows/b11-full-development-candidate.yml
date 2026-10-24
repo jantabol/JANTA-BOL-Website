@@ -1,0 +1,73 @@
+name: B11 Whole Backup Recovery Development (Never LIVE)
+on:
+  push:
+    branches: [codex/b11-backup-recovery-g0-preflight-20261024]
+  workflow_dispatch:
+permissions:
+  contents: read
+
+jobs:
+  original_g0:
+    name: B11 pre-code locked original 109/7 test source gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Original seven B11 tests and safe release gate
+        run: node --test ci/phase4/b11-g0-readonly-source-and-release-gates.test.mjs
+      - name: Existing B10 original tests source contract retained
+        run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+      - name: Original backup diagnostics without changing older files
+        run: python3 -m unittest discover -s ci/backup -p 'test_*.py'
+      - name: Guard API credentials absent from candidate workflow
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+
+  b11_development:
+    name: B11 T069-T075 offline backup recovery functionality and security/failure suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: One-shot T069-T075 deterministic offline recovery test suite
+        run: node --test ci/phase4/b11/recovery-engine.test.mjs
+      - name: End-to-end command interface on disposable fake backup/media bytes
+        shell: bash
+        run: |
+          set -euo pipefail
+          d="$(mktemp -d)"
+          trap 'rm -rf -- "$d"' EXIT
+          node ci/phase4/b11/cli.mjs fixture --path "$d/source" > /dev/null
+          node ci/phase4/b11/cli.mjs verify --path "$d/source" >/dev/null
+          node ci/phase4/b11/cli.mjs copy-disposable --source "$d/source" --dest "$d/restored" --confirm JANTA_BOL_DISPOSABLE_ONLY > "$d/disposable-restore-result.json"
+          node -e "const f=require(process.argv[1]);if(f.state!=='VERIFIED_DISPOSABLE_COPY'||f.db_sql_restore_executed)process.exit(1)" "$d/disposable-restore-result.json"
+          node ci/phase4/b11/cli.mjs verify --path "$d/restored" > /dev/null
+          node ci/phase4/b11/cli.mjs incident --type lost_founder_device > "$d/incident.json"
+          node -e "const a=require(process.argv[1]);if(a.decision!=='HOLD_FOR_SAFE_EVIDENCE'||a.automatic_destructive_action)process.exit(1)" "$d/incident.json"
+          echo 'B11_OFFLINE_DISPOSABLE_MEDIA_HASH_AND_IDENTITY=PASS; LIVE_DB_NOT_TOUCHED=true'
+      - name: Prevent unsafe B11 automation and production restore scripts
+        run: |
+          set -euo pipefail
+          ! grep -Eq '^[[:space:]]*(schedule|push):' .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml
+          test ! -e ci/phase4/b11/.env
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'B11_DEV_ONLY_NOT_PRODUCTION_RESTORE_OR_FINAL_PASS_LOCK'
+
+  b11_candidate_gate:
+    name: B11 coding complete development gate (official T069-T075 still require real proofs)
+    needs: [original_g0, b11_development]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Preserve honest evidence status
+        run: |
+          echo 'B11 source functional/safety candidate PASS.'
+          echo 'Original T069–T075 real backup/media/fully deployed recovery tests NOT RUN.'
+          echo 'Historic B7-T034 actual PG17 DB-only restore re-used; storage bytes/config still UNPROVEN.'
+          echo 'Original B10 final HOLD is never waived by this workflow.'
