@@ -20,8 +20,8 @@ BEGIN
   OR p.provolatile<>'s' OR p.proretset IS DISTINCT FROM true THEN
   RAISE EXCEPTION 'T066_ORIGINAL_FUNCTION_IDENTITY_MISMATCH';
  END IF;
- IF NOT (p.prosrc LIKE '%from public.ad_campaigns c join public.advertiser_users au on au.advertiser_id=c.advertiser_id%'
-    AND p.prosrc LIKE '%where au.user_id=auth.uid() order by c.created_at desc%'
+ IF NOT (lower(p.prosrc) LIKE '%from public.ad_campaigns c join public.advertiser_users au on au.advertiser_id=c.advertiser_id%'
+    AND lower(p.prosrc) LIKE '%where au.user_id=auth.uid() order by c.created_at desc%'
     AND p.prosrc NOT LIKE '%current_session_active()%') THEN
   RAISE EXCEPTION 'T066_ORIGINAL_FUNCTION_SOURCE_DRIFT';
  END IF;
