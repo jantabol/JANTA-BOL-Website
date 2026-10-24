@@ -37,5 +37,5 @@ test('T074 Founder-only media backup workflow remains manual and never produces 
 test('T073 refuse real media invocation without source or independent signer',()=>{
  const r=spawnSync('bash',[path,'manual-offsite','/not_found',
  '/not_found.sig','/not_found.pem'],{encoding:'utf8'});
- assert.equal(r.status,3);assert.match(r.stderr,/source plus independent Owner attestation/);
+ assert.equal(r.status,3);assert.match(r.stderr,/source offline folder required/);
 });
