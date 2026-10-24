@@ -30,3 +30,22 @@
 - Production read-only T066 audit: 9 rows with session revocation actions; 2 suspension-action rows; 1 role-change event; total 1560 audit rows. Live data invariants: 32 Articles, 7 Advertisement Campaigns, 6 Grievances, 4 Role assignments, 72 Auth session rows. No production DDL, mutation, session revoke or global Founder settings changed.
 - `jb-team-api` is deployed with verify_jwt=true. Server authorizes live `auth.getUser(token)`, backend user+session context, actual Owner role, AAL2 and *recent MFA* for mutations; service-role API is called only after server-side validation. This is source evidence, not a live revoked-admin negative trial.
 - A read-only low-role transaction found no public Search private-ID exposure for random UUID. Does not replace a full signed Production E5 proof.
+
+## FINAL SUPERSEDING ADDENDUM — LIVE FIX AUTHORIZED, APPLIED & RECHECKED — 24 OCT 2026
+This section supersedes older pre-authorization statements above that the fix had not been deployed.
+
+**Founder approval:** explicit full permission after prior isolated pass. **Target:** only Supabase project `vrffsnkycvjithwtiylt` (JANTA BOL), NEVER Cricket.
+
+**Source-to-CI chain:**
+- Exact production migration: `JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql`.
+- Preflight verified correct original function owner postgres, SECURITY DEFINER, STABLE, 7-column return, original SQL body, previously allowed `authenticated`/`service_role` and denied `anon`, and both Ad base tables RLS enabled. No unrelated policy changes.
+- `40072121020` head `e2a4644025568cd69f1a3341ced56501a8ff6bd1` **CI SUCCESS**. Same production SQL bytes ran against disposable PG17: **original signed JWT RED successfully reproduced**, **GREEN 12/12 signed JWT HTTP tests**, original T065 25/25 HTTP tests, protected B0–B9, B10 source tests GREEN.
+- LIVE `apply_migration` returned `success:true`; Supabase migration history confirms `20261024065659 b10_t066_advertiser_campaign_revocation_active_session_guard_20261024`.
+- LIVE immediate postflight verifies `jb_ad_my_campaigns()` includes server-side `private.current_session_active()`; signature/owner/provolatile/SECURITY DEFINER/EXECUTE ACL/search_path unchanged; `anon` cannot execute; `authenticated` and `service_role` can execute.
+- Production before/after invariants: **Advertiser mappings 0, Articles 32, Ads 7, Grievances 6, assigned roles 4, audit rows 1560, Auth sessions 72**. No account/session data writes, deployment of frontend/Vercel, or paid resources.
+- LIVE audit E5 read-only: 9 historical `security_session_revoked` entries carried target session IDs; **9/9 referenced sessions now absent** from `auth.sessions`; 1 `team_suspended` and 1 `reporter_account_suspended` entry. Demonstrates historical evidence consistency, not a fresh hosted signed revoked-JWT attack.
+- Supabase Advisor postflight warnings remain separate: 43 RLS-no-policy INFO, 22 anonymous SECURITY DEFINER WARN, 117 authenticated SECURITY DEFINER WARN, leaked-password protection WARN. No blanket GRANT/REVOKE; unrelated alerts not falsely marked fixed.
+
+**T066 verdict:** `SCOPED LIVE FIX IMPLEMENTATION VERIFIED PASS`; **ORIGINAL P4-T066 FINAL PASS+LOCK remains HOLD**, because two genuine, distinct Hosted QA JWT principals and a real revoked/suspended HTTP session attack with complete E2/E5 identity-bounded evidence were not exercised. There were no linked real advertiser users (0); do not invent a positive hosted Advertiser login. T064 remains DUE; T065 complete hosted proof HOLD; T063 prior HOLD. T061/T062 remain locked. Explicit Founder approval did **not** waive test evidence or permit real user/device session tampering.
+
+**Next production action:** None without reviewed QA actor/release design. Do not automatically create accounts, suspend live users or roll back security hardening.
