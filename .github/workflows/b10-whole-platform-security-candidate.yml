@@ -158,6 +158,65 @@ jobs:
           done
           node ci/phase4/b10-t065-disposable-signed-http.test.mjs
 
+      - name: "T066: disposable signed advertiser revocation/suspended-role fixture (never LIVE)"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t066-disposable-revocation-fixture.sql
+      - name: "T066 signed revocation RED/GREEN over actual isolated PostgREST JWT HTTP"
+        shell: bash
+        run: |
+          set -euo pipefail
+          export JB_T066_DISPOSABLE_JWT_SECRET="$(openssl rand -hex 40)"
+          docker run --rm -d --name jb-t066-disposable-postgrest --network host \
+            -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
+            -e PGRST_DB_SCHEMAS=public \
+            -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_JWT_SECRET="$JB_T066_DISPOSABLE_JWT_SECRET" \
+            postgrest/postgrest:v12.2.3 >/dev/null
+          trap 'docker stop jb-t066-disposable-postgrest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ | grep -Eq '^(200|401|403)    name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
+    needs: [old_protected, b10_static, b10_pg17]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coding handoff only; official security closure requires later live/device E3
+        run: |
+          echo "B10 coding candidate source+isolated tests GREEN."
+          echo "P4-T063 REAL device/MFA/recovery evidence remains DUE."
+          echo "P4-T068 FINAL PASS+LOCK remains DUE until E1 E2 E5 E7 reconciled."
+          echo "B9 P4-T105 REAL 1–2-year old Android performance evidence remains DUE."
+
+  b10_complete_candidate_zip:
+    name: Assemble B0-B10 SHA256 ZIP (development candidate only)
+    needs: [b10_coding_gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create and verify all tracked source files, SHA256, no secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --out dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --verify dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PHASE_4_B10_CODING_CANDIDATE
+          path: |
+            dist/PHASE_4_B10_CODING_CANDIDATE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
+; then break; fi
+            sleep 1
+          done
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs red
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_session_guard_REVIEW_ONLY.sql
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs green
+
   b10_coding_gate:
     name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
     needs: [old_protected, b10_static, b10_pg17]
