@@ -18,12 +18,13 @@ let n=0;const reference=original.map(([bucket,path,value])=>({
 }));
 const values=new Map(original.map(([bucket,path,value])=>[bucket+'/'+path,new TextEncoder().encode(value)]));
 const SHA=b=>createHash('sha256').update(b).digest('hex');
-function input({rows=reference,overrides={},mutateStore=false,drift=false}={}){
- const storage=new Map();let uploads=0,gets=0,calls=0,readCalls=0;
+function input({rows=reference,overrides={},mutateStore=false,drift=false,permit=true,expireBeforeWrite=false}={}){
+ const storage=new Map();let uploads=0,gets=0,calls=0,readCalls=0,authCalls=0;
  return {
   async args(){
    const founder=await age.generateIdentity(),recipient=await age.identityToRecipient(founder);
    return {
+    authorizeFounder:async()=>{authCalls++;return permit&&!(expireBeforeWrite&&authCalls>1)},
     inventory:async()=>{calls++;return structuredClone(drift&&calls===2?[...rows].reverse().slice(1):rows)},
     readOriginal:async(d)=>{readCalls++;return values.get(d.bucket+'/'+d.path)??new Uint8Array(0)},
     age,founderRecipient:recipient,
@@ -35,7 +36,7 @@ function input({rows=reference,overrides={},mutateStore=false,drift=false}={}){
     uuid:()=>uuid(95)
    };
   },
-  get stats(){return {uploads,gets,calls,readCalls}},
+  get stats(){return {uploads,gets,calls,readCalls,authCalls}},
   storage
  };
 }
@@ -47,7 +48,7 @@ test('T069 real AGE multi-recipient B2 ciphertext upload, readback, decrypted fu
  assert.equal(proof.origin,'JANTA_BOL_ONLY');
  assert.equal(proof.atomic_db_snapshot,false);
  assert.equal(proof.cipher_sha256,SHA(x.storage.get(proof.b2_object_key)));
- assert.deepEqual(x.stats,{uploads:1,gets:1,calls:2,readCalls:5});
+ assert.deepEqual(x.stats,{uploads:1,gets:1,calls:2,readCalls:5,authCalls:2});
  const recipientProof=await age.generateIdentity(); // unrelated private key cannot decrypt
  const fail=new age.Decrypter();fail.addIdentity(recipientProof);
  await assert.rejects(fail.decrypt(x.storage.get(proof.b2_object_key)));
@@ -106,4 +107,17 @@ test('T069 invalid Founder recipient refused before any Storage read',async()=>{
  const x=input(),a=await x.args();a.founderRecipient='not-an-age-recipient';
  await assert.rejects(encryptedB2MediaRoundTrip(a),/T069_FAIL_CLOSED/);
  assert.equal(x.stats.calls,0);assert.equal(x.stats.readCalls,0);
+});
+
+test('T069 unauthenticated backup invocation cannot read Storage bytes or call B2',async()=>{
+ const x=input({permit:false});
+ await assert.rejects(encryptedB2MediaRoundTrip(await x.args()),/T069_FAIL_CLOSED/);
+ assert.equal(x.stats.uploads,0);assert.equal(x.stats.readCalls,0);
+ assert.equal(x.stats.authCalls,1);
+});
+test('T069 Founder AAL2 revocation before remote upload leaves no B2 artifact',async()=>{
+ const x=input({expireBeforeWrite:true});
+ await assert.rejects(encryptedB2MediaRoundTrip(await x.args()),/T069_FAIL_CLOSED/);
+ assert.equal(x.stats.uploads,0);assert.equal(x.stats.readCalls,5);
+ assert.equal(x.stats.authCalls,2);
 });
