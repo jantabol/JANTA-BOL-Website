@@ -1,0 +1,25 @@
+name: T069 Least Privilege Boundary QA - No LIVE Access
+on:
+  push:
+    branches: [codex/b11-t069-keyless-rls-access-audit-20261024]
+permissions:
+  contents: read
+jobs:
+  read_only_evidence:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Original RLS private Gateway and exact Github secret boundary must HOLD fail closed
+        run: node --test ci/phase4/b11/t069-keyless-policy-asof-20261024.test.mjs
+      - name: Preserve existing T069 media backup negative tests
+        run: |
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-readonly-export.test.mjs
+      - name: Never access LIVE DB, B2, Supabase secret or Cricket
+        run: |
+          set -euo pipefail
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          echo 'T069_LEAST_PRIVILEGE_REVIEW_ONLY=PASS; REAL_MEDIA_BACKUP_NOT_RUN=true'

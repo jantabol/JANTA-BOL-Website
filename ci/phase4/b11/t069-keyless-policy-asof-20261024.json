@@ -1,0 +1,77 @@
+{
+  "schema": "jb-t069-keyless-storage-policy-inventory-v1",
+  "as_of_utc": "2026-10-24",
+  "project_ref": "vrffsnkycvjithwtiylt",
+  "method": "SUPABASE_READ_ONLY_SQL_PLUS_EXISTING_EDGE_FUNCTION_SOURCE",
+  "bucket_inventory": {
+    "grievance-private": {
+      "public": false,
+      "objects": 2,
+      "owner_id_missing": 2,
+      "declared_metadata_bytes": 853304
+    },
+    "private-editorial": {
+      "public": false,
+      "objects": 1,
+      "owner_id_missing": 1,
+      "declared_metadata_bytes": 2285707
+    },
+    "public-media": {
+      "public": true,
+      "objects": 2,
+      "owner_id_missing": 0,
+      "declared_metadata_bytes": 1866224
+    }
+  },
+  "storage_rls_policies": [
+    {
+      "name": "b5_private_gateway_only",
+      "mode": "RESTRICTIVE",
+      "operation": "ALL",
+      "roles": [
+        "anon",
+        "authenticated"
+      ],
+      "deny_bucket": "grievance-private"
+    },
+    {
+      "name": "owner_manage_private_editorial",
+      "mode": "PERMISSIVE",
+      "operation": "ALL",
+      "role": "authenticated",
+      "requires": "private.current_owner_aal2()"
+    },
+    {
+      "name": "owner_manage_public_media",
+      "mode": "PERMISSIVE",
+      "operation": "ALL",
+      "role": "authenticated",
+      "requires": "private.current_owner_aal2()"
+    },
+    {
+      "name": "owner_read_private_editorial",
+      "mode": "PERMISSIVE",
+      "operation": "SELECT",
+      "role": "authenticated",
+      "requires": "private.current_owner_aal2()"
+    }
+  ],
+  "existing_gateway": {
+    "slug": "jb-grievance-assets",
+    "status": "ACTIVE",
+    "version": 3,
+    "verify_jwt": true,
+    "actions": [
+      "view",
+      "download",
+      "export"
+    ],
+    "requires_case_and_evidence_ids": true,
+    "internal_supabase_service_key": true
+  },
+  "current_gh_media_export_requires": "JB_B11_SERVICE_ROLE_KEY",
+  "keyless_direct_full_backup_possible_under_locked_rls": false,
+  "current_original_5_file_byte_backup_verified": false,
+  "live_environment_modified": false,
+  "cricket_modified": false
+}
