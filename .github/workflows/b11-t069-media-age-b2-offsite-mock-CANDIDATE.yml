@@ -23,6 +23,8 @@ jobs:
         run: node --test ci/phase4/b11/t069-b2-s3-transport.test.mjs
       - name: Verify original private source access requires Owner AAL2 and five-file end-to-end
         run: node --test ci/phase4/b11/t069-owner-supabase-media-source.test.mjs
+      - name: Assert fail-closed Supabase Edge copy and dependency/credential constraints
+        run: node --test ci/phase4/b11/t069-edge-candidate-static-safety.test.mjs
       - name: Retain original T069 negative tests
         run: |
           node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
