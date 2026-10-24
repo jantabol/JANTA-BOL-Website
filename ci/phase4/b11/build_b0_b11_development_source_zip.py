@@ -3,7 +3,7 @@
 from __future__ import annotations
 import argparse, hashlib, json, subprocess, stat, zipfile
 from pathlib import Path, PurePosixPath
-ROOT=Path(__file__).resolve().parents[2]
+ROOT=Path(__file__).resolve().parents[3]
 PREFIX='JANTA_BOL_MASTER_SOURCE/'
 MANIFEST=PREFIX+'MASTER_SHA256_MANIFEST.json'
 ESSENTIAL=[
@@ -80,7 +80,7 @@ def build(p):
   meta={
    'schema':'janta-bol-b0-to-b11-tracked-source-v1',
    'source_repo':'jantabol/JANTA-BOL-Website',
-   'source_branch':'codex/b10-whole-platform-security-candidate-20261023',
+   'source_branch':'codex/b11-backup-recovery-g0-preflight-20261024',
    'exact_commit_sha':head,'files_count':len(fl),'files':records,
    'b11':'DEVELOPMENT_CANDIDATE__T069_TO_T075_REAL_TESTS_NOT_YET_CLOSED',
    'b10_test_gate':'T060_T068_REAL_AUTH_DEVICE_AND_HOSTED_IDENTITY_FINAL_DUE',
