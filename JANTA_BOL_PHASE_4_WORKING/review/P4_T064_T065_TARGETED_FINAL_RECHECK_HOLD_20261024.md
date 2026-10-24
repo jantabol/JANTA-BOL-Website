@@ -15,3 +15,11 @@ Founder scope: **ONLY P4-T064 AND P4-T065**. Prior T061/T062 LOCK preserved, T06
 `P4-T064 = HOLD (E7 dev/test/prod environment separation FAIL)`.
 `P4-T065 = HOLD (signed authenticated cross-account HTTP negative proof remains missing)`.
 `B10 = NOT LOCKED`. Stop: no T066 onward without explicit Founder direction; do not issue a deceptive "PASS + LOCK" or whole-B10 official ZIP. GitHub code/CI and data regression support prior locks.
+
+## 24 OCT 2026 — ₹0 disposable signed-JWT real HTTP closing most of gap
+
+- Created TWO NEW disposable CI-only test files: `ci/phase4/b10-t065-disposable-signed-http-fixture.sql` and `ci/phase4/b10-t065-disposable-signed-http.test.mjs`.
+- GitHub Actions `b10_pg17` spins up **fresh PostgreSQL 17 fixture AND PostgREST Docker HTTP API** on disposable GitHub runner, independent of production Supabase. It uses dummy Reporter A + dummy Reporter B + Editor + anonymous, with independently **HS256 signed JWTs**, distinct synthetic session IDs, and PostgREST's actual JWT validation.
+- **19/19 newly added real HTTP authenticated/anonymous tests PASS:** anon drafts blocked/public published positive; Reporter A own draft posit
+
+Full granular report: `JANTA_BOL_PHASE_4_WORKING/review/P4_T064_T065_ZERO_COST_SIGNED_WIRE_19_OF_19_20261024.md`. Neither Official FINAL LOCK can be claimed for hosted product, but 19/19 wire tests PASS and old regression all GREEN.
