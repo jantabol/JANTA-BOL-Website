@@ -88,6 +88,22 @@ await visible(article.A,tokens.AStolenBSession,0,'user A with B session mismatch
 await visible(article.Owner,tokens.AFakeOwner,0,'Reporter forge user/app metadata and aal2 denied');
 await deniedRPC(tokens.A,'Reporter A cannot see private article versions');
 await deniedRPC(tokens.B,'Reporter B cannot see private article versions');
+// True cross-account HTTP tampering: fail-closed UPDATE IDOR with valid signed actors.
+async function patchDraft(id,token,expected,label){
+ const r=await query('/articles?id=eq.'+id+'&select=id,excerpt',token,'PATCH',
+   {excerpt:'CI_DUMMY_ATTEMPT_' + label.replace(/\\W+/g,'_')});
+ assert.ok([200,204].includes(r.status),label+' unexpected HTTP status '+r.status);
+ const rows=r.data===null?[]:r.data;
+ assert.ok(Array.isArray(rows),label+' response is not a row array');
+ assert.equal(rows.length,expected,label+' RLS mutation count');
+ console.log('PASS T065 signed wire PATCH IDOR: '+label); n++;
+}
+await patchDraft(article.B,tokens.A,0,'Reporter A PATCH against Reporter B draft DENIED');
+await patchDraft(article.A,tokens.B,0,'Reporter B PATCH against Reporter A draft DENIED');
+await patchDraft(article.A,tokens.AStale,0,'Reporter A revoked session PATCH own draft DENIED');
+await patchDraft(article.A,tokens.AStolenBSession,0,'Reporter A borrowed B session PATCH own draft DENIED');
+await patchDraft(article.A,tokens.A,1,'Reporter A PATCH own draft ALLOWED disposable only');
+await patchDraft(article.B,tokens.B,1,'Reporter B PATCH own draft ALLOWED disposable only');
 const forged=await query('/articles?select=id&limit=1',tokens.InvalidSignature);
 assert.equal(forged.status,401,'invalid JWT signature must be 401');
 console.log('PASS T065 signed wire: untrusted JWT signature rejected');n++;
