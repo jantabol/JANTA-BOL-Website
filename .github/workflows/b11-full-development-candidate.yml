@@ -7,6 +7,10 @@ permissions:
   contents: read
 
 jobs:
+  immutable_previous_b0_b8:
+    name: B0-B8 immutable regression protected PG17 existing suite
+    uses: ./.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml
+
   original_g0:
     name: B11 pre-code locked original 109/7 test source gate
     runs-on: ubuntu-latest
@@ -19,6 +23,8 @@ jobs:
         run: node --test ci/phase4/b11-g0-readonly-source-and-release-gates.test.mjs
       - name: Existing B10 original tests source contract retained
         run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+      - name: Preserve B9 existing functional UI regressions
+        run: node --test ci/phase4/b9-client-and-ui.test.mjs
       - name: Original backup diagnostics without changing older files
         run: python3 -m unittest discover -s ci/backup -p 'test_*.py'
       - name: Guard API credentials absent from candidate workflow
@@ -93,7 +99,7 @@ jobs:
 
   b11_candidate_gate:
     name: B11 coding complete development gate (official T069-T075 still require real proofs)
-    needs: [original_g0, b11_development]
+    needs: [immutable_previous_b0_b8, original_g0, b11_development]
     runs-on: ubuntu-latest
     steps:
       - name: Preserve honest evidence status
@@ -102,3 +108,31 @@ jobs:
           echo 'Original T069–T075 real backup/media/fully deployed recovery tests NOT RUN.'
           echo 'Historic B7-T034 actual PG17 DB-only restore re-used; storage bytes/config still UNPROVEN.'
           echo 'Original B10 final HOLD is never waived by this workflow.'
+
+  b11_source_package:
+    name: B0-B11 exact source ZIP and SHA256 per-file integrity development artifact
+    needs: [b11_candidate_gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Build and independently re-read every B0-B11 tracked source file SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/b11/build_b0_b11_development_source_zip.py --out dist/JANTA_BOL_B0_B11_DEVELOPMENT_CANDIDATE.zip
+          python3 ci/phase4/b11/build_b0_b11_development_source_zip.py --verify dist/JANTA_BOL_B0_B11_DEVELOPMENT_CANDIDATE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: JANTA_BOL_B0_B11_DEVELOPMENT_CANDIDATE
+          path: |
+            dist/JANTA_BOL_B0_B11_DEVELOPMENT_CANDIDATE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          retention-days: 30
+          if-no-files-found: error
