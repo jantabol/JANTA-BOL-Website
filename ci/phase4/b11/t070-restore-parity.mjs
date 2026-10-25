@@ -73,8 +73,10 @@ function childParents(items){
  // Keep users distinct; no silent account recreation during restore.
  if(users.size!==items.auth_users.length)STOP('DUPLICATE_AUTH_ID');
 }
-function stableInventory(m){
- if(!m||m.project!=='vrffsnkycvjithwtiylt'||m.isolated!==true||
+function stableInventory(m, origin){
+ // A production-source manifest MUST NOT pretend to be an isolated restore.
+ const shouldBeIsolated=origin==='RESTORED';
+ if(!m||m.project!=='vrffsnkycvjithwtiylt'||m.isolated!==shouldBeIsolated||
     !safe(m.snapshot_id)||!safe(m.captured_at)||!Number.isFinite(Date.parse(m.captured_at)))
   STOP('MANIFEST_IDENTITY');
  const items={};
@@ -84,7 +86,7 @@ function stableInventory(m){
     typeof m.rls_fingerprint!=='string'||!/^[a-f0-9]{64}$/.test(m.rls_fingerprint))
   STOP('PLATFORM_SECURITY_PROOF');
  if(!Array.isArray(m.media)||!m.media.every(x=>['grievance-private','private-editorial','public-media'].includes(x.bucket)&&
-     safe(x.path)&&!/^[./]/.test(x.path)&&/^[a-f0-9]{64}$/.test(x.sha256)&&Number.isSafeInteger(x.bytes)&&x.bytes>=0))
+     safe(x.path)&&!x.path.includes('\\')&&x.path.split('/').every(p=>p!==''&&p!=='.'&&p!=='..')&&/^[a-f0-9]{64}$/.test(x.sha256)&&Number.isSafeInteger(x.bytes)&&x.bytes>=0))
   STOP('MEDIA_MANIFEST_INVALID');
  const med=m.media.map(x=>({bucket:x.bucket,path:x.path,sha256:x.sha256,bytes:x.bytes}))
   .sort((a,b)=>(a.bucket+'/'+a.path).localeCompare(b.bucket+'/'+b.path));
@@ -94,7 +96,7 @@ function stableInventory(m){
   captured_at:m.captured_at,snapshot_id:m.snapshot_id};
 }
 export function assessT070Restore({source,restored,evidence}){
- const src=stableInventory(source),dst=stableInventory(restored);
+ const src=stableInventory(source,'SOURCE'),dst=stableInventory(restored,'RESTORED');
  if(src.snapshot_id!==dst.snapshot_id||src.captured_at!==dst.captured_at)
   STOP('NOT_SAME_TRUSTED_SNAPSHOT');
  const expected={...src},actual={...dst};
