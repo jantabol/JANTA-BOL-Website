@@ -26,7 +26,10 @@ function verifiedItems(manifest,table){
  const ids=new Set(),rows=[];
  for(const row of manifest[table]){
   if(!row||typeof row!=='object'||Array.isArray(row))STOP('BAD_ROW_'+table);
-  const id=row.id;if(!safe(id)||!uuid.test(id)&&table!=='article_versions'&&table!=='grievance_history'&&!Number.isSafeInteger(id))STOP('BAD_ID_'+table);
+  const id=row.id;
+  const numericPk=table==='article_versions'||table==='grievance_history';
+  if(numericPk?(!Number.isSafeInteger(id)||id<1):(typeof id!=='string'||!uuid.test(id)))
+   STOP('BAD_ID_'+table);
   const idkey=String(id);if(ids.has(idkey))STOP('DUP_ID_'+table);ids.add(idkey);
   const normalized={};
   for(const col of cols){
