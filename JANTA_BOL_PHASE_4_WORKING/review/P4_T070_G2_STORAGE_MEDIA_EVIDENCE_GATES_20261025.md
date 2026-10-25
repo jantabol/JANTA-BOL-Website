@@ -10,6 +10,14 @@
 - New offline `t070-media-byte-verifier.mjs`: verifies actual file content SHA-256 and size, rejects missing files, symlinks, unsafe relative paths, forged bucket/hash/size, duplicates and empty inventories. Offline **synthetic** negative and positive regression: **8/8 PASS locally under Node 22**. No live credentials, no network or file upload. This is **not** original file recovery and output deliberately states `final_t070_pass:false`.
 - PR #40 is a DRAFT; protected main not merged or changed. Cricket/Saarthi remains isolated.
 
+## Independent reproducibility evidence (2026-10-25)
+- Executed Node.js **v22.16.0** in an ephemeral local runner: `node --test t070-media-byte-verifier.test.mjs` using a local copy of the exact two PR #40 files.
+- **Actual TAP result: 8 PASS / 0 FAIL**; includes matching bytes, tampered same-size bytes, missing media, traversal/duplicate inventory, invalid bucket/hash/size, linked file and parent, non-absolute root.
+- Matched the runnable local copies by Git blob content SHA to GitHub PR #40 files: verifier `aedc7f781cce9df22625e6795cba7c60896a4f07`, tests `adfbd0c129ad3ec15a37b01d56fa1574856738ff`.
+- This verifies **the synthetic offline development gate only**. It neither recovers original Supabase objects nor proves same-snapshot restore, Auth service or settings. GitHub Actions on the updated PR HEAD have not been independently verified GREEN.
+- Fresh READ-ONLY Supabase confirmation: project state `ACTIVE_HEALTHY`, 5 Storage metadata objects in 3 buckets, 32 articles, 6 grievances, 16 live sessions, 7 ad campaigns; these are not restored data and do not prove all source bytes remain retrievable.
+- Zero production changes, zero third-party account uploads, no private data or credentials handled.
+
 ## Required evidence for real E8 before T070 Final PASS
 1. Trusted same-snapshot source manifest with Article IDs/PURLs, Grievance public IDs, Live and ad-payment associations, Auth IDs/security policy identity.
 2. Real networkless disposable PG17 restore of that snapshot; compare both sides with T070 comparator and record bounded logs.
