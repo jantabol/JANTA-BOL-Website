@@ -49,3 +49,9 @@
 - Exact new Git blob identities: comparator `389337fbf6f1870df648acb07f6097b7f176451b`, 18-test suite `3f84116986948915f4f2b8ce1453497c2ec9d705`.
 - Vercel project `shubham-pichhore-2028` was located by read-only project listing, but environment-variable METADATA query returned **403 insufficient team-scope authorization**. Did not request secret values or change Vercel. Config recovery evidence **HOLD**, not assumed.
 - Until an authorized disposable restore of same DB snapshot + original media bytes + Auth/config platform is possible, FINAL T070 **HOLD** despite passing development checks. T071 not initiated.
+
+## G2.2 Vercel access / configuration inventory (25 Oct 2026)
+- Founder completed the Vercel single-use team consent on Android (success screen: “You're signed in”). Permission query was then retried on the SAME linked Vercel team and succeeded; original 403 authorization blocker CLOSED.
+- Scoped **read-only** Vercel project `shubham-pichhore-2028` (`prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI`, team `team_8axPWNjZuUp3vmEwLOxiKVhn`). `filter_project_envs(decrypt=false)` returned 0 visible environment-variable records and 0 hidden-production-env count. This is metadata, not evidence of any secret value or complete platform recovery. **No decrypt, value retrieval, mutation or key generation.**
+- The latest inspected Vercel deployment was `READY` on branch `codex/b11-t070-real-restore-identity-preflight-20261025`, commit `8100b96e3baadc5982d7a8af5643ac8fa1257c58`. This is a preview/build signal, not proof that production restore occurred, not an official current T070 GitHub Actions CI PASS.
+- Original permanent URL, Auth identity, Storage bytes, restore chronology, all platform config identities and private object SHA validation **still lack contemporaneous E8 isolated recovery proof**. Source unchanged. T070 FINAL HOLD; T071 not started.
