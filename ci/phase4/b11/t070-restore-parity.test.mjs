@@ -16,14 +16,14 @@ function fixture(){
  tables.ad_campaigns=[{id:uuid(9),advertiser_id:uuid(2),package_id:uuid(3),status:'review'}];
  tables.ad_payments=[{id:uuid(10),campaign_id:uuid(9),amount_minor:5000,status:'manual'}];
  const media=[{bucket:'grievance-private',path:'demo.bin',sha256:digest,bytes:42}];
- return {project:'vrffsnkycvjithwtiylt',isolated:true,snapshot_id:'audit-mock-snapshot-2026-10-25',
+ return {project:'vrffsnkycvjithwtiylt',isolated:false,snapshot_id:'audit-mock-snapshot-2026-10-25',
  captured_at:'2026-10-25T10:00:00Z',tables,media,
  settings_fingerprint:digest,rls_fingerprint:digest};
 }
 const E={destination:'ISOLATED_DISPOSABLE',production_untouched:true,overwrite_existing:false,
 restore_performed:true,actual_media_bytes_checked:true,auth_permissions_checked:true,
 config_restored_verified:true,reconciliation_performed:true,restore_run_id:'synthetic-fixture-only'};
-const pair=()=>{const a=fixture();return {source:a,restored:structuredClone(a),evidence:structuredClone(E)}};
+const pair=()=>{const a=fixture();const restored=structuredClone(a);restored.isolated=true;return {source:a,restored,evidence:structuredClone(E)}};
 test('T070 synthetic exact Article/PURL, Grievance, Live, payment, auth parity candidate passes comparator',()=>{
  const result=assessT070Restore(pair());
  assert.equal(result.status,'READY_FOR_INDEPENDENT_E8_REVIEW');
@@ -96,4 +96,17 @@ test('T070 missing table is never silently accepted as empty',()=>{
 test('T070 rejects duplicate grievance identifier',()=>{
  const p=pair();p.source.tables.grievances.push({...p.source.tables.grievances[0],id:uuid(21)});
  assert.throws(()=>assessT070Restore(p),/T070_FAIL_CLOSED_DUPLICATE_GRIEVANCE_ID/);
+});
+
+test('T070 must distinguish original production source from disconnected restored clone',()=>{
+ const p=pair();p.source.isolated=true;
+ assert.throws(()=>assessT070Restore(p),/T070_FAIL_CLOSED_MANIFEST_IDENTITY/);
+ const q=pair();q.restored.isolated=false;
+ assert.throws(()=>assessT070Restore(q),/T070_FAIL_CLOSED_MANIFEST_IDENTITY/);
+});
+test('T070 rejects traversal or noncanonical media object paths',()=>{
+ for(const path of ['../hidden.png','demo/../hidden.png','./hidden.png','/absolute.png','demo\\evil.png','demo//evil.png']){
+   const p=pair();p.source.media[0].path=path;
+   assert.throws(()=>assessT070Restore(p),/T070_FAIL_CLOSED_MEDIA_MANIFEST_INVALID/,path);
+ }
 });
