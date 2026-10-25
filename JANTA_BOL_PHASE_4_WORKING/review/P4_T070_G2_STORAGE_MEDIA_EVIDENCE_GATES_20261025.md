@@ -41,3 +41,11 @@
 - Do NOT re-use a historical backup as a current snapshot, bypass key approvals, create fake media objects or disable RLS.
 - No automated production restoration or upload to B2 is authorized here. Zero-cost, development-only gate preserves Main.
 - **Final P4-T070 = HOLD until actual E8 and validation.** Media verifier development test = PASS/LOCK for its narrow synthetic-only scope.
+
+## G2.1 comparator hardening and verification • 25 Oct 2026
+- Re-audited baseline T070 comparator, found real-source provenance contradiction: previous contract required `isolated=true` for BOTH original production source manifest and restored offline clone. Corrected to `source.isolated=false`, `restored.isolated=true`. No live source data or production setting changed.
+- Hardened media path grammar: rejects dot segments, empty path components, backslash paths and absolute-path media references, so unsafe media filenames cannot be accepted into a purported restored manifest.
+- Added two fail-closed negative regression tests. Direct V8 JavaScript execution of actual GitHub comparator/test code (substituting a deterministic test hash and structuredClone shim because Code Mode lacks Node built-ins) passed **18/18 logic assertions**. This is NOT official Node.js/Actions validation of the new branch HEAD, and MUST NOT be represented as CI GREEN. Old original G0/G1 GitHub CI 20/20 pass was for an earlier HEAD only.
+- Exact new Git blob identities: comparator `389337fbf6f1870df648acb07f6097b7f176451b`, 18-test suite `3f84116986948915f4f2b8ce1453497c2ec9d705`.
+- Vercel project `shubham-pichhore-2028` was located by read-only project listing, but environment-variable METADATA query returned **403 insufficient team-scope authorization**. Did not request secret values or change Vercel. Config recovery evidence **HOLD**, not assumed.
+- Until an authorized disposable restore of same DB snapshot + original media bytes + Auth/config platform is possible, FINAL T070 **HOLD** despite passing development checks. T071 not initiated.
