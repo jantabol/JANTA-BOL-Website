@@ -18,6 +18,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-live-source-integrity-contract.test.mjs
       - name: Verify real media byte-checker against disconnected synthetic fixtures
         run: node --test ci/phase4/b11/t070-media-byte-verifier.test.mjs
+      - name: Guard G2 Storage metadata read-only query and privacy
+        run: node --test ci/phase4/b11/t070-storage-source-preflight.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
