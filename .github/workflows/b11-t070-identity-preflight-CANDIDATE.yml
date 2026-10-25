@@ -1,0 +1,23 @@
+name: T070 Isolated Restore Identity Preflight (Synthetic Only)
+on:
+  push:
+    branches: [codex/b11-t070-real-restore-identity-preflight-20261025]
+permissions:
+  contents: read
+jobs:
+  t070_identity_preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate E8 identity and security parity on mock source vs isolated restore
+        run: node --test ci/phase4/b11/t070-restore-parity.test.mjs
+      - name: Strictly no production restore or secrets at this checkpoint
+        run: |
+          set -euo pipefail
+          node --check ci/phase4/b11/t070-restore-parity.mjs
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T070_SYNTHETIC_COMPARATOR_ONLY=PASS; T070_REAL_RESTORE_E8=NOT_RUN'
