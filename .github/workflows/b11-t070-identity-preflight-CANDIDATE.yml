@@ -14,6 +14,8 @@ jobs:
           persist-credentials: false
       - name: Validate E8 identity and security parity on mock source vs isolated restore
         run: node --test ci/phase4/b11/t070-restore-parity.test.mjs
+      - name: Assert source-only 14-rule safe evidence collector contract
+        run: node --test ci/phase4/b11/t070-live-source-integrity-contract.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
