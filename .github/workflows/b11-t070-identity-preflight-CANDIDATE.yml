@@ -108,7 +108,7 @@ jobs:
 
   t070_g15_local_joint_synthetic:
     # Run only on a deliberate source-reviewed candidate commit. Never reads JANTA BOL data.
-    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && contains(github.event.head_commit.message, '[G15-local-synthetic]') }}
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && (contains(github.event.head_commit.message, '[G15-local-synthetic]') || contains(github.event.head_commit.message, '[G17-local-fence]')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -121,11 +121,15 @@ jobs:
         run: |
           set -euo pipefail
           bash -n ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.sh
+          bash -n ci/phase4/b11/t070-g17-local-reversible-pg-fence.sh
           node --test ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.test.mjs
+          node --test ci/phase4/b11/t070-g17-local-reversible-pg-fence.test.mjs
       - name: Install pinned official local Supabase CLI
         uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
         with:
           version: 2.120.0
-      - name: Execute LOCAL synthetic DB/Media/Auth and negative RLS restoration
+      - name: Execute LOCAL synthetic DB/Media/Auth and optional G17 real transaction-release probe
         shell: bash
+        env:
+          G17_LOCAL_SYNTHETIC_ONLY: ${{ contains(github.event.head_commit.message, '[G17-local-fence]') && 'YES' || 'NO' }}
         run: bash ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.sh
