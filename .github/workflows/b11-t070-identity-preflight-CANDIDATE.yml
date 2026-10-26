@@ -36,6 +36,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-g18-edge-version-inventory.test.mjs
       - name: G17 source writer surface and non-automatic maintenance release decision
         run: node --test ci/phase4/b11/t070-g17-maintenance-go-no-go.test.mjs
+      - name: G17 verify actual three cron schedules and 5-second writer source evidence
+        run: node --test ci/phase4/b11/t070-g17-cron-readonly-source-evidence.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
