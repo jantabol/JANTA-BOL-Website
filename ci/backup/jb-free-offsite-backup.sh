@@ -27,16 +27,27 @@ command -v zstd >/dev/null || fail "zstd not installed"
 # Existing manual backup remains the DEFAULT, unchanged path (mode=0).
 # A dual-identity real clone run requires distinct manual workflow authorization.
 dual="${JB_T034_DUAL_RESTORE_PROBE:-0}"
+joint="${JB_T070_JOINT_PROBE:-0}"
 [[ "$dual" == 0 || "$dual" == 1 ]] || fail 'invalid dual-restore mode'
+[[ "$joint" == 0 || "$joint" == 1 ]] || fail 'invalid joint-restore mode'
+[[ "$joint" == 0 || "$dual" == 1 ]] || fail 'joint media restore requires existing dual-recipient PG restore'
 if [[ "$dual" == 1 ]]; then
   [[ "${GITHUB_ACTIONS:-}" == true &&
      "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
      "${GITHUB_REF:-}" == refs/heads/main &&
      "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
      "${GITHUB_ACTOR:-}" == jantabol &&
-     "${GITHUB_RUN_ATTEMPT:-}" == 1 &&
-     "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
-    fail 'real isolated clone verification denied: manual Founder/main/exact workflow first attempt required'
+     "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
+    fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
+  if [[ "$joint" == 1 ]]; then
+    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
+       "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
+       -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
+      fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
+  else
+    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
+      fail 'legacy T034 manual workflow identity required'
+  fi
   command -v age-keygen >/dev/null || fail 'AGE key generator missing'
 fi
 
@@ -144,6 +155,27 @@ if [[ "$dual" == 1 ]]; then
     fail 'invalid private metric10 evidence'
   sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1 > "$work/plain/metric10_components_contract_sha256.txt"
   sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1 > "$work/plain/security_parity_contract_sha256.txt"
+  if [[ "$joint" == 1 ]]; then
+    # Capture original media while authoritative raw DB MVCC snapshot is still held.
+    # All payloads/manifests remain in 0700 ephemeral runner and later AGE ciphertext.
+    jb_t034_snapshot_query ci/phase4/b11/t070-joint-storage-snapshot-identity.sql \
+      "$work/plain/t070_snapshot_storage.json" ||
+      fail 'cannot capture private original-file identities from same full DB snapshot'
+    [[ -s "$work/plain/t070_snapshot_storage.json" ]] ||
+      fail 'empty protected snapshot media metadata'
+    mkdir -m 700 "$work/plain/media"
+    node ci/phase4/b11/storage-media-manual-cli.mjs export-manual \
+      --root "$work/plain/media" > "$work/private-media-export.log" 2>&1 ||
+      fail 'original Storage media read-only export did not finish cleanly'
+    node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
+      --root "$work/plain/media" > "$work/private-media-verify.log" 2>&1 ||
+      fail 'source original five Storage file bytes fail SHA256 validation'
+    node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
+      "$work/plain/t070_snapshot_storage.json" \
+      "$work/plain/media/config/storage-export-readonly-summary.json" ||
+      fail 'source Storage original five objects mismatch raw PG snapshot file identities'
+    echo 'T070_REAL_SOURCE_FIVE_MEDIA_CAPTURED_WITH_PG_MVCC_SNAPSHOT=PASS'
+  fi
   jb_t034_snapshot_finish
   printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
   [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
@@ -164,6 +196,9 @@ printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/sour
 bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
 if [[ "$dual" == 1 ]]; then
   bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
+fi
+if [[ "$joint" == 1 ]]; then
+  bundle+=(t070_snapshot_storage.json media)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -232,7 +267,24 @@ if [[ "$dual" == 1 ]]; then
   # Fail closed if Supabase public functions require additional extensions/auth.
   bash ci/backup/jb-t034-offline-full-pg-restore.sh "$work/recovered" ||
     fail 'full isolated PG17 restore verification refused; B2 encrypted archive is preserved'
-  printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
+  if [[ "$joint" == 1 ]]; then
+    cmp -s "$work/plain/t070_snapshot_storage.json" \
+      "$work/recovered/t070_snapshot_storage.json" ||
+      fail 'encrypted DB snapshot original media manifest changed in B2 roundtrip'
+    node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
+      --root "$work/recovered/media" > "$work/private-media-restored.log" 2>&1 ||
+      fail 'five ORIGINAL Storage file bytes not recovered from encrypted B2 archive'
+    node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
+      "$work/recovered/t070_snapshot_storage.json" \
+      "$work/recovered/media/config/storage-export-readonly-summary.json" ||
+      fail 'restored real PG snapshot does not match restored original media identities'
+    echo 'T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS'
+    echo 'T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED'
+    echo 'T070_FINAL_INDEPENDENT_E8=NOT_RUN'
+    echo 'T070_FINAL_LOCK=HOLD'
+  else
+    printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
+  fi
 else
   printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
 fi
