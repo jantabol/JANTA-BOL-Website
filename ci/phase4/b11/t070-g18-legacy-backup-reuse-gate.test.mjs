@@ -26,8 +26,12 @@ test('G18 source timestamps stable for ten app/media tables but cannot assert hi
  assert.equal(e.unchanged_timestamp_does_not_prove_unchanged_data,true);
  assert.equal(e.original_5_file_bytes_verified_with_db_archive,false);
 });
-test('G18 true auth user updated and new session since DB backup recorded, never treated as identity loss',()=>{
+test('G18 real auth login happened AFTER both backups, not between them; not exact identity parity',()=>{
  assert.equal(assessExistingBackupReuse(e).checks.auth_signin_churn_observed,true);
+ assert.equal(assessExistingBackupReuse(e).checks.auth_drift_outside_inter_run_gap,true);
+ assert.equal(e.auth_followup.users_updated_between_db_and_media_runs,0);
+ assert.equal(e.auth_followup.auth_sessions_created_between_db_and_media_runs,0);
+ assert.equal(e.auth_followup.users_updated_after_media_start,1);
  assert.equal(e.auth_followup.new_auth_sessions_since_db_start,1);
  assert.equal(e.auth_followup.identity_or_permission_mutation_proven,false);
  assert.equal(assessExistingBackupReuse(e).auth_session_equivalence_proven,false);
@@ -37,7 +41,8 @@ test('G18 any missing family, changed article, mismatched source, or fake backup
   x=>x.source_project='hriakdazkcvplsdwgfle',
   x=>x.source_metadata_rowcounts_and_updated_since_db_start.pop(),
   x=>x.source_metadata_rowcounts_and_updated_since_db_start.find(f=>f.family==='articles').changed=1,
-  x=>x.database_backup.github_conclusion='failure'
+  x=>x.database_backup.github_conclusion='failure',
+  x=>x.auth_followup.users_updated_between_db_and_media_runs=1
  ];
  for(const change of mutations){const x=structuredClone(e);change(x);assert.equal(assessExistingBackupReuse(x).status,'HOLD_UNVERIFIED_COMPONENTS');}
 });
