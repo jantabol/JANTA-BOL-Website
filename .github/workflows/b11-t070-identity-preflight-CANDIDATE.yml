@@ -20,6 +20,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-media-byte-verifier.test.mjs
       - name: Guard G2 Storage metadata read-only query and privacy
         run: node --test ci/phase4/b11/t070-storage-source-preflight.test.mjs
+      - name: Guard T070 FINAL against missing platform/grievance/all-media evidence
+        run: node --test ci/phase4/b11/t070-final-e8-gate.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
