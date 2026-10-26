@@ -22,10 +22,14 @@ export function guardManual(env=process.env){
   GITHUB_REPOSITORY:'jantabol/JANTA-BOL-Website',
   GITHUB_ACTOR:'jantabol',GITHUB_REF:'refs/heads/main',
   GITHUB_RUN_ATTEMPT:'1',
-  GITHUB_WORKFLOW_REF:'jantabol/JANTA-BOL-Website/.github/workflows/b11-storage-media-MANUAL.yml@refs/heads/main',
-  B11_MEDIA_EXPORT_CONFIRMATION:'JANTA_BOL_MEDIA_EXPORT_ONLY'
  };
- if(!Object.entries(checks).every(([k,v])=>env[k]===v))fail('FOUNDER_EXACT_MANUAL_APPROVAL_REQUIRED');
+ const original=env.GITHUB_WORKFLOW_REF==='jantabol/JANTA-BOL-Website/.github/workflows/b11-storage-media-MANUAL.yml@refs/heads/main'&&
+  env.B11_MEDIA_EXPORT_CONFIRMATION==='JANTA_BOL_MEDIA_EXPORT_ONLY'&&
+  env.JB_T070_JOINT_PROBE!=='1';
+ const joint=env.GITHUB_WORKFLOW_REF==='jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main'&&
+  env.B11_MEDIA_EXPORT_CONFIRMATION==='JANTA_BOL_T070_JOINT_EXPORT_ONLY'&&
+  env.JB_T034_DUAL_RESTORE_PROBE==='1'&&env.JB_T070_JOINT_PROBE==='1';
+ if(!Object.entries(checks).every(([k,v])=>env[k]===v)||(!original&&!joint))fail('FOUNDER_EXACT_MANUAL_APPROVAL_REQUIRED');
  return true;
 }
 function cleanKey(name){
