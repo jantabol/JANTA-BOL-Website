@@ -34,6 +34,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-g16-write-fence-gate.test.mjs
       - name: G18 source Edge version metadata hash and no-secret restore truth guards
         run: node --test ci/phase4/b11/t070-g18-edge-version-inventory.test.mjs
+      - name: G17 source writer surface and non-automatic maintenance release decision
+        run: node --test ci/phase4/b11/t070-g17-maintenance-go-no-go.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
