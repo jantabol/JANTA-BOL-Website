@@ -1,0 +1,37 @@
+name: B11 T069 Real AGE B2 Media Roundtrip Candidate (MOCK B2 ONLY)
+on:
+  push:
+    branches: [codex/b11-t069-age-b2-restorable-media-offsite-dev-20261024]
+permissions:
+  contents: read
+jobs:
+  decrypt_restore_verification:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Review branch checkout, no retained credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Confirm node version
+        run: node --version
+      - name: Test real AGE v0.3.1 implementation with mocked Backblaze object store
+        run: |
+          npm install --no-save --ignore-scripts --no-package-lock age-encryption@0.3.1
+          node --test ci/phase4/b11/t069-media-age-b2-roundtrip.test.mjs
+      - name: Verify exact B2 bucket and ciphertext-only readback transport
+        run: node --test ci/phase4/b11/t069-b2-s3-transport.test.mjs
+      - name: Verify original private source access requires Owner AAL2 and five-file end-to-end
+        run: node --test ci/phase4/b11/t069-owner-supabase-media-source.test.mjs
+      - name: Assert fail-closed Supabase Edge copy and dependency/credential constraints
+        run: node --test ci/phase4/b11/t069-edge-candidate-static-safety.test.mjs
+      - name: Retain original T069 negative tests
+        run: |
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-readonly-export.test.mjs
+          node --test ci/phase4/b11/t069-backup-run-health.test.mjs
+      - name: Fail closed, no LIVE Supabase/B2/Cricket used
+        run: |
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T069_REAL_AGE_CRYPTO_MOCK_B2=PASS; REAL_ORIGINAL_MEDIA_B2=UNTESTED'
