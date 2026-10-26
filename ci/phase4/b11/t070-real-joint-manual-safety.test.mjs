@@ -39,6 +39,14 @@ test('T070 restores one B2 ciphertext before asserting genuine source DB/media s
  assert.match(db,/T070_FINAL_LOCK=HOLD/);
  assert.doesNotMatch(db,/\bsupabase db reset\b|\bpg_restore .*(?:DB_URI|pooler\.supabase\.com)/);
 });
+test('T070 original source Storage UUIDs confirmed against the ACTUAL restored PG17 clone before its teardown',()=>{
+ const script=readFileSync('ci/backup/jb-t034-offline-full-pg-restore.sh','utf8');
+ assert.match(script,/if \[\[ "\$\{JB_T070_JOINT_PROBE:-0\}" == 1 \]\]; then/);
+ assert.match(script,/t070-joint-storage-snapshot-identity\.sql/);
+ assert.match(script,/\$src\/t070_snapshot_storage\.json/);
+ assert.match(script,/T070_RESTORED_PG17_AND_ORIGINAL_FIVE_FILE_UUIDS_METADATA=EXACT_MATCH/);
+ assert.match(script,/GITHUB_EVENT_NAME:-\}" == workflow_dispatch/);
+});
 test('T070 protected release cannot auto read public source and never uses founder AGE private key',()=>{
  assert.match(wf,/workflow_dispatch:/);
  assert.match(wf,/github\.actor == 'jantabol'/);
