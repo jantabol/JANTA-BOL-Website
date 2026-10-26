@@ -10,7 +10,7 @@ const b=Object.freeze({
   managedCloneCount:0,
   productionWriteBarrierProven:false,
   singleDatabaseMediaCapture:false,
-  localSupabaseStackStarted:false,
+  localSupabaseStackStarted:true,
   fullEdgeVersionedSourcesRecovered:false,
   verifiedVercelRuntimeRestore:false,
   signedIndependentE8:false,
@@ -51,7 +51,14 @@ test('G13 current live observations never manufacture the two absent relationshi
     ['live_update_session_fk','payment_campaign_fk']);
 });
 test('G13 actual Auth/Edge/Vercel isolated runtime is not asserted from metadata inventory',()=>{
-  assert.equal(b.localSupabaseStackStarted,false);
+  assert.equal(b.localSupabaseStackStarted,true);
+  assert.equal(e.sandbox.ephemeral_local_supabase_stack_booted,true);
+  assert.equal(e.sandbox.local_db_auth_storage_containers_up,true);
+  assert.equal(e.sandbox.no_production_secrets,true);
+  assert.equal(e.sandbox.local_pg_major_verified,false);
+  assert.equal(e.sandbox.real_janta_bol_database_restored,false);
+  assert.equal(e.sandbox.real_media_five_originals_restored_here,false);
+  assert.equal(e.sandbox.actual_same_point_e8,false);
   assert.equal(b.fullEdgeVersionedSourcesRecovered,false);
   assert.equal(b.verifiedVercelRuntimeRestore,false);
 });
@@ -70,4 +77,16 @@ test('G13 FINAL T070 and T071 fail closed despite actual component/subset PASS r
   for (const gate of ['ONE_TRUSTED_RECOVERY_POINT','COMPLETE_ISOLATED_RUNTIME_RESTORE',
     'ZERO_ROW_EXERCISE_IN_CLONE_ONLY','FINAL_E1_E2_E4_E5_E8_INDEPENDENT_SECURITY'])
     assert.ok(r.missing.includes(gate));
+});
+
+test('G14 independent real ephemeral runner exists but platform auth/edge/vercel remain unproven',()=>{
+  assert.equal(e.sandbox.run_id,'40291268018');
+  assert.equal(e.sandbox.job_id,'121466638578');
+  assert.equal(e.sandbox.log_scope,'EMPTY_STACK_RUNTIME_SMOKE_ONLY');
+  assert.equal(e.sandbox.real_edge_functions_restored,false);
+  assert.equal(e.sandbox.real_auth_negative_tests,false);
+  assert.equal(e.sandbox.real_vercel_runtime_restored,false);
+  assert.equal(e.sandbox.cloud_paid_clone_created,false);
+  const r=assessT070G11(e);
+  assert.equal(r.status,'HOLD');assert.equal(r.final_pass,false);assert.equal(r.final_lock,false);
 });
