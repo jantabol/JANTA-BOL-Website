@@ -14,7 +14,9 @@
     "grievance_file_count": 2,
     "b2_ciphertext_readback": true,
     "isolated_original_byte_sha256_parity": true,
-    "non_destructive": true
+    "non_destructive": true,
+    "b2_ciphertext_sha256": "8b46443493245e06db6859de464ba4a2e3882a33b832ef3ae46add650528de21",
+    "ciphertext_file_bytes": 4781378
   },
   "observations": {
     "as_of_utc": "2026-10-26T05:38:16Z",
@@ -63,7 +65,19 @@
     "database_point_id": "T034-2026-10-26-database-only",
     "media_point_id": "T069-2026-10-26-media-only"
   },
-  "owner": {},
+  "owner": {
+    "android_observation_ist": "2026-10-26T13:27:00+05:30",
+    "founder_private_key_available_off_ci": true,
+    "founder_primary_recipient_decrypted_offline": true,
+    "github_ciphertext_equals_android_sha256": true,
+    "android_ciphertext_sha256": "8b46443493245e06db6859de464ba4a2e3882a33b832ef3ae46add650528de21",
+    "android_ciphertext_bytes": 4781378,
+    "age_engine_selftest_pass": true,
+    "key_material_recorded": false,
+    "new_isolated_restore_from_b2_after_original_runner_destroyed": false,
+    "all_5_sha256_verified": false,
+    "caveat": "Off-runner complete AGE authenticated decrypt to /dev/null does NOT prove extracted plaintext manifest/per-object SHA or full combined platform recovery."
+  },
   "platform": {},
   "identity": {},
   "audit": {}
