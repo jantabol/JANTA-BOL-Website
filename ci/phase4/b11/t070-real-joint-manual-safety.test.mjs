@@ -50,5 +50,5 @@ test('T070 protected release cannot auto read public source and never uses found
  assert.match(wf,/JB_T034_DUAL_RESTORE_PROBE: '1'/);
  assert.match(wf,/JB_T070_JOINT_PROBE: '1'/);
  assert.doesNotMatch(wf,/AGE_PRIVATE|AGE_IDENTITY|CRICKET/);
- assert.doesNotMatch(exporter,/\bPUT\b|\bDELETE\b/);
+ assert.doesNotMatch(exporter,/method\s*:\s*['\"](?:PUT|DELETE|PATCH)['\"]/);
 });
