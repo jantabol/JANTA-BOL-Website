@@ -4,19 +4,21 @@
 import {readFileSync} from 'node:fs';
 const BUCKETS=new Set(['grievance-private','private-editorial','public-media']);
 const FAIL='T070_JOINT_STORAGE_SNAPSHOT_HOLD';
-// PostgreSQL and Supabase object timestamps contain microseconds. Date.parse drops
-// the final 3 digits: matching at millisecond precision could silently accept a
-// changed original object within the same ms. Compare exact UTC microseconds.
-const iso=x=>{
+// The source PG snapshot is authoritative to the microsecond. Some Storage
+// API serializers may provide only millisecond precision; NEVER silently
+// downgrade source equality without a SECOND, FRESH, read-only PG source check.
+const stamp=x=>{
  const m=typeof x==='string'?x.match(/^((?:19|20|21)\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,6}))?(Z|\+00:00)$/):null;
  if(!m)throw Error(FAIL+'_INVALID_TIMESTAMP');
  const at=Date.parse(m[1]+'Z');
  if(!Number.isFinite(at)||new Date(at).toISOString().slice(0,19)!==m[1])
   throw Error(FAIL+'_INVALID_TIMESTAMP');
- return String(at)+':'+(m[2]||'').padEnd(6,'0');
+ const micros=(m[2]||'').padEnd(6,'0');
+ return {full:String(at)+':'+micros,millisecond:String(at)+':'+micros.slice(0,3),digits:(m[2]||'').length};
 };
+const iso=x=>stamp(x).full;
 const key=x=>{if(typeof x!=='string'||!x||x.length>800||x.startsWith('/')||x.includes('\\')||x.split('/').some(t=>!t||t==='..'||t==='.'))throw Error(FAIL+'_INVALID_KEY');return x};
-export function verifyJointStorageBinding(dbRows,receipt){
+export function verifyJointStorageBinding(dbRows,receipt,postRows){
  if(!Array.isArray(dbRows)||dbRows.length!==5||!receipt||receipt.project_ref!=='vrffsnkycvjithwtiylt'||
  receipt.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||
  receipt.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
@@ -33,6 +35,26 @@ export function verifyJointStorageBinding(dbRows,receipt){
  }
  if(counts['grievance-private']!==2||counts['private-editorial']!==1||counts['public-media']!==2)
   throw Error(FAIL+'_BUCKET_COUNTS_INVALID');
+ // The post-media PG query MUST be a FRESH transaction, not the exported
+ // MVCC snapshot. An update during Storage GET must not become a false restore PASS.
+ if(postRows!==undefined){
+  if(!Array.isArray(postRows)||postRows.length!==5)throw Error(FAIL+'_POST_READ_SCOPE_INVALID');
+  const post=new Map();
+  for(const row of postRows){
+   if(!row||!BUCKETS.has(row.bucket)||typeof row.id!=='string')
+    throw Error(FAIL+'_POST_READ_SCOPE_INVALID');
+   const id=row.bucket+'/'+key(row.key);
+   if(post.has(id))throw Error(FAIL+'_POST_READ_DUPLICATE_OBJECT');
+   post.set(id,row);
+  }
+  for(const [id,row] of map){
+   const current=post.get(id);
+   if(!current||row.id!==current.id||iso(row.updated_at)!==iso(current.updated_at))
+    throw Error(FAIL+'_POST_READ_SOURCE_CHANGED');
+  }
+  if(post.size!==map.size)throw Error(FAIL+'_POST_READ_SOURCE_CHANGED');
+ }
+ let apiPrecisionLossGuarded=0;
  const seen=new Set();
  for(const obj of receipt.sha_records){
   if(!BUCKETS.has(obj.bucket)||typeof obj.id!=='string')throw Error(FAIL+'_RECEIPT_ID_INVALID');
@@ -41,14 +63,24 @@ export function verifyJointStorageBinding(dbRows,receipt){
   seen.add(id);
   const db=map.get(id);
   if(db.id!==obj.id)throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH_ID');
-  if(iso(db.updated_at)!==iso(obj.original_updated_at))
-   throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP');
+  const pgTime=stamp(db.updated_at),apiTime=stamp(obj.original_updated_at);
+  if(pgTime.full!==apiTime.full){
+   // Only a 3-digit API timestamp, matching the SAME UTC millisecond, may
+   // be reconciled against exact, unchanged six-digit PG metadata after GET.
+   // An actual six-digit microsecond mismatch is NEVER accepted.
+   if(postRows!==undefined&&apiTime.digits===3&&
+      pgTime.millisecond===apiTime.millisecond){
+    apiPrecisionLossGuarded++;
+   }else throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP');
+  }
   if(!/^[a-f0-9]{64}$/.test(obj.sha256)||!Number.isSafeInteger(obj.size)||obj.size<0)
    throw Error(FAIL+'_ORIGINAL_BYTES_MANIFEST_INVALID');
  }
  if(seen.size!==5||map.size!==seen.size)throw Error(FAIL+'_FILES_NOT_EXACTLY_BIJECTIVE');
  return Object.freeze({schema:'JB_T070_JOINT_STORAGE_BINDING_V1',project:'vrffsnkycvjithwtiylt',
-  exact_5_original_metadata_ids_timestamps:true,
+  exact_5_original_metadata_ids_timestamps:apiPrecisionLossGuarded===0,
+  original_db_microsecond_identity_postread_stable:postRows!==undefined,
+  api_millisecond_precision_loss_validated_by_fresh_pg:apiPrecisionLossGuarded>0,
   exactly_2_private_grievance_files:true,
   source_db_snapshot_storage_metadata_mapped_to_byte_verified_media:true,
   source_files_can_change_after_capture:true,
@@ -60,11 +92,14 @@ export function verifyJointStorageBinding(dbRows,receipt){
 }
 if(process.argv[1]?.endsWith('t070-joint-storage-snapshot-identity.mjs')){
  try{
-  if(process.argv.length!==4)throw Error(FAIL+'_USAGE');
+  if(process.argv.length!==5)throw Error(FAIL+'_USAGE');
   const rows=JSON.parse(readFileSync(process.argv[2],'utf8'));
   const receipt=JSON.parse(readFileSync(process.argv[3],'utf8'));
-  const result=verifyJointStorageBinding(rows,receipt);
+  const postRows=JSON.parse(readFileSync(process.argv[4],'utf8'));
+  const result=verifyJointStorageBinding(rows,receipt,postRows);
   console.log('T070_REAL_SOURCE_DB_SNAPSHOT_FIVE_ORIGINAL_STORAGE_METADATA_BOUND=PASS');
+  console.log('T070_FRESH_READ_ONLY_PG_POST_MEDIA_ID_TIMESTAMP_PARITY=PASS');
+  console.log('T070_STORAGE_API_SUBMILLISECOND_LOSS_WITH_FRESH_PG_GUARD='+String(result.api_millisecond_precision_loss_validated_by_fresh_pg));
   console.log('T070_DB_STORAGE_UNIVERSAL_ATOMIC_FREEZE_PROVEN=false');
   console.log('T070_AUTH_EDGE_VERCEL_RUNTIME_REBUILT=false');
   console.log('T070_FINAL_LOCK=false');
@@ -76,7 +111,8 @@ if(process.argv[1]?.endsWith('t070-joint-storage-snapshot-identity.mjs')){
    'DUPLICATE_DB_OBJECT','BUCKET_COUNTS_INVALID','RECEIPT_ID_INVALID',
    'ORIGINAL_OBJECT_MISSING','DB_MEDIA_OBJECT_VERSION_MISMATCH_ID',
    'DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP','ORIGINAL_BYTES_MANIFEST_INVALID',
-   'FILES_NOT_EXACTLY_BIJECTIVE',
+   'FILES_NOT_EXACTLY_BIJECTIVE','POST_READ_SCOPE_INVALID',
+   'POST_READ_DUPLICATE_OBJECT','POST_READ_SOURCE_CHANGED',
   ]);
   const raw=String(e?.message??''),tag=raw.startsWith(FAIL+'_')?raw.slice(FAIL.length+1):'';
   const safe=allow.has(tag)?tag:'UNCLASSIFIED';
