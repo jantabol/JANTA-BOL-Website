@@ -1,0 +1,33 @@
+# No live Supabase, B2 or encrypted media operations in this workflow.
+name: B11 T069 Media Recovery Manual Guard Regression (No LIVE)
+on:
+  pull_request:
+    paths:
+      - ci/phase4/b11/storage-media-manual-safety.test.mjs
+      - ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh
+      - .github/workflows/b11-storage-media-MANUAL.yml
+      - .github/workflows/b11-t069-media-recovery-safety-ci.yml
+  push:
+    branches:
+      - fix/t069-safe-negative-preflight-20261026
+permissions:
+  contents: read
+jobs:
+  negative_release_guard:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate original-media shell syntax without running backup
+        run: bash -n ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh
+      - name: Run manual-only Founder security negatives without secrets
+        run: node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+      - name: Confirm no media export, no secrets, no artifacts
+        run: |
+          set -euo pipefail
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T069_MANUAL_GUARD_NEGATIVE_CI=PASS; ORIGINAL_MEDIA_BACKUP_NOT_RUN'
