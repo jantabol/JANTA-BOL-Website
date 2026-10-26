@@ -9,6 +9,7 @@ for name in SUPABASE_DB_PASSWORD SUPABASE_SERVICE_ROLE_KEY JB_B11_SERVICE_ROLE_K
   [[ -z "${!name:-}" ]] || hold 'PRODUCTION_CREDENTIAL_PRESENT'
 done
 for app in supabase docker tar sha256sum curl; do command -v "$app" >/dev/null || hold 'LOCAL_TOOL_MISSING'; done
+repo_root="$(pwd)"
 d="$(mktemp -d)"
 network='jb-t070-g15-fixture'
 cleanup(){
@@ -71,6 +72,9 @@ printf 'CHANGED' >>"$d/media/restored/public-media/a.dat"
 if (cd "$d/media/restored" && sha256sum -c "$d/original.sha" >/dev/null 2>&1); then hold 'TAMPER_UNDETECTED'; fi
 health="$(curl --max-time 12 -s -o /dev/null -w '%{http_code}' http://127.0.0.1:54321/auth/v1/health)"
 [[ "$health" == 200 ]] || hold 'LOCAL_AUTH_HEALTH'
+if [[ "${G17_LOCAL_SYNTHETIC_ONLY:-}" == 'YES' ]]; then
+  bash "$repo_root/ci/phase4/b11/t070-g17-local-reversible-pg-fence.sh" "$db" "$d" || hold 'G17_REAL_ISOLATED_PG_FENCE'
+fi
 echo 'G15_REAL_SYNTHETIC_DB_DUMP_RESTORE=PASS'
 echo 'G15_REAL_SYNTHETIC_ID_FK_ZERO_SOURCE_RELATIONS=PASS'
 echo 'G15_REAL_SYNTHETIC_ANON_RLS_NEGATIVE=PASS'
