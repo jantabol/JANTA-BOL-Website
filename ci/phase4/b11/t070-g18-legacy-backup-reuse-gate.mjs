@@ -12,7 +12,8 @@ export function assessExistingBackupReuse(input={}){
    actual_media_component:m.original_objects_verified===5&&m.grievance_original_objects_verified===2,
    all_family_rows_current:SHA_FAMILY.length===families.length&&SHA_FAMILY.every(name=>families.filter(f=>f.family===name&&Number.isInteger(f.count)&&f.count>=0&&Number.isInteger(f.changed)&&f.changed>=0).length===1),
    no_app_timestamp_drift:families.filter(f=>f.family!=='auth_users').every(f=>f.changed===0),
-   auth_signin_churn_observed:families.some(f=>f.family==='auth_users'&&f.changed===1)&&auth.new_auth_sessions_since_db_start===1&&auth.users_with_both===1,
+   auth_drift_outside_inter_run_gap:auth.users_updated_between_db_and_media_runs===0&&auth.user_signins_between_db_and_media_runs===0&&auth.auth_sessions_created_between_db_and_media_runs===0,
+   auth_signin_churn_observed:families.some(f=>f.family==='auth_users'&&f.changed===1)&&auth.new_auth_sessions_since_db_start===1&&auth.users_with_both===1&&auth.users_updated_between_db_and_media_runs===0&&auth.auth_sessions_created_between_db_and_media_runs===0&&auth.users_updated_after_media_start===1&&auth.auth_sessions_created_after_media_start===1,
    no_silent_composition_claim:input.not_a_historical_snapshot_read===true&&input.all_writers_quiesced_from_db_to_media===false&&input.unchanged_timestamp_does_not_prove_unchanged_data===true,
    no_unperformed_joint_claim:input.archive_opened_on_same_clean_runner===false&&input.auth_edge_vercel_runtimes_restored===false&&input.original_5_file_bytes_verified_with_db_archive===false
  };
