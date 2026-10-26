@@ -13,7 +13,7 @@ for key in JB_DB_URI SUPABASE_DB_PASSWORD SUPABASE_SERVICE_ROLE_KEY JB_B11_SERVI
 done
 [[ "$#" == 2 ]] || hold REQUIRED_LOCAL_DB_AND_TEMP_DIRECTORY
 db="$1"; scratch="$2"
-[[ -d "$scratch" && "$db" =~ ^supabase_db_[a-zA-Z0-9_-]+$ ]] || hold LOCAL_TARGET_INVALID
+[[ -d "$scratch" && "$db" =~ ^supabase_db_[a-zA-Z0-9_.-]+$ ]] || hold LOCAL_TARGET_INVALID
 [[ "$(docker exec "$db" psql -U postgres -d postgres -X -Atqc "SELECT count(*) FROM t070_fixture.articles WHERE slug='only-synthetic-article'")" == 1 ]] || hold SYNTHETIC_FIXTURE_MISSING
 # Source and clone are disposable already prepared by G15. No production endpoint.
 pid=''
