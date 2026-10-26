@@ -1,0 +1,48 @@
+{
+  "schema": "T070_G17_CRON_SOURCE_READONLY_V1",
+  "project_ref": "vrffsnkycvjithwtiylt",
+  "observed_ist": "2026-10-26",
+  "scope": "READONLY_SOURCE_SCHEDULES_AND_ONE_HOUR_AGGREGATES_ONLY",
+  "jobs": [
+    {
+      "jobid": 3,
+      "active": true,
+      "schedule": "5 seconds",
+      "command_sha256": "f217c3fa1d3052036aa52ea4188237fc13f967245d3528c62f8d94237fa473ee",
+      "execution_scope_sha256": "df3660386f12638dfd2639bb68eebc0348b6d0e121dd9db25a24cf8159b11e24",
+      "succeeded_last_hour": 717,
+      "failed_last_hour": 0,
+      "running_at_observation": 0
+    },
+    {
+      "jobid": 4,
+      "active": true,
+      "schedule": "* * * * *",
+      "command_sha256": "6d466687658e1acc2b41b5610dc597c520750dbc89194ef76be084fc72717b1b",
+      "execution_scope_sha256": "df3660386f12638dfd2639bb68eebc0348b6d0e121dd9db25a24cf8159b11e24",
+      "succeeded_last_hour": 60,
+      "failed_last_hour": 0,
+      "running_at_observation": 0
+    },
+    {
+      "jobid": 5,
+      "active": true,
+      "schedule": "0 * * * *",
+      "command_sha256": "2e4f7227f359c0f2326ea11a836d0239f18861a21db6bdd1da4105229536de9f",
+      "execution_scope_sha256": "df3660386f12638dfd2639bb68eebc0348b6d0e121dd9db25a24cf8159b11e24",
+      "succeeded_last_hour": 1,
+      "failed_last_hour": 0,
+      "running_at_observation": 0
+    }
+  ],
+  "caveats": [
+    "Command text withheld; hashes are NOT backups of executable cron definitions or rollback guarantees.",
+    "5-second cron scheduling must be handled with a tested reversible maintenance fence.",
+    "One-hour counters change with time; never compare exact counts as a frozen source state."
+  ],
+  "no_live_cron_changed": true,
+  "no_jobs_paused": true,
+  "no_production_rollback_drill_passed": true,
+  "no_real_same_point_recovery": true,
+  "t070_final_lock": false
+}
