@@ -80,5 +80,22 @@
   },
   "platform": {},
   "identity": {},
-  "audit": {}
+  "audit": {},
+  "sandbox": {
+    "run_id": "40291268018",
+    "job_id": "121466638578",
+    "github_head_sha": "4bea8a4969bc1a99f2110e8afc5b05d66c4a6550",
+    "no_production_secrets": true,
+    "ephemeral_local_supabase_stack_booted": true,
+    "local_db_auth_storage_containers_up": true,
+    "local_pg_major_verified": false,
+    "real_janta_bol_database_restored": false,
+    "real_media_five_originals_restored_here": false,
+    "real_edge_functions_restored": false,
+    "real_auth_negative_tests": false,
+    "real_vercel_runtime_restored": false,
+    "actual_same_point_e8": false,
+    "cloud_paid_clone_created": false,
+    "log_scope": "EMPTY_STACK_RUNTIME_SMOKE_ONLY"
+  }
 }
