@@ -4,7 +4,17 @@
 import {readFileSync} from 'node:fs';
 const BUCKETS=new Set(['grievance-private','private-editorial','public-media']);
 const FAIL='T070_JOINT_STORAGE_SNAPSHOT_HOLD';
-const iso=x=>{if(typeof x!=='string'||!/^(?:19|20|21)\d\d-/.test(x)||!Number.isFinite(Date.parse(x)))throw Error(FAIL+'_INVALID_TIMESTAMP');return Date.parse(x)};
+// PostgreSQL and Supabase object timestamps contain microseconds. Date.parse drops
+// the final 3 digits: matching at millisecond precision could silently accept a
+// changed original object within the same ms. Compare exact UTC microseconds.
+const iso=x=>{
+ const m=typeof x==='string'?x.match(/^((?:19|20|21)\d\d-\d\d-\d\dT\d\d:\d\d:\d\d)(?:\.(\d{1,6}))?(Z|\+00:00)$/):null;
+ if(!m)throw Error(FAIL+'_INVALID_TIMESTAMP');
+ const at=Date.parse(m[1]+'Z');
+ if(!Number.isFinite(at)||new Date(at).toISOString().slice(0,19)!==m[1])
+  throw Error(FAIL+'_INVALID_TIMESTAMP');
+ return String(at)+':'+(m[2]||'').padEnd(6,'0');
+};
 const key=x=>{if(typeof x!=='string'||!x||x.length>800||x.startsWith('/')||x.includes('\\')||x.split('/').some(t=>!t||t==='..'||t==='.'))throw Error(FAIL+'_INVALID_KEY');return x};
 export function verifyJointStorageBinding(dbRows,receipt){
  if(!Array.isArray(dbRows)||dbRows.length!==5||!receipt||receipt.project_ref!=='vrffsnkycvjithwtiylt'||
