@@ -1,3 +1,8 @@
+import {mkdtempSync,writeFileSync,rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
+import {fileURLToPath} from 'node:url';
+import {spawnSync} from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {verifyJointStorageBinding} from './t070-joint-storage-snapshot-identity.mjs';
@@ -55,4 +60,27 @@ test('cannot infer missing LIVE update or ad payment records as real identities'
  const r=verifyJointStorageBinding(rows,receipt());
  assert.equal(r.auth_go_true_or_edge_runtime_restored,false);
  assert.equal(r.source_files_can_change_after_capture,true);
+});
+
+test('Run1 real joint RCA distinguishes ID drift from microsecond timestamp drift without exposing metadata',()=>{
+ const dir=mkdtempSync(join(tmpdir(),'jb-t070-rca-'));
+ const dbPath=join(dir,'db.json'),mediaPath=join(dir,'media.json');
+ const script=fileURLToPath(new URL('./t070-joint-storage-snapshot-identity.mjs',import.meta.url));
+ try{
+  const cases=[
+   {change:r=>{r.sha_records[0].id='untrusted-private-id';},reason:'DB_MEDIA_OBJECT_VERSION_MISMATCH_ID'},
+   {change:r=>{r.sha_records[0].original_updated_at='2026-10-18T05:57:15.146692Z';},reason:'DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP'},
+   {change:r=>{r.sha_records[0].key='private-sensitive-path';},reason:'ORIGINAL_OBJECT_MISSING'},
+  ];
+  for(const c of cases){
+   const media=receipt();c.change(media);
+   writeFileSync(dbPath,JSON.stringify(rows));
+   writeFileSync(mediaPath,JSON.stringify(media));
+   const res=spawnSync(process.execPath,[script,dbPath,mediaPath],{encoding:'utf8'});
+   assert.equal(res.status,3);
+   assert.equal(res.stdout,'');
+   assert.match(res.stderr,new RegExp('T070_JOINT_STORAGE_SNAPSHOT_HOLD_INVALID_OR_INCONSISTENT_REASON='+c.reason));
+   assert.doesNotMatch(res.stderr,/evidence\/a\.pdf|untrusted-private-id|private-sensitive-path|146692/);
+  }
+ }finally{rmSync(dir,{recursive:true,force:true})}
 });

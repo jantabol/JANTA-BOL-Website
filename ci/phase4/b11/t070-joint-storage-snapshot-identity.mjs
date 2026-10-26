@@ -40,8 +40,9 @@ export function verifyJointStorageBinding(dbRows,receipt){
   if(seen.has(id)||!map.has(id))throw Error(FAIL+'_ORIGINAL_OBJECT_MISSING');
   seen.add(id);
   const db=map.get(id);
-  if(db.id!==obj.id||iso(db.updated_at)!==iso(obj.original_updated_at))
-   throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH');
+  if(db.id!==obj.id)throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH_ID');
+  if(iso(db.updated_at)!==iso(obj.original_updated_at))
+   throw Error(FAIL+'_DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP');
   if(!/^[a-f0-9]{64}$/.test(obj.sha256)||!Number.isSafeInteger(obj.size)||obj.size<0)
    throw Error(FAIL+'_ORIGINAL_BYTES_MANIFEST_INVALID');
  }
@@ -67,5 +68,19 @@ if(process.argv[1]?.endsWith('t070-joint-storage-snapshot-identity.mjs')){
   console.log('T070_DB_STORAGE_UNIVERSAL_ATOMIC_FREEZE_PROVEN=false');
   console.log('T070_AUTH_EDGE_VERCEL_RUNTIME_REBUILT=false');
   console.log('T070_FINAL_LOCK=false');
- }catch(e){console.error(FAIL+'_INVALID_OR_INCONSISTENT');process.exitCode=3}
+ }catch(e){
+  // Log ONLY fixed, reviewed failure classes. No bucket keys, IDs, bytes, timestamps,
+  // secret values or parser exception contents are ever printed on a real run.
+  const allow=new Set([
+   'WRONG_SCOPE_OR_COUNT','INVALID_TIMESTAMP','INVALID_KEY','DB_IDENTITY_INVALID',
+   'DUPLICATE_DB_OBJECT','BUCKET_COUNTS_INVALID','RECEIPT_ID_INVALID',
+   'ORIGINAL_OBJECT_MISSING','DB_MEDIA_OBJECT_VERSION_MISMATCH_ID',
+   'DB_MEDIA_OBJECT_VERSION_MISMATCH_TIMESTAMP','ORIGINAL_BYTES_MANIFEST_INVALID',
+   'FILES_NOT_EXACTLY_BIJECTIVE',
+  ]);
+  const raw=String(e?.message??''),tag=raw.startsWith(FAIL+'_')?raw.slice(FAIL.length+1):'';
+  const safe=allow.has(tag)?tag:'UNCLASSIFIED';
+  console.error(FAIL+'_INVALID_OR_INCONSISTENT_REASON='+safe);
+  process.exitCode=3;
+ }
 }
