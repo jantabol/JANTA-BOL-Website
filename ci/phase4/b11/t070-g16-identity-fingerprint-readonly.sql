@@ -2,7 +2,9 @@
 -- NEVER represents DB+Storage object BYTE atomicity. Does NOT restore any data.
 -- Only opaque aggregate SHA256, row counts; no row IDs, paths, JWTs, names or PII returned.
 -- All subqueries in one SQL statement share one MVCC statement snapshot.
-WITH families AS (
+WITH expected_families AS (
+ SELECT unnest(ARRAY['articles','article_versions','grievances','grievance_history','grievance_evidence','live_sessions','live_updates','ad_campaigns','ad_payments','auth_users','storage_metadata']) AS family
+), families AS (
  SELECT 'articles' AS family, id::text AS ord, jsonb_build_array(id,slug,created_by,version) AS keys FROM public.articles
  UNION ALL SELECT 'article_versions',id::text,jsonb_build_array(id,article_id,article_version,responsible_user) FROM public.article_versions
  UNION ALL SELECT 'grievances',id::text,jsonb_build_array(id,public_id,article_id) FROM public.grievances
