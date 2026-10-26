@@ -24,6 +24,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-final-e8-gate.test.mjs
       - name: Prove existing T069 original-media recovery is gated and not an E8 PASS
         run: node --test ci/phase4/b11/t070-g8-existing-recovery-contract.test.mjs
+      - name: G11 one-recovery-point and durable Founder-key restoration fail-closed audit
+        run: node --test ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
