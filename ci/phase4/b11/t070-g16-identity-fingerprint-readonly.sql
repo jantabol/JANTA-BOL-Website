@@ -18,9 +18,9 @@ WITH expected_families AS (
  UNION ALL SELECT 'storage_metadata',id::text,jsonb_build_array(id,bucket_id,name,updated_at,metadata->>'size') FROM storage.objects
  WHERE bucket_id IN ('grievance-private','private-editorial','public-media')
 ),fingerprints AS (
- SELECT family,count(*)::integer AS source_rows,
- encode(extensions.digest(convert_to(coalesce(jsonb_agg(keys ORDER BY ord)::text,'[]'),'UTF8'),'sha256'),'hex') AS identity_sha256
- FROM families GROUP BY family
+ SELECT n.family,count(f.ord)::integer AS source_rows,
+ encode(extensions.digest(convert_to(coalesce((jsonb_agg(f.keys ORDER BY f.ord) FILTER (WHERE f.ord IS NOT NULL))::text,'[]'),'UTF8'),'sha256'),'hex') AS identity_sha256
+ FROM expected_families n LEFT JOIN families f ON f.family=n.family GROUP BY n.family
 )
 SELECT family, source_rows, identity_sha256,
  'LIVE_SOURCE_SQL_SNAPSHOT_ONLY__NO_STORAGE_BYTES__NO_FULL_RESTORE' AS evidence_scope
