@@ -450,6 +450,30 @@ python3 ci/backup/jb-t034-db-identity.py compare \
   fail 'restored DB owner, locale, ACL or settings drift'
 printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\n'
 
+# P4-T070, opt-in only: compare the RESTORED networkless DB's original Storage
+# object identities with the ORIGINAL source MVCC snapshot while clone is alive.
+# All paths/IDs remain in 0600 private runner temp files and encrypted B2 bundle.
+if [[ "${JB_T070_JOINT_PROBE:-0}" == 1 ]]; then
+  [[ "${GITHUB_ACTIONS:-}" == true &&
+     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+     "${GITHUB_ACTOR:-}" == jantabol &&
+     "${GITHUB_REF:-}" == refs/heads/main &&
+     "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' ]] ||
+    fail 'T070 original metadata proof only permitted under reviewed manual main workflow'
+  [[ -s "$src/t070_snapshot_storage.json" ]] ||
+    fail 'missing original encrypted T070 source MVCC media identities'
+  docker cp ci/phase4/b11/t070-joint-storage-snapshot-identity.sql \
+    "$clone:/tmp/t070-media-ids.sql" >/dev/null 2>&1 ||
+    fail 'T070 reviewed original Storage identity query unavailable in networkless clone'
+  docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+    -U supabase_admin -d postgres -f /tmp/t070-media-ids.sql \
+    > "$temp/t070-restored-media-ids.json" 2> "$temp/t070-restored-media-ids.err" ||
+    fail 'T070 original media metadata read failed in isolated RESTORED source DB'
+  cmp -s "$src/t070_snapshot_storage.json" "$temp/t070-restored-media-ids.json" ||
+    fail 'T070 restored original Storage UUID/version metadata differs from original source MVCC'
+  echo 'T070_RESTORED_PG17_AND_ORIGINAL_FIVE_FILE_UUIDS_METADATA=EXACT_MATCH'
+fi
+
 post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||
   fail 'cannot recheck restored background-worker isolation'
 [[ "$post_settings" == 'postgres|off|template1' ]] ||
