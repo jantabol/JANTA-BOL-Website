@@ -28,7 +28,33 @@ test('T069 no direct DB export, media provider destructive methods or GitHub art
  assert.ok(script.includes(t),t);
 });
 test('T069 unauthorized shell execution rejected before contacting backend',()=>{
- const r=spawnSync('bash',['ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh','/tmp'],{encoding:'utf8'});
+ // Never inherit privileged CI runner GITHUB_* environment into a negative test.
+ // An isolated, unprivileged subprocess cannot access backup keys or production.
+ const env={
+  PATH:process.env.PATH||'/usr/bin:/bin', HOME:process.env.HOME||'/tmp',
+  GITHUB_ACTIONS:'false', GITHUB_REPOSITORY:'untrusted/fork',
+  GITHUB_EVENT_NAME:'pull_request', GITHUB_ACTOR:'untrusted',
+  GITHUB_REF:'refs/heads/unsafe', GITHUB_RUN_ATTEMPT:'2',
+  GITHUB_WORKFLOW_REF:'untrusted/fork/.github/workflows/b11-storage-media-MANUAL.yml@refs/heads/unsafe',
+  GITHUB_RUN_ID:'0', B11_FOUNDER_APPROVED_MEDIA_OFFSITE:''
+ };
+ const r=spawnSync('bash',['ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh','/tmp'],{
+  encoding:'utf8',env,timeout:5000
+ });
  assert.equal(r.status,3);
- assert.match(r.stderr,/Founder\/main\/manual protected release missing|one offline original Storage export directory required/);
+ assert.match(r.stderr,/Founder\/main\/manual protected release missing/);
+ assert.doesNotMatch(r.stderr,/age encryption recipient missing|Backblaze protected scoped secret absent/);
+});
+test('T069 spoofed GitHub Actions context cannot authorize media export',()=>{
+ const env={PATH:process.env.PATH||'/usr/bin:/bin',HOME:process.env.HOME||'/tmp',
+  GITHUB_ACTIONS:'true', GITHUB_REPOSITORY:'untrusted/fork',
+  GITHUB_EVENT_NAME:'workflow_dispatch',GITHUB_ACTOR:'untrusted',
+  GITHUB_REF:'refs/heads/main', GITHUB_RUN_ATTEMPT:'1',
+  GITHUB_WORKFLOW_REF:'untrusted/fork/.github/workflows/b11-storage-media-MANUAL.yml@refs/heads/main',
+  GITHUB_RUN_ID:'123', B11_FOUNDER_APPROVED_MEDIA_OFFSITE:'JANTA_BOL_MEDIA_EXPORT_ONLY'};
+ const r=spawnSync('bash',['ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh','/tmp'],{
+  encoding:'utf8',env,timeout:5000
+ });
+ assert.equal(r.status,3);
+ assert.match(r.stderr,/Founder\/main\/manual protected release missing/);
 });
