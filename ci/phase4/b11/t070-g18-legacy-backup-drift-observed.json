@@ -84,7 +84,13 @@
     "users_with_recent_sign_in": 1,
     "users_with_both": 1,
     "new_auth_sessions_since_db_start": 1,
-    "identity_or_permission_mutation_proven": false
+    "identity_or_permission_mutation_proven": false,
+    "users_updated_between_db_and_media_runs": 0,
+    "users_updated_after_media_start": 1,
+    "user_signins_between_db_and_media_runs": 0,
+    "user_signins_after_media_start": 1,
+    "auth_sessions_created_between_db_and_media_runs": 0,
+    "auth_sessions_created_after_media_start": 1
   },
   "not_a_historical_snapshot_read": true,
   "all_writers_quiesced_from_db_to_media": false,
@@ -94,5 +100,5 @@
   "auth_edge_vercel_runtimes_restored": false,
   "source_to_clone_identity_reconciled_in_joint_restore": false,
   "founder_final_lock": false,
-  "conclusion": "TEN_FAMILIES_SHOW_NO_POST_DB_RUN_TIMESTAMP_INDICATOR; AUTH_HAS_SIGN_IN_AND_SESSION_CHURN; NO_PROOF_OF_SAME_TRUSTED_POINT_OR_COMBINED_RESTORE"
+  "conclusion": "ALL_ELEVEN_SOURCE_FAMILIES_SHOW_ZERO_TIMESTAMP_INDICATED_CHANGES_BETWEEN_DB_AND_MEDIA_RUN_START; ONE_AUTH_LOGIN_AND_SESSION_OCCURRED_AFTER_MEDIA_START; ORIGINAL_ARCHIVES_NOT_RESTORED_TOGETHER; NO_HISTORICAL_ATOMICITY_PROVEN"
 }
