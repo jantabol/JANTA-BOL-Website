@@ -28,6 +28,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
       - name: Guard G11 real observed DB/Media proof scope and live read-only source counts
         run: node --test ci/phase4/b11/t070-g11-observed-recovery-scope.test.mjs
+      - name: G13 Founder ciphertext recovery and no-cost full-system E8 honesty checks
+        run: node --test ci/phase4/b11/t070-g13-readiness-proof.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
