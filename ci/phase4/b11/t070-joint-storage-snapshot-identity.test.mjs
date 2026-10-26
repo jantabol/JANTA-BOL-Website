@@ -24,6 +24,22 @@ test('DB snapshot original object updated timestamp changed without object id ch
  const r=receipt();r.sha_records[0].original_updated_at='2026-10-18T06:00:00Z';
  assert.throws(()=>verifyJointStorageBinding(rows,r),/VERSION_MISMATCH/);
 });
+test('G18 exact PostgreSQL microseconds: change in last microsecond must be rejected, not rounded to JS milliseconds',()=>{
+ const r=receipt();
+ r.sha_records[0].original_updated_at='2026-10-18T05:57:15.146692+00:00';
+ assert.throws(()=>verifyJointStorageBinding(rows,r),/VERSION_MISMATCH/);
+});
+test('G18 cross-format identical UTC microseconds remain byte-for-byte equivalent',()=>{
+ const r=receipt();
+ r.sha_records[0].original_updated_at='2026-10-18T05:57:15.146691Z';
+ assert.equal(verifyJointStorageBinding(rows,r).source_db_snapshot_storage_metadata_mapped_to_byte_verified_media,true);
+});
+test('G18 malformed or ambiguous Storage times fail closed',()=>{
+ for(const bad of ['2026-10-18T05:57:15.14669','2026-10-18T05:57:15.146691+05:30','2026-10-18T05:57:15.1466911Z']){
+  const r=receipt();r.sha_records[0].original_updated_at=bad;
+  assert.throws(()=>verifyJointStorageBinding(rows,r),/INVALID_TIMESTAMP/);
+ }
+});
 test('do not silently allow different private grievance file count or wrong project',()=>{
  const r=receipt();r.project_ref='hriakdazkcvplsdwgfle';assert.throws(()=>verifyJointStorageBinding(rows,r),/WRONG_SCOPE/);
  const a=structuredClone(rows);a[1].bucket='public-media';assert.throws(()=>verifyJointStorageBinding(a,receipt()),/BUCKET_COUNTS/);
