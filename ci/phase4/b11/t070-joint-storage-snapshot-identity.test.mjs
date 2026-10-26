@@ -62,9 +62,29 @@ test('cannot infer missing LIVE update or ad payment records as real identities'
  assert.equal(r.source_files_can_change_after_capture,true);
 });
 
+test('T070 precision adapter accepts millisecond-only API timestamps ONLY with an exact fresh source PostgreSQL postread',()=>{
+ const r=receipt();
+ for(const x of r.sha_records)x.original_updated_at='2026-10-18T05:57:15.146Z';
+ assert.throws(()=>verifyJointStorageBinding(rows,r),/VERSION_MISMATCH_TIMESTAMP/);
+ const proof=verifyJointStorageBinding(rows,r,structuredClone(rows));
+ assert.equal(proof.api_millisecond_precision_loss_validated_by_fresh_pg,true);
+ assert.equal(proof.exact_5_original_metadata_ids_timestamps,false);
+ assert.equal(proof.original_db_microsecond_identity_postread_stable,true);
+ const changed=structuredClone(rows);
+ changed[0].updated_at='2026-10-18T05:57:15.146692Z';
+ assert.throws(()=>verifyJointStorageBinding(rows,r,changed),/POST_READ_SOURCE_CHANGED/);
+ const swapped=structuredClone(rows);
+ swapped[0].id='changed-secret-id';
+ assert.throws(()=>verifyJointStorageBinding(rows,r,swapped),/POST_READ_SOURCE_CHANGED/);
+ const millisWrong=structuredClone(r);millisWrong.sha_records[0].original_updated_at='2026-10-18T05:57:15.147Z';
+ assert.throws(()=>verifyJointStorageBinding(rows,millisWrong,structuredClone(rows)),/VERSION_MISMATCH_TIMESTAMP/);
+ const fullMicrosWrong=structuredClone(r);fullMicrosWrong.sha_records[0].original_updated_at='2026-10-18T05:57:15.146692Z';
+ assert.throws(()=>verifyJointStorageBinding(rows,fullMicrosWrong,structuredClone(rows)),/VERSION_MISMATCH_TIMESTAMP/);
+});
+
 test('Run1 real joint RCA distinguishes ID drift from microsecond timestamp drift without exposing metadata',()=>{
  const dir=mkdtempSync(join(tmpdir(),'jb-t070-rca-'));
- const dbPath=join(dir,'db.json'),mediaPath=join(dir,'media.json');
+ const dbPath=join(dir,'db.json'),mediaPath=join(dir,'media.json'),postPath=join(dir,'post.json');
  const script=fileURLToPath(new URL('./t070-joint-storage-snapshot-identity.mjs',import.meta.url));
  try{
   const cases=[
@@ -76,7 +96,8 @@ test('Run1 real joint RCA distinguishes ID drift from microsecond timestamp drif
    const media=receipt();c.change(media);
    writeFileSync(dbPath,JSON.stringify(rows));
    writeFileSync(mediaPath,JSON.stringify(media));
-   const res=spawnSync(process.execPath,[script,dbPath,mediaPath],{encoding:'utf8'});
+   writeFileSync(postPath,JSON.stringify(rows));
+   const res=spawnSync(process.execPath,[script,dbPath,mediaPath,postPath],{encoding:'utf8'});
    assert.equal(res.status,3);
    assert.equal(res.stdout,'');
    assert.match(res.stderr,new RegExp('T070_JOINT_STORAGE_SNAPSHOT_HOLD_INVALID_OR_INCONSISTENT_REASON='+c.reason));
