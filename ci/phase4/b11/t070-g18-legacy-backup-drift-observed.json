@@ -1,0 +1,98 @@
+{
+  "schema": "JB_T070_G18_LEGACY_BACKUP_COMPATIBILITY_READONLY_V1",
+  "source_project": "vrffsnkycvjithwtiylt",
+  "observed_date_ist": "2026-10-26",
+  "source": "One real Supabase read-only statement snapshot + separate auth aggregated follow-up; no original ciphertext decrypted here",
+  "database_backup": {
+    "github_run_id": "40223103797",
+    "job_id": "121258741884",
+    "github_conclusion": "success",
+    "started_utc": "2026-10-25T18:49:51Z",
+    "source_to_clone_26_metrics": "EXACT_MATCH",
+    "source_to_clone_16_security_metrics": "EXACT_MATCH",
+    "scope": "ACTUAL_DB_ONLY_RESTORE"
+  },
+  "media_backup": {
+    "github_run_id": "40274621191",
+    "job_id": "121414622988",
+    "github_conclusion": "success",
+    "started_utc": "2026-10-26T05:30:50Z",
+    "original_objects_verified": 5,
+    "grievance_original_objects_verified": 2,
+    "scope": "ACTUAL_5_STORAGE_OBJECTS_ONLY_RESTORE"
+  },
+  "source_metadata_rowcounts_and_updated_since_db_start": [
+    {
+      "family": "ad_campaigns",
+      "count": 7,
+      "changed": 0
+    },
+    {
+      "family": "ad_payments",
+      "count": 0,
+      "changed": 0
+    },
+    {
+      "family": "article_versions",
+      "count": 878,
+      "changed": 0
+    },
+    {
+      "family": "articles",
+      "count": 32,
+      "changed": 0
+    },
+    {
+      "family": "auth_users",
+      "count": 5,
+      "changed": 1
+    },
+    {
+      "family": "grievance_evidence",
+      "count": 2,
+      "changed": 0
+    },
+    {
+      "family": "grievance_history",
+      "count": 57,
+      "changed": 0
+    },
+    {
+      "family": "grievances",
+      "count": 6,
+      "changed": 0
+    },
+    {
+      "family": "live_sessions",
+      "count": 16,
+      "changed": 0
+    },
+    {
+      "family": "live_updates",
+      "count": 0,
+      "changed": 0
+    },
+    {
+      "family": "storage_metadata",
+      "count": 5,
+      "changed": 0
+    }
+  ],
+  "auth_followup": {
+    "auth_users": 5,
+    "user_metadata_rows_updated_since_db_start": 1,
+    "users_with_recent_sign_in": 1,
+    "users_with_both": 1,
+    "new_auth_sessions_since_db_start": 1,
+    "identity_or_permission_mutation_proven": false
+  },
+  "not_a_historical_snapshot_read": true,
+  "all_writers_quiesced_from_db_to_media": false,
+  "unchanged_timestamp_does_not_prove_unchanged_data": true,
+  "original_5_file_bytes_verified_with_db_archive": false,
+  "archive_opened_on_same_clean_runner": false,
+  "auth_edge_vercel_runtimes_restored": false,
+  "source_to_clone_identity_reconciled_in_joint_restore": false,
+  "founder_final_lock": false,
+  "conclusion": "TEN_FAMILIES_SHOW_NO_POST_DB_RUN_TIMESTAMP_INDICATOR; AUTH_HAS_SIGN_IN_AND_SESSION_CHURN; NO_PROOF_OF_SAME_TRUSTED_POINT_OR_COMBINED_RESTORE"
+}
