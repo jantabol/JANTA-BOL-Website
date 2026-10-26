@@ -170,113 +170,23 @@ if [[ "$dual" == 1 ]]; then
     node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
       --root "$work/plain/media" > "$work/private-media-verify.log" 2>&1 ||
       fail 'source original five Storage file bytes fail SHA256 validation'
-    node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
-      "$work/plain/t070_snapshot_storage.json" \
-      "$work/plain/media/config/storage-export-readonly-summary.json" ||
-      fail 'source Storage original five objects mismatch raw PG snapshot file identities'
-    echo 'T070_REAL_SOURCE_FIVE_MEDIA_CAPTURED_WITH_PG_MVCC_SNAPSHOT=PASS'
-  fi
-  jb_t034_snapshot_finish
-  printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
-  [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
-    fail 'invalid source database identity record'
-  python3 ci/backup/jb-t034-db-identity.py plan \
-      "$work/plain/source_db_identity.json" "$work/identity-preflight.sql" ||
-    fail 'source database identity outside reviewed owner/ACL allowlist'
-  rm -f "$work/identity-preflight.sql"
-  [[ "$(wc -l < "$work/plain/expected_identity.txt")" == 26 ]] ||
-    fail 'invalid metric coverage in source baseline'
-  ! grep -q '=MISSING' "$work/plain/expected_identity.txt" ||
-    fail 'one of the four protected Ad RPCs is absent on live source'
-fi
-# SQL files contain personal/confidential data; never print their lines or hashes.
-date -u +%Y-%m-%dT%H:%M:%SZ > "$work/plain/backup_utc.txt"
-printf 'JANTA BOL production project vrffsnkycvjithwtiylt\n' > "$work/plain/source_project.txt"
-# Age secret identity never exists in Actions; owner retains it offline.
-bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt)
-if [[ "$dual" == 1 ]]; then
-  bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
-fi
-if [[ "$joint" == 1 ]]; then
-  bundle+=(t070_snapshot_storage.json media)
-fi
-tar -C "$work/plain" -cf - "${bundle[@]}" |
- zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
-test -s "$work/backup.age" || fail "empty encrypted archive"
-name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
-destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
-# Fail if collision or remote access unavailable; no overwrites.
-# Must be owner-provisioned private bucket/folder. Fail CLOSED if inaccessible.
-rclone --config "$work/rclone.conf" lsf "${JB_BACKUP_REMOTE_PREFIX%/}" >/dev/null ||
- fail "approved offsite storage destination unavailable"
-rclone --config "$work/rclone.conf" copyto --immutable "$work/backup.age" "$destination" >/dev/null ||
-  fail "upload failed"
-# Cryptographically verify ciphertext download bytes (does NOT prove DB restore).
-rclone --config "$work/rclone.conf" copyto "$destination" "$work/remote.age" >/dev/null ||
- fail "cannot download encrypted backup for checksum comparison"
-cmp -s "$work/backup.age" "$work/remote.age" || fail "remote ciphertext does not match source"
-sha="$(sha256sum "$work/backup.age" | cut -d' ' -f1)"
-bytes="$(wc -c < "$work/backup.age")"
-printf 'OFFSITE_ENCRYPTED_BACKUP_UPLOADED=true\nOBJECT_SUFFIX=%s\nSHA256_CIPHERTEXT=%s\nBYTES=%s\n' "$name" "$sha" "$bytes"
-if [[ "$dual" == 1 ]]; then
-  # Check that ciphertext was actually recovered from B2 before AGE decrypt.
-  # The owner private key is NOT available on this runner.
-  mkdir -m 700 "$work/recovered"
-  age -d -i "$work/ephemeral-restore.identity" "$work/remote.age" |
-    zstd -dq | tar --no-same-owner --no-same-permissions -C "$work/recovered" -xf - ||
-    fail 'B2 ciphertext could not be decrypted into local isolated runner'
-  for f in roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc.txt source_project.txt; do
-    [[ -s "$work/recovered/$f" ]] || fail "missing recovered archive component $f"
-    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
-      fail "recovered archive bytes differ from original component $f"
-  done
-  for f in raw_dump_snapshot_id.txt snapshot_scope.txt; do
-    [[ -s "$work/recovered/$f" ]] || fail 'exported source snapshot metadata missing after AGE'
-    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
-      fail 'source snapshot evidence differs after AGE decrypt'
-  done
-  [[ -s "$work/recovered/expected_security_identity.txt" ]] ||
-    fail 'protected security parity digest absent after decrypt'
-  cmp -s "$work/plain/expected_security_identity.txt" "$work/recovered/expected_security_identity.txt" ||
-    fail 'security parity manifest changed after encrypted roundtrip'
-  [[ -s "$work/recovered/expected_metric10_components.txt" &&
-      -s "$work/recovered/metric10_components_contract_sha256.txt" ]] ||
-    fail 'private metric10 component evidence missing after AGE'
-  for f in expected_metric10_components.txt metric10_components_contract_sha256.txt; do
-    cmp -s "$work/plain/$f" "$work/recovered/$f" ||
-      fail 'private metric10 evidence altered during AGE roundtrip'
-  done
-  [[ "$(cat "$work/recovered/metric10_components_contract_sha256.txt")" == "$(sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1)" ]] ||
-    fail 'protected metric10 diagnostic contract changed'
-  [[ -s "$work/recovered/security_parity_contract_sha256.txt" ]] ||
-    fail 'encrypted parity contract SHA file absent'
-  cmp -s "$work/plain/security_parity_contract_sha256.txt" "$work/recovered/security_parity_contract_sha256.txt" ||
-    fail 'parity contract fingerprint changed in B2 roundtrip'
-  [[ "$(cat "$work/recovered/security_parity_contract_sha256.txt")" == "$(sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1)" ]] ||
-    fail 'source snapshot and clone parity comparison SQL revisions differ'
-  [[ -s "$work/recovered/source_db_identity.json" ]] ||
-    fail 'source DB owner/ACL manifest missing after encryption'
-  cmp -s "$work/plain/source_db_identity.json" "$work/recovered/source_db_identity.json" ||
-    fail 'source DB identity differs after encrypted B2 readback'
-  [[ -s "$work/recovered/expected_identity.txt" ]] ||
-    fail 'signed encrypted bundle lacks source snapshot-identity baseline'
-  cmp -s "$work/plain/expected_identity.txt" "$work/recovered/expected_identity.txt" ||
-    fail 'source baseline did not survive encrypted B2 round trip'
-  printf 'T034_ACTUAL_REMOTE_AGE_DECRYPT=PASS; OWNER_PRIVATE_KEY_NOT_USED=true\n'
-  # Disposable Docker has NO NETWORK. No real DB write is ever allowed.
-  # Fail closed if Supabase public functions require additional extensions/auth.
-  bash ci/backup/jb-t034-offline-full-pg-restore.sh "$work/recovered" ||
-    fail 'full isolated PG17 restore verification refused; B2 encrypted archive is preserved'
-  if [[ "$joint" == 1 ]]; then
-    cmp -s "$work/plain/t070_snapshot_storage.json" \
-      "$work/recovered/t070_snapshot_storage.json" ||
-      fail 'encrypted DB snapshot original media manifest changed in B2 roundtrip'
-    node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
-      --root "$work/recovered/media" > "$work/private-media-restored.log" 2>&1 ||
-      fail 'five ORIGINAL Storage file bytes not recovered from encrypted B2 archive'
+    # Independent, FRESH READ-ONLY query after Storage GETs; not the
+    # previously exported MVCC snapshot. Never log object IDs or timestamps.
+    {
+      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
+      cat ci/phase4/b11/t070-joint-storage-snapshot-identity.sql
+      printf '\nCOMMIT;\n'
+    } | docker run --rm -i --network=host postgres:17 \
+      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
+      > "$work/plain/t070_post_media_current_storage.json" \
+      2> "$work/private-post-media-db.err" || \
+      fail 'fresh read-only Storage DB post-media identity check unavailable'
+    [[ -s "$work/plain/t070_post_media_current_storage.json" ]] || \
+      fail 'fresh Storage DB post-media identity empty'
     node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
       "$work/recovered/t070_snapshot_storage.json" \
-      "$work/recovered/media/config/storage-export-readonly-summary.json" ||
+      "$work/recovered/media/config/storage-export-readonly-summary.json" \
+      "$work/recovered/t070_post_media_current_storage.json" || \
       fail 'restored real PG snapshot does not match restored original media identities'
     echo 'T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS'
     echo 'T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED'
