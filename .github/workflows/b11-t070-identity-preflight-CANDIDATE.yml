@@ -26,6 +26,8 @@ jobs:
         run: node --test ci/phase4/b11/t070-g8-existing-recovery-contract.test.mjs
       - name: G11 one-recovery-point and durable Founder-key restoration fail-closed audit
         run: node --test ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
+      - name: Guard G11 real observed DB/Media proof scope and live read-only source counts
+        run: node --test ci/phase4/b11/t070-g11-observed-recovery-scope.test.mjs
       - name: Strictly no production restore or secrets at this checkpoint
         run: |
           set -euo pipefail
