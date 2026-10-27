@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'ci/phase4/b11/t070-g19-run3-observed-failclosed.test.mjs'
+      - 'ci/phase4/b11/t070-g19-source-writers-failclosed.test.mjs'
+      - 'ci/phase4/b11/t070-g19-20261027-live-writer-source-observation.json'
       - 'ci/phase4/b11/t070-final-e8-gate.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G19_REAL_RUN3_INDEPENDENT_BACKEND_AUDIT_20261027.md'
       - '.github/workflows/b11-t070-g19-independent-audit-FAKE-CI.yml'
@@ -23,7 +25,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --check ci/phase4/b11/t070-g19-run3-observed-failclosed.test.mjs
-          node --test ci/phase4/b11/t070-final-e8-gate.test.mjs ci/phase4/b11/t070-g19-run3-observed-failclosed.test.mjs ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
+          node --check ci/phase4/b11/t070-g19-source-writers-failclosed.test.mjs
+          node --test ci/phase4/b11/t070-final-e8-gate.test.mjs ci/phase4/b11/t070-g19-run3-observed-failclosed.test.mjs ci/phase4/b11/t070-g19-source-writers-failclosed.test.mjs ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
           echo 'T070_REAL_JOINT_DATA_PLANE=PROVEN_IN_EXTERNAL_RUN_40452402698_NOT_THIS_CI'
           echo 'T070_G19_REAL_AUTH_EDGE_VERCEL_E8=NOT_RUN'
           echo 'T070_FINAL_LOCK=HOLD'
