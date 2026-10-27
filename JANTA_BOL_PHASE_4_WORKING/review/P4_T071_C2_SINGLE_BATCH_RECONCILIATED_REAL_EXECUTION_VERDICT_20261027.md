@@ -18,25 +18,51 @@
 
 GitHub **`40531996112`**, job **`122287010483`**, SUCCESS. Disposable real **PostgreSQL17** loaded original B7 payment/event fixtures plus unchanged **`20261010_b7_qualified_impressions_REVIEW_ONLY.sql`** (NOT Production). Confirmed actual owner analytics RPC labels results **client-reported estimates, anti_bot_verified=false**, with qualified/unverified impressions separated. Revoked authenticated `EXECUTE` on `jb_ad_qualified_analytics_internal(uuid)`: actual SQL `insufficient_privilege`, existing synthetic published Article, Ad state and event counts unchanged. Re-granted and checked identical honest analytics after recovery. **Scope: genuine scoped SQL RPC fault**, no provider/bot-proof/hosted article browser; full E8 HOLD.
 
+## 27 October latest seven-family real HTTP batch — all remaining domains covered at scoped boundaries
+
+**Actual GitHub Actions run `40534396564`, job `122295571136`, SUCCESS: 8/8 Node tests and one real original B8 PG17 committed-record durability check before/after.** The test executed actual repository JavaScript adapters pinned to B8 SHA `658f474d...` and complete News/B9 source SHA `b509c60f...`, but against an **actual local Node HTTP server deliberately returning HTTP 503**. The outage response is controlled synthetic, **not a real Supabase Edge or Larix/provider outage**. Genuine static News, Article and LIVE HTML routes returned HTTP 200, unknown file returned 404.
+
+- **#01 Social:** original UI refused fake Posted and HTTP 503 did not change local Pending status.
+- **#04 Grievance:** original internal transition rejected HTTP 503; no fabricated protected transition success. This is a source/HTTP boundary test, **not genuine Grievance SQL rollback**.
+- **#05 Compliance:** original internal transition rejected HTTP 503; no invented approval/transition. Not original compliance SQL rollback.
+- **#07 Search:** original B9 adapter sanitized actual HTTP 503 to `B9_BACKEND_REJECTED_jb_b9_search: REMOTE_CHECK_FAILED`; independently the exact sourced Article **HTML** remained HTTP 200, which alone does **not** prove loaded article body.
+- **#09 LIVE:** original LIVE client failed on actual HTTP 503 from local Edge stand-in, no false command success; not a real Larix/live stream.
+- **#10 Provider:** camera handoff refused 503, navigation remained unchanged; no actual encoder/provider was called.
+- **#12 Messaging:** original LIVE notification acknowledgement refused actual HTTP 503. In that **same GitHub job** genuine disposable PG17 was loaded with original B8 Owner-case RPC and a synthetic Owner/AAL2 actor; a case **was committed before** the messaging fault. A fresh PostgreSQL query **after** the seven HTTP failures proved case + original Article + Ad still persisted. This is an original DB continuity check with a synthetic remote 503, **not a real external messaging delivery receipt**.
+
+**Original source fault coverage is now 13/13 locally:** six of thirteen source-backed actual PostgreSQL17 SQL faults (#02,#03,#06,#08,#11,#13), seven other original adapters confronted with genuine **local HTTP 503** (#01,#04,#05,#07,#09,#10,#12). **C2 FINAL E8 remains HOLD** because backend/provider outages were controlled local stand-ins and six PG17 tests are separate fixture environments, not the same full release-candidate live stack.
+
+### Live connected Supabase READ-ONLY catalog/operational check (no user messages/PII inspected)
+
+The connected production JANTA BOL project `vrffsnkycvjithwtiylt` reported PostgreSQL17 ACTIVE_HEALTHY. Only `BEGIN TRANSACTION READ ONLY` catalog/aggregate probes were used:
+- **Social:** global_enabled=true but **three** actual Social Distribution records have `provider_mode=MANUAL`. Therefore **enabled UI cannot be called automated external Posted proof**; source blocks fake Posted.
+- **LIVE:** **16 live_sessions OFF**, **7 public_live_feed OFF**. The public site’s old static red LIVE banner is still a separate Soft Launch truth issue.
+- **Messaging:** **160 live_notifications = IN_APP_READY**, **no external deliverability established** from this state; a queued/in-app notification is not a proven WhatsApp/email send.
+- **Grievance:** six rows across received 3 / resolved 1 / under_review 1 / withdrawn 1. **Compliance:** one complete task. Counts only; no sensitive complaint/task content accessed.
+- **Security:** RLS enabled and anon direct SELECT absent on private `articles`, `grievances`, `compliance_tasks`, `social_distribution`, `social_settings`, `live_notifications`. Anon direct `public_live_feed` SELECT is permitted under RLS. Anon EXECUTE on private Grievance/Compliance/Social mutation RPCs is **denied**. Anon `jb_b9_search('T032')` returned **one** public metadata result **without full body**. `jb_b8_g4_public_feed` also exposes a controlled public RPC. These are **ACL/live baseline proofs, not injected production faults**.
+- As previously audited, disabled/review-only B7 capability RPCs cannot be forced into Production merely to manufacture a C2 PASS.
+
+**Machine-readable 13/13 evidence index** (with per-domain exact run and full-product HONEST HOLD): `ci/phase4/b11/t071-c2-all-13-source-transport-pg17-evidence-index-20261027.json`. The fixed Five-Gate Route V1.0 remains unchanged.
+
 ## Frozen thirteen-family C2 status: no hidden gate
 
 | # | Family | Source/adapter dependency-negative | New/preserved genuine isolated backend proof | Final original connected-E2 test |
 |---:|---|---|---|---|
-| 1 | Social | PASS | no genuine provider delivery fault | HOLD |
+| 1 | Social | PASS | **Original UI real loopback HTTP 503 fail-closed `40534396564`**, provider genuinely external still untested | HOLD |
 | 2 | Analytics | PASS | **NEW real disposable PG17 B7 qualified-analytics RPC permission fault, old Article/events unchanged, restored `40531996112`**. No real bot audit or production deployment | HOLD |
 | 3 | Notifications | PASS | **PASS scoped real PG17 notification storage outage** | HOLD |
-| 4 | Grievance | PASS | no full private/grievance actual backend fault+recovery | HOLD |
-| 5 | Compliance | PASS | no full compliance actual backend fault+recovery | HOLD |
+| 4 | Grievance | PASS | **Original protected RPC client via real local HTTP 503 `40534396564`**; original backend grievance transaction not fault-injected | HOLD |
+| 5 | Compliance | PASS | **Original protected RPC client via real local HTTP 503 `40534396564`**; original compliance backend transaction not fault-injected | HOLD |
 | 6 | Advertising | PASS | **PASS scoped real PG17 original B7 Ad LIVE guard during real payment DB fault** | HOLD |
-| 7 | Search | PASS | B9 RPC read success previously, not actual failure | HOLD |
+| 7 | Search | PASS | **Actual local HTTP 503 on original B9 client** with Article HTML 200 `40534396564`; real anon Supabase search RPC one metadata hit, no genuine hosted outage | HOLD |
 | 8 | Accountability | PASS | **PASS scoped PG17 original B8 RPC permission fault and restoration** | HOLD |
-| 9 | LIVE | PASS | DB observed OFF + source Edge failure simulation, not genuine session/provider fault | HOLD |
-| 10 | Provider | PASS | no genuine Larix/external encoder fault | HOLD |
+| 9 | LIVE | PASS | **Original LIVE Edge client real local HTTP 503 `40534396564`**, live DB 16 OFF; no actual Larix/backend outage | HOLD |
+| 10 | Provider | PASS | **Real local HTTP 503 camera handoff, no false navigation `40534396564`**; actual Larix/provider not invoked | HOLD |
 | 11 | Payments | PASS | **PASS scoped PG17 original B7 payment write rejection, no false paid/Ad LIVE** | HOLD |
-| 12 | Messaging | PASS | real notification storage outage proven **but no separate external delivery/committed event replay fault** | HOLD |
+| 12 | Messaging | PASS | **Original Edge client real local HTTP 503 while original B8 case genuinely committed in same disposable PG17 job and persisted after `40534396564`**; actual external provider undelivered E8 untested | HOLD |
 | 13 | Database | PASS | **NEW real PG17 original B8 failed-write no-false-ACK, rollback, recovery, Owner AAL2 denial `40531488909`**; original crash/restore still disclosed one ACKed post-checkpoint lost row `40501228346` | HOLD |
 
-**Counts:** 13/13 real *source JS* adapters tested with **injected fake network/provider responses**. **Six unique functional families (#02, #03, #06, #08, #11, #13) now have actual local PostgreSQL17 source-backed component failure evidence**, including real analytics ACL denial/recovery and original B8 failed write that did **NOT** falsely acknowledge a commit. Prior crash/restore has a known acknowledged post-checkpoint loss; do NOT claim zero-RPO or full hosted transaction continuity. **0/13 are independently certified as integrated full product E8.**
+**Counts:** **13/13 exact family labels now have an executed local failure-isolation boundary probe beyond pure fabricated JavaScript outcomes**: six have original source-backed actual PostgreSQL17 database fault/recovery (#02,#03,#06,#08,#11,#13); seven have real loopback HTTP 503 against original JS clients (#01,#04,#05,#07,#09,#10,#12), with real PG17 B8 case durability verified across simulated messaging failure. These are **DIFFERENT SCOPE CLASSES** and do **not** mean 13 real deployed failures or unified source version. Prior restore still lost one post-checkpoint acknowledged synthetic write. **0/13 can be certified full same-release integrated E8.**
 
 ## Non-negotiable C2 completion condition already frozen
 
@@ -58,6 +84,7 @@ A valid **C2 COMPLETE/PASS** needs *each of thirteen* families under the **same 
 - Founder request to avoid endless reports: **this file is the single reconciled C2 status**. Subsequent updates should **replace/update this report with new real proofs**, not split the same evidence into new reports. Only deliver final LOCK if original requirements genuinely verified; don't move the gateposts.
 
 ### CI links
+- New remaining seven original JS adapters real local HTTP 503 + same-job actual original B8 PostgreSQL17 committed-case readback: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40534396564
 - New B7 qualified analytics real PG17 fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40531996112
 - Notification fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40528474982
 - B7 Ad and Payment fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40530048228
