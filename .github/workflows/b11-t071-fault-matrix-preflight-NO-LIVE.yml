@@ -7,6 +7,7 @@ on:
       - 'ci/phase4/b11/t071-failure-isolation-contract.mjs'
       - 'ci/phase4/b11/t071-failure-isolation-contract.test.mjs'
       - 'ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs'
+      - 'ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs'
       - 'ci/phase4/b11/t071-vercel-production-git-source-observed-20261027.json'
       - 'ci/phase4/b11/t071-vercel-production-source-risk.test.mjs'
       - 'index.html'
@@ -44,9 +45,10 @@ jobs:
           test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           node --check ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs
-          node --test ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs
+          node --check ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs
+          node --test ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs
           (cd "$T071_PINNED_INTEGRATED_ROOT" &&
-            node --test ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs)
+            node --test               ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs               ci/phase4/b7-t038-cp01-manual-payment-source.test.cjs               ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs)
           echo 'T071_REAL_B8_SOURCE_WITH_ISOLATED_FAULTS=TESTED_SELECTED_DOMAINS'
           echo 'T071_REAL_HOSTED_FAULTS=NOT_RUN'
       - name: Source contract and fail-closed recovery preflight (no live faults)
