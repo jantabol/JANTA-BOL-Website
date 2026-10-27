@@ -58,8 +58,13 @@ jobs:
           T071_PINNED_SEARCH_ROOT: t071-search-fixture
         run: |
           set -Eeuo pipefail
-          node --test --test-name-pattern='^(0[1-7]|09|1[0-3])\\b' ci/phase4/b11/t071-thirteen-actual-adapters-isolated-faults.test.mjs
-          echo 'T071_REMAINING_12_REAL_SOURCE_ADAPTERS_WITH_FAKE_DEPENDENCY_FAULTS=12_SELECTED'
+          node --test ci/phase4/b11/t071-thirteen-actual-adapters-isolated-faults.test.mjs | tee "${RUNNER_TEMP}/t071-source-faults.log"
+          test "$(grep -c '^.*T071_FAULT_MATRIX_VM .*VM_REAL_ADAPTER_ONLY' "${RUNNER_TEMP}/t071-source-faults.log")" -eq 13
+          for family in social analytics notifications grievance compliance advertising search live provider payments messaging database; do
+            grep -F "T071_FAULT_MATRIX_VM $family=VM_REAL_ADAPTER_ONLY" "${RUNNER_TEMP}/t071-source-faults.log" >/dev/null
+          done
+          grep -F 'T071_HOSTED_MATRIX=NOT_RUN' "${RUNNER_TEMP}/t071-source-faults.log" >/dev/null
+          echo 'T071_REMAINING_12_REAL_SOURCE_ADAPTERS_WITH_FAKE_DEPENDENCY_FAULTS=12_VERIFIED_EXCLUDING_ALREADY_REAL_B8_ACCOUNTABILITY'
           echo 'T071_REMAINING_12_CONNECTED_SERVER_FAULTS=NOT_RUN'
       - name: Core News publish amid compliance failure, Owner AAL2 & version safety using actual source
         shell: bash
