@@ -107,3 +107,24 @@ The existing real Run #3 restored *data-plane* PG17 and 5 Storage file bytes in 
 There is no independently witnessed freeze of all 20 writer surfaces (including unsynced Android/reporters and the 5-second cron), and silently pausing production or modifying active grants would break strict **no old work damage** rules. Future runtime restoration, a planned reversible maintenance window and owner-durable private AGE recovery require explicit secure authorization, not automation of a production mutation from a test.
 
 **Final adjudication unchanged:** verified G17 real DB+5-original-media PASS, G19 source writer inventory PASS LIMITED, **full G19 E8/HOSTED_AUTH_RUNTIME/HARDENED_WRITE_FENCE HOLD**, **P4-T070 FINAL PASS+LOCK HOLD**, **T071 NOT STARTED**. Never re-label no-cost static tests as full recovery.
+
+## 6. Founder authorized **preparation stage** — real source SQL negative-access audit (read-only)
+
+Following Founder permission to START T070's remaining security checks, **only reversible/non-mutating evidence collection** was initiated. No actual production maintenance/freeze, live authentication mutation, paid project or new isolated service was authorized by the bare START message.
+
+Six bounded read-only SQL role checks executed on connected JANTA BOL PostgreSQL using `BEGIN TRANSACTION READ ONLY; SET LOCAL ROLE …; SELECT COUNT(*) …; ROLLBACK;` without retrieving IDs or private table rows:
+
+| Real source DB access check | Actual observed |
+|---|---|
+| Anonymous `SELECT` from `public.grievances` | `SQLSTATE 42501` permission denied |
+| Anonymous `SELECT` from `public.grievance_evidence` | `SQLSTATE 42501` permission denied |
+| Anonymous SELECT from private `storage.objects` metadata | 0 visible rows |
+| Authenticated DB role *without a signed JWT* SELECT from grievances | 0 visible rows |
+| Authenticated DB role *without a signed JWT* SELECT from `user_roles` | 0 visible rows |
+| Anonymous SELECT on public articles | 16 publicly visible rows |
+
+**Results: source SQL role/privilege+RLS negative evidence = PASS for these six probes**, not the same as recovery runtime. A no-JWT `SET LOCAL ROLE authenticated` DB session is **not** an actual Supabase GoTrue user or AAL2 login. These checks do not prove restored HTTP/private Storage API controls, session invalidation, auth refresh or Edge Functions, and do not provide a global write barrier. Distinct 42501 (denied privilege) and 0 visible via RLS are deliberately not conflated.
+
+Sanitized counts and results recorded in `ci/phase4/b11/t070-g19-live-source-role-negative-readonly-20261027.json`. Corresponding fail-closed PR-only tests assert no escalation of metadata/source SQL into E8 restored-runtime claims.
+
+**Go/No-Go:** `T070_SOURCE_SQL_NEGATIVE_ACCESS_LIMITED=PASS` / `T070_RESTORED_AUTH_MFA_HTTP_ACCESS=NOT_RUN` / `T070_PRODUCTION_MAINTENANCE=NOT_APPLIED` / `T070_FULL_E8=HOLD` / `T071=NOT_STARTED`.
