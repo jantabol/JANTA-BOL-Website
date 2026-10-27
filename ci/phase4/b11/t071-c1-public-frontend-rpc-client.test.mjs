@@ -13,10 +13,11 @@ const article=Object.freeze({
  location:'Pichhore',reporter_name:'JANTA BOL',news_date:'2026-10-27',
  news_time:'12:00:00',breaking:false,top_story:false
 });
-function mk(outputs=[]) {
+function mk(outputs=[],search='') {
  const calls=[];
  const result=outputs.slice();
  const client={
+  auth:{getSession:async()=>({data:{session:null},error:null})},
   rpc:async(...args)=>{calls.push({op:'rpc',args});return result.shift()??{data:{items:[]},error:null}},
   from:(tbl)=>{
     calls.push({op:'from',table:tbl});
@@ -33,7 +34,7 @@ function mk(outputs=[]) {
  const win={
   supabase:{createClient:()=>client},
   JB_SUPABASE_CONFIG:{url:'https://dummy.invalid',publishableKey:'PUBLIC_DUMMY'},
-  location:{href:'https://example.invalid/article.html'},localStorage:{
+  location:{href:'https://example.invalid/article.html'+search,search},localStorage:{
    getItem:()=>null,setItem:()=>{},removeItem:()=>{}
   }
  };
@@ -100,4 +101,11 @@ test('Owner privateData path retains original authenticated table read, does not
  assert.equal(await b.getArticle(publicId,{privateData:true}),null);
  assert.equal(calls.some(x=>x.op==='rpc'),false);
  assert.equal(calls.some(x=>x.op==='from'&&x.table==='articles'),true);
+});
+
+test('legacy ?preview=admin draft path requires real Owner/AAL2 before direct table read',async()=>{
+ const {b,calls}=mk([],'?preview=admin');
+ await assert.rejects(()=>b.getArticle(publicId,{privateData:false}),/AUTH_REQUIRED/);
+ assert.equal(calls.some(x=>x.op==='from'),false);
+ assert.equal(calls.some(x=>x.op==='rpc'),false);
 });
