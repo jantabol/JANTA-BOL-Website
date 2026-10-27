@@ -27,7 +27,7 @@ test('T070 source original Storage files bound inside PG raw dumped MVCC transac
  assert.match(db,/jb_t034_snapshot_query ci\/phase4\/b11\/t070-joint-storage-snapshot-identity\.sql/);
  assert.match(db,/node ci\/phase4\/b11\/storage-media-manual-cli\.mjs export-manual/);
  assert.ok(db.indexOf('t070-joint-storage-snapshot-identity.sql')<db.indexOf("  jb_t034_snapshot_finish\n  printf"));
- assert.match(db,/bundle\+=\(t070_snapshot_storage\.json t070_post_media_current_storage\.json media\)/);
+ assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)'));
  assert.match(db,/source_db_identity\.json/);
  assert.match(db,/READ COMMITTED, READ ONLY/);
  assert.match(db,/t070_post_media_current_storage\.json/);
