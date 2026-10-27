@@ -14,12 +14,16 @@
 3. **Accountability #08 (previous genuine partial):** `40504645684`, SUCCESS — real isolated B8 public RPC feed fails on scoped permission removal; independent peer public-case RPC continues; original synthetic News + Ad rows preserved; grant restored.
 4. **Database #13 — NEW actual failed-write/false-ACK proof:** `40531488909`, job `122285201848`, SUCCESS. Actual original B8 `jb_b8_g1_owner_create_case` inside isolated PostgreSQL17 wrote and committed a baseline record. PG17 `CHECK(false) NOT VALID` caused a subsequent real source RPC INSERT to fail with `check_violation`; no UUID/success was emitted, zero partial rows persisted and independent Article/Ad records survived. After removing the fault the original RPC genuinely committed one new case, and disabling synthetic Owner/AAL2 denied an additional write. **Scope:** genuine PG17 + synthetic Owner auth, NOT hosted client/Supabase/Edge E8. Separately previous backup-crash-restore `40501228346`, SUCCESS: checkpoint point-age 0.422s / local RTO 1.261s with **one acknowledged post-checkpoint synthetic committed row lost**, not production SLA.
 
+### Newly executed Analytics #02 genuine original B7 candidate RPC fault
+
+GitHub **`40531996112`**, job **`122287010483`**, SUCCESS. Disposable real **PostgreSQL17** loaded original B7 payment/event fixtures plus unchanged **`20261010_b7_qualified_impressions_REVIEW_ONLY.sql`** (NOT Production). Confirmed actual owner analytics RPC labels results **client-reported estimates, anti_bot_verified=false**, with qualified/unverified impressions separated. Revoked authenticated `EXECUTE` on `jb_ad_qualified_analytics_internal(uuid)`: actual SQL `insufficient_privilege`, existing synthetic published Article, Ad state and event counts unchanged. Re-granted and checked identical honest analytics after recovery. **Scope: genuine scoped SQL RPC fault**, no provider/bot-proof/hosted article browser; full E8 HOLD.
+
 ## Frozen thirteen-family C2 status: no hidden gate
 
 | # | Family | Source/adapter dependency-negative | New/preserved genuine isolated backend proof | Final original connected-E2 test |
 |---:|---|---|---|---|
 | 1 | Social | PASS | no genuine provider delivery fault | HOLD |
-| 2 | Analytics | PASS | no deployed qualified-analytics RPC real fault | HOLD |
+| 2 | Analytics | PASS | **NEW real disposable PG17 B7 qualified-analytics RPC permission fault, old Article/events unchanged, restored `40531996112`**. No real bot audit or production deployment | HOLD |
 | 3 | Notifications | PASS | **PASS scoped real PG17 notification storage outage** | HOLD |
 | 4 | Grievance | PASS | no full private/grievance actual backend fault+recovery | HOLD |
 | 5 | Compliance | PASS | no full compliance actual backend fault+recovery | HOLD |
@@ -32,7 +36,7 @@
 | 12 | Messaging | PASS | real notification storage outage proven **but no separate external delivery/committed event replay fault** | HOLD |
 | 13 | Database | PASS | **NEW real PG17 original B8 failed-write no-false-ACK, rollback, recovery, Owner AAL2 denial `40531488909`**; original crash/restore still disclosed one ACKed post-checkpoint lost row `40501228346` | HOLD |
 
-**Counts:** 13/13 real *source JS* adapters tested with **injected fake network/provider responses**. **Five unique functional families (#03, #06, #08, #11, #13) have actual local PostgreSQL17 component-level fault evidence**, including a newly executed **real original B8 failed write that did NOT falsely acknowledge a commit**. Prior crash/restore has a known acknowledged post-checkpoint loss; do NOT claim zero-RPO or full hosted transaction continuity. **0/13 are independently certified as integrated full product E8.**
+**Counts:** 13/13 real *source JS* adapters tested with **injected fake network/provider responses**. **Six unique functional families (#02, #03, #06, #08, #11, #13) now have actual local PostgreSQL17 source-backed component failure evidence**, including real analytics ACL denial/recovery and original B8 failed write that did **NOT** falsely acknowledge a commit. Prior crash/restore has a known acknowledged post-checkpoint loss; do NOT claim zero-RPO or full hosted transaction continuity. **0/13 are independently certified as integrated full product E8.**
 
 ## Non-negotiable C2 completion condition already frozen
 
@@ -54,6 +58,7 @@ A valid **C2 COMPLETE/PASS** needs *each of thirteen* families under the **same 
 - Founder request to avoid endless reports: **this file is the single reconciled C2 status**. Subsequent updates should **replace/update this report with new real proofs**, not split the same evidence into new reports. Only deliver final LOCK if original requirements genuinely verified; don't move the gateposts.
 
 ### CI links
+- New B7 qualified analytics real PG17 fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40531996112
 - Notification fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40528474982
 - B7 Ad and Payment fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40530048228
 - B8 Accountability fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40504645684
