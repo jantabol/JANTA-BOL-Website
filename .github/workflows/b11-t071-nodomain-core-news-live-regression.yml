@@ -1,0 +1,72 @@
+name: B11 T071 No-DNS source News-LIVE-Ads & B9 regression (partial E8)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/b11-t071-nodomain-core-news-live-regression.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T071_DOMAIN_DUE_NONDOMAIN_EVIDENCE_REPORT_20261027.md'
+permissions:
+  contents: read
+jobs:
+  verify_no_domain_core_news_live_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Checkout this T071 review source (read only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Pin existing B8 full source and existing B9 branding/search + public truth source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 658f474d6ee0f24efac60f069979e8adee1e9221
+          path: t071-no-domain-b8-source
+          persist-credentials: false
+      - name: Checkout B9 Founder-final copy and public-truth candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: b509c60fceb053a51686f67e587d4922a40fa6f4
+          path: t071-no-domain-b9-source
+          persist-credentials: false
+      - name: Scope: domain/DNS is deferred and no connected systems will be written
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_HEAD_REF" = "codex/b11-t071-failure-isolation-preflight-20261027"
+          test "$GITHUB_EVENT_NAME" = "pull_request"
+          test "$(git -C t071-no-domain-b8-source rev-parse HEAD)" = 658f474d6ee0f24efac60f069979e8adee1e9221
+          test "$(git -C t071-no-domain-b9-source rev-parse HEAD)" = b509c60fceb053a51686f67e587d4922a40fa6f4
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'T071_NEW_CUSTOM_DOMAIN=jantaboli.in; STATUS=DUE_NOT_CONNECTED'
+      - name: B8 existing actual client/renderer News, LIVE, Ads and approved public cases regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd t071-no-domain-b8-source
+          node --test \
+            ci/phase4/b8-live-parity-static.test.mjs \
+            ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs \
+            ci/phase4/b7-public-release-worker.test.mjs \
+            ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs \
+            ci/phase4/b8-g4-public-projection-contract.test.mjs
+          echo 'T071_NONDOMAIN_SOURCE_NEWS_LIVE_ADS_B8=PASS_SCOPED'
+      - name: B9 existing exact public-truth and global scope/Article Search CI contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd t071-no-domain-b9-source
+          node --test \
+            ci/phase4/b11/t071-softlaunch-public-truth.test.mjs \
+            ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          echo 'T071_NONDOMAIN_SOURCE_BRAND_SEARCH=PASS_SCOPED'
+          echo 'T071_DOMAIN_DNS=jantaboli.in_NOT_CONFIGURED_NOT_REQUIRED_FOR_SOURCE_TESTS'
+          echo 'T071_LIVE_E2E_NOT_RUN=true'
+          echo 'T071_REAL_PUBLISH_E2E_NOT_RUN=true'
+          echo 'T071_FINAL_E8=HOLD'
+          echo 'T071_FINAL_PASS_LOCK=false'
