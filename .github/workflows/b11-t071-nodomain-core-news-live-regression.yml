@@ -31,7 +31,7 @@ jobs:
           ref: b509c60fceb053a51686f67e587d4922a40fa6f4
           path: t071-no-domain-b9-source
           persist-credentials: false
-      - name: Scope: domain/DNS is deferred and no connected systems will be written
+      - name: "Scope: domain/DNS is deferred and no connected systems will be written"
         shell: bash
         run: |
           set -Eeuo pipefail
