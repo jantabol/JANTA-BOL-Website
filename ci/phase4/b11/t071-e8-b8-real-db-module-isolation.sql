@@ -33,8 +33,6 @@ begin
  if (select count(*) from public.articles where id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' and status='published' and headline='Existing News Article')<>1
  or (select count(*) from public.ad_campaigns where id='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' and status='requested')<>1
  then raise exception 'T071_E8_BEFORE_OLD_NEWS_AD_BAD';end if;
- select public.jb_b8_g4_public_case(current_setting('b8.test_case')::uuid) into v;
- exception when undefined_object then null;
 end $baseline$;
 
 -- Existing B8 public case independent RPC works before controlled failure.
@@ -66,12 +64,7 @@ begin
 end $fault$;
 -- The separate real public per-case RPC remains callable during feed failure.
 select public.jb_b8_g4_public_case(:'t071_case'::uuid) as unaffected_case \gset
-do $healthy_peer$
-declare v jsonb;
-begin
- v:=public.jb_b8_g4_public_case(current_setting('b8.fixture_case_uuid')::uuid);
- exception when undefined_object then null;
-end $healthy_peer$;
+
 reset role;
 do $after$
 begin
