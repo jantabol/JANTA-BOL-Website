@@ -65,3 +65,8 @@ Founder specifically authorized conservative handling of restored-data loss in i
 - C3 approved-policy audit: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40540836749
 - C4 machine register: `ci/phase4/b11/t071-c4-e5-thirteen-executed-evidence-log-register-20261027.json`
 - C4 independent runner: `ci/phase4/b11/t071-c4-e5-independent-log-and-provenance.test.mjs`
+
+
+## FOLLOW-UP: exact PR47 now READY on Vercel Preview — original C4 same-source static delivery partially advanced
+The previously described Vercel Preview daily cap has cleared for **one** safe no-production Preview. Independently fetched existing project deployment **`dpl_5se4Pgpa95ipioEreDP8nMF4VqXR`**, **READY** for **exact PR47 SHA `ddd80abbec0abd4f60e1e4556334365f599005ef`**, branch `codex/t071-c1-public-read-secure-20261027`, target NOT Production. Vercel returned **200** for homepage, folder `index.html`, `article.html`, `live.html`, `b9-search.html`, `backend-client.js` (6 routes). Bare root `/article.html`, `/live.html` remained 404; root `/` followed internal redirect to folder homepage. This is a **genuine hosted static release of same PR47 SHA**, supplementing—not replacing—the already independently verified 32/32 original candidate source regressions.
+**C4 reclassified:** exact-source hosted **static** routing **PASS**; real logged-out backend full-body Article read, real Founder/AAL2 publishing, in-browser LIVE OFF/WAIT and 13 independent connected failure E5 remain **HOLD**. Live Supabase read-only confirms reviewed Guest RPC `jb_c1_public_articles` missing; 16 published including 14 QA-marker titles and six empty bodies. No unsafe broad anon grant or public-body SQL was applied. `C4_FINAL_PASS_LOCK=false`.
