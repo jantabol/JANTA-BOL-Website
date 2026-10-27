@@ -12,7 +12,7 @@
 1. **Notifications #03, code source backed:** `40528474982`, job `122274421572`, SUCCESS — **15 actual B8 SQL migrations** in disposable PG17, actual notification INSERT fails, concurrently actual original B8 case function commits under simulated Owner/AAL2; original News+Ad+notification sentinel unchanged; storage recovers; no fake notification delivered. Productwide/messaging provider E8 still HOLD.
 2. **Advertising #06 + Payments #11, original project B7 candidate SQL:** `40530048228`, job `122280044810`, SUCCESS — real PG17 authentic `b7-payment-fixture.sql`, `20261010_b7_manual_payment_REVIEW_ONLY.sql`, `20261012_b7_lifecycle_state_guard_REVIEW_ONLY.sql`, synthetic Owner enabled. Existing source `jb_ad_confirm_manual_payment_internal` attempts real PostgreSQL payment INSERT during engineered CHECK violation; fails. Independent SQL read-back confirms NO `confirmed` payment, NO campaign `paid` or `live`, attempted direct LIVE promotion denied by original trigger. Storage repair then missing receipt still denied. **No real bank transfer or live Ads/provider action.**
 3. **Accountability #08 (previous genuine partial):** `40504645684`, SUCCESS — real isolated B8 public RPC feed fails on scoped permission removal; independent peer public-case RPC continues; original synthetic News + Ad rows preserved; grant restored.
-4. **Database #13 (previous real local backup-crash-restore, NOT full false-commit proof):** `40501228346`, SUCCESS — actual disposable PG17 crash + restore, RPO-point age 0.422s / observed local RTO 1.261s, **one acknowledged post-checkpoint synthetic committed row lost**; no hosted SLA or live Article E2E.
+4. **Database #13 — NEW actual failed-write/false-ACK proof:** `40531488909`, job `122285201848`, SUCCESS. Actual original B8 `jb_b8_g1_owner_create_case` inside isolated PostgreSQL17 wrote and committed a baseline record. PG17 `CHECK(false) NOT VALID` caused a subsequent real source RPC INSERT to fail with `check_violation`; no UUID/success was emitted, zero partial rows persisted and independent Article/Ad records survived. After removing the fault the original RPC genuinely committed one new case, and disabling synthetic Owner/AAL2 denied an additional write. **Scope:** genuine PG17 + synthetic Owner auth, NOT hosted client/Supabase/Edge E8. Separately previous backup-crash-restore `40501228346`, SUCCESS: checkpoint point-age 0.422s / local RTO 1.261s with **one acknowledged post-checkpoint synthetic committed row lost**, not production SLA.
 
 ## Frozen thirteen-family C2 status: no hidden gate
 
@@ -30,9 +30,9 @@
 | 10 | Provider | PASS | no genuine Larix/external encoder fault | HOLD |
 | 11 | Payments | PASS | **PASS scoped PG17 original B7 payment write rejection, no false paid/Ad LIVE** | HOLD |
 | 12 | Messaging | PASS | real notification storage outage proven **but no separate external delivery/committed event replay fault** | HOLD |
-| 13 | Database | PASS | actual disposable PG17 crash and restore, ACKed loss explicitly disclosed | HOLD |
+| 13 | Database | PASS | **NEW real PG17 original B8 failed-write no-false-ACK, rollback, recovery, Owner AAL2 denial `40531488909`**; original crash/restore still disclosed one ACKed post-checkpoint lost row `40501228346` | HOLD |
 
-**Counts:** 13/13 real *source JS* adapters tested with **injected fake network/provider responses**. **Four unique functional families (#03, #06, #08, #11) have actual local PG17 component-level fault and recovery evidence**. #13 has an actual DB crash/recovery but not an accepted full-system false-ack transaction proof. **0/13 are independently certified as integrated full product E8.**
+**Counts:** 13/13 real *source JS* adapters tested with **injected fake network/provider responses**. **Five unique functional families (#03, #06, #08, #11, #13) have actual local PostgreSQL17 component-level fault evidence**, including a newly executed **real original B8 failed write that did NOT falsely acknowledge a commit**. Prior crash/restore has a known acknowledged post-checkpoint loss; do NOT claim zero-RPO or full hosted transaction continuity. **0/13 are independently certified as integrated full product E8.**
 
 ## Non-negotiable C2 completion condition already frozen
 
@@ -57,5 +57,6 @@ A valid **C2 COMPLETE/PASS** needs *each of thirteen* families under the **same 
 - Notification fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40528474982
 - B7 Ad and Payment fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40530048228
 - B8 Accountability fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40504645684
+- New original B8 DB false-ACK fault: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40531488909
 - Real disposable DB backup/crash/restore: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40501228346
 - Thirteen source-only adapter fault exercise: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40508982711
