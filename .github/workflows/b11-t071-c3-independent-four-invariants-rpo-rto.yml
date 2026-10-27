@@ -1,0 +1,54 @@
+name: B11 T071 C3 Independent Four Invariants + Actual PG17 RPO RTO Log Audit
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-c3-four-invariants-recovery-review-evidence-v1.json'
+      - 'ci/phase4/b11/t071-c3-four-safety-and-recovery-evidence.test.mjs'
+      - '.github/workflows/b11-t071-c3-independent-four-invariants-rpo-rto.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t071-c3-four-invariants-recovery-review-evidence-v1.json'
+      - 'ci/phase4/b11/t071-c3-four-safety-and-recovery-evidence.test.mjs'
+      - '.github/workflows/b11-t071-c3-independent-four-invariants-rpo-rto.yml'
+permissions:
+  actions: read
+  contents: read
+jobs:
+  c3_actual_historical_logs_and_recovery_metrics_integrity:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Immutable source-only checkout, no write authority
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify strictly read-only scope and JSON/node syntax
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          node --check ci/phase4/b11/t071-c3-four-safety-and-recovery-evidence.test.mjs
+          node -e "JSON.parse(require('fs').readFileSync('ci/phase4/b11/t071-c3-four-invariants-recovery-review-evidence-v1.json','utf8'))"
+          echo "C3_JANTA_BOL_READ_ONLY_GITHUB_LOG_AUDIT=READY"
+      - name: Independently verify all four original behaviors, actual old runs and recovery SHA
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c3-four-safety-and-recovery-evidence.test.mjs
+          echo "C3_FOUR_MASTER_INVARIANTS_SCOPED_LOG_PROVENANCE=PASS"
+          echo "C3_PRACTICAL_RECOVERY_REVIEW_LOCAL=COMPLETE"
+          echo "C3_FOUNDER_RISK_POLICY=NOT_APPROVED"
+          echo "C3_FULL_CONNECTED_REAL_RELEASE_E8=HOLD"
+          echo "C3_FINAL_PASS_LOCK=false"
+          echo "T071_FINAL_PASS_LOCK=false"
+          echo "T072_STARTED=false"
