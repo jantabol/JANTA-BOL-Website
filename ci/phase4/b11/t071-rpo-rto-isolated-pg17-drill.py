@@ -101,6 +101,7 @@ def main():
           must(denied=='0','ANON_RLS_BYPASS')
           return values
       try:
+          print('T071_STAGE=BOOT')
           boot=docker('run','-d','--rm','--name',ref,'--network','none',
                       '-e','POSTGRES_PASSWORD=T071_EPHEMERAL_DUMMY_ONLY',
                       'postgres:17')
@@ -112,12 +113,17 @@ def main():
               if r.returncode==0:healthy=True;break
               time.sleep(.2)
           must(healthy,'PG17_NOT_READY')
+          print('T071_STAGE=VERSION')
           pg_version=psql("SHOW server_version_num;",'postgres').stdout.decode().strip()
           must(pg_version.startswith('17'),'WRONG_POSTGRES_MAJOR')
+          print('T071_STAGE=ROLE_CREATE')
           docker('exec',ref,'psql','-U','postgres','-d','postgres','-X','-qAt',
                  '-v','ON_ERROR_STOP=1','-c','CREATE ROLE t071_public_test NOLOGIN;')
+          print('T071_STAGE=DB_CREATE')
           docker('exec',ref,'createdb','-U','postgres','t071_original')
+          print('T071_STAGE=FIXTURE_SQL')
           psql(fixture_sql())
+          print('T071_STAGE=BASELINE_VERIFY')
           must(verify('t071_original')=='only-synthetic-article|T071-SYNTHETIC-GRIEVANCE|1|1|1','BASELINE_INVALID')
           # Synthetic five-media bundle, same categories as old G15 rehearsal.
           media=tmp/'media';media.mkdir()
@@ -133,6 +139,7 @@ def main():
           with tarfile.open(archive,'w') as tar:
               for key in sorted(items):tar.add(media/key,arcname=key,recursive=False)
           # Establish last VERIFIED, restorable checkpoint BEFORE fault.
+          print('T071_STAGE=PG_DUMP')
           dump=tmp/'trusted_checkpoint.pg17.dump'
           with dump.open('wb') as o:
               r=docker('exec',ref,'pg_dump','-U','postgres','-d','t071_original',
@@ -140,14 +147,17 @@ def main():
               must(r.returncode==0 and bool(r.stdout),'SOURCE_BACKUP_FAILED')
               o.write(r.stdout)
           verified_dump_sha=sha(dump.read_bytes())
+          print('T071_STAGE=RESTORE_VERIFIED')
           docker('exec',ref,'createdb','-U','postgres','t071_verified')
           with dump.open('rb') as inp:
               docker('exec','-i',ref,'pg_restore','-U','postgres','-d','t071_verified',
                      '--no-owner',input_data=inp.read())
+          print('T071_STAGE=VERIFY_CHECKPOINT')
           verify('t071_verified')
           checkpoint_at=iso()
           # One ACKNOWLEDGED COMMITTED row arrives AFTER checkpoint. Restore must
           # surface it as lost, not pretend RPO=0, a key negative test.
+          print('T071_STAGE=POST_CHECKPOINT_WRITE')
           psql("""INSERT INTO t071_fixture.articles(id,slug)
               VALUES ('00000000-0000-4000-8000-000000000199','post-checkpoint-committed');""")
           must(psql("SELECT count(*) FROM t071_fixture.articles;").stdout.decode().strip()=='2',
@@ -155,6 +165,7 @@ def main():
           time.sleep(.25)
           incident_at=iso()
           incident_clock=time.monotonic()
+          print('T071_STAGE=CRASH')
           docker('kill','--signal=KILL',ref)
           down=docker('exec',ref,'psql','-U','postgres','-d','t071_original',
                       '-X','-qAt','-c','SELECT 1;',ok=False)
@@ -162,6 +173,7 @@ def main():
           # Crash recover PostgreSQL engine on same disposable container. Simulate
           # irrecoverable DB loss with ONLY synthetic t071_original, then re-create
           # SAME database endpoint from trusted dump.
+          print('T071_STAGE=RESTART')
           docker('start',ref)
           available=False
           for _ in range(70):
@@ -169,11 +181,13 @@ def main():
               if p.returncode==0:available=True;break
               time.sleep(.2)
           must(available,'PG17_CRASH_RESTART_FAILED')
+          print('T071_STAGE=REBUILD_SAME_ENDPOINT')
           docker('exec',ref,'dropdb','-U','postgres','--if-exists','t071_original')
           docker('exec',ref,'createdb','-U','postgres','t071_original')
           with dump.open('rb') as inp:
               docker('exec','-i',ref,'pg_restore','-U','postgres','-d','t071_original',
                      '--no-owner',input_data=inp.read())
+          print('T071_STAGE=RESTORED_VERIFY')
           verify('t071_original')
           must(psql("SELECT count(*) FROM t071_fixture.articles WHERE slug='post-checkpoint-committed';"
                     ).stdout.decode().strip()=='0','LOSS_NOT_ACCOUNTED_FOR')
