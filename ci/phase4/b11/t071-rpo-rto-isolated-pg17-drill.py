@@ -102,7 +102,7 @@ def main():
           return values
       try:
           print('T071_STAGE=BOOT')
-          boot=docker('run','-d','--rm','--name',ref,'--network','none',
+          boot=docker('run','-d','--name',ref,'--network','none',
                       '-e','POSTGRES_PASSWORD=T071_EPHEMERAL_DUMMY_ONLY',
                       'postgres:17')
           started=True
