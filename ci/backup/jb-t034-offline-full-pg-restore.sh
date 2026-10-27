@@ -54,7 +54,8 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
-         ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' &&
+         ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
@@ -222,7 +223,8 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
-         ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' &&
+         ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
@@ -435,7 +437,8 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
         "${GITHUB_HEAD_REF:-}" == 'review/t034-rca7-canonical-security-fake-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
-         ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' &&
+         ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
@@ -472,6 +475,30 @@ if [[ "${JB_T070_JOINT_PROBE:-0}" == 1 ]]; then
   cmp -s "$src/t070_snapshot_storage.json" "$temp/t070-restored-media-ids.json" ||
     fail 'T070 restored original Storage UUID/version metadata differs from original source MVCC'
   echo 'T070_RESTORED_PG17_AND_ORIGINAL_FIVE_FILE_UUIDS_METADATA=EXACT_MATCH'
+  [[ -s "$src/t070_representative_identity.txt" ]] || \
+    fail 'restored representative identity source manifest missing'
+  [[ "$(wc -l < "$src/t070_representative_identity.txt")" == 25 ]] || \
+    fail 'restored representative identity source scope incomplete'
+  docker cp ci/phase4/b11/t070-representative-identity.sql \
+    "$clone:/tmp/t070-representative-identity.sql" >/dev/null 2>&1 || \
+    fail 'reviewed representative identity SQL missing from offline clone'
+  docker exec -u postgres "$clone" psql -X -qAt -v ON_ERROR_STOP=1 \
+    -U supabase_admin -d postgres -f /tmp/t070-representative-identity.sql \
+    > "$temp/t070-representative-restored.txt" 2> "$temp/t070-representative.err" || \
+    fail 'read-only representative identity verification failed in offline clone'
+  cmp -s "$src/t070_representative_identity.txt" \
+    "$temp/t070-representative-restored.txt" || \
+    fail 'Article/PURL, Grievance, Live, Ad and Auth identities differ in restored clone'
+  for n in 19 20 21 22 23 24 25; do
+    grep -Fxq "${n}_orphan_check=0" "$temp/t070-representative-restored.txt" || \
+      fail 'restored representative relationships contain unresolved orphans'
+  done
+  echo 'T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES=EXACT_MATCH'
+  if grep -Eq '^13_public_ad_payments=[1-9][0-9]*:' "$temp/t070-representative-restored.txt"; then
+    echo 'T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=true'
+  else
+    echo 'T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false'
+  fi
 fi
 
 post_settings="$(q "SELECT current_setting('cron.database_name') || '|' || current_setting('cron.launch_active_jobs') || '|' || current_setting('pg_net.database_name')")" ||

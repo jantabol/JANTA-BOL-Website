@@ -163,6 +163,17 @@ if [[ "$dual" == 1 ]]; then
       fail 'cannot capture private original-file identities from same full DB snapshot'
     [[ -s "$work/plain/t070_snapshot_storage.json" ]] ||
       fail 'empty protected snapshot media metadata'
+    # The SAME exported PostgreSQL MVCC snapshot supplies editorial, Auth,
+    # Live and Ads identity proof. Never print digest or identifier contents.
+    jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql \
+      "$work/plain/t070_representative_identity.txt" || \
+      fail 'cannot capture source representative identity and relationship proof'
+    [[ "$(wc -l < "$work/plain/t070_representative_identity.txt")" == 25 ]] || \
+      fail 'T070 incomplete representative identity manifest'
+    for n in 19 20 21 22 23 24 25; do
+      grep -Fxq "${n}_orphan_check=0" "$work/plain/t070_representative_identity.txt" || \
+        fail 'T070 source relationship integrity not verified'
+    done
     mkdir -m 700 "$work/plain/media"
     node ci/phase4/b11/storage-media-manual-cli.mjs export-manual \
       --root "$work/plain/media" > "$work/private-media-export.log" 2>&1 ||
@@ -170,9 +181,42 @@ if [[ "$dual" == 1 ]]; then
     node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
       --root "$work/plain/media" > "$work/private-media-verify.log" 2>&1 ||
       fail 'source original five Storage file bytes fail SHA256 validation'
+    # Fresh READ-ONLY PG lookup AFTER original-byte GET and stable listing;
+    # never reuse the exported MVCC snapshot for this current-state gate.
+    {
+      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
+      cat ci/phase4/b11/t070-joint-storage-snapshot-identity.sql
+      printf '\nCOMMIT;\n'
+    } | docker run --rm -i --network=host postgres:17 \
+      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
+      > "$work/plain/t070_post_media_current_storage.json" \
+      2> "$work/private-post-media-db.err" || \
+      fail 'fresh read-only Storage DB post-media identity check unavailable'
+    [[ -s "$work/plain/t070_post_media_current_storage.json" ]] || \
+      fail 'fresh Storage DB post-media identity empty'
+    # One additional FRESH single-statement READ ONLY source transaction, after
+    # media GET. All 25 representative row/relationship digests must match the
+    # authoritative raw-dump MVCC snapshot; else do not assert a trusted point.
+    # No auth identities, PURL, private grievance records or digests reach logs.
+    {
+      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
+      cat ci/phase4/b11/t070-representative-identity.sql
+      printf '\nCOMMIT;\n'
+    } | docker run --rm -i --network=host postgres:17 \
+      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
+      > "$work/plain/t070_post_media_representative_identity.txt" \
+      2> "$work/private-post-representative-db.err" || \
+      fail 'fresh read-only representative DB post-media identity unavailable'
+    [[ "$(wc -l < "$work/plain/t070_post_media_representative_identity.txt")" == 25 ]] || \
+      fail 'T070 post-media representative identity scope incomplete'
+    cmp -s "$work/plain/t070_representative_identity.txt" \
+      "$work/plain/t070_post_media_representative_identity.txt" || \
+      fail 'source Article/Grievance/LIVE/Ads/Auth changed during joint media acquisition'
+    echo 'T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE'
     node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
       "$work/plain/t070_snapshot_storage.json" \
-      "$work/plain/media/config/storage-export-readonly-summary.json" ||
+      "$work/plain/media/config/storage-export-readonly-summary.json" \
+      "$work/plain/t070_post_media_current_storage.json" || \
       fail 'source Storage original five objects mismatch raw PG snapshot file identities'
     echo 'T070_REAL_SOURCE_FIVE_MEDIA_CAPTURED_WITH_PG_MVCC_SNAPSHOT=PASS'
   fi
@@ -198,7 +242,7 @@ if [[ "$dual" == 1 ]]; then
   bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
 fi
 if [[ "$joint" == 1 ]]; then
-  bundle+=(t070_snapshot_storage.json media)
+  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -271,12 +315,31 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/t070_snapshot_storage.json" \
       "$work/recovered/t070_snapshot_storage.json" ||
       fail 'encrypted DB snapshot original media manifest changed in B2 roundtrip'
+    [[ -s "$work/recovered/t070_representative_identity.txt" ]] || \
+      fail 'representative identity absent in encrypted archive'
+    cmp -s "$work/plain/t070_representative_identity.txt" \
+      "$work/recovered/t070_representative_identity.txt" || \
+      fail 'representative identity changed during AGE B2 roundtrip'
+    [[ -s "$work/recovered/t070_post_media_representative_identity.txt" ]] || \
+      fail 'fresh post-media representative identity absent in encrypted archive'
+    cmp -s "$work/plain/t070_post_media_representative_identity.txt" \
+      "$work/recovered/t070_post_media_representative_identity.txt" || \
+      fail 'fresh post-media representative identity changed in AGE B2 roundtrip'
+    cmp -s "$work/recovered/t070_representative_identity.txt" \
+      "$work/recovered/t070_post_media_representative_identity.txt" || \
+      fail 'source representative identity became inconsistent during media acquisition'
+    [[ -s "$work/recovered/t070_post_media_current_storage.json" ]] || \
+      fail 'fresh PG post-media identity absent in encrypted archive'
+    cmp -s "$work/plain/t070_post_media_current_storage.json" \
+      "$work/recovered/t070_post_media_current_storage.json" || \
+      fail 'post-media PG identity changed during AGE B2 roundtrip'
     node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
       --root "$work/recovered/media" > "$work/private-media-restored.log" 2>&1 ||
       fail 'five ORIGINAL Storage file bytes not recovered from encrypted B2 archive'
     node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
       "$work/recovered/t070_snapshot_storage.json" \
-      "$work/recovered/media/config/storage-export-readonly-summary.json" ||
+      "$work/recovered/media/config/storage-export-readonly-summary.json" \
+      "$work/recovered/t070_post_media_current_storage.json" ||
       fail 'restored real PG snapshot does not match restored original media identities'
     echo 'T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS'
     echo 'T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED'
