@@ -1,0 +1,83 @@
+# JANTA BOL — Phase 4 / B11 / P4-T070
+## G19 independently cross-checked backend recovery checkpoint — 27 October 2026 (IST)
+
+**Source of truth:** original Phase-4 Master Execution Pack, Topic 10 / RUN-10 / RECOV-012–018, requiring *real restore, preserved identities, representative Article/Grievance/LIVE/Ads/Auth/permissions/config, and E1+E2+E4+E5+E8 proof*. This report is an independent *bounded* backend audit; it is **not** the E8 completion certificate.
+
+**GitHub immutable run:** https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40452402698 — Run #3 / job 122017925138, actor `jantabol`, first `workflow_dispatch` attempt on protected main SHA `f447231c0677644ca5a44cc19f12cf0314ff38ea`, environment approved by Founder; GitHub outcome `success`, end 2026-10-27 05:09:29 UTC, 13m58s total. All six primary execution steps concluded SUCCESS. Audit independently read actual Actions logs rather than taking the green icon as final acceptance.
+
+### 1. VERIFIED REAL DRILL — bounded data-plane restore = PASS
+
+| Evidence in actual Run #3 job logs | Result |
+|---|---|
+| Founder-only protected manual workflow + exact main SHA | PASS |
+| T070_SAFETY_PREFLIGHT | PASS |
+| Same exported PG MVCC point for raw dump, Storage ID snapshot and representative identities | CONFIRMED for database snapshot scope |
+| T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES | STABLE within bounded source check |
+| T070_REAL_SOURCE_DB_SNAPSHOT_FIVE_ORIGINAL_STORAGE_METADATA_BOUND | PASS |
+| T070_FRESH_READ_ONLY_PG_POST_MEDIA_ID_TIMESTAMP_PARITY | PASS |
+| T070_STORAGE_API_SUBMILLISECOND_LOSS_WITH_FRESH_PG_GUARD | true (3-digit Storage API timestamp reconciled ONLY with independently stable, exact 6-digit PG metadata) |
+| Offsite encrypted JANTA BOL B2 ciphertext upload/readback and private ephemeral-recipient AGE decrypt | PASS |
+| T034_FULL_PG17_DATABASE_RESTORED | true, disposable offline PG17 |
+| T034_SOURCE_TO_CLONE_26_METRICS | EXACT_MATCH |
+| T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS | EXACT_MATCH |
+| T070_RESTORED_PG17_AND_ORIGINAL_FIVE_FILE_UUIDS_METADATA | EXACT_MATCH |
+| T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES | EXACT_MATCH |
+| T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES | **PASS** |
+
+The isolated PG17 database + five genuine private/public Storage bytes were recovered from one actual encrypted B2 bundle in one run. All five includes **two grievance-private**, **one private editorial** and **two public media** originals. The legacy DB-only nested restore substep prints `STORAGE_FILE_BYTES_RESTORED=false`; that refers to the nested DB-only step, not the later successful T070 combined file verification.
+
+Important limits: database Auth *rows/UUIDs* restored, **not** operational GoTrue login, session revocation, MFA or JWT runtime. The five original bytes were validated in an isolated filesystem, **not** a newly running Storage API service or policies endpoint. One same-run validated manifest does not prove a universal atomic write freeze.
+
+### 2. INDEPENDENT READ-ONLY LIVE SOURCE POST-RUN AUDIT — PASS within metadata scope
+
+Re-executed the exact 25-family `ci/phase4/b11/t070-representative-identity.sql` through the connected JANTA BOL Supabase project `vrffsnkycvjithwtiylt`, inside a `REPEATABLE READ, READ ONLY` transaction. Result **25/25 metrics present; seven relation-orphan checks all 0**. Compared *aggregate counts only* below; private row digests/IDs/paths and personal data are NOT published.
+
+| Latest live-source relation | Aggregate |
+|---|---:|
+| Articles / versions / sources | 32 / 878 / 31 |
+| Grievances / history / evidence | 6 / 57 / 2 |
+| LIVE sessions / operations / generations | 16 / 75 / 21 |
+| LIVE final reports / deletion ledger | 2 / 1 |
+| Ad campaigns / payments / ad history | 7 / **0** / 29 |
+| Auth users / user-role records | 5 / 4 |
+| Original Storage metadata objects | 5 |
+| All 7 cross-table orphan-link checks | **0** |
+
+Additional independent metadata read: **100/100** public ordinary tables have RLS enabled; **81** public/private/Storage app policies; 3/3 expected Storage bucket definitions present; **auth.sessions=73**, **auth.mfa_factors=2**, **3 active pg_cron jobs**. This is *source inventory* only, never a functioning restored Auth/runtime check, nor proof of no transient changes between snapshots. Source still has 0 LIVE updates and 0 ad payments: no fabricated positive sample or positive production payment recovery PASS.
+
+### 3. AUTH / EDGE / VERCEL READ-ONLY INVENTORY — OBSERVED, NOT RESTORED
+
+- Project identity reconfirmed: **JANTA BOL**, `ACTIVE_HEALTHY`, region `ap-south-1`, PostgreSQL 17.6.1.155.
+- Supabase deployed Edge inventory: **13/13 ACTIVE**, all 13 current slug/version/verify_jwt fields matched the existing G18 inventory file `ci/phase4/b11/t070-g18-live-edge-version-inventory.json`. Current flags: 8 `verify_jwt=true`, 5 `verify_jwt=false`. A false flag alone does NOT prove insecure: custom auth may apply; neither does inventory prove that authorization was independently exercised or functions restored into a disposable project.
+- Previously documented associated Vercel project `prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI` (`shubham-pichhore-2028`): metadata reports latest Production deployment READY (ID `dpl_nFSo2MXg3ASBPgUfXRYDzv2ybP8C`), Node 24.x. `filter_project_envs(decrypt=false)` returned 0 visible entries, hiddenProductionEnvCount=0. These are metadata results **not source-vs-recreated runtime configuration parity**, and do not establish absence of external secrets or settings.
+- Supabase security advisor metadata (unchanged, not automatically edited): 43 `rls_enabled_no_policy` INFO, 22 `anon_security_definer_function_executable` WARN, 117 `authenticated_security_definer_function_executable` WARN, 1 leaked-password protection WARN. Findings are NOT confirmed exploits; no policies/RPCs modified merely to turn warnings green.
+
+### 4. E8 FINAL ACCEPTANCE — STILL HOLD (NO FAKE PASS)
+
+Exact honest terminal markers from the real workflow:
+```text
+T070_DB_STORAGE_UNIVERSAL_ATOMIC_FREEZE_PROVEN=false
+T070_AUTH_EDGE_VERCEL_RUNTIME_REBUILT=false
+T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED
+T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false
+T070_FINAL_INDEPENDENT_E8=NOT_RUN
+T070_FINAL_LOCK=HOLD
+```
+
+| G19 requirement | Independently evidenced conclusion |
+|---|---|
+| Actual combined genuine DB + 5 original files + source/clone identities | **PASS (data-plane scope only)** |
+| Database row and permission/ACL parity in disconnected PG17 clone | **PASS limited scope** |
+| Universal bounded-write quiescence / all 20 writer families / offline queues | **NOT VERIFIED** (3 cron jobs active at current read) |
+| Real isolated GoTrue/Auth/MFA/session rotation/revocation/negative-access runtime | **NOT RUN** |
+| Real isolated Storage private HTTP access/RLS and all 13 Edge Functions | **NOT RUN** |
+| Actual Vercel/Edge/GoTrue/config/secret *parity* after independent reconstruction | **NOT RUN** |
+| Real positive production Ad payment / LIVE update record recovered | **NOT EXERCISABLE** (source counts zero; synthetic fixture distinction required) |
+| B2 ciphertext independent owner-durable AGE private-key recovery of this exact bundle | **NOT VERIFIED**; ephemeral workflow recipient proven only |
+| Independent complete E1/E2/E4/E5/E8, real Android restored-runtime proof, Founder final approval | **NOT RUN** |
+
+**Security conclusion:** No production schema write, policy weakening, paid Supabase/Vercel resource creation, B2 overwrite, private key transfer, or Cricket/Saarthi access was performed in this *post-run review*. No new production restore or re-run of already successful Run #3. Security advisors are recorded, not auto-remediated.
+
+**Decision:** G17 **REAL COMBINED OFFLINE RECOVERY = PASS/LOCK (bounded component proof)**. G18 **SOURCE PLATFORM INVENTORY = VERIFIED**. G19 **INDEPENDENT BACKEND AUDIT COMPLETE, FULL E8 NOT SATISFIED**. Whole **P4-T070 FINAL PASS + LOCK = HOLD**; **P4-T071 NOT STARTED**.
+
+**Only remaining substantive route to Final Lock:** a security-reviewed disposable GoTrue/Storage/Edge/Vercel runtime with real negative-access tests, a provably coherent production write-barrier and recovery-point scope, independent E1/E2/E4/E5/E8 evidence plus Founder final approval. Current tools only confirm existing production metadata and the genuine offline data-plane restore; metadata cannot substitute for isolated runtime or unattended Founder security approval. Repeating Run #3 without a specific defect is unnecessary.
