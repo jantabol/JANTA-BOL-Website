@@ -673,31 +673,47 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
 }
 
   async function getArticle(id,{privateData=false}={}){
-    const publicCols='id,slug,title,body,excerpt,cover_image_url,video_url,additional_media_urls,public_attribution,category,geography_level,district,location,reporter_name,status,published_at,created_at,updated_at,version,news_date,news_time,breaking,top_story';
+    // Existing article.html calls getArticle({privateData:false}) even in its
+    // authenticated ?preview=admin mode. Preserve that private Owner preview
+    // ONLY after repeating the Owner/AAL2 check: no public RPC may convert
+    // a draft into published, and no guest may reach the private table.
+    if(!privateData && /(?:[?&])preview=admin(?:&|$)/.test(String(global.location.search||''))){
+      await requireOwner();
+      privateData=true;
+    }
+    if(!privateData){
+      // Guest and signed-in public readers share the SAME strictly public,
+      // SQL-enforced published/nondeleted projection. Never use a broad
+      // anon SELECT grant; a missing RPC means unavailable, not private fallback.
+      if(!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id||''))){
+        return null;
+      }
+      const {data,error}=await client.rpc('jb_c1_public_articles',{
+        p_article_id:id,p_limit:1
+      });
+      if(error)throw error;
+      if(!data || !Array.isArray(data.items)){
+        throw new Error('PUBLIC_ARTICLE_RESPONSE_INVALID');
+      }
+      const row=data.items[0];
+      if(!row)return null;
+      if(row.status!=='published' || row.id!==id ||
+         !row.published_at){
+        throw new Error('PUBLIC_ARTICLE_PRIVACY_INVARIANT');
+      }
+      return normalize(row,{});
+    }
 
-    let q=client
+    // Existing Owner/Editor/Reporter private path is unchanged and remains
+    // subject to existing auth, RLS, audit and explicit caller permission.
+    const {data,error}=await client
       .from('articles')
-      .select(privateData?'*':publicCols)
+      .select('*')
       .eq('id',id)
       .maybeSingle();
-
-    const {data,error}=await q;
-
-    if(error){
-      throw error;
-    }
-
-    if(!data){
-      return null;
-    }
-
-    let s={};
-
-    if(privateData){
-      s=await getSource(id);
-    }
-
-    return normalize(data,s);
+    if(error)throw error;
+    if(!data)return null;
+    return normalize(data,await getSource(id));
   }
 
   async function listByStatus(status){
@@ -735,21 +751,19 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
       )
     );
   }
-    async function listPublishedPublic(limit=20){
-    const {data,error}=await client
-      .from('articles')
-      .select('id,slug,title,body,excerpt,cover_image_url,video_url,additional_media_urls,public_attribution,category,geography_level,district,location,reporter_name,status,published_at,created_at,updated_at,version,news_date,news_time,breaking,top_story')
-      .eq('status','published')
-      .order('published_at',{ascending:false})
-      .limit(limit);
-
-    if(error){
-      throw error;
+  async function listPublishedPublic(limit=20){
+    const safeLimit=Math.max(1,Math.min(30,Number.isFinite(Number(limit))?Math.trunc(Number(limit)):20));
+    const {data,error}=await client.rpc('jb_c1_public_articles',{
+      p_article_id:null,p_limit:safeLimit
+    });
+    if(error)throw error;
+    if(!data || !Array.isArray(data.items)){
+      throw new Error('PUBLIC_ARTICLE_FEED_RESPONSE_INVALID');
     }
-
-    return (data||[]).map(
-      r=>normalize(r,{})
-    );
+    if(data.items.length>safeLimit || data.items.some(r=>r?.status!=='published'||!r.published_at)){
+      throw new Error('PUBLIC_ARTICLE_FEED_PRIVACY_INVARIANT');
+    }
+    return data.items.map(r=>normalize(r,{}));
   }
 
   async function saveSource(item,prevVerification){
