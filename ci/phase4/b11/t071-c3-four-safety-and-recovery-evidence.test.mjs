@@ -33,9 +33,15 @@ function audit(x){
  assert.equal(v.reference_run_id,40501228346);
  assert.equal(v.reference_job_id,122179118305);
  assert.equal(v.reference_evidence_sha256,'b5edd1774be77b52ecc2cb47e59a6797a20dfee354461dbd98095220808d2220');
- const stamp=s=>Date.parse(s);
- assert.equal(Math.round((stamp(v.incident_start_at_utc)-stamp(v.last_verified_restorable_checkpoint_at_utc))),422);
- assert.equal(Math.round((stamp(v.independently_observed_service_restored_at_utc)-stamp(v.incident_start_at_utc))),1261);
+ // Date.parse truncates sub-millisecond precision. Preserve the original
+ // PostgreSQL incident log's six fractional digits before comparing times.
+ const stampMicro=s=>{
+  const match=/^(.*)\.(\d{6})Z$/.exec(s);
+  assert(match,'expected exact UTC microsecond timestamp');
+  return BigInt(Date.parse(match[1]+'Z'))*1000n+BigInt(match[2]);
+ };
+ assert.equal(Math.round(Number(stampMicro(v.incident_start_at_utc)-stampMicro(v.last_verified_restorable_checkpoint_at_utc))/1000),422);
+ assert.equal(Math.round(Number(stampMicro(v.independently_observed_service_restored_at_utc)-stampMicro(v.incident_start_at_utc))/1000),1261);
  assert.equal(v.observed_local_rpo_seconds,0.422);
  assert.equal(v.observed_local_rto_seconds,1.261);
  assert.equal(v.post_checkpoint_committed_synthetic_article_rows_lost,1);
