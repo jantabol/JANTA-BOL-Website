@@ -117,8 +117,13 @@ def main():
           pg_version=psql("SHOW server_version_num;",'postgres').stdout.decode().strip()
           must(pg_version.startswith('17'),'WRONG_POSTGRES_MAJOR')
           print('T071_STAGE=ROLE_CREATE')
-          docker('exec',ref,'psql','-U','postgres','-d','postgres','-X','-qAt',
-                 '-v','ON_ERROR_STOP=1','-c','CREATE ROLE t071_public_test NOLOGIN;')
+          role_result=docker('exec',ref,'psql','-U','postgres','-d','postgres','-X','-qAt',
+                 '-v','ON_ERROR_STOP=1','-c','CREATE ROLE t071_public_test NOLOGIN;',ok=False)
+          if role_result.returncode:
+              # This command contains only hard-coded synthetic SQL. Never echo
+              # arbitrary production command output from other operations.
+              print('T071_LOCAL_ROLE_SQL_ERROR='+role_result.stderr.decode(errors='replace').strip()[:200])
+          must(role_result.returncode==0,'PG17_SYNTHETIC_ROLE_CREATE_FAILED')
           print('T071_STAGE=DB_CREATE')
           docker('exec',ref,'createdb','-U','postgres','t071_original')
           print('T071_STAGE=FIXTURE_SQL')
