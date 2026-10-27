@@ -194,6 +194,25 @@ if [[ "$dual" == 1 ]]; then
       fail 'fresh read-only Storage DB post-media identity check unavailable'
     [[ -s "$work/plain/t070_post_media_current_storage.json" ]] || \
       fail 'fresh Storage DB post-media identity empty'
+    # One additional FRESH single-statement READ ONLY source transaction, after
+    # media GET. All 25 representative row/relationship digests must match the
+    # authoritative raw-dump MVCC snapshot; else do not assert a trusted point.
+    # No auth identities, PURL, private grievance records or digests reach logs.
+    {
+      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
+      cat ci/phase4/b11/t070-representative-identity.sql
+      printf '\nCOMMIT;\n'
+    } | docker run --rm -i --network=host postgres:17 \
+      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
+      > "$work/plain/t070_post_media_representative_identity.txt" \
+      2> "$work/private-post-representative-db.err" || \
+      fail 'fresh read-only representative DB post-media identity unavailable'
+    [[ "$(wc -l < "$work/plain/t070_post_media_representative_identity.txt")" == 25 ]] || \
+      fail 'T070 post-media representative identity scope incomplete'
+    cmp -s "$work/plain/t070_representative_identity.txt" \
+      "$work/plain/t070_post_media_representative_identity.txt" || \
+      fail 'source Article/Grievance/LIVE/Ads/Auth changed during joint media acquisition'
+    echo 'T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE'
     node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
       "$work/plain/t070_snapshot_storage.json" \
       "$work/plain/media/config/storage-export-readonly-summary.json" \
@@ -223,7 +242,7 @@ if [[ "$dual" == 1 ]]; then
   bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
 fi
 if [[ "$joint" == 1 ]]; then
-  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)
+  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -301,6 +320,14 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/t070_representative_identity.txt" \
       "$work/recovered/t070_representative_identity.txt" || \
       fail 'representative identity changed during AGE B2 roundtrip'
+    [[ -s "$work/recovered/t070_post_media_representative_identity.txt" ]] || \
+      fail 'fresh post-media representative identity absent in encrypted archive'
+    cmp -s "$work/plain/t070_post_media_representative_identity.txt" \
+      "$work/recovered/t070_post_media_representative_identity.txt" || \
+      fail 'fresh post-media representative identity changed in AGE B2 roundtrip'
+    cmp -s "$work/recovered/t070_representative_identity.txt" \
+      "$work/recovered/t070_post_media_representative_identity.txt" || \
+      fail 'source representative identity became inconsistent during media acquisition'
     [[ -s "$work/recovered/t070_post_media_current_storage.json" ]] || \
       fail 'fresh PG post-media identity absent in encrypted archive'
     cmp -s "$work/plain/t070_post_media_current_storage.json" \
