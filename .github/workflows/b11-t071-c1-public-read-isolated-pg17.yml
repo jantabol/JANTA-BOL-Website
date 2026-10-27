@@ -6,6 +6,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261027_t071_c1_scoped_published_article_rpc_REVIEW_ONLY.sql'
       - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
       - 'ci/phase4/b11/t071-c1-public-article-isolated-pg17-*.sql'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
       - '.github/workflows/b11-t071-c1-public-read-isolated-pg17.yml'
   pull_request:
     branches: [main]
@@ -13,6 +14,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261027_t071_c1_scoped_published_article_rpc_REVIEW_ONLY.sql'
       - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
       - 'ci/phase4/b11/t071-c1-public-article-isolated-pg17-*.sql'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
       - '.github/workflows/b11-t071-c1-public-read-isolated-pg17.yml'
 permissions:
   contents: read
@@ -67,6 +69,12 @@ jobs:
           done
           test "$(psql -X -v ON_ERROR_STOP=1 -qAtc 'show server_version_num' | cut -c 1-2)" = 17
           echo 'C1_EXACT_REAL_PG17_EPHEMERAL=VERIFIED'
+      - name: 10 true JS client adapter negative and private owner-path tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          echo 'C1_CLIENT_GUEST_PUBLISHED_AND_OWNER_PRIVATE_GATES=PASS_SCOPE'
       - name: Apply synthetic fixture and actual candidate SECURITY DEFINER RPC in temporary PG17
         shell: bash
         run: |
