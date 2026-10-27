@@ -20,6 +20,8 @@ function audit(x){
  assert.equal(x.authority.closure_gate,'C3');
  assert.equal(x.authority.recov,'RECOV-019..026');
  assert.equal(x.authority.precisely_four_invariants,true);
+ assert.equal(x.tested_sources.repo,'jantabol/JANTA-BOL-Website');
+ assert.equal(x.tested_sources.same_source_integrated_hosted_candidate_verified,false);
  assert.deepEqual(x.evidence.map(v=>v.invariant),master);
  assert.equal(x.evidence.length,4);
  assert.equal(x.evidence[0].verdict,'PARTIAL_ISOLATED');
