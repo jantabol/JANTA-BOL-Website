@@ -6,6 +6,8 @@ on:
     paths:
       - 'ci/phase4/b11/t071-failure-isolation-contract.mjs'
       - 'ci/phase4/b11/t071-failure-isolation-contract.test.mjs'
+      - 'ci/phase4/b11/t071-vercel-production-git-source-observed-20261027.json'
+      - 'ci/phase4/b11/t071-vercel-production-source-risk.test.mjs'
       - 'index.html'
       - 'script.js'
       - '.github/workflows/b11-t071-fault-matrix-preflight-NO-LIVE.yml'
@@ -33,10 +35,13 @@ jobs:
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           node --check ci/phase4/b11/t071-failure-isolation-contract.mjs
           node --check ci/phase4/b11/t071-failure-isolation-contract.test.mjs
-          node --test ci/phase4/b11/t071-failure-isolation-contract.test.mjs ci/phase4/b11/t070-final-e8-gate.test.mjs
+          node --check ci/phase4/b11/t071-vercel-production-source-risk.test.mjs
+          node --test ci/phase4/b11/t071-failure-isolation-contract.test.mjs ci/phase4/b11/t070-final-e8-gate.test.mjs ci/phase4/b11/t071-vercel-production-source-risk.test.mjs
           echo 'T071_REAL_PRODUCT_CONTROLLED_FAULTS=NOT_RUN'
           echo 'T071_RPO_RTO_REAL_TARGETS=NOT_ESTABLISHED'
           echo 'T071_FAILURE_MATRIX_PRECODE_GATES=VERIFIED'
           echo 'T071_FINAL_PASS_LOCK=false'
           echo 'T070_FINAL_E8_STILL=HOLD'
-          echo 'SOFT_LAUNCH_PRODUCTION_SOURCE_MAPPING=UNVERIFIED'
+          echo 'SOFT_LAUNCH_VERCEL_PRODUCTION_SOURCE_GIT_SHA=VERIFIED_READONLY'
+          echo 'SOFT_LAUNCH_ACTUAL_HTTP_SITE_CONTENT=UNVERIFIED'
+          echo 'SOFT_LAUNCH_EDITORIAL_STATIC_MOCK_RISK=HOLD'
