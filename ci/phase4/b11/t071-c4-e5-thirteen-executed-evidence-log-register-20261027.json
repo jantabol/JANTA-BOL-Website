@@ -114,7 +114,7 @@
       "fault_class": "ACTUAL_DISPOSABLE_PG17_RPC_PERMISSION",
       "run_id": 40504645684,
       "job_id": 122190733649,
-      "run_sha": null,
+      "run_sha": "47a0073828974c30b2131e8605f4ed61bac7b5db",
       "markers": [
         "T071_REAL_PG17_B8_ACCOUNTABILITY_FEED_MODULE_FAULT=PASS",
         "T071_REAL_PG17_CASE_RPC_SURVIVED_FEED_OUTAGE=PASS",
