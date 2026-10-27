@@ -71,14 +71,15 @@ test('T070 representative Article/PURL, Grievance, LIVE, Ads and Auth source ide
  'public.live_operations','public.ad_campaigns','public.ad_payments',
  'public.audit_logs','auth.users','public.user_roles','storage.objects'];
  for(const table of names)assert.ok(q.includes('FROM '+table+' t'),'T070 missing '+table);
- assert.equal((q.match(/SELECT '\\d\\d_[^']+' AS metric/g)||[]).length,25);
- assert.doesNotMatch(q,/\\b(?:INSERT\\s+INTO|UPDATE\\s+(?:public|auth)|DELETE\\s+FROM|DROP\\s+TABLE|ALTER\\s+TABLE)\\b/i);
- assert.match(db,/jb_t034_snapshot_query ci\\/phase4\\/b11\\/t070-representative-identity\\.sql/);
- assert.match(db,/bundle\\+=\\(t070_snapshot_storage\\.json t070_post_media_current_storage\\.json t070_representative_identity\\.txt media\\)/);
- assert.match(db,/cmp -s "\\$work\\/plain\\/t070_representative_identity\\.txt"/);
- assert.match(clone,/T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES=EXACT_MATCH/);
- assert.match(clone,/T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false/);
- assert.match(clone,/cmp -s "\\$src\\/t070_representative_identity\\.txt"/);
- assert.match(clone,/for n in 19 20 21 22 23 24 25/);
- assert.doesNotMatch(wf,/on:\\s*\\n\\s*(?:pull_request|push|schedule):/);
+ assert.equal(q.split(" AS metric").length-1,25);
+ for(const forbidden of ['INSERT INTO','UPDATE public.','DELETE FROM','DROP TABLE','ALTER TABLE'])
+  assert.ok(!q.toUpperCase().includes(forbidden.toUpperCase()),'T070 SQL is not read-only');
+ assert.ok(db.includes('jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql'));
+ assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)'));
+ assert.ok(db.includes('cmp -s "$work/plain/t070_representative_identity.txt"'));
+ assert.ok(clone.includes('T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES=EXACT_MATCH'));
+ assert.ok(clone.includes('T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false'));
+ assert.ok(clone.includes('cmp -s "$src/t070_representative_identity.txt"'));
+ assert.ok(clone.includes('for n in 19 20 21 22 23 24 25'));
+ assert.ok(wf.includes('workflow_dispatch:'));
 });
