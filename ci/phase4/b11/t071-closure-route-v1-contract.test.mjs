@@ -22,6 +22,14 @@ const exclusions=[
  'P4_T070_FULL_E8_REOPEN_UNLESS_DIRECTLY_AFFECTS_T071_BASELINE'];
 
 function check(r) {
+ assert.deepEqual(Object.keys(r).sort(),[
+   'authority','category','purpose','mandatory_gates','matrix',
+   'pass_invariants','required_evidence','excluded_as_extra_mandatory_gates',
+   'route_change_control','latest_evidence','transition','schema'
+ ].sort(),'COVERT_TOP_LEVEL_GATE_NOT_ALLOWED');
+ assert(r.mandatory_gates.every(g=>Object.keys(g).sort().join(',')===
+   ['id','name','evidence','close_condition','status'].sort().join(',')),
+   'COVERT_NESTED_GATE_NOT_ALLOWED');
  assert.equal(r.schema,'JB_PHASE4_T071_CLOSURE_ROUTE_V1_0_FROZEN_20261027');
  assert.equal(r.authority.master,'JANTA_BOL_PHASE_4_MASTER_EXECUTION_PACK(20261027-041849).pdf');
  assert.equal(r.authority.page,304);
@@ -63,7 +71,9 @@ const mutations=[
  ['import T072 into T071',r=>r.transition.next='P4-T073'],
  ['swap Master precedence',r=>r.authority.source_of_truth_precedence='PR45_OVERRIDES_MASTER'],
  ['rewrite T071 section map',r=>r.authority.section_range='600..630'],
- ['change test number',r=>r.authority.test='P4-T072']
+ ['change test number',r=>r.authority.test='P4-T072'],
+ ['covert sixth top-level closure gate',r=>r.hidden_mandatory_gate='PURCHASE_HOSTING'],
+ ['covert sixth sub-gate field',r=>r.mandatory_gates[0].extra_precondition='PRIVATE_HOST']
 ];
 for(const [label,change] of mutations){
  test('Reject route drift: '+label,()=>{
