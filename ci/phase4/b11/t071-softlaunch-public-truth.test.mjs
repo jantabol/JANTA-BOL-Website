@@ -106,3 +106,12 @@ test('no synthetic passing assertions ever authorise T071 final/hosted E8 or pub
   assert.equal(status.production_release_approved,false);
   assert.equal(status.hosted_runtime_faults,'NOT_RUN');
 });
+
+test('Founder editorial scope: public hero clearly covers global, India, MP and village without a LIVE claim',()=>{
+  assert.match(home, /<div class="live-badge" aria-label="दुनिया, भारत, मध्य प्रदेश और स्थानीय क्षेत्रों की खबरें">\s*दुनिया से गाँव तक\s*<\/div>/);
+  assert.doesNotMatch(home, />\s*स्थानीय समाचार\s*</);
+  assert.equal((home.match(/दुनिया से गाँव तक/g)||[]).length,1);
+  assert.match(home, /जहाँ सच बोलता है/);
+  assert.match(home, /id="b9SearchNav"/);
+  assert.doesNotMatch(home,/🔴 LIVE/);
+});
