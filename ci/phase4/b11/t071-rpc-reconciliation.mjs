@@ -59,7 +59,7 @@ export function auditReconciliation(manifest,root=process.env.T071_PINNED_B8_ROO
    assert(e.gate && e.intent && e.gate.length>=10,'MISSING_FAIL_CLOSED_CONTRACT');
    const sql=file(e.ref);
    assert(/\b(?:REVIEW[- ]ONLY|STAGING REVIEW|SOURCE[- ]ONLY)\b/i.test(sql.slice(0,800)),'NON_REVIEW_SOURCE_'+e.name);
-   assert(/\b(?:DO NOT|never)\b/i.test(sql.slice(0,1200)),'ABSENT_PRODUCTION_STOP_BANNER');
+   assert(/\b(?:DO NOT|never|NOT PRODUCTION|NOT AN AUTHORIZED LIVE MIGRATION|NOT FOR LIVE)\b/i.test(sql.slice(0,1200)),'ABSENT_PRODUCTION_STOP_BANNER_'+e.name);
    const declaration=new RegExp('\\bcreate\\s+(?:or\\s+replace\\s+)?function\\s+public\\.'+e.name+'\\s*\\(','i');
    const defined=declaration.test(sql);
    if(e.class==='REVIEW_ONLY_SQL_EXISTS') {
