@@ -40,8 +40,8 @@
             सच • तथ्य • भरोसा
         </p>
 
-        <a href="#top-story" class="hero-btn">
-            ▶ आज की टॉप स्टोरी देखें
+        <a href="#latest-news" class="hero-btn">
+            ▶ प्रकाशित खबरें देखें
         </a>
 
     </div>
@@ -124,7 +124,7 @@
  <h2>🎥 वीडियो न्यूज़</h2>
  <p>संपादकीय स्वीकृति के बाद उपलब्ध वीडियो समाचार यहाँ दिखेंगे।</p>
 </section>
-<section class="latest-news-section">
+<section class="latest-news-section" id="latest-news">
  <h2>📰 ताज़ा खबरें</h2>
  <p class="latest-subtitle">केवल सर्वर पर प्रकाशित खबरें नीचे दिखेंगी।</p>
 </section>
@@ -378,9 +378,10 @@
 
     <div class="citizen-action-card">
         <h3>📢 अपनी खबर भेजें</h3>
-        <p>सिर्फ जरूरी जानकारी भरें और अपने क्षेत्र की खबर JANTA BOL तक पहुँचाएँ।</p>
+        <p>ऑनलाइन खबर जमा करने की सुविधा फिलहाल बंद है। इस पेज पर दर्ज की गई जानकारी भेजी नहीं जाएगी।</p>
+        <p role="status">खबर या सुझाव देने के लिए <a href="#contact">संपर्क विकल्प देखें</a>।</p>
 
-        <form class="citizen-news-form" id="citizen-news-form">
+        <form class="citizen-news-form" id="citizen-news-form" hidden inert style="display:none" aria-hidden="true">
             <label for="citizen-name">आपका नाम</label>
             <input id="citizen-name" name="name" type="text" placeholder="अपना नाम लिखें" required>
 
@@ -397,7 +398,7 @@
         </form>
 
         <p class="citizen-verify-note">
-            🛡️ भेजी गई जानकारी को JANTA BOL द्वारा सत्यापित किया जाएगा।
+            🛡️ ऑनलाइन खबर भेजने का फ़ॉर्म फिलहाल उपलब्ध नहीं है; यहाँ कोई जानकारी जमा नहीं होती।
         </p>
     </div>
 
@@ -428,10 +429,10 @@
     <div class="district-reporter">
         <h3>🏅 आधिकारिक जिला रिपोर्टर बनें</h3>
         <p>
-            यदि आप नियमित, जिम्मेदार और भरोसेमंद रिपोर्टिंग करना चाहते हैं,
-            तो आधिकारिक रिपोर्टर आवेदन भरें।
+            आधिकारिक रिपोर्टर के ऑनलाइन आवेदन फिलहाल स्वीकार नहीं किए जा रहे हैं।
+            आवेदन फिर शुरू होने पर यहाँ सूचना दी जाएगी।
         </p>
-        <button type="button" class="district-button official-reporter-open">
+        <button type="button" class="district-button official-reporter-open" disabled aria-disabled="true" title="ऑनलाइन आवेदन फिलहाल बंद हैं">
             📝 आधिकारिक रिपोर्टर आवेदन
         </button>
     </div>
@@ -671,7 +672,7 @@
     <div class="reporter-modal-kicker">🎙️ JANTA BOL</div>
     <h2 id="reporter-modal-title">आधिकारिक रिपोर्टर आवेदन</h2>
 
-    <form id="official-reporter-form" class="official-reporter-form">
+    <form id="official-reporter-form" class="official-reporter-form" hidden inert style="display:none" aria-hidden="true">
       <div class="form-section-title">👤 व्यक्तिगत जानकारी</div>
 
       <label for="r-name">पूरा नाम*</label>
