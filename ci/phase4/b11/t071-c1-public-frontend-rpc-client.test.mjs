@@ -39,7 +39,7 @@ function mk(outputs=[],search='') {
   }
  };
  vm.runInNewContext(source,{
-  window:win,document:{createElement:()=>({})},crypto:{randomUUID:()=>publicId},
+  window:win,localStorage:win.localStorage,document:{createElement:()=>({})},crypto:{randomUUID:()=>publicId},
   URL,Date,Uint8Array,TextDecoder,atob:()=>'',setTimeout,console
  },{filename:'backend-client.js'});
  return {b:win.JBBackend,calls};
