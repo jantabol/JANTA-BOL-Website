@@ -163,6 +163,17 @@ if [[ "$dual" == 1 ]]; then
       fail 'cannot capture private original-file identities from same full DB snapshot'
     [[ -s "$work/plain/t070_snapshot_storage.json" ]] ||
       fail 'empty protected snapshot media metadata'
+    # The SAME exported PostgreSQL MVCC snapshot supplies editorial, Auth,
+    # Live and Ads identity proof. Never print digest or identifier contents.
+    jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql \
+      "$work/plain/t070_representative_identity.txt" || \
+      fail 'cannot capture source representative identity and relationship proof'
+    [[ "$(wc -l < "$work/plain/t070_representative_identity.txt")" == 25 ]] || \
+      fail 'T070 incomplete representative identity manifest'
+    for n in 19 20 21 22 23 24 25; do
+      grep -Fxq "${n}_orphan_check=0" "$work/plain/t070_representative_identity.txt" || \
+        fail 'T070 source relationship integrity not verified'
+    done
     mkdir -m 700 "$work/plain/media"
     node ci/phase4/b11/storage-media-manual-cli.mjs export-manual \
       --root "$work/plain/media" > "$work/private-media-export.log" 2>&1 ||
@@ -212,7 +223,7 @@ if [[ "$dual" == 1 ]]; then
   bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
 fi
 if [[ "$joint" == 1 ]]; then
-  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json media)
+  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)
 fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
@@ -285,6 +296,11 @@ if [[ "$dual" == 1 ]]; then
     cmp -s "$work/plain/t070_snapshot_storage.json" \
       "$work/recovered/t070_snapshot_storage.json" ||
       fail 'encrypted DB snapshot original media manifest changed in B2 roundtrip'
+    [[ -s "$work/recovered/t070_representative_identity.txt" ]] || \
+      fail 'representative identity absent in encrypted archive'
+    cmp -s "$work/plain/t070_representative_identity.txt" \
+      "$work/recovered/t070_representative_identity.txt" || \
+      fail 'representative identity changed during AGE B2 roundtrip'
     [[ -s "$work/recovered/t070_post_media_current_storage.json" ]] || \
       fail 'fresh PG post-media identity absent in encrypted archive'
     cmp -s "$work/plain/t070_post_media_current_storage.json" \
