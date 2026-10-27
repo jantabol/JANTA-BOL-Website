@@ -144,3 +144,29 @@ The workflow explicitly loaded **no production secrets**, contacted localhost on
 **Precisely what this proves:** a runnable isolated *synthetic* Auth/Storage test environment and successful real network/HTTP authorization checks under fake roles/data. **Precisely what it does not:** recovery of JANTA BOL's 5 Auth users, session rotation/revocation, AAL2/MFA, historical grievance private bytes into a running Storage API, 13 deployed Edge Functions, Vercel runtime, configuration/secrets, all-writer maintenance freeze, or E8 final acceptance. Do not transform this successful local fake rehearsal into a **real restored-production-runtime PASS**.
 
 **Current status after this new improvement:** `T070_G19_LOCAL_SYNTHETIC_AUTH_STORAGE_HTTP=PASS` / `T070_REAL_DB_PLUS_FIVE_MEDIA_OFFLINE=PASS` (independent Run #3) / `T070_REAL_RECONSTRUCTED_FULL_PLATFORM=NOT_RUN` / `T070_FINAL_LOCK=HOLD` / `T071_NOT_STARTED`.
+
+## 8. Further local **real HTTP auth-session and private-owner access** negative proof — 27 October (fake accounts only)
+
+To remove the prior limitation of testing Storage only with a privileged service-role, the GitHub PR-only local synthetic runtime was strengthened and an actual GitHub test was executed:
+
+- GitHub run `40467067658`, job **isolated_runtime_synthetic**, immutable code SHA `a04f1e9cd90bdbcd1f88913b3e828f079f3b8692`: **SUCCESS**, actual job logs independently retrieved.
+- A real disposable local GoTrue instance created **two fabricated confirmed-email test users** with random passwords under a fake/non-deliverable domain. Local password login returned signed JWT and matching user UUID for the correct user.
+- Wrong password login was rejected; non-admin user JWT attempting the GoTrue admin users endpoint was rejected.
+- A locally installed RLS rule (ONLY in ephemeral docker database) grants signed authenticated SELECT of a fabricated private Storage object solely when `storage.objects.name` UUID prefix equals the signed-in `auth.uid()`. Positive known-owner HTTP GET retrieved exact fake bytes; independently signed-in other fake user was denied, as were anonymous authenticated/private/public URLs.
+- Actual user logout succeeded; immediate old refresh-token exchange was rejected. This is **refresh-session invalidation**, not a claim that previously issued access JWTs were independently checked for immediate expiry; their lifetime semantics remain separate.
+- No local passwords, JWTs, fake UUIDs or object bodies were printed. Docker and filesystem temp credentials cleaned after job. No B2/production credentials were supplied, and no Production/GoTrue user or role was changed.
+
+Confirmed stdout:
+```text
+T070_LOCAL_SYNTHETIC_REAL_USER_LOGIN_AND_UID=PASS
+T070_LOCAL_SYNTHETIC_BAD_PASSWORD_AND_NONADMIN_NEGATIVES=PASS
+T070_LOCAL_SYNTHETIC_OWNER_POSITIVE_AND_NONOWNER_DENIAL=PASS
+T070_LOCAL_SYNTHETIC_LOGOUT_REFRESH_TOKEN_REVOKED=PASS
+T070_PRODUCTION_DATA_TESTED_IN_THIS_JOB=false
+T070_ORIGINAL_AUTH_USER_SESSIONS_RESTORED=false
+T070_LIVE_AUTH_MFA_EDGE_VERCEL_CONFIG_RECONSTRUCTED=false
+T070_G19_FINAL_E8=HOLD
+T070_FINAL_LOCK=HOLD
+```
+
+The additional smoke tests are a genuine network-based Auth/Storage HTTP *behavioral rehearsal using invented data*. They are NOT proof of actual JANTA BOL GoTrue/MFA/owner roles being restored or of deployment-config parity. Production writability still unchanged; E8 final must remain HOLD pending a protected *real-data isolated platform* and universal writer barrier.
