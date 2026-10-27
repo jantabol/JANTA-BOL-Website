@@ -8,6 +8,7 @@ on:
       - 'ci/phase4/b11/t071-failure-isolation-contract.test.mjs'
       - 'ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs'
       - 'ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs'
+      - 'ci/phase4/b11/t071-thirteen-actual-adapters-isolated-faults.test.mjs'
       - 'ci/phase4/b11/t071-vercel-production-git-source-observed-20261027.json'
       - 'ci/phase4/b11/t071-vercel-production-source-risk.test.mjs'
       - 'index.html'
@@ -32,21 +33,30 @@ jobs:
           ref: 658f474d6ee0f24efac60f069979e8adee1e9221
           path: t071-integrated-fixture
           persist-credentials: false
+      - name: Check out separate exact B9 public Search adapter fixture (read only)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: b509c60fceb053a51686f67e587d4922a40fa6f4
+          path: t071-search-fixture
+          persist-credentials: false
       - name: Verify exact integrated source SHA and execute real B8 code with controlled fake dependency faults
         shell: bash
         env:
           T071_PINNED_INTEGRATED_ROOT: t071-integrated-fixture
+          T071_PINNED_SEARCH_ROOT: t071-search-fixture
         run: |
           set -Eeuo pipefail
           test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
           test "$GITHUB_EVENT_NAME" = pull_request
           test "$(git -C "$T071_PINNED_INTEGRATED_ROOT" rev-parse HEAD)" = 658f474d6ee0f24efac60f069979e8adee1e9221
+          test "$(git -C "$T071_PINNED_SEARCH_ROOT" rev-parse HEAD)" = b509c60fceb053a51686f67e587d4922a40fa6f4
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           node --check ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs
           node --check ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs
-          node --test ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs
+          node --check ci/phase4/b11/t071-thirteen-actual-adapters-isolated-faults.test.mjs
+          node --test ci/phase4/b11/t071-real-b8-integrated-feed-fault.test.mjs ci/phase4/b11/t071-real-b8-rpc-faults.test.mjs ci/phase4/b11/t071-thirteen-actual-adapters-isolated-faults.test.mjs
           (cd "$T071_PINNED_INTEGRATED_ROOT" &&
             node --test               ci/phase4/b7-t040-cp02-analytics-failure-isolation.test.cjs               ci/phase4/b7-t038-cp01-manual-payment-source.test.cjs               ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs)
           echo 'T071_REAL_B8_SOURCE_WITH_ISOLATED_FAULTS=TESTED_SELECTED_DOMAINS'
