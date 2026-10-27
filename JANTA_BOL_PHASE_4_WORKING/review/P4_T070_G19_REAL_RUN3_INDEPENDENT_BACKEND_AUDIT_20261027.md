@@ -128,3 +128,19 @@ Six bounded read-only SQL role checks executed on connected JANTA BOL PostgreSQL
 Sanitized counts and results recorded in `ci/phase4/b11/t070-g19-live-source-role-negative-readonly-20261027.json`. Corresponding fail-closed PR-only tests assert no escalation of metadata/source SQL into E8 restored-runtime claims.
 
 **Go/No-Go:** `T070_SOURCE_SQL_NEGATIVE_ACCESS_LIMITED=PASS` / `T070_RESTORED_AUTH_MFA_HTTP_ACCESS=NOT_RUN` / `T070_PRODUCTION_MAINTENANCE=NOT_APPLIED` / `T070_FULL_E8=HOLD` / `T071=NOT_STARTED`.
+
+## 7. New genuine disposable Supabase GoTrue + Storage HTTP exercise (LOCAL SYNTHETIC ONLY)
+
+**GitHub Actions CI Run:** `40466162996` (source HEAD `93afe5e8a5ea554c1d03e13376800d3373ec89c4`). This was an *actual ephemeral local Supabase stack*, not a paper oracle, yet all users/objects/keys were **fabricated local test data**, not a restored production identity/service. CI job succeeded with these real HTTP probes:
+
+- `T070_LOCAL_SYNTHETIC_GOTRUE_HEALTH=PASS`: local GoTrue Auth responded to a health request.
+- `T070_LOCAL_SYNTHETIC_AUTH_NO_USER_DENIAL=PASS`: unauthenticated user request was denied.
+- `T070_LOCAL_SYNTHETIC_STORAGE_OWNER_OBJECT_BYTES=PASS`: a fabricated original byte string uploaded to a *local private bucket* was downloadable by the *local ephemeral service-role*, and bytes matched exactly.
+- `T070_LOCAL_SYNTHETIC_PRIVATE_STORAGE_ANON_NEGATIVE=PASS`: local anonymous actor could not read that known-existing private object.
+- `T070_LOCAL_SYNTHETIC_PRIVATE_BUCKET_PUBLIC_ENDPOINT_NEGATIVE=PASS`: public object URL did not expose its contents.
+
+The workflow explicitly loaded **no production secrets**, contacted localhost only, pinned the prior CLI `v2.120.0`, bound Docker networking to loopback, cleaned containers/temp credentials, and uploaded no artifacts/media. New scripts: `ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs` and `.github/workflows/b11-t070-g19-disposable-auth-storage-SYNTHETIC.yml`.
+
+**Precisely what this proves:** a runnable isolated *synthetic* Auth/Storage test environment and successful real network/HTTP authorization checks under fake roles/data. **Precisely what it does not:** recovery of JANTA BOL's 5 Auth users, session rotation/revocation, AAL2/MFA, historical grievance private bytes into a running Storage API, 13 deployed Edge Functions, Vercel runtime, configuration/secrets, all-writer maintenance freeze, or E8 final acceptance. Do not transform this successful local fake rehearsal into a **real restored-production-runtime PASS**.
+
+**Current status after this new improvement:** `T070_G19_LOCAL_SYNTHETIC_AUTH_STORAGE_HTTP=PASS` / `T070_REAL_DB_PLUS_FIVE_MEDIA_OFFLINE=PASS` (independent Run #3) / `T070_REAL_RECONSTRUCTED_FULL_PLATFORM=NOT_RUN` / `T070_FINAL_LOCK=HOLD` / `T071_NOT_STARTED`.
