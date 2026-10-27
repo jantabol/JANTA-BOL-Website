@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs'
+      - 'ci/phase4/b11/t070-g19-local-fake-owner-storage-policy.sql'
       - '.github/workflows/b11-t070-g19-disposable-auth-storage-SYNTHETIC.yml'
 permissions:
   contents: read
@@ -66,6 +67,21 @@ jobs:
             echo 'T070_LOCAL_STACK_STATUS=HOLD'; exit 3;
           }
           chmod 600 "$temp/local-service-keys.json"
+          # Allow signed local synthetic users to read ONLY their own fake UUID-prefixed
+          # fixture, never touch actual JANTA BOL Storage or RLS policies.
+          db="$(docker ps --format '{{.Names}}' | grep -E '^supabase_db_[A-Za-z0-9_.-]+
+          echo 'T070_LOCAL_GOTRUE_AND_STORAGE_HTTP_SYNTHETIC_RUNTIME=PASS'
+          echo 'T070_REAL_PRODUCTION_HOSTED_RUNTIME_RESTORE=NOT_RUN'
+          echo 'T070_FINAL_LOCK=HOLD'
+ | head -n1)"
+          test -n "$db" || { echo 'T070_LOCAL_DB_CONTAINER=HOLD'; exit 3; }
+          docker inspect -f '{{json .NetworkSettings.Networks}}' "$db" | grep -Fq "\"$network\"" || {
+            echo 'T070_LOCAL_DB_NETWORK_SCOPE=HOLD'; exit 3;
+          }
+          docker exec -i "$db" psql -X -q -v ON_ERROR_STOP=1 -U postgres -d postgres             < "$repo/ci/phase4/b11/t070-g19-local-fake-owner-storage-policy.sql"             > "$temp/private-local-policy.log" 2>&1 || {
+            echo 'T070_LOCAL_RLS_FIXTURE_SETUP=HOLD'; exit 3;
+          }
+          echo 'T070_LOCAL_SYNTHETIC_OWNER_ONLY_RLS_POLICY=INSTALLED'
           node "$repo/ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs" "$temp/local-service-keys.json"
           echo 'T070_LOCAL_GOTRUE_AND_STORAGE_HTTP_SYNTHETIC_RUNTIME=PASS'
           echo 'T070_REAL_PRODUCTION_HOSTED_RUNTIME_RESTORE=NOT_RUN'
