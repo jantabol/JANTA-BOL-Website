@@ -18,7 +18,7 @@ function boot({ownerAllowed=true,response='throw'}={}){
    rpc:async (name,args)=>{
     calls.push({name,args});
     if(response==='throw')throw Error('T071_ISOLATED_BACKEND_NETWORK_LOSS');
-    if(response==='error')return {data:null,error:{code:'T071_FAKE_BACKEND_UNAVAILABLE'}};
+    if(response==='error')return {data:null,error:Error('T071_FAKE_BACKEND_UNAVAILABLE')};
     return {data:'FAKE_ACK_NO_PRODUCTION_ACTION',error:null};
    },
    from:table=>{
