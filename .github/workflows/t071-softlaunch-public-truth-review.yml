@@ -10,6 +10,10 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
       - 'JANTA_BOL_PHASE_3C_WORKING/public-ads.js'
       - 'ci/phase4/b11/t071-softlaunch-public-truth.test.mjs'
+      - 'ci/phase4/b11/t071-b9-search-reuse.test.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.css'
       - '.github/workflows/t071-softlaunch-public-truth-review.yml'
       - 'vercel.json'
 permissions:
@@ -34,9 +38,13 @@ jobs:
           test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           node --check ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          node --check ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-search-ui.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-home-link.js
           node --check JANTA_BOL_PHASE_3C_WORKING/script.js
           node --check JANTA_BOL_PHASE_3C_WORKING/website-v3.js
-          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs
           echo 'T071_PUBLIC_TRUTH_SOURCE_REVIEW=CHECKED'
           echo 'T071_HOSTED_PUBLIC_PREVIEW=NOT_YET_DEVICE_VERIFIED'
           echo 'T071_13_HOSTED_FAILURES=NOT_RUN'
