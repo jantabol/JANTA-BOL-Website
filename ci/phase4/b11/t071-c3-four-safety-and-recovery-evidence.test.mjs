@@ -59,7 +59,8 @@ function audit(x){
  assert.match(p.derived_risk,/already acknowledged/);
  assert.equal(p.founder_production_rpo_numeric_target,'NOT_APPROVED');
  assert.equal(p.founder_production_rto_numeric_target,'NOT_APPROVED');
- assert.equal(p.founder_recovery_risk_acceptance,'NOT_RECORDED');
+ assert.equal(p.founder_recovery_risk_acceptance,'APPROVED_PROVISIONAL_CONSERVATIVE_POLICY_2026_10_27');
+ assert.equal(p.founder_approved_policy_scope.length,4);
  assert.equal(p.no_paid_service_required,true);
  assert.equal(p.no_new_t071_gate,true);
  assert.equal(x.status.four_invariants_reviewed_with_direct_run_log_markers,true);
@@ -90,7 +91,7 @@ const mutations=[
  ['pretend zero-data-loss',x=>x.recovery_observed.zero_data_loss_claim=true],
  ['pretend real production RPO',x=>x.recovery_observed.production_rpo='0.422s'],
  ['pretend live RTO',x=>x.recovery_observed.production_rto='1.261s'],
- ['pretend approved Founder risk',x=>x.practical_recovery_policy_review.founder_recovery_risk_acceptance='ACCEPTED'],
+ ['forge a different Founder approval',x=>x.practical_recovery_policy_review.founder_recovery_risk_acceptance='PRODUCTION_SLA_APPROVED'],
  ['pretend Founder numeric SLA',x=>x.practical_recovery_policy_review.founder_production_rpo_numeric_target='0s'],
  ['pretend C3 PASS LOCK',x=>x.status.c3_final_pass_lock=true],
  ['pretend T071 final',x=>x.status.t071_final_pass_lock=true],
@@ -184,5 +185,5 @@ test('C3 independent PG17 incident chronological recovery and original hash mani
  console.log('C3_MEASURED_DISPOSABLE_RTO_SECONDS=1.261');
  console.log('C3_ACKNOWLEDGED_SYNTHETIC_ROWS_LOST=1');
  console.log('C3_PRODUCTION_RPO_RTO=NOT_MEASURED');
- console.log('C3_FOUNDER_RECOVERY_RISK_ACCEPTANCE=NOT_RECORDED');
+ console.log('C3_FOUNDER_PROVISIONAL_NO_SILENT_LOSS_POLICY=APPROVED; NUMERIC_PROD_RPO_RTO=NOT_APPROVED');
 },{timeout:180000});
