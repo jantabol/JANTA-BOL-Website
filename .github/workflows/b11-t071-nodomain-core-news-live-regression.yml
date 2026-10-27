@@ -1,5 +1,7 @@
 name: B11 T071 No-DNS source News-LIVE-Ads & B9 regression (partial E8)
 on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
   pull_request:
     branches: [main]
     paths:
@@ -9,7 +11,7 @@ permissions:
   contents: read
 jobs:
   verify_no_domain_core_news_live_regression:
-    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027' }}
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 8
     steps:
@@ -34,8 +36,12 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
-          test "$GITHUB_HEAD_REF" = "codex/b11-t071-failure-isolation-preflight-20261027"
-          test "$GITHUB_EVENT_NAME" = "pull_request"
+          if test "$GITHUB_EVENT_NAME" = push; then
+            test "$GITHUB_REF" = "refs/heads/codex/b11-t071-failure-isolation-preflight-20261027"
+          else
+            test "$GITHUB_EVENT_NAME" = pull_request
+            test "$GITHUB_HEAD_REF" = "codex/b11-t071-failure-isolation-preflight-20261027"
+          fi
           test "$(git -C t071-no-domain-b8-source rev-parse HEAD)" = 658f474d6ee0f24efac60f069979e8adee1e9221
           test "$(git -C t071-no-domain-b9-source rev-parse HEAD)" = b509c60fceb053a51686f67e587d4922a40fa6f4
           test -z "${DATABASE_URL:-}"
