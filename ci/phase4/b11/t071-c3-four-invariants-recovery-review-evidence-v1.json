@@ -110,10 +110,17 @@
     },
     "founder_production_rpo_numeric_target": "NOT_APPROVED",
     "founder_production_rto_numeric_target": "NOT_APPROVED",
-    "founder_recovery_risk_acceptance": "NOT_RECORDED",
+    "founder_recovery_risk_acceptance": "APPROVED_PROVISIONAL_CONSERVATIVE_POLICY_2026_10_27",
     "founder_choice_needed": "APPROVE_NO_UNRECONCILED_ACKNOWLEDGED_LOSS_RISK_POLICY_OR_EXPLICITLY_ACCEPT_DOCUMENTED_RECOVERY_RISK; NUMERIC_TARGETS_SEPARATE",
     "no_paid_service_required": true,
-    "no_new_t071_gate": true
+    "no_new_t071_gate": true,
+    "founder_decision_source": "Founder replied 'Meri permission h bhai start kro' directly after request to approve conservative C3 loss-disclosure/reconciliation policy and advance C4; interpreted as assent to proposed policy only, not numeric RPO/RTO or hosted E8",
+    "founder_approved_policy_scope": [
+      "No silent unreconciled acknowledged authoritative write loss",
+      "Visible gap ledger and Founder reconciliation before reopening ambiguous impacted actions",
+      "No production numeric RPO/RTO promise based on disposable PostgreSQL17",
+      "Do not activate paid Ads/LIVE while recovery state ambiguous"
+    ]
   },
   "status": {
     "four_invariants_reviewed_with_direct_run_log_markers": true,
