@@ -673,6 +673,14 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
 }
 
   async function getArticle(id,{privateData=false}={}){
+    // Existing article.html calls getArticle({privateData:false}) even in its
+    // authenticated ?preview=admin mode. Preserve that private Owner preview
+    // ONLY after repeating the Owner/AAL2 check: no public RPC may convert
+    // a draft into published, and no guest may reach the private table.
+    if(!privateData && /(?:[?&])preview=admin(?:&|$)/.test(String(global.location.search||''))){
+      await requireOwner();
+      privateData=true;
+    }
     if(!privateData){
       // Guest and signed-in public readers share the SAME strictly public,
       // SQL-enforced published/nondeleted projection. Never use a broad
