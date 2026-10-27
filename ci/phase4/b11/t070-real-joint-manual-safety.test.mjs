@@ -62,3 +62,23 @@ test('T070 protected release cannot auto read public source and never uses found
  assert.doesNotMatch(wf,/AGE_PRIVATE|AGE_IDENTITY|CRICKET/);
  assert.doesNotMatch(exporter,/method\s*:\s*['\"](?:PUT|DELETE|PATCH)['\"]/);
 });
+
+test('T070 representative Article/PURL, Grievance, LIVE, Ads and Auth source identity proof is joint-only and AGE sealed',()=>{
+ const q=readFileSync('ci/phase4/b11/t070-representative-identity.sql','utf8');
+ const clone=readFileSync('ci/backup/jb-t034-offline-full-pg-restore.sh','utf8');
+ const names=['public.articles','public.article_versions','public.grievances',
+ 'public.grievance_history','public.grievance_evidence','public.live_sessions',
+ 'public.live_operations','public.ad_campaigns','public.ad_payments',
+ 'public.audit_logs','auth.users','public.user_roles','storage.objects'];
+ for(const table of names)assert.ok(q.includes('FROM '+table+' t'),'T070 missing '+table);
+ assert.equal((q.match(/SELECT '\\d\\d_[^']+' AS metric/g)||[]).length,25);
+ assert.doesNotMatch(q,/\\b(?:INSERT\\s+INTO|UPDATE\\s+(?:public|auth)|DELETE\\s+FROM|DROP\\s+TABLE|ALTER\\s+TABLE)\\b/i);
+ assert.match(db,/jb_t034_snapshot_query ci\\/phase4\\/b11\\/t070-representative-identity\\.sql/);
+ assert.match(db,/bundle\\+=\\(t070_snapshot_storage\\.json t070_post_media_current_storage\\.json t070_representative_identity\\.txt media\\)/);
+ assert.match(db,/cmp -s "\\$work\\/plain\\/t070_representative_identity\\.txt"/);
+ assert.match(clone,/T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES=EXACT_MATCH/);
+ assert.match(clone,/T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false/);
+ assert.match(clone,/cmp -s "\\$src\\/t070_representative_identity\\.txt"/);
+ assert.match(clone,/for n in 19 20 21 22 23 24 25/);
+ assert.doesNotMatch(wf,/on:\\s*\\n\\s*(?:pull_request|push|schedule):/);
+});
