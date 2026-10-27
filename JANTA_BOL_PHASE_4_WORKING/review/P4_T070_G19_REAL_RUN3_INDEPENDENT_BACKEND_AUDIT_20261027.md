@@ -81,3 +81,29 @@ T070_FINAL_LOCK=HOLD
 **Decision:** G17 **REAL COMBINED OFFLINE RECOVERY = PASS/LOCK (bounded component proof)**. G18 **SOURCE PLATFORM INVENTORY = VERIFIED**. G19 **INDEPENDENT BACKEND AUDIT COMPLETE, FULL E8 NOT SATISFIED**. Whole **P4-T070 FINAL PASS + LOCK = HOLD**; **P4-T071 NOT STARTED**.
 
 **Only remaining substantive route to Final Lock:** a security-reviewed disposable GoTrue/Storage/Edge/Vercel runtime with real negative-access tests, a provably coherent production write-barrier and recovery-point scope, independent E1/E2/E4/E5/E8 evidence plus Founder final approval. Current tools only confirm existing production metadata and the genuine offline data-plane restore; metadata cannot substitute for isolated runtime or unattended Founder security approval. Repeating Run #3 without a specific defect is unnecessary.
+
+
+## 5. Independent writer-barrier source recheck (27 October 2026; *read-only*, NO production fence)
+
+A new single `READ ONLY REPEATABLE READ` source query and SQL privileges/policy-metadata inventory verified:
+
+| Real writer signal | Current observation | Security consequence |
+|---|---:|---|
+| Active production pg_cron | **3** (one executes every **5 seconds**) | No demonstrated time-bounded cron shutdown |
+| Enabled non-internal public triggers | **48** | Public write routes may trigger indirect writes |
+| Security-definer routines in public | **215** | Authorization needs targeted review, not automatic revocation |
+| Direct table write grants for anon | **5** | All five affected tables have RLS enabled and at least one anon/public policy; table grants alone do not prove actual unauthorized access or isolation |
+| Direct table write grants for authenticated | **16** | Historical 26 October preflight observed 15; difference needs non-destructive review, not an assumed breach |
+| Public tables with RLS enabled | **100/100** | Protective baseline only; not a guaranteed write barrier |
+| One-instant active DB writers | **0** (excluding the querying backend) | One instantaneous observation is NOT proof no scheduled or queued writes |
+| Edge deployed functions | **13** (5 verify_jwt=false) | Source inventory only; custom-auth and all callback paths need runtime negative checks |
+
+The aggregate was recorded **without table rows/PII/secrets** in `ci/phase4/b11/t070-g19-20261027-live-writer-source-observation.json`. The new G19 fail-closed security regression checks both existing 20-point G16 and 18-point G17 safety gates **still HOLD**, notwithstanding successful real Run #3. No production jobs paused, roles revoked, policies edited, backend deploys or costs incurred.
+
+### Technical impossibility of claiming G19 complete from these tools/permissions today
+
+The existing real Run #3 restored *data-plane* PG17 and 5 Storage file bytes in a disposable runner. This **cannot** separately reconstruct or attest operational GoTrue/MFA/refresh-session/revocation, the Storage HTTP/RLS service, 13 Edge Functions, Vercel environment configuration or signing secrets. Current project APIs offer production metadata, not a sealed copy of each managed service's confidential deployment-state and secrets, and a disposable fully reconstructed runtime plus Founder-bound access would be required for genuine negative-access behavior and E8.
+
+There is no independently witnessed freeze of all 20 writer surfaces (including unsynced Android/reporters and the 5-second cron), and silently pausing production or modifying active grants would break strict **no old work damage** rules. Future runtime restoration, a planned reversible maintenance window and owner-durable private AGE recovery require explicit secure authorization, not automation of a production mutation from a test.
+
+**Final adjudication unchanged:** verified G17 real DB+5-original-media PASS, G19 source writer inventory PASS LIMITED, **full G19 E8/HOSTED_AUTH_RUNTIME/HARDENED_WRITE_FENCE HOLD**, **P4-T070 FINAL PASS+LOCK HOLD**, **T071 NOT STARTED**. Never re-label no-cost static tests as full recovery.
