@@ -24,6 +24,7 @@ select public.jb_b8_g2_owner_link_article(
 select public.jb_b8_g4_owner_release_public_projection(
   :'t071_case'::uuid,'PUBLISH','PUBLIC_WORKS','PICHHORE','UNDER_REVIEW',true);
 reset role;
+select set_config('t071.synthetic_case_uuid', :'t071_case', true);
 
 -- Verify before fault: published original Article remains unchanged, linked
 -- approved safe public case is discoverable and private title is not leaked.
@@ -45,6 +46,9 @@ begin
  if jsonb_array_length(v)<>1 then raise exception 'T071_E8_PUBLIC_FEED_BASELINE_WRONG';end if;
  if v::text like '%synthetic independent source module outage isolation%'
  then raise exception 'T071_E8_PRIVATE_SOURCE_LEAK';end if;
+ v:=public.jb_b8_g4_public_case(current_setting('t071.synthetic_case_uuid')::uuid);
+ if v is null or v->>'case_id' <> current_setting('t071.synthetic_case_uuid')
+ then raise exception 'T071_E8_PER_CASE_BASELINE_NOT_REAL';end if;
 end $pre$;
 reset role;
 
@@ -63,7 +67,13 @@ begin
  if not denied then raise exception 'T071_E8_MODULE_FAULT_NOT_REAL';end if;
 end $fault$;
 -- The separate real public per-case RPC remains callable during feed failure.
-select public.jb_b8_g4_public_case(:'t071_case'::uuid) as unaffected_case \gset
+do $healthy_peer$
+declare v jsonb;
+begin
+ v:=public.jb_b8_g4_public_case(current_setting('t071.synthetic_case_uuid')::uuid);
+ if v is null or v->>'case_id' <> current_setting('t071.synthetic_case_uuid')
+ then raise exception 'T071_E8_INDEPENDENT_PER_CASE_RPC_FAILED_WITH_FEED_DOWN';end if;
+end $healthy_peer$;
 
 reset role;
 do $after$
@@ -84,6 +94,8 @@ declare v jsonb;
 begin
  v:=public.jb_b8_g4_public_feed(12);
  if jsonb_array_length(v)<>1 then raise exception 'T071_E8_MODULE_RECOVERY_FAILED';end if;
+ v:=public.jb_b8_g4_public_case(current_setting('t071.synthetic_case_uuid')::uuid);
+ if v is null then raise exception 'T071_E8_RECOVERED_CASE_UNAVAILABLE';end if;
 end $recovery$;
 reset role;
 do $final$
