@@ -1,0 +1,133 @@
+{
+  "schema": "JANTA_BOL_T071_C3_FOUR_INVARIANTS_RECOVERY_PRACTICAL_REVIEW_V1",
+  "date_ist": "2026-10-27",
+  "authority": {
+    "master_page": 304,
+    "test": "P4-T071",
+    "recov": "RECOV-019..026",
+    "closure_gate": "C3",
+    "route": "T071-CLOSURE-ROUTE-V1.0",
+    "precisely_four_invariants": true
+  },
+  "tested_sources": {
+    "repo": "jantabol/JANTA-BOL-Website",
+    "source_review_branch": "codex/b11-t071-failure-isolation-preflight-20261027",
+    "news_full_candidate_sha": "b509c60fceb053a51686f67e587d4922a40fa6f4",
+    "b8_original_pinned_sha": "658f474d6ee0f24efac60f069979e8adee1e9221",
+    "production_main_sha": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "same_source_integrated_hosted_candidate_verified": false
+  },
+  "evidence": [
+    {
+      "invariant": "OPTIONAL_MODULE_FAILURE_DOES_NOT_CRASH_WHOLE_SITE",
+      "verdict": "PARTIAL_ISOLATED",
+      "scope": "Original Social/B9 source client 503 fail-closed, actual localhost News/Article/LIVE static routes 200, not real article DB runtime or actual deployed production",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_head_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "required_log_markers": [
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404",
+        "C2_01_SOCIAL_REAL_HTTP_503=FAIL_CLOSED_NO_FAKE_POSTED",
+        "C2_07_SEARCH_REAL_HTTP_503=FAIL_CLOSED_ARTICLE_HTML_STILL_200"
+      ],
+      "full_integrated_pass": false
+    },
+    {
+      "invariant": "AMBIGUOUS_PAYMENT_CANNOT_AUTOMATICALLY_MAKE_AD_LIVE",
+      "verdict": "PASS_ISOLATED_REAL_PG17",
+      "scope": "Original B7 reviewed payment and ad LIVE-guard SQL applied on disposable PostgreSQL17; real payment insert reject, no paid/LIVE, recover missing receipt denied",
+      "run_id": 40530048228,
+      "job_id": 122280044810,
+      "run_head_sha": "fd285b3d5000e3102e5d8efb53e8c03ff67f3767",
+      "required_log_markers": [
+        "T071_C2_REAL_PG17_PAYMENT_WRITE_FAILURE=PASS",
+        "T071_C2_AD_CANNOT_GO_LIVE_DURING_PAYMENT_OUTAGE=PASS",
+        "T071_C2_PAYMENT_STORAGE_RECOVERED_BUT_NO_RECEIPT_STILL_DENIED=PASS"
+      ],
+      "full_integrated_pass": false
+    },
+    {
+      "invariant": "MESSAGING_FAILURE_DOES_NOT_REVERSE_COMMITTED_BUSINESS_ACTION",
+      "verdict": "PASS_ISOLATED_PG17_WITH_LOCAL_HTTP_503",
+      "scope": "Original B8 Owner-case SQL committed in disposable PG17; local HTTP 503 messaging boundary during same job, PostgreSQL independent readback after fault confirms case and original News/Ad remained",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_head_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "required_log_markers": [
+        "C2_ORIGINAL_B8_CASE_ACTUALLY_COMMITTED_BEFORE_MESSAGING_FAULT=PASS",
+        "C2_12_MESSAGING_EDGE_HTTP_503=NO_FALSE_ACK",
+        "C2_ORIGINAL_B8_COMMITTED_CASE_NEWS_AD_STILL_STABLE_AFTER_REAL_HTTP_MESSAGE_FAULT=PASS"
+      ],
+      "supporting_run_id": 40528474982,
+      "supporting_job_id": 122274421572,
+      "supporting_marker": "T071_C2_REAL_B8_CORE_CASE_COMMITTED_DURING_NOTIFICATION_OUTAGE=PASS",
+      "full_integrated_pass": false
+    },
+    {
+      "invariant": "DATABASE_FAILURE_CANNOT_REPORT_FALSE_SUCCESS",
+      "verdict": "PASS_ISOLATED_REAL_PG17",
+      "scope": "Original B8 PG17 Owner-case RPC failed with SQL check_violation, no false UUID or partial row, old records stable, recovered then Founder AAL2 simulator denial; prior separate crash/restore has 1 acknowledged post-checkpoint write missing",
+      "run_id": 40531488909,
+      "job_id": 122285201848,
+      "run_head_sha": "60873bcc9f24c3f466de9720ea00e87eb316f06f",
+      "required_log_markers": [
+        "T071_C2_DB_ORIGINAL_B8_WRITE_REJECTED_NO_FALSE_SUCCESS=PASS",
+        "T071_C2_DB_ABORTED_CASE_NOT_COMMITTED_PREVIOUS_NEWS_AD_OK=PASS",
+        "T071_C2_DB_ORIGINAL_B8_RECOVERY_REAL_COMMIT=PASS",
+        "T071_C2_DB_ORIGINAL_B8_AAL2_DENIAL_NO_WRITE=PASS"
+      ],
+      "full_integrated_pass": false
+    }
+  ],
+  "recovery_observed": {
+    "reference_run_id": 40501228346,
+    "reference_job_id": 122179118305,
+    "reference_test_sha": "8b6fcab5327cb7aed5eaf328772c1a970d3bfca8",
+    "reference_evidence_sha256": "b5edd1774be77b52ecc2cb47e59a6797a20dfee354461dbd98095220808d2220",
+    "last_verified_restorable_checkpoint_at_utc": "2026-10-27T12:07:02.908542Z",
+    "incident_start_at_utc": "2026-10-27T12:07:03.330412Z",
+    "independently_observed_service_restored_at_utc": "2026-10-27T12:07:04.590969Z",
+    "observed_local_rpo_seconds": 0.422,
+    "observed_local_rto_seconds": 1.261,
+    "post_checkpoint_committed_synthetic_article_rows_lost": 1,
+    "real_pg17_container_sigkill": true,
+    "same_disposable_db_endpoint_restored": true,
+    "fresh_client_schema_fk_rls_and_five_media_sha_verified": true,
+    "network_disabled": true,
+    "scope": "DISPOSABLE_OFFLINE_PG17_SYNTHETIC_FIXTURE_ONLY",
+    "production_rpo": "NOT_MEASURED",
+    "production_rto": "NOT_MEASURED",
+    "zero_data_loss_claim": false,
+    "actual_production_readiness": "NOT_PROVEN"
+  },
+  "practical_recovery_policy_review": {
+    "recommendation": "DO_NOT_ACCEPT_ANY_UNRECONCILED_ACKNOWLEDGED_AUTHORITATIVE_WRITE_LOSS; RESTORE_ONLY_FROM_VERIFIED_SNAPSHOT_WITH_VISIBLE_GAP_LEDGER_AND_FOUNDER_APPROVAL; DENY_FALSE_SUCCESS_UNTIL_POST_RESTORE_PROOFS_COMPLETE",
+    "derived_risk": "A verified last snapshot can still lose writes already acknowledged after it; a checksum/FK-valid restored database does not prove zero loss of public-news/case/payment audit activity.",
+    "on_incident_readiness": "HOLD_PUBLIC_WRITES_AND_LIVE_ACTIVATION_IF_AMBIGUOUS; AD_PAYMENT_STAYS_NOT_LIVE; MARK_MESSAGING_UNDELIVERED; DO_NOT_SAY_RECOVERY_SUCCESS_BEFORE_FRESH_ROLE_RLS_AND_BUSINESS_DATA_READBACK",
+    "practical_non_numeric_objectives": {
+      "rpo": "RECONCILE_EVERY_ACKNOWLEDGED_AUTHORITATIVE_POST_CHECKPOINT_WRITE_OR_MARK_IRRECOVERABLE_GAP_VISIBLE; NO_ZERO_LOSS_CLAIM",
+      "rto": "RESTORATION_COMPLETE_ONLY_AFTER_INDEPENDENT_E2E_FRESH_READS_AND_FOUNDER_AUTHORITY_RECONFIRMATION; NO_LOCAL_RUNNER_SECONDS_AS_LIVE_SLA"
+    },
+    "founder_production_rpo_numeric_target": "NOT_APPROVED",
+    "founder_production_rto_numeric_target": "NOT_APPROVED",
+    "founder_recovery_risk_acceptance": "NOT_RECORDED",
+    "founder_choice_needed": "APPROVE_NO_UNRECONCILED_ACKNOWLEDGED_LOSS_RISK_POLICY_OR_EXPLICITLY_ACCEPT_DOCUMENTED_RECOVERY_RISK; NUMERIC_TARGETS_SEPARATE",
+    "no_paid_service_required": true,
+    "no_new_t071_gate": true
+  },
+  "status": {
+    "four_invariants_reviewed_with_direct_run_log_markers": true,
+    "four_invariants_full_same_candidate_prod_pass": false,
+    "actual_disposable_pg17_restoration_practical_review_complete": true,
+    "production_recovery_objectives_approved": false,
+    "c3_local_evidence_and_risk_review": "COMPLETE",
+    "c3_final_pass_lock": false,
+    "c1_final_pass_lock": false,
+    "c2_final_pass_lock": false,
+    "t071_final_pass_lock": false,
+    "t072_started": false
+  },
+  "domain": "JANTABOL.in",
+  "prod_unchanged": true,
+  "cricket_resources_untouched": true
+}
