@@ -102,5 +102,5 @@ test('T070 source representative MVCC identity MUST equal fresh read-only post-m
  const apiCheck = db.indexOf('node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs');
  const tar = db.indexOf('tar -C "$work/plain"');
  assert.ok(pre>=0&&postread>pre&&apiCheck>postread&&tar>apiCheck);
- assert.ok(db.indexOf('T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE')<db.indexOf('jb_t034_snapshot_finish'));
+ assert.ok(db.indexOf('T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE')<db.indexOf('  jb_t034_snapshot_finish\n  printf'));
 });
