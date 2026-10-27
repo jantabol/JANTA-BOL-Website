@@ -107,18 +107,38 @@ def main():
                       'postgres:17')
           started=True
           must(bool(boot.stdout.strip()),'LOCAL_PG_CONTAINER_BOOT')
+          # postgres:17 Docker initializes a TEMP server, then shuts it down
+          # and starts the permanent server. pg_isready can be true during
+          # the temporary instance, so require stable real SELECTs twice.
           healthy=False
-          for _ in range(50):
-              r=docker('exec',ref,'pg_isready','-q','-U','postgres','-d','postgres',ok=False)
-              if r.returncode==0:healthy=True;break
-              time.sleep(.2)
-          must(healthy,'PG17_NOT_READY')
+          for _ in range(65):
+              args=('exec',ref,'psql','-U','postgres','-d','postgres',
+                    '-X','-qAt','-v','ON_ERROR_STOP=1','-c','SELECT 1;')
+              probe=docker(*args,ok=False)
+              if probe.returncode==0 and probe.stdout.strip()==b'1':
+                  time.sleep(.4)
+                  again=docker(*args,ok=False)
+                  if again.returncode==0 and again.stdout.strip()==b'1':
+                      healthy=True
+                      break
+              time.sleep(.3)
+          must(healthy,'PG17_STABLE_SQL_NOT_READY')
           print('T071_STAGE=VERSION')
           pg_version=psql("SHOW server_version_num;",'postgres').stdout.decode().strip()
           must(pg_version.startswith('17'),'WRONG_POSTGRES_MAJOR')
           print('T071_STAGE=ROLE_CREATE')
-          role_result=docker('exec',ref,'psql','-U','postgres','-d','postgres','-X','-qAt',
-                 '-v','ON_ERROR_STOP=1','-c','CREATE ROLE t071_public_test NOLOGIN;',ok=False)
+          role_result=None
+          for _ in range(16):
+              role_result=docker('exec',ref,'psql','-U','postgres','-d','postgres','-X','-qAt',
+                     '-v','ON_ERROR_STOP=1','-c','CREATE ROLE t071_public_test NOLOGIN;',ok=False)
+              if role_result.returncode==0:
+                  break
+              # Retrying only the deterministic *connection* race during
+              # pg17 Docker entrypoint initialization, not SQL errors.
+              if b'connection to server' not in role_result.stderr:
+                  break
+              time.sleep(.35)
+          must(role_result is not None,'PG17_ROLE_PROBE_MISSING')
           if role_result.returncode:
               # This command contains only hard-coded synthetic SQL. Never echo
               # arbitrary production command output from other operations.
