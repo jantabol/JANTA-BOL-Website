@@ -1,0 +1,172 @@
+{
+  "schema": "JB_PHASE4_T071_CLOSURE_ROUTE_V1_0_FROZEN_20261027",
+  "authority": {
+    "master": "JANTA_BOL_PHASE_4_MASTER_EXECUTION_PACK(20261027-041849).pdf",
+    "page": 304,
+    "test": "P4-T071",
+    "run": "RUN-10",
+    "topic": "Topic 10 Backup/Recovery",
+    "requirement_range": "RECOV-019..RECOV-026",
+    "section_range": "600..616",
+    "source_of_truth_precedence": "MASTER_OVERRIDES_THIS_ROUTE"
+  },
+  "category": "AUTO_FAILURE_MATRIX",
+  "purpose": "Controlled failures across 13 module families and practical RPO/RTO objectives; independently verify original four PASS invariants without damaging existing core.",
+  "mandatory_gates": [
+    {
+      "id": "C1",
+      "name": "Source and baseline binding",
+      "evidence": [
+        "E1"
+      ],
+      "close_condition": "Record exact release-candidate source tree, selected original module/role authority, pre-fault article read and publishing baseline, LIVE baseline or demonstrated truthful OFF state; protect existing Phase3 CI.",
+      "status": "PARTIAL_SOURCE_PINNED_FINAL_RUNTIME_UNVERIFIED"
+    },
+    {
+      "id": "C2",
+      "name": "Thirteen controlled failure outcomes",
+      "evidence": [
+        "E2"
+      ],
+      "close_condition": "For each of 13 families reproduce a controlled actual integrated failure/availability loss in safe isolated deployment; capture before/after real adapter or backend states and show mandatory expected behavior. Disabled optional/paid functions may satisfy only after release-candidate fail-closed/unavailable state and unaffected core are independently observed; source-only stubs do not equal full PASS.",
+      "status": "PARTIAL_REAL_ACCOUNTABILITY_SQL_ONE_MODULE_ONLY"
+    },
+    {
+      "id": "C3",
+      "name": "Master behavior and practical recovery objectives",
+      "evidence": [
+        "E2",
+        "E5"
+      ],
+      "close_condition": "Independently prove each of 4 Master PASS behaviors and review a credible same-system recovery point/time/data-loss example, record whether objectives are approved, deferred or risk-accepted; no invented production SLA. Founder sets policy/accepts risk; Master does not prescribe a particular numeric target.",
+      "status": "PARTIAL_LOCAL_PG17_METRICS_NOT_SYSTEM_TARGET"
+    },
+    {
+      "id": "C4",
+      "name": "Original evidence and regressions",
+      "evidence": [
+        "E1",
+        "E5"
+      ],
+      "close_condition": "Attach per-family failure logs with source and environment identity, timestamps, rejection/commit/readback evidence and rollback/cleanup proof; show baseline CI, Core News Publishing and Live truth/regression green on same candidate. Reuse old proof where source-appropriate, never fabricate hosted logs.",
+      "status": "PARTIAL_SELECTED_CI_GREEN"
+    },
+    {
+      "id": "C5",
+      "name": "Independent E8 review, Founder close and T072 handoff",
+      "evidence": [
+        "E8"
+      ],
+      "close_condition": "Independent reviewer validates C1-C4 against original Master T071 four PASS invariants and real negative evidence; no outstanding mandatory HOLD, no old-work regressions, Founder explicitly signs final decision and fixed result published. Only then Final PASS+LOCK and start P4-T072.",
+      "status": "HOLD"
+    }
+  ],
+  "matrix": [
+    [
+      "social",
+      "OPTIONAL",
+      "failure_isolated_website_and_publishing_healthy"
+    ],
+    [
+      "analytics",
+      "OPTIONAL",
+      "failure_isolated_website_and_publishing_healthy"
+    ],
+    [
+      "notifications",
+      "AUXILIARY",
+      "failure_audited_committed_business_action_preserved"
+    ],
+    [
+      "grievance",
+      "PROTECTED",
+      "unauthorized_sensitive_actions_denied_private_data_safe"
+    ],
+    [
+      "compliance",
+      "PROTECTED",
+      "unauthorized_sensitive_actions_denied_private_data_safe"
+    ],
+    [
+      "advertising",
+      "PROTECTED",
+      "uncertain_payment_never_promotes_or_publishes_ad"
+    ],
+    [
+      "search",
+      "OPTIONAL",
+      "failure_isolated_article_reads_and_publishing_healthy"
+    ],
+    [
+      "accountability",
+      "PROTECTED",
+      "protected_writes_fail_closed_audit_retained"
+    ],
+    [
+      "live",
+      "PROTECTED",
+      "no_false_live_state_or_provider_success"
+    ],
+    [
+      "provider",
+      "EXTERNAL",
+      "unknown_or_unavailable_not_fabricated_as_success"
+    ],
+    [
+      "payments",
+      "PROTECTED",
+      "uncertain_payment_not_published_as_live"
+    ],
+    [
+      "messaging",
+      "AUXILIARY",
+      "failure_cannot_undo_committed_business_action"
+    ],
+    [
+      "database",
+      "CRITICAL",
+      "failed_write_not_accepted_as_committed"
+    ]
+  ],
+  "pass_invariants": [
+    "OPTIONAL_MODULE_FAILURE_DOES_NOT_CRASH_WHOLE_SITE",
+    "AMBIGUOUS_PAYMENT_CANNOT_AUTOMATICALLY_MAKE_AD_LIVE",
+    "MESSAGING_FAILURE_DOES_NOT_REVERSE_COMMITTED_BUSINESS_ACTION",
+    "DATABASE_FAILURE_CANNOT_REPORT_FALSE_SUCCESS"
+  ],
+  "required_evidence": [
+    "E1",
+    "E2",
+    "E5",
+    "E8"
+  ],
+  "excluded_as_extra_mandatory_gates": [
+    "NEW_CUSTOM_DNS_HOST_jantaboli.in",
+    "PAID_HOSTING_OR_NEW_VERCEL_SUBSCRIPTION",
+    "DEPLOY_ALL_11_ABSENT_REVIEW_ONLY_B7_RPC_FUNCTIONS",
+    "FORCE_ENABLE_ADVANCED_ADS_PAYMENT_OR_EXTERNAL_SOCIAL",
+    "PRODUCTION_CRASH_OR_PRODUCTION_PROVIDER_PAYMENT",
+    "SOFT_LAUNCH_EDITORIAL_QA_NEWS_CLEANUP_AND_PUBLIC_URL_BRANDING",
+    "P4_T072_PARTIAL_WRITE_AND_RETRY_IDEMPOTENCY",
+    "P4_T070_FULL_E8_REOPEN_UNLESS_DIRECTLY_AFFECTS_T071_BASELINE"
+  ],
+  "route_change_control": "No extra T071 closure prerequisite unless traceable to Master RECOV-019..026, four PASS invariants, E1/E2/E5/E8 or independently proven regression/security blocker within original T071 scope. New issue outside route belongs to a separate issue/test, must not silently reopen C1-C5. Founder explicit approval required for scope changes.",
+  "latest_evidence": {
+    "exact_source_vm_13_of_13": "PASS_SOURCE_ONLY_GITHUB_40508982711",
+    "backend_accountability_optional_feed": "PASS_ISOLATED_REAL_PG17_GITHUB_40504645684",
+    "recovered_disposable_pg17": "PASS_GITHUB_40501228346_LOCAL_RPO_POINT_0_422s_RTO_1_261s_ONE_POST_BACKUP_COMMITTED_ROW_LOST",
+    "b7_11_rpc_reconciliation": "PASS_DOCUMENTARY_20_20_GITHUB_40511005431",
+    "no_domain_source_regressions": "PASS_50_50_GITHUB_40506133975",
+    "thirteen_real_integrated_acceptance": "NOT_COMPLETE",
+    "founder_numeric_rpo_rto_objectives": "NOT_DEFINED_MASTER_REQUIRES_PRACTICAL_REVIEW_NOT_ARBITRARY_SLA",
+    "full_e8": "HOLD",
+    "final_pass_lock": false,
+    "custom_domain": "DUE_OUTSIDE_T071"
+  },
+  "transition": {
+    "next": "P4-T072",
+    "master_range": "RECOV-027..RECOV-032",
+    "scope": "Partial DB Write, Fail-Closed, Retry/Idempotency; do not import as new T071 gates",
+    "rule": "ALL_C1_C5_MANDATORY_PROOFS_ACCEPTED_AND_INDEPENDENT_E8_AND_FOUNDER_FINAL_SIGNOFF"
+  }
+}
