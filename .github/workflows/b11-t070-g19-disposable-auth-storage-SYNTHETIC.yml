@@ -1,0 +1,72 @@
+# Isolated real HTTP GoTrue/Storage test, synthetic bytes only. No B2/Production.
+name: B11 T070 G19 Disposable Auth Storage HTTP (SYNTHETIC ONLY)
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs'
+      - '.github/workflows/b11-t070-g19-disposable-auth-storage-SYNTHETIC.yml'
+permissions:
+  contents: read
+jobs:
+  isolated_runtime_synthetic:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.event_name == 'pull_request' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    env:
+      T070_G19_LOCAL_ONLY: 'YES'
+    steps:
+      - name: Checkout reviewed candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: No production credentials and script checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "${GITHUB_REPOSITORY}" = jantabol/JANTA-BOL-Website
+          test "${GITHUB_EVENT_NAME}" = pull_request
+          test "${T070_G19_LOCAL_ONLY}" = YES
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_BACKUP_AGE_RECIPIENT:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          node --check ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs
+          docker info >/dev/null
+          echo 'T070_SYNTHETIC_RUNTIME_NO_PRODUCTION_SECRETS=PASS'
+      - name: Pinned Supabase CLI v2.120.0 (same toolchain as successful real Run3)
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Real local GoTrue and Storage HTTP with fabricated private object
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          repo="$GITHUB_WORKSPACE"
+          temp="$(mktemp -d)"
+          network="jb-t070-local-${GITHUB_RUN_ID}"
+          cleanup() {
+            (cd "$temp" && supabase stop --no-backup >/dev/null 2>&1) || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+            rm -rf -- "$temp"
+          }
+          trap cleanup EXIT
+          cd "$temp"
+          supabase init --yes > "$temp/init.log" 2>&1 || {
+            echo 'T070_LOCAL_STACK_INIT=HOLD'; exit 3;
+          }
+          docker network create -o com.docker.network.bridge.host_binding_ipv4=127.0.0.1 "$network" >/dev/null
+          supabase start --network-id "$network" -x studio,imgproxy,realtime,logflare,vector,supavisor,edge-runtime,postgres-meta,mailpit > "$temp/start.log" 2>&1 || {
+            echo 'T070_LOCAL_STACK_START=HOLD'; exit 3;
+          }
+          supabase status -o json > "$temp/local-service-keys.json" 2> "$temp/status.err" || {
+            echo 'T070_LOCAL_STACK_STATUS=HOLD'; exit 3;
+          }
+          chmod 600 "$temp/local-service-keys.json"
+          node "$repo/ci/phase4/b11/t070-g19-synthetic-auth-storage-runtime.mjs" "$temp/local-service-keys.json"
+          echo 'T070_LOCAL_GOTRUE_AND_STORAGE_HTTP_SYNTHETIC_RUNTIME=PASS'
+          echo 'T070_REAL_PRODUCTION_HOSTED_RUNTIME_RESTORE=NOT_RUN'
+          echo 'T070_FINAL_LOCK=HOLD'
