@@ -27,7 +27,7 @@ test('T070 source original Storage files bound inside PG raw dumped MVCC transac
  assert.match(db,/jb_t034_snapshot_query ci\/phase4\/b11\/t070-joint-storage-snapshot-identity\.sql/);
  assert.match(db,/node ci\/phase4\/b11\/storage-media-manual-cli\.mjs export-manual/);
  assert.ok(db.indexOf('t070-joint-storage-snapshot-identity.sql')<db.indexOf("  jb_t034_snapshot_finish\n  printf"));
- assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)'));
+ assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)'));
  assert.match(db,/source_db_identity\.json/);
  assert.match(db,/READ COMMITTED, READ ONLY/);
  assert.match(db,/t070_post_media_current_storage\.json/);
@@ -75,11 +75,32 @@ test('T070 representative Article/PURL, Grievance, LIVE, Ads and Auth source ide
  for(const forbidden of ['INSERT INTO','UPDATE public.','DELETE FROM','DROP TABLE','ALTER TABLE'])
   assert.ok(!q.toUpperCase().includes(forbidden.toUpperCase()),'T070 SQL is not read-only');
  assert.ok(db.includes('jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql'));
- assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt media)'));
+ assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)'));
  assert.ok(db.includes('cmp -s "$work/plain/t070_representative_identity.txt"'));
  assert.ok(clone.includes('T070_REPRESENTATIVE_ARTICLE_PURL_GRIEVANCE_LIVE_ADS_AUTH_IDENTITIES=EXACT_MATCH'));
  assert.ok(clone.includes('T070_RESTORED_REAL_AD_PAYMENT_SAMPLE_PRESENT=false'));
  assert.ok(clone.includes('cmp -s "$src/t070_representative_identity.txt"'));
  assert.ok(clone.includes('for n in 19 20 21 22 23 24 25'));
  assert.ok(wf.includes('workflow_dispatch:'));
+});
+
+test('T070 source representative MVCC identity MUST equal fresh read-only post-media source before encryption and remain exact after isolated readback',()=>{
+ const source = 't070_representative_identity.txt';
+ const post = 't070_post_media_representative_identity.txt';
+ assert.ok(db.includes("cat ci/phase4/b11/t070-representative-identity.sql"));
+ assert.ok(db.includes('BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;'));
+ assert.ok(db.includes('> "$work/plain/'+post+'"'));
+ assert.ok(db.includes('cmp -s "$work/plain/'+source+'"'));
+ assert.ok(db.includes('"$work/plain/'+post+'"'));
+ assert.ok(db.includes("fail 'source Article/Grievance/LIVE/Ads/Auth changed during joint media acquisition'"));
+ assert.ok(db.includes("T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE"));
+ assert.ok(db.includes('bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)'));
+ assert.ok(db.includes('cmp -s "$work/recovered/'+source+'"'));
+ assert.ok(db.includes('"$work/recovered/'+post+'"'));
+ const pre = db.indexOf("jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql");
+ const postread = db.indexOf('> "$work/plain/'+post+'"');
+ const apiCheck = db.indexOf('node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs');
+ const tar = db.indexOf('tar -C "$work/plain"');
+ assert.ok(pre>=0&&postread>pre&&apiCheck>postread&&tar>apiCheck);
+ assert.ok(db.indexOf('T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE')<db.indexOf('jb_t034_snapshot_finish'));
 });
