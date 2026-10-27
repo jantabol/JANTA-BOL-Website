@@ -64,13 +64,15 @@ SELECT public.jb_b8_g1_owner_create_case(
  'Pichhore','R1'
 ) AS c2_case_uuid \gset
 RESET ROLE;
+CREATE TEMP TABLE t071_c2_case_ref(id uuid primary key);
+INSERT INTO t071_c2_case_ref(id) VALUES (:'c2_case_uuid'::uuid);
 
 -- Readback of the *committed* real source case, the old Article and Ad, and
 -- the denied notification. The deliberate outage must not claim "delivered".
 DO $$
 BEGIN
  IF (SELECT count(*) FROM public.b8_cases
-     WHERE id=:'c2_case_uuid'::uuid)<>1 THEN
+     WHERE id=(SELECT id FROM t071_c2_case_ref))<>1 THEN
    RAISE EXCEPTION 'C2_BUSINESS_CASE_NOT_COMMITTED';
  END IF;
  IF (SELECT count(*) FROM public.articles
@@ -110,7 +112,7 @@ INSERT INTO public.live_notifications(
 DO $$
 BEGIN
  IF (SELECT count(*) FROM public.live_notifications WHERE dedupe_key='C2_RECOVERED')<>1
- OR (SELECT count(*) FROM public.b8_cases WHERE id=:'c2_case_uuid'::uuid)<>1
+ OR (SELECT count(*) FROM public.b8_cases WHERE id=(SELECT id FROM t071_c2_case_ref))<>1
  THEN RAISE EXCEPTION 'C2_RECOVERY_OR_COMMITTED_CASE_MISSING';END IF;
 END $$;
 \echo T071_C2_REAL_NOTIFICATION_RECOVERED_AND_COMMITTED_CASE_PRESERVED=PASS
