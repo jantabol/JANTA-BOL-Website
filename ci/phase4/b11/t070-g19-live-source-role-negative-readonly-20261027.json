@@ -1,0 +1,61 @@
+{
+  "schema": "JB_T070_LIVE_SOURCE_SQL_ROLE_NEGATIVE_V1",
+  "project_ref": "vrffsnkycvjithwtiylt",
+  "observed_date_ist": "2026-10-27",
+  "environment": "EXISTING_PRODUCTION_DB_READ_ONLY_NOT_RESTORED_GO_TRUE_OR_HTTP",
+  "sql_pattern": "BEGIN TRANSACTION READ ONLY; SET LOCAL ROLE role_name; SELECT count(*) aggregate only; ROLLBACK;",
+  "no_data_rows_extracted": true,
+  "no_production_write": true,
+  "checks": [
+    {
+      "role": "anon",
+      "object": "public.grievances",
+      "expected": "SQLSTATE_42501",
+      "observed": "SQLSTATE_42501_PERMISSION_DENIED",
+      "result": "PASS_DB_DENY"
+    },
+    {
+      "role": "anon",
+      "object": "public.grievance_evidence",
+      "expected": "SQLSTATE_42501",
+      "observed": "SQLSTATE_42501_PERMISSION_DENIED",
+      "result": "PASS_DB_DENY"
+    },
+    {
+      "role": "anon",
+      "object": "storage.objects WHERE bucket_id='grievance-private'",
+      "expected": "visible=0",
+      "observed_visible": 0,
+      "result": "PASS_DB_RLS_ZERO"
+    },
+    {
+      "role": "authenticated (no JWT claims)",
+      "object": "public.grievances",
+      "expected": "visible=0",
+      "observed_visible": 0,
+      "result": "PASS_DB_RLS_ZERO"
+    },
+    {
+      "role": "authenticated (no JWT claims)",
+      "object": "public.user_roles",
+      "expected": "visible=0",
+      "observed_visible": 0,
+      "result": "PASS_DB_RLS_ZERO"
+    },
+    {
+      "role": "anon",
+      "object": "public.articles",
+      "expected": "published public rows visible",
+      "observed_visible": 16,
+      "result": "PASS_PUBLIC_POSITIVE_READ"
+    }
+  ],
+  "source_surface_tests_real": true,
+  "cloned_runtime_auth_mfa_negative_tests_executed": false,
+  "HTTP_storage_private_access_negative_tests_executed": false,
+  "auth_token_revocation_AAL2_tests_executed": false,
+  "all_E8_ready": false,
+  "T070_FINAL_LOCK": false,
+  "T071_STARTED": false,
+  "notes": "Live production PostgreSQL SET LOCAL ROLE is a real limited SQL privileges/RLS observation only. It does not emulate signed HTTP requests, GoTrue sessions, or isolated restored service. Never expose IDs, complainants, secrets, private paths, byte hashes."
+}
