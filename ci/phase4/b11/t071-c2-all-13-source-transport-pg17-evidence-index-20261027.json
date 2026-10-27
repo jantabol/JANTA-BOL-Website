@@ -1,0 +1,176 @@
+{
+  "schema": "JANTA_BOL_P4_T071_C2_ALL_13_SCOPED_FAILURE_EVIDENCE_V1",
+  "test": "P4-T071",
+  "gate": "C2",
+  "date_ist": "2026-10-27",
+  "master": "RECOV-019..026 p304",
+  "closure_route": "C2_OF_C1_C5",
+  "evidence_binding": {
+    "pinned_b8": "658f474d6ee0f24efac60f069979e8adee1e9221",
+    "pinned_news": "b509c60fceb053a51686f67e587d4922a40fa6f4",
+    "original_13_adapter_ci": 40508982711,
+    "actual_7_http_and_pg_case_ci": 40534396564,
+    "actual_7_http_job": 122295571136,
+    "actual_7_http_assertions": "8/8 PASS; 7 original source adapters rejected real localhost HTTP 503; real PG17 original B8 case committed pre/post",
+    "production_main": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "production_mutated": false,
+    "live_provider_called": false,
+    "real_payment_made": false
+  },
+  "families": [
+    {
+      "index": 1,
+      "module": "social",
+      "proof": "HTTP_503_SOURCE_REAL_HTTP",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 2,
+      "module": "analytics",
+      "proof": "PG17_SOURCE_RPC_PERMISSION_DENIAL",
+      "run_id": "40531996112",
+      "full_product_e8": false
+    },
+    {
+      "index": 3,
+      "module": "notifications",
+      "proof": "PG17_SOURCE_NOTIFICATION_INSERT_REJECTION",
+      "run_id": "40528474982",
+      "full_product_e8": false
+    },
+    {
+      "index": 4,
+      "module": "grievance",
+      "proof": "HTTP_503_SOURCE_REAL_HTTP",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 5,
+      "module": "compliance",
+      "proof": "HTTP_503_SOURCE_REAL_HTTP",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 6,
+      "module": "advertising",
+      "proof": "PG17_SOURCE_PAYMENT_OUTAGE_AD_LIVE_GUARD",
+      "run_id": "40530048228",
+      "full_product_e8": false
+    },
+    {
+      "index": 7,
+      "module": "search",
+      "proof": "HTTP_503_SOURCE_REAL_HTTP_ARTICLE_STATIC_CONTINUES",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 8,
+      "module": "accountability",
+      "proof": "PG17_SOURCE_PUBLIC_FEED_PERMISSION_FAULT",
+      "run_id": "40504645684",
+      "full_product_e8": false
+    },
+    {
+      "index": 9,
+      "module": "live",
+      "proof": "HTTP_503_SOURCE_EDGE_REAL_HTTP",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 10,
+      "module": "provider",
+      "proof": "HTTP_503_SOURCE_ENCODER_HANDOFF_FAIL_NO_NAVIGATION",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 11,
+      "module": "payments",
+      "proof": "PG17_SOURCE_PAYMENT_FAILED_WRITE_NO_FALSE_PAID",
+      "run_id": "40530048228",
+      "full_product_e8": false
+    },
+    {
+      "index": 12,
+      "module": "messaging",
+      "proof": "HTTP_503_SOURCE_EDGE_WHILE_ORIGINAL_B8_PG17_CASE_PERSISTS",
+      "run_id": "40534396564",
+      "full_product_e8": false
+    },
+    {
+      "index": 13,
+      "module": "database",
+      "proof": "PG17_SOURCE_B8_CASE_INSERT_FAILED_NO_ACK_RECOVERY",
+      "run_id": "40531488909",
+      "full_product_e8": false
+    }
+  ],
+  "source_adapters_with_fault_tests": 13,
+  "pg17_source_component_families": 6,
+  "actual_local_http_source_families": 7,
+  "actual_loopback_static_news_article_live_routes_200": 3,
+  "actual_loopback_invalid_static_route_404": true,
+  "actual_local_pg17_committed_case_unchanged_after_http_503": true,
+  "supabase_connected_prod_readonly": {
+    "project": "vrffsnkycvjithwtiylt",
+    "source": "Connected Supabase pg_catalog / aggregate SELECT in READ ONLY TXN",
+    "active_project": true,
+    "postgres_major": 17,
+    "social_global_enabled": true,
+    "social_provider_mode_manual_count": 3,
+    "live_sessions_OFF_count": 16,
+    "public_live_feed_OFF_count": 7,
+    "notification_delivery_state_IN_APP_READY_count": 160,
+    "grievance_status_counts": {
+      "received": 3,
+      "resolved": 1,
+      "under_review": 1,
+      "withdrawn": 1
+    },
+    "compliance_status_counts": {
+      "complete": 1
+    },
+    "anon_no_direct_select_on": [
+      "articles",
+      "grievances",
+      "compliance_tasks",
+      "social_distribution",
+      "social_settings",
+      "live_notifications"
+    ],
+    "anon_direct_select_public_live_feed": true,
+    "anon_rpc_can_execute": [
+      "jb_b9_search",
+      "jb_b8_g4_public_feed"
+    ],
+    "anon_rpc_cannot_execute": [
+      "jb_grievance_transition_internal",
+      "jb_compliance_transition_internal",
+      "jb_social_record_attempt_internal",
+      "jb_social_set_global_internal"
+    ],
+    "real_anon_b9_T032_search_count": 1,
+    "real_anon_b9_T032_result_contains_full_body": false,
+    "production_write_operations": 0,
+    "runtime_faults_injected_into_production": 0
+  },
+  "accepted_scopes": {
+    "c2_all_13_local_boundary_fault_probes": "PASS_SCOPED_ONLY",
+    "c2_pg17_six_family_component_probes": "PASS_SCOPED_ONLY",
+    "c2_live_catalog_acl_readonly": "PASS_READONLY_ONLY",
+    "c2_exact_same_healthy_release_with_13_active_faults": "NOT_PROVEN",
+    "c2_full_real_hosted_integrated_E8": "HOLD",
+    "c2_final_PASS_LOCK": false,
+    "t071_final_PASS_LOCK": false,
+    "c1_final_PASS_LOCK": false,
+    "t072_started": false
+  },
+  "c2_gap": "Original Master C2 demands one same-release-candidate real integrated failure/unavailability evidence + core News/LIVE continuity for all families. Local real HTTP 503 server is a synthetic dependency returning genuine HTTP but NOT Supabase/real provider; PG17 cases are authentic source-backed functions on separate disposable DB. Neither substitutes for final hosted original C2 E8.",
+  "domain": "JANTABOL.in",
+  "no_new_gate_added": true
+}
