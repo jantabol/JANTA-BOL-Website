@@ -130,7 +130,7 @@ test('05 COMPLIANCE original protected transition rejects actual local HTTP 503'
 test('07 SEARCH original B9 search rejects local HTTP 503 without imaginary hits while Article GET still 200',async()=>{
  const win={JBBackend:{client:{rpc:(method,args)=>request('/rpc/'+method,args)}}};
  vm.runInNewContext(original.search,{window:win,Error},{timeout:1000});
- await assert.rejects(win.JBB9.search({query:'पिछोर',limit:5}),/T071_C2_HTTP_503/);
+ await assert.rejects(win.JBB9.search({query:'पिछोर',limit:5}),/B9_BACKEND_REJECTED_jb_b9_search: REMOTE_CHECK_FAILED/);
  assert(hits.some(x=>x.path==='/rpc/jb_b9_search'));
  const article=await fetch(origin+'/JANTA_BOL_PHASE_3C_WORKING/article.html');
  assert.equal(article.status,200);
