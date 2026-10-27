@@ -83,7 +83,7 @@ test('negative: fabricated trending views are rejected',()=>{
 test('negative: newly enabled citizen / reporter demo forms are rejected',()=>{
   const exposed=home.replace('id="citizen-news-form" hidden inert style="display:none"','id="citizen-news-form"');
   assert.ok(problems({page:exposed}).includes('citizen demo form could collect private input'));
-  const exposedReporter=home.replace('class="official-reporter-open" disabled','class="official-reporter-open"');
+  const exposedReporter=home.replace('class="district-button official-reporter-open" disabled','class="district-button official-reporter-open"');
   assert.ok(problems({page:exposedReporter}).includes('reporter demo CTA enabled'));
 });
 
