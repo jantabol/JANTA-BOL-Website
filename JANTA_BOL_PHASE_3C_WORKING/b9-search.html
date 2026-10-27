@@ -1,0 +1,38 @@
+<!doctype html><html lang="hi"><head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>पुरानी खबरें खोजें — JANTA BOL</title>
+<meta name="description" content="जनता बोल — प्रकाशित समाचार, पुराना संग्रह, जिला, तारीख और विषय खोजें।">
+<link rel="stylesheet" href="b9-ui.css"></head>
+<body class="b9-page">
+<header class="b9-header"><a class="b9-brand" href="index.html">JANTA <span>BOL</span></a><a href="index.html">← होम</a><a href="accountability-public.html">जवाबदेही</a></header>
+<main class="b9-shell">
+<section class="b9-panel">
+<h1>🔎 खबरें और पुराना समाचार संग्रह</h1>
+<p class="b9-muted">केवल वर्तमान प्रकाशित खबरें दिखाई जाती हैं। पुराने वर्षों की खबरें भी यहाँ मिलेंगी।</p>
+<form id="b9Filters">
+<div class="b9-grid">
+<div class="b9-field"><label for="b9Query">खबर / शब्द / शीर्षक / खबर का हिस्सा</label><input id="b9Query" name="query" maxlength="120" autocomplete="off" placeholder="किस विषय की खबर?"></div>
+<div class="b9-field"><label for="b9Id">पूरी Article ID (वैकल्पिक)</label><input id="b9Id" name="articleId" maxlength="36" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"></div>
+<div class="b9-field"><label for="b9District">जिला</label><input id="b9District" name="district" maxlength="100" placeholder="Shivpuri"></div>
+<div class="b9-field"><label for="b9Location">स्थान / तहसील</label><input id="b9Location" name="location" maxlength="120"></div>
+<div class="b9-field"><label for="b9Category">श्रेणी</label><input id="b9Category" name="category" maxlength="90" placeholder="Politics / Crime / Education"></div>
+<div class="b9-field"><label for="b9Term">Topic या Tag</label><input id="b9Term" name="term" maxlength="120" list="b9Terms" placeholder="मंजूर विषय या टैग"><datalist id="b9Terms"></datalist></div>
+<div class="b9-field"><label for="b9From">शुरुआती तारीख</label><input id="b9From" type="date" name="from"></div>
+<div class="b9-field"><label for="b9To">आखिरी तारीख</label><input id="b9To" type="date" name="to"></div>
+<div class="b9-field"><label for="b9Year">वर्ष</label><input id="b9Year" type="number" name="year" min="1900" max="2200" placeholder="2026"></div>
+<div class="b9-field"><label for="b9Month">महीना</label><select id="b9Month" name="month"><option value="">सभी महीने</option><option value="1">जनवरी</option><option value="2">फ़रवरी</option><option value="3">मार्च</option><option value="4">अप्रैल</option><option value="5">मई</option><option value="6">जून</option><option value="7">जुलाई</option><option value="8">अगस्त</option><option value="9">सितंबर</option><option value="10">अक्टूबर</option><option value="11">नवंबर</option><option value="12">दिसंबर</option></select></div>
+<div class="b9-field"><label for="b9Sort">क्रम</label><select id="b9Sort" name="order"><option value="latest">सबसे नई</option><option value="oldest">सबसे पुरानी</option><option value="relevance">सबसे संबंधित</option></select></div>
+</div>
+<div class="b9-actions"><button class="b9-btn" type="submit" id="b9Submit">खबर खोजें</button><button class="b9-btn secondary" type="reset">सभी फिल्टर हटाएँ</button></div>
+</form>
+</section>
+<section class="b9-panel" aria-live="polite" aria-label="खोज नतीजे">
+<h2>प्रकाशित खबरें</h2><p class="b9-status" id="b9Status">खोज शुरू हो रही है…</p>
+<div id="b9Results"></div><div class="b9-actions"><button type="button" class="b9-btn secondary" id="b9More" hidden>और खबरें देखें</button></div>
+</section>
+<section class="b9-panel"><h2>सार्वजनिक संवाददाता</h2><p class="b9-muted">सिर्फ उन नामों की सूची जिन्होंने सार्वजनिक नाम दिखाने की अनुमति दी है।</p><div id="b9Reporters"></div></section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script><script src="backend-client.js"></script>
+<script src="b9-client.js"></script><script src="b9-search-ui.js"></script>
+</body></html>
