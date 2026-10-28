@@ -161,7 +161,7 @@ test('T075 ZERO PAID: two independent default-OFF release approvals AND actual e
 
 test('T075 prevent stale or wrong-subfolder quota: verify bucket-wide B2 cap twice before export and before upload',()=>{
  const s=readFileSync('ci/backup/jb-free-offsite-backup.sh','utf8');
- const command='rclone --config "$work/rclone.conf" --retries 1 size --json "jbbackup:jantabol-backup-euc-2026"';
+ const command='rclone --config "$work/rclone.conf" --retries 1 --b2-versions size --json "jbbackup:jantabol-backup-euc-2026"';
  const start=s.indexOf('if [[ "$auto" == 1 ]]; then\n  # FREE-TIER COST CAP:');
  const pre=s.indexOf(command,start);
  const db=s.indexOf('supabase db dump --db-url');
@@ -171,6 +171,7 @@ test('T075 prevent stale or wrong-subfolder quota: verify bucket-wide B2 cap twi
  assert(start>=0 && pre>start && pre<db);
  assert(fresh>db && fresh<cap && cap<offsite);
  assert.equal(s.split(command).length-1,2,'must check B2 whole bucket before DB and again before immutable upload');
+ assert.equal((s.match(/--b2-versions size --json/g)||[]).length,2,'old versions/hidden ciphertext must count toward storage cap');
  assert(!s.includes('size --json "${JB_BACKUP_REMOTE_PREFIX%/}"'));
  assert.match(s,/T075 fresh bucket-wide B2 quota unknown before upload/);
 });
