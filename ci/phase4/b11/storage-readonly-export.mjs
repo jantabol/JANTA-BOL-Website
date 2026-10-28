@@ -3,6 +3,7 @@
 // NEVER runs in B11 CI against LIVE. Requires separately authorized manual Owner context.
 // No mutation, S3 delete, generation of signed URLs, shared public-media endpoints, or
 // reading the separate Cricket project. Source may change during export: double-scan HOLD.
+import {assertScheduledBackupContext} from './t075-scheduled-backup-identity.mjs';
 import {mkdirSync,existsSync,lstatSync,statSync,readFileSync,readdirSync,writeFileSync,rmSync,renameSync,createWriteStream} from 'node:fs';
 import {Readable,Transform} from 'node:stream';
 import {pipeline} from 'node:stream/promises';
@@ -17,6 +18,7 @@ const MAX_TOTAL=2*1024*1024*1024;
 function fail(code){throw new Error('B11_STORAGE_'+code)}
 function under(child,base){const r=relative(base,child);return !!r&&r!=='..'&&!r.startsWith('..'+sep)&&!isAbsolute(r)}
 export function guardManual(env=process.env){
+ if(env.JB_T075_AUTO_JOINT_BACKUP==='1') return assertScheduledBackupContext(env);
  const checks={
   GITHUB_ACTIONS:'true',GITHUB_EVENT_NAME:'workflow_dispatch',
   GITHUB_REPOSITORY:'jantabol/JANTA-BOL-Website',
@@ -147,7 +149,7 @@ export async function exportStorageBytes({outDir,fetchImpl=globalThis.fetch,toke
   // No standalone 'complete archive' claim: only storage files exported.
   // Original full T034 encrypted DB archive and Founder-signed B11 bundle
   // are required separately for recovery attestation.
-  return {mode:manual?'MANUAL_READ_ONLY':'SYNTHETIC_TEST',
+  return {mode:manual?(env.JB_T075_AUTO_JOINT_BACKUP==='1'?'SCHEDULED_READ_ONLY':'MANUAL_READ_ONLY'):'SYNTHETIC_TEST',
    project_ref:REF,buckets:BUCKETS,
    object_count:downloaded,byte_count:total,stable_double_listing:true,
    actual_files_exported:true,db_snapshot_bound:false,
@@ -169,7 +171,7 @@ export function verifyStorageExportReceipt(rootDir){
  if(!existsSync(storageBase)||lstatSync(storageBase).isSymbolicLink()||
   !statSync(storageBase).isDirectory())fail('RECEIPT_SOURCE_STORAGE_SYMLINK_OR_MISSING');
  if(receipt.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||
- receipt.project_ref!==REF||receipt.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
+ receipt.project_ref!==REF||!['MANUAL_OWNER_SERVICE_ROLE_READ_ONLY','SCHEDULED_PROTECTED_SERVICE_ROLE_READ_ONLY'].includes(receipt.capture_method)||
  receipt.stable_double_listing!==true||receipt.db_snapshot_bound!==false||
  !Array.isArray(receipt.sha_records)||!Number.isSafeInteger(receipt.object_count)||
  receipt.object_count<1||receipt.sha_records.length!==receipt.object_count||
