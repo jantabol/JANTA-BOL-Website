@@ -30,12 +30,13 @@ function fetchOnly(path){
   }},r=>{
    const status=r.statusCode,ctype=String(r.headers['content-type']||'');
    const redirect=r.headers.location||null,validTLS=r.socket.authorized===true;
+   const headers={cache:String(r.headers['cache-control']||''),nosniff:String(r.headers['x-content-type-options']||''),frame:String(r.headers['x-frame-options']||'')};
    r.on('data',c=>{
     bytes+=c.length;
     if(bytes>400000){q.destroy(new Error('T076_EXCESSIVE_PUBLIC_RESPONSE'));return;}
     parts.push(c);
    });
-   r.on('end',()=>resolve({status,ctype,redirect,validTLS,body:Buffer.concat(parts)}));
+   r.on('end',()=>resolve({status,ctype,redirect,validTLS,headers,body:Buffer.concat(parts)}));
   });
   q.on('timeout',()=>q.destroy(new Error('T076_PREVIEW_HTTP_TIMEOUT')));
   q.on('error',reject);q.end();
@@ -55,13 +56,18 @@ test('T076 actual reviewed PR61 exact preview V3 index available with public TLS
  assert(r.body.toString('utf8').includes('website-v3.js'));
  assert(!r.body.toString('utf8').includes('शिवपुरी अस्पताल में भ्रष्टाचार का आरोप'));
  const local=readFileSync('JANTA_BOL_PHASE_3C_WORKING/index.html');
+ // Vercel's optional public feedback toolbar appends an immutable 163-byte
+ // deployment-specific footer to otherwise exact static HTML. Accept ONLY
+ // that pinned provider-injected footer, never arbitrary added HTML/scripts.
+ const suffix=r.body.subarray(local.length).toString('utf8');
+ const injected='<script async data-explicit-opt-in="true" data-deployment-id="'+reviewedDeploy+'" src="https://vercel.live/_next-live/feedback/feedback.js"></script>';
  const identical=r.body.equals(local);
  if(!identical){
-  const first=(()=>{const n=Math.min(local.length,r.body.length);for(let i=0;i<n;i++)if(local[i]!==r.body[i])return i;return n})();
-  console.log('T076_HTML_BYTE_DIFFERENCE_DIAGNOSTIC: LOCAL_SIZE='+local.length+' LIVE_SIZE='+r.body.length+' FIRST_MISMATCH_OFFSET='+first+'; LOCAL_SHA16='+fp(local)+' LIVE_SHA16='+fp(r.body));
-  if(first===local.length && r.body.length-local.length<300){const suffix=r.body.subarray(local.length).toString('utf8');console.log('T076_PREVIEW_EXTRA_PUBLIC_FOOTER='+JSON.stringify(suffix).slice(0,450));}
+  assert(r.body.length>local.length);
+  assert(r.body.subarray(0,local.length).equals(local),'preview V3 HTML source modified before provider footer');
+  assert.equal(suffix,injected,'unrecognized extra script/HTML content must remain blocked');
+  console.log('T076_PR61_HTML_EXACT_PREFIX_PLUS_PINNED_VERCEL_OPTIN_FEEDBACK_FOOTER=PASS');
  }
- assert(identical,'PREVIEW_HTML_NOT_EQUAL_REVIEWED_BRANCH_BYTE_SOURCE');
  console.log('T076_PREVIEW_V3_HTML_BYTES_MATCH_PR61=PASS_SCOPED');
 });
 test('T076 actual reviewed Preview JS equals original reviewed PR61 source bytes',async()=>{
@@ -78,6 +84,10 @@ test('T076 actual Preview Founder login page is public shell, never tests protec
  assert.match(r.ctype,/text\/html/i);
  const html=r.body.toString('utf8');
  assert(html.includes('b12-safe-nav.js'),'expected reviewed B12 redirect safety helper in public login shell');
+ assert.match(r.headers.cache,/(?:^|,\s*)private|no-store/i,'admin HTML must explicitly prevent shared cache');
+ assert.match(r.headers.cache,/no-store/i,'Founder login shell must be no-store');
+ assert.equal(r.headers.nosniff,'nosniff');
+ assert.equal(r.headers.frame,'SAMEORIGIN');
  assert(!/SUPABASE_SERVICE_ROLE_KEY\s*=/.test(html),'secret-bearing source must not leak');
  console.log('T076_PREVIEW_ADMIN_SHELL_HTTP200=PASS_SCOPED_NO_LOGIN_ATTEMPT');
 });
