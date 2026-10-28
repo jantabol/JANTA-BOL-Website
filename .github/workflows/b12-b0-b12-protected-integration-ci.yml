@@ -256,3 +256,44 @@ jobs:
           node -e "const r=require('/tmp/b12-release-hold.json'); if(r.release!=='HOLD'||r.ready_to_consider_founder_release)process.exit(1)"
           echo 'B12_SOURCE_CODING_PRECHECK=PASS_SCOPED_REAL_PRODUCT_TESTS_NOT_RUN'
           echo 'B12_T076_T083_FINAL_HOLD=true'
+
+  b11_review_only_candidate:
+    name: B11 T070-T075 joint backup candidates plus original protected backup hashes (NO LIVE)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Fail-closed evidence of unchanged original B8/T034 and new B11 candidate scripts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/b12-b0-b12-reconcile-20261028'
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test "$(git hash-object ci/backup/jb-free-offsite-backup.sh)" = "70568709e83c7caddecd64bd170de90ea9c55d35"
+          test "$(git hash-object ci/backup/jb-t034-offline-full-pg-restore.sh)" = "78858062cfda3b8960173a3d3134efbf2efb2cfa"
+          bash -n ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh
+          bash -n ci/phase4/b11/backup/jb-t034-offline-full-pg-restore-joint-CANDIDATE.sh
+          grep -q 'bash ci/phase4/b11/backup/jb-t034-offline-full-pg-restore-joint-CANDIDATE.sh' ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh
+          for wf in b11-t070-real-joint-restore-MANUAL.yml b11-t075-scheduled-encrypted-joint-review.yml; do
+            grep -Fq 'ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh' ".github/workflows/$wf"
+            if grep -Eq 'bash ci/backup/jb-free-offsite-backup.sh' ".github/workflows/$wf"; then exit 1; fi
+          done
+          node --check ci/phase4/b11/storage-readonly-export.mjs
+          node --check ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs
+          echo 'B11_OLD_BACKUP_SCRIPTS_UNCHANGED_CANDIDATES_BASH_SAFE=PASS_SCOPED'
+      - name: Run only B11 offline synthetic and cost-budget negatives, never live E8
+        run: |
+          set -Eeuo pipefail
+          node --test \
+            ci/phase4/b11/t075-scheduled-budget.test.mjs \
+            ci/phase4/b11/storage-readonly-export.test.mjs \
+            ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs \
+            ci/phase4/b11/t070-media-byte-verifier.test.mjs
+          echo 'B11_NO_LIVE_DB_NO_B2_SYNTHETIC_CODING_TESTS=PASS_SCOPED'
+          echo 'B11_T070_REAL_MANUAL_RESTORE_AND_T075_SCHEDULED_PRODUCTION=HOLD'
