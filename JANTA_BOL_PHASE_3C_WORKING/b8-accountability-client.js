@@ -24,7 +24,7 @@ function requireRole(role,want){
   if(role!==want)deny('ROLE_'+want.toUpperCase()+'_REQUIRED');
 }
 /** Inject the current authenticated public Supabase client; never service_role. */
-export function createB8Workflow({client,role,allowPrivateUpload=false}){
+export function createB8Workflow({client,role,allowPrivateUpload=false,ownerCaseIdempotency=null}){
   if(!client||typeof client.rpc!=='function')deny('AUTHENTICATED_BACKEND_REQUIRED');
   if(!['owner','editor','reporter'].includes(role))deny('ACTIVE_STAFF_LOGIN_REQUIRED');
   async function rpc(name,args){
@@ -52,10 +52,21 @@ export function createB8Workflow({client,role,allowPrivateUpload=false}){
     },
     async ownerCreateCase(title,area,lane){
       requireRole(role,'owner');
+      const p_title=bounded(title,12,200,'CASE_TITLE_REQUIRED');
+      const p_area_label=bounded(area,2,120,'AREA_REQUIRED');
+      const p_risk_lane=caseLane(lane);
+      // T072 REVIEW-ONLY UI opt-in: never downgrade on an absent/missing
+      // protected idempotent server RPC or an ambiguous network acknowledgement.
+      // Legacy API compatibility is retained only for callers NOT using opt-in.
+      if(ownerCaseIdempotency!==null){
+        if(typeof ownerCaseIdempotency.submit!=='function')
+          deny('IDEMPOTENCY_ADAPTER_REQUIRED');
+        return id(await ownerCaseIdempotency.submit({
+          client,payload:{title:p_title,area:p_area,lane:p_risk_lane}
+        }));
+      }
       return id(await rpc('jb_b8_g1_owner_create_case',{
-        p_title:bounded(title,12,200,'CASE_TITLE_REQUIRED'),
-        p_area_label:bounded(area,2,120,'AREA_REQUIRED'),
-        p_risk_lane:caseLane(lane)
+        p_title,p_area_label,p_risk_lane
       }));
     },
     async ownerAssignReporter(caseId,userId,expiry){
