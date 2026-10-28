@@ -10,8 +10,10 @@ import {join} from 'node:path';
 import vm from 'node:vm';
 const b8=process.env.T071_C2_B8_SOURCE;
 const news=process.env.T071_C2_NEWS_SOURCE;
-assert(b8?.endsWith('/t071-c2-pinned-b8')&&!b8.includes('..'),'PINNED_B8_SOURCE_MISSING');
-assert(news?.endsWith('/t071-c2-pinned-news')&&!news.includes('..'),'PINNED_NEWS_SOURCE_MISSING');
+assert((b8?.endsWith('/t071-c2-pinned-b8')||b8?.endsWith('/t071-c2-full-actual'))&&!b8.includes('..'),'PINNED_B8_SOURCE_MISSING');
+assert((news?.endsWith('/t071-c2-pinned-news')||news?.endsWith('/t071-c2-full-actual'))&&!news.includes('..'),'PINNED_NEWS_SOURCE_MISSING');
+// For full-candidate replay, both adapters MUST come from one identical source root.
+if(b8?.endsWith('/t071-c2-full-actual'))assert.equal(b8,news,'SAME_CANDIDATE_SOURCE_IDENTITY_MISMATCH');
 const from=(root,name)=>readFileSync(join(root,'JANTA_BOL_PHASE_3C_WORKING',name),'utf8');
 const original=Object.freeze({
  domain:from(b8,'phase4-domain-client.js'),
