@@ -45,7 +45,7 @@ module.exports = async function handler(req, res) {
       && (!category || String(a.category || '').toLowerCase() === category.toLowerCase())
     ).map(a => {
       const summary = {
-        id: a.id, slug: a.slug || '', title: a.title || '',
+        id: a.id, slug: a.slug || '', status: 'published', title: a.title || '',
         excerpt: a.excerpt || '', category: a.category || '',
         cover_image_url: a.cover_image_url || '', public_attribution: a.public_attribution || '',
         published_at: a.published_at, news_date: a.news_date || null,
