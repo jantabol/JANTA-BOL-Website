@@ -45,7 +45,9 @@ try{
   el('category').textContent=a.category||'समाचार';
   el('title').textContent=a.title||'समाचार';document.title=(a.title||'समाचार')+' | JANTA BOL';
   const d=new Date(a.published_at);
-  el('meta').textContent=(isNaN(d.getTime())?'':'प्रकाशित: '+d.toLocaleString('hi-IN',{timeZone:'Asia/Kolkata',dateStyle:'long',timeStyle:'short'}))+(a.location?' • '+a.location:'');
+  const datePart = Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat('hi-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'long',year:'numeric'}).format(d);
+  const timePart = Number.isNaN(d.getTime()) ? '' : new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(d);
+  el('meta').textContent=(datePart?'प्रकाशित: '+datePart+' • '+timePart+' IST':'प्रकाशन समय उपलब्ध नहीं')+(a.location?' • '+a.location:'');
   if(a.excerpt){el('excerpt').textContent=a.excerpt;el('excerpt').hidden=false;}
   if(a.cover_image_url&&/^https:\/\//i.test(a.cover_image_url)){el('cover').src=a.cover_image_url;el('cover').hidden=false;el('cover').referrerPolicy='no-referrer';}
   const body=typeof a.body==='string'?a.body:'';
