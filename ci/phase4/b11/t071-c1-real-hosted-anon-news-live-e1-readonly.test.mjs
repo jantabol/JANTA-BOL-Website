@@ -69,21 +69,19 @@ test('E1 actual anonymous public Article RPC never returns old Founder-unpublish
  console.log('C1_E1_OLD_UNPUBLISHED_DEMO_ANON_RPC_DENIED=PASS');
 });
 test('E1 actual direct REST RLS allows only published content; never leaks unpublished Demo',async()=>{
- const p=await request(API+'/rest/v1/articles?select=id,status,created_by,updated_by&id=eq.'+ARTICLE,{headers});
- if(p.code===200){
-   assert(Array.isArray(p.value));
-   assert.equal(p.value.length,1,'expected one publicly PUBLISHED article only');
-   assert.equal(p.value[0].id,ARTICLE);
-   assert.equal(p.value[0].status,'published');
-   console.log('C1_E1_DIRECT_REST_PUBLISHED_ROW_VISIBLE_OLD_POLICY=OBSERVED');
-   console.log('C1_E1_PUBLIC_CREATOR_UID_FIELDS_VISIBLE='+JSON.stringify({
-     created_by:typeof p.value[0].created_by==='string',
-     updated_by:typeof p.value[0].updated_by==='string'
-   }));
- }else{
-   assert([401,403].includes(p.code),'unexpected public published REST status '+p.code);
-   console.log('C1_E1_DIRECT_REST_PUBLISHED_ROW_DENIED_BY_GRANT');
- }
+ // Existing legacy column-level grants intentionally permit PUBLIC title/body
+ // on PUBLISHED rows; protected actor/role metadata columns are NOT exposed.
+ // Thus `has_table_privilege(anon,SELECT)=false` is compatible with a 200
+ // published-only projection. Never label it as a general table grant.
+ const p=await request(API+'/rest/v1/articles?select=id,title,body&id=eq.'+ARTICLE,{headers});
+ const rows=secureReadCheck(p,'existing public column-level published read');
+ assert(Array.isArray(rows)&&rows.length===1);
+ assert.equal(rows[0].id,ARTICLE);
+ assert.equal(rows[0].body.length,2896);
+ const privileged=await request(API+'/rest/v1/articles?select=id,created_by,updated_by&id=eq.'+ARTICLE,{headers});
+ assert([401,403].includes(privileged.code),
+   'CRITICAL: private Founder/user UUID metadata columns accessible by anonymous public');
+ console.log('C1_E1_ANON_PUBLISHED_CONTENT_COLGRANTS_ALLOWED_PRIVATE_ACTOR_COLUMNS_DENIED=PASS');
  const d=await request(API+'/rest/v1/articles?select=id,title,body&id=eq.'+OLD_DEMO,{headers});
  if(d.code===200){
    assert(Array.isArray(d.value));
@@ -101,7 +99,7 @@ test('E1 actual direct REST RLS allows only published content; never leaks unpub
    assert([401,403].includes(all.code));
  }
  console.log('C1_E1_ANON_REST_UNPUBLISHED_DRAFTS_NOT_EXPOSED=PASS');
- console.log('C1_E1_DIRECT_PUBLISHED_METADATA_COLUMN_HARDENING=REVIEW_SEPARATELY');
+ console.log('C1_E1_PREEXISTING_PUBLISHED_ONLY_RLS_AND_COLUMN_GRANTS_VERIFIED');
 });
 test('E1 actual public LIVE feed has no false LIVE/INTERRUPTED flag when backend is OFF',async()=>{
  const r=await request(API+'/rest/v1/public_live_feed?select=public_status&public_status=in.(LIVE,INTERRUPTED)&limit=10',{headers});
