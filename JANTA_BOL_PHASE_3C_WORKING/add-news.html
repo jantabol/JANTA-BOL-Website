@@ -20,7 +20,7 @@
 
     <div class="grid-2">
       <div class="field"><label for="publishDate">News Date</label><input id="publishDate" type="date"></div>
-      <div class="field"><label for="publishTime">News Time</label><input id="publishTime" type="time"></div>
+      <div class="field"><label for="publishTime">News Time (optional — verified time only)</label><input id="publishTime" type="time"><small>Source me exact time nahi hai to khali rakhein. System khud current clock fill nahi karega.</small></div>
     </div>
 
     <div class="grid-2">
@@ -88,7 +88,7 @@
   const $=id=>document.getElementById(id); let editing=null, origin='new', previousVerification='Pending Verification', autoTimer=null, publishingItem=null, autoBusy=false, manualBusy=false, autoQueued=false, lastSavedSnapshot=null, conflictMode=false;
   const qs=new URLSearchParams(location.search), editId=qs.get('edit'), from=qs.get('from');
   function today(){return new Date().toISOString().slice(0,10)} function currentTime(){return new Date().toTimeString().slice(0,5)}
-  $('publishDate').value=today();$('publishTime').value=currentTime();$('sourceDate').value=today();
+  $('publishDate').value=today();$('publishTime').value='';$('sourceDate').value=today();
   function state(text,good=true){$('syncState').className='notice '+(good?'status-good':'');$('syncState').textContent=text}
   function selectedDistrict(){return $('district').value==='Other'?$('customDistrict').value.trim():$('district').value}
   $('district').addEventListener('change',()=>$('customDistrictWrap').classList.toggle('hidden',$('district').value!=='Other'));
@@ -121,7 +121,7 @@
     $('geoLevel').value=i.geoLevel||'';
     setDistrict(i.district||'');
     $('publishDate').value=i.newsDate||today();
-    $('publishTime').value=i.newsTime||currentTime();
+    $('publishTime').value=i.newsTime||'';
     $('breaking').checked=!!i.breaking;
     $('topStory').checked=!!i.topStory;
 

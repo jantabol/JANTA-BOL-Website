@@ -1,0 +1,42 @@
+name: B11 T071 C1 E1 real hosted guest News + LIVE no mock read-only
+on:
+  push:
+    branches: [codex/t071-c1-android-published-loading-guard-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-c1-real-hosted-anon-news-live-e1-readonly.test.mjs'
+      - '.github/workflows/b11-t071-c1-hosted-guest-article-live-e1-readonly.yml'
+permissions:
+  contents: read
+jobs:
+  exact_old_preview_source_real_guest_http:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/t071-c1-android-published-loading-guard-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Use source-only JANTA BOL files, never checkout private keys
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify published web app is exact identical SHA 659b not stale drift
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          git cat-file -e 659bcdc2ec4e270ea066863b4b456aeb65cb7c73^{commit}
+          git diff --exit-code 659bcdc2ec4e270ea066863b4b456aeb65cb7c73 HEAD -- JANTA_BOL_PHASE_3C_WORKING
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${DATABASE_URL:-}"
+          node --check ci/phase4/b11/t071-c1-real-hosted-anon-news-live-e1-readonly.test.mjs
+          echo 'C1_E1_EXACT_DEPLOYED_PREVIEW_SOURCE_659b_PIN=PASS'
+      - name: Actual external HTTPS Vercel + anonymous PostgREST public Article and LIVE no writes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-real-hosted-anon-news-live-e1-readonly.test.mjs
+          echo 'C1_E1_REAL_HOSTED_ANON_NEWS_LIVE_BASELINE=PASS_SCOPED'
+          echo 'T071_C1_FINAL_FULL_13_MODULE_INTEGRATED_E8=HOLD'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T072_STARTED=false'
