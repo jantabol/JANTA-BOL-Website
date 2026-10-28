@@ -17,7 +17,7 @@ const key='77777777-7777-4777-8777-777777777779';
 const title='T072 concurrency real original owner request one action';
 const area='Pichhore',lane='R1';
 function exact(actor){
- return `SELECT set_config('b8.fixture_actor','${actor}',false); SELECT set_config('b8.fixture_session','on',false); SELECT set_config('b8.fixture_aal','aal2',false); SET ROLE authenticated; SELECT public.jb_b8_g1_owner_create_case_idempotent('${key}'::uuid,'${title}','${area}','${lane}');`;
+ return `SET b8.fixture_actor = '${actor}'; SET b8.fixture_session = 'on'; SET b8.fixture_aal = 'aal2'; SET ROLE authenticated; SELECT public.jb_b8_g1_owner_create_case_idempotent('${key}'::uuid,'${title}','${area}','${lane}');`;
 }
 function uuidFrom(o){
  const match=o.stdout.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/g);
