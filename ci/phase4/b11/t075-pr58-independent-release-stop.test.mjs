@@ -77,7 +77,7 @@ test('T075 original Founder/manual permission gates and B2 combined cap still pr
 test('T075 no $0 future billing assertion or fake full E8 PASS',()=>{
  const doc=readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T075_E3_NO_PAID_SYSTEM_FOUNDER_POLICY_AND_53_PASS_20261028.md','utf8');
  assert.match(doc,/account-wide/);
- assert.match(doc,/not an absolute zero-billing guarantee/i);
+ assert.match(doc,/(?:does not guarantee zero spend|not an absolute zero-billing guarantee)/i);
  assert.match(doc,/Class D/);
  const s=readFileSync(WF,'utf8');
  assert.match(s,/JB_BACKUP_B2_APPLICATION_KEY: \$\{\{ secrets.JB_BACKUP_B2_APPLICATION_KEY \}\}/);
