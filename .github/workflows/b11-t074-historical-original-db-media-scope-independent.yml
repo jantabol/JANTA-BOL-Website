@@ -1,0 +1,39 @@
+name: B11 T074 independent original offsite DB and Media postrestore evidence scoped only
+on:
+  push:
+    branches: [codex/b11-t074-independent-postrestore-evidence-20261028]
+    paths:
+      - '.github/workflows/b11-t074-historical-original-db-media-scope-independent.yml'
+      - 'ci/phase4/b11/t074-independent-original-db-media-postrestore-scope.test.mjs'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent_readonly_original_restore_recheck:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t074-independent-postrestore-evidence-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout unprivileged review only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Independently check real T034 database and T069 media job logs, not a fake whole restore
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check ci/phase4/b11/t074-independent-original-db-media-postrestore-scope.test.mjs
+          node --test ci/phase4/b11/t074-independent-original-db-media-postrestore-scope.test.mjs
+          echo 'T074_INDEPENDENT_SOURCE_DB_MEDIA_BACKUP_READBACK=PASS_COMPONENT_ONLY'
+          echo 'T074_SAME_POINT_DATABASE_MEDIA_AUTH_PLATFORM_RESTORED=false'
+          echo 'T074_REAL_FOUNDER_DEVICE_LOSS_RECOVERY=NOT_TESTED'
+          echo 'T074_FULL_E8=HOLD'
+          echo 'T075_B11_FINAL_PASS_LOCK=false'
