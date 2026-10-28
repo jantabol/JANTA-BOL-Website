@@ -1,4 +1,5 @@
 name: B11 T071 C3 C4 C5 independent timestamp E5 E8 scope review on same runner
+# Stacked draft PR49; this checks real original GH logs only, no production calls.
 on:
   push:
     branches: [codex/b11-t071-e5-e8-independent-single-runner-20261028]
