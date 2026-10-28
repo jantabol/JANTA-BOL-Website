@@ -85,7 +85,7 @@
       const payload = await response.json();
       if (!Array.isArray(payload.items)) throw new Error('Unexpected response');
       // Defensive frontend guard; existing RPC + server are the authority.
-      const published = payload.items.filter(a => a && a.status === undefined
+      const published = payload.items.filter(a => a && a.status === 'published'
         && typeof a.id === 'string' && a.published_at && typeof a.title === 'string');
       fill(general, published.slice(0, 12), 'अभी कोई प्रकाशित खबर उपलब्ध नहीं है।');
       fill(tech, published.filter(a => categoryMatch(a.category,'technology')), 'तकनीकी श्रेणी में अभी कोई प्रकाशित खबर नहीं है।');
