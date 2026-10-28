@@ -517,3 +517,10 @@ FIXED / EXACT OLD TEST GREEN
 - **ENV05**: `loadedmetadata` shows local video dimensions/duration only (including representative 15s MP4); image source tests cover 3264×1840, 2448×2448, 1600×2000 and 4000×1000 without crop (contain). All local metadata and magic-byte preflight are NOT FFmpeg/AV, server-side poster, clean release, remote storage or original-file proof. **SOURCE/CI VERIFIED, REAL PHOTOS/VIDEO AND BACKEND E2/E3/E5/E7 DUE**.
 - New independent `ci/phase4/b7-cp06-android-environment.test.cjs` executes 7 focused environment/security/media cases through existing source; older `ci/phase4/b7-media-preview-regression.cjs`, CP04, CP05, E1, PostgreSQL and Phase3 protections remain wired to CI. Changed only `JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js`, new regression, and existing Candidate workflow test step. All Source and CI candidates untouched otherwise.
 - All 6 × 5 CP groups now have an engineering source/checkpoint record; **30/30 findings accounted for, NOT 30/30 production resolved**. Original test manifest `P4-T034..P4-T042` **0/9 FINAL PASS+LOCK**, ZIP release **BLOCKED**. Founder's next stage = bounded Android E3 on exact SHA SPCK test copy, original SPCK project and database kept intact. Required E2/E5/E6/E7 remain separately DUE; no hidden positive approval and no real money test.
+
+
+### B12/CODING ONLY 2026-10-28
+- B12-A01: Existing Admin Login accepted untrusted `?next=` into `location.replace()` after owner/MFA/local unlock, possible external navigation. Candidate fix: exact local HTML allowlist `b12-safe-nav.js` in both paths; final CI/browser E2 not yet run. **Status: CODED, NOT TESTED**.
+- B12-A02: Existing Article UI included raw `e.message` from backend in public/preview error display; candidate generic-error guard coded. **NOT TESTED**.
+- B12-A03: protected Main static home != live Phase-4 publishing shell; C1 preview branch has corrected no-demo website but B9/B10/B11 cross-branch lineage not yet reconciled. **OPEN INTEGRATION BLOCKER**.
+- B12-A04: B11/T072 live original case retry can duplicate; B11/T075 real automatic backups and E8 full recovery incomplete. **HOLD for B12 T080/T081/T083**.
