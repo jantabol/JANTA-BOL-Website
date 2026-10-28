@@ -1,0 +1,82 @@
+{
+  "schema": "JANTA_BOL_P4_T071_C1_READONLY_RELEASE_SOURCE_BASELINE_V1",
+  "test": "P4-T071",
+  "subgate": "C1",
+  "date_ist": "2026-10-27",
+  "master": {
+    "page": 304,
+    "run": "RUN-10",
+    "recov": "RECOV-019..RECOV-026",
+    "required": "E1_SOURCE_SCOPE_AND_PHASE3_BASELINE"
+  },
+  "repo": "jantabol/JANTA-BOL-Website",
+  "production": {
+    "git_sha": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "vercel_id": "dpl_nFSo2MXg3ASBPgUfXRYDzv2ybP8C",
+    "deployed_sha": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "state": "READY",
+    "root_http": 200,
+    "article_http": 404,
+    "live_http": 404,
+    "search_http": 404,
+    "static_live_claim_in_root": true
+  },
+  "pr45": {
+    "branch": "codex/b11-t071-failure-isolation-preflight-20261027",
+    "head_sha_at_audit": "685eac2b615ceedc32cb08ec318228e82fc9832b",
+    "candidate_preview_id": "dpl_5mDrS1nUwvVQpLu4Kd9KSMapecnE",
+    "preview_sha": "ba067def545043489e76af9eec31785a1aca2b83",
+    "preview_root_http": 200,
+    "preview_article_http": 404,
+    "preview_live_http": 404,
+    "preview_search_http": 404,
+    "preview_is_current_head": false
+  },
+  "pr46": {
+    "branch": "codex/t071-public-truth-forms-20261027",
+    "head_sha": "b509c60fceb053a51686f67e587d4922a40fa6f4",
+    "latest_verified_preview_id": "dpl_7HvpnryrKX6CSnKkrBefsZSTkuXk",
+    "preview_sha": "cebc088d38e6bddcbb163ef5d84852dafdeb3f28",
+    "preview_root_http": 200,
+    "preview_article_http": 200,
+    "preview_live_http": 200,
+    "preview_search_http": 200,
+    "preview_is_current_head": false,
+    "release_state": "REVIEW_CANDIDATE_UNMERGED_UNDEPLOYED_HEAD"
+  },
+  "database": {
+    "project": "vrffsnkycvjithwtiylt",
+    "published_not_deleted": 16,
+    "draft_not_deleted": 15,
+    "live_session_public_OFF": 16,
+    "public_live_feed_OFF": 7,
+    "public_anon_articles_select": false,
+    "auth_articles_select": true,
+    "rls_public_tables": 100,
+    "public_tables": 100,
+    "anon_b9_search_T032_visible_items": 1
+  },
+  "baseline_evidence": {
+    "source_identity_public_main_binding": "VERIFIED",
+    "public_home_http": "VERIFIED_200_BUT_STATIC_UNREVIEWED_NEWS_AND_LIVE_BADGE",
+    "public_purl_article_read": "NOT_PROVEN_ARTICLE_ROUTE_404",
+    "article_backend_direct_table_read": "ANON_SELECT_DENIED_SEARCH_RPC_AVAILABLE",
+    "publishing_authorized_owner_aal2_true_runtime_e2e": "NOT_EXECUTED_NO_PRODUCTION_WRITE",
+    "live_current_truth": "DATABASE_OFF_BUT_PUBLIC_HOME_STATIC_LIVE_BADGE",
+    "selected_phase3_publish_live_ci": "SOURCE_ONLY_PREVIOUSLY_GREEN",
+    "same_candidate_complete_core_release_baseline": "NOT_ESTABLISHED"
+  },
+  "proof_boundaries": [
+    "VERCEL_FETCH_HTTP_READ_ONLY",
+    "GITHUB_TREE_AND_SHA_READ_ONLY",
+    "SUPABASE_READ_ONLY_SQL",
+    "NO_LIVE_OR_PUBLISH_MUTATION",
+    "NO_FOUNDER_AAL2_IMPERSONATION",
+    "NO_DEPLOYMENT"
+  ],
+  "c1_e1_source_scope_review": "COMPLETE_WITH_GAPS_DOCUMENTED",
+  "c1_production_usable_article_and_truthful_live_baseline": "HOLD",
+  "c1_final_pass": false,
+  "t071_final_lock": false,
+  "domain_jantaboli_in": "DUE_SEPARATE"
+}

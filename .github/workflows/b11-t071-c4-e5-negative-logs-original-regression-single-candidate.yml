@@ -1,0 +1,86 @@
+name: B11 T071 C4 E5 13 real logs + exact PR47 Core News LIVE baseline (NO DEPLOY)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-c4-e5-thirteen-executed-evidence-log-register-20261027.json'
+      - 'ci/phase4/b11/t071-c4-e5-independent-log-and-provenance.test.mjs'
+      - '.github/workflows/b11-t071-c4-e5-negative-logs-original-regression-single-candidate.yml'
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+jobs:
+  exact_full_candidate_e5_and_phase3_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout review-only T071 evidence, no write access
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Checkout exact unmerged PR47 Source SHA (original Full News tree + narrow C1 patch)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: ddd80abbec0abd4f60e1e4556334365f599005ef
+          path: t071-c4-exact-news
+          persist-credentials: false
+      - name: Safety identity and production exclusion
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$(git -C t071-c4-exact-news rev-parse HEAD)" = ddd80abbec0abd4f60e1e4556334365f599005ef
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check ci/phase4/b11/t071-c4-e5-independent-log-and-provenance.test.mjs
+          node --check t071-c4-exact-news/JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          echo 'C4_EXACT_PROPOSED_FULL_NEWS_PR47_SHA=PINNED'
+      - name: Independently verify actual thirteen historical source-domain E5 logs via GitHub API, no production calls
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c4-e5-independent-log-and-provenance.test.mjs
+          echo 'C4_ALL_THIRTEEN_ACTUAL_NEGATIVE_E5_LOGS=PASS_SCOPED'
+          echo 'C4_SAME_DEPLOYED_HOSTED_SOURCE_E8=HOLD'
+      - name: Re-run original B9 Search News and brand, Phase3 LIVE, Owner publish source test on exact PR47 candidate
+        shell: bash
+        working-directory: t071-c4-exact-news
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs ci/phase4/b8-live-parity-static.test.mjs ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo 'C4_SAME_PR47_CORE_NEWS_B9_LIVE_GUEST_AND_OWNER_SOURCE_REGRESSION=PASS'
+          echo 'C4_OWNER_AAL2_PUBLISH_SOURCE_MOCK_ONLY=NOT_HOSTED'
+      - name: Verify exact PR47 News Article LIVE Search static files over real local loopback HTTP without Vercel quota
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 -m http.server 8769 --bind 127.0.0.1 --directory t071-c4-exact-news >"$RUNNER_TEMP/t071-c4-http.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ready=0
+          for i in $(seq 1 20); do
+            if curl --noproxy '*' -fsS --max-time 2 http://127.0.0.1:8769/JANTA_BOL_PHASE_3C_WORKING/index.html -o /dev/null; then ready=1;break;fi
+            sleep 0.25
+          done
+          test "$ready" -eq 1
+          for route in index.html article.html live.html b9-search.html backend-client.js; do
+            code=$(curl --noproxy '*' -sS -o /dev/null -w '%{http_code}' --max-time 3 "http://127.0.0.1:8769/JANTA_BOL_PHASE_3C_WORKING/$route")
+            test "$code" = 200
+            echo "C4_PR47_EXACT_STATIC_$route=200"
+          done
+          code=$(curl --noproxy '*' -sS -o /dev/null -w '%{http_code}' "http://127.0.0.1:8769/JANTA_BOL_PHASE_3C_WORKING/missing.html")
+          test "$code" = 404
+          echo 'C4_PR47_SAME_SOURCE_LOOPBACK_HTTP_STATIC=5x200_1x404'
+          echo 'C4_ACTUAL_PUBLIC_ARTICLE_FULL_BODY_BROWSER=NOT_PROVEN'
+          echo 'C4_REAL_LIVE_PROVIDER_E2E=NOT_RUN'
+          echo 'C4_FINAL_PASS_LOCK=false'
+          echo 'T071_FINAL_PASS_LOCK=false'

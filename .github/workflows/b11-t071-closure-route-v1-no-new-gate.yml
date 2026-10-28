@@ -1,0 +1,41 @@
+name: B11 T071 V1 frozen closure-route guard (NOT T071 final PASS)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-closure-route-v1-frozen.json'
+      - 'ci/phase4/b11/t071-closure-route-v1-contract.test.mjs'
+      - '.github/workflows/b11-t071-closure-route-v1-no-new-gate.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t071-closure-route-v1-frozen.json'
+      - 'ci/phase4/b11/t071-closure-route-v1-contract.test.mjs'
+      - '.github/workflows/b11-t071-closure-route-v1-no-new-gate.yml'
+permissions:
+  contents: read
+jobs:
+  guard_no_new_master_closure_gates:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - name: Read-only source — no persisted Git credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify immutable master scope, exact five gates and distinct T072 transition
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          node --check ci/phase4/b11/t071-closure-route-v1-contract.test.mjs
+          node --test ci/phase4/b11/t071-closure-route-v1-contract.test.mjs
+          echo 'T071_V1_NO_EXTRA_GATES_CHECK=PASS_DOCUMENTARY'
+          echo 'T071_MANDATORY_GATES=C1_C2_C3_C4_C5'
+          echo 'T071_MASTER_EVIDENCE=E1_E2_E5_E8'
+          echo 'T071_MODULE_FAMILIES=13'
+          echo 'T071_CUSTOM_DOMAIN_jantaboli.in=OUTSIDE_T071_DUE'
+          echo 'T071_FULL_E8=HOLD'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T072_NOT_STARTED=true'
