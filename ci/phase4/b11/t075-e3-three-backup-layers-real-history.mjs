@@ -49,6 +49,7 @@ export function auditActualRunHistory(input,{observedAt,approvedMaxAgeHours=null
    state='ALERT_NEWEST_JOB_FAILURE';
   else if(newest&&newest.status!=='completed')
    state='HOLD_LATEST_IN_PROGRESS';
+  else if(!newest)state='HOLD_NO_TRUSTED_RUN';
   else if(!good)state='HOLD_NO_SUCCESS';
   else if(approvedMaxAgeHours===null)state='HOLD_FOUNDER_RECENCY_POLICY_MISSING';
   else if(age>approvedMaxAgeHours)state='ALERT_GITHUB_RUN_HISTORY_STALE';
