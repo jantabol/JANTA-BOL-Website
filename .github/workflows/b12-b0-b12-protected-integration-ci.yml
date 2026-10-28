@@ -294,6 +294,9 @@ jobs:
             ci/phase4/b11/t075-scheduled-budget.test.mjs \
             ci/phase4/b11/storage-readonly-export.test.mjs \
             ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs \
-            ci/phase4/b11/t070-media-byte-verifier.test.mjs
-          echo 'B11_NO_LIVE_DB_NO_B2_SYNTHETIC_CODING_TESTS=PASS_SCOPED'
+            ci/phase4/b11/t070-media-byte-verifier.test.mjs \
+            ci/phase4/b11/t072-durable-owner-idempotency-client.test.mjs \
+            ci/phase4/b11/t072-b8-owner-app-optin-integration.test.mjs \
+            ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs
+          echo 'B11_NO_LIVE_DB_NO_B2_T072_CLIENT_AND_BACKUP_CODING_TESTS=PASS_SCOPED'
           echo 'B11_T070_REAL_MANUAL_RESTORE_AND_T075_SCHEDULED_PRODUCTION=HOLD'
