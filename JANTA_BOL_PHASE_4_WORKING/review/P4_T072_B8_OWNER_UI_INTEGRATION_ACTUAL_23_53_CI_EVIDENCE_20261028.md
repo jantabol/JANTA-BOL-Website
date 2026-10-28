@@ -7,6 +7,14 @@
 - **53/53 old original B8 Android/News/public-private UI regressions PASS**: original G1 mobile case selector, G3 workflows and contract, B8 mobile navigation, G4 public projection and lifecycle tests. None were simply reported as previously green; all reran on the new original integrated candidate source.
 - The *first* proposed integration CI **40650093227 FAILED** specifically due to a newly introduced misnamed `p_area` variable in the new opt-in code. **Fixed to `p_area_label`** in SHA `0fe434...` and the complete new CI then passed. No old code changed to hide the failure.
 
+## Additional same-runner original Backend + integrated UI proof (executed)
+- GitHub Actions run **40650341918**, job **122688699561**: **SUCCESS**, source SHA `14908d28d0a7c012c136f1334f7e0aa19df2148b`.
+- Immutable proposed protected SQL source `38ca825d8c32bdc33ddd8122aa871cafd645aba4` checked out independently; real disposable PostgreSQL17 on localhost; original B8 G1 fixture and protected add-only review SQL applied only in disposable test DB.
+- In same runner, verified real DB: same request key -> one case; payload tampering denied; legitimate second key permitted; forced partial write rolls back case and ledger; repaired retry creates only one; revoked session/Owner AAL2 denied; anon private ledger denied; old News and Ads preserved.
+- The same runner executed **76/76 original B8 integrated Android/client and old functional security tests PASS; zero fail**.
+- This is original code and real local PG17 component E2, **not a hosted HTTP Supabase Auth E5 or real Android device test**. Test auth/session/AAL2 suppliers in the original PG17 fixture are simulated; no fake full PASS.
+- Independent production read-only check: old RPC present, proposed safe RPC and private ledger still **absent**. Git Main and Vercel Production still at `f447231c0677644ca5a44cc19f12cf0314ff38ea`.
+- **T072 Production P2 OPEN; Final HOLD. T075 full E8 HOLD.** No production writes/merge/redeployment.
 ## Narrow integration
 1. The original `b8-accountability-client.js` takes optional `ownerCaseIdempotency` injection. When explicitly supplied, the old `jb_b8_g1_owner_create_case(text,text,text)` RPC is **not used or fallback-invoked**, even when safe backend RPC is absent. Old unrelated callers retain original interface and original tests; deployment must not retain their unsafe create callsite.
 2. New `b8-owner-idempotency-client.js` uses previously independently tested persisted per-Owner UUID, payload digest (not original private title), Web Locks, current Supabase Auth `getUser`, and only **protected proposed** `jb_b8_g1_owner_create_case_idempotent(uuid,text,text,text)`. UNKNOWN and offline timeouts preserve PENDING and the same request ID.
