@@ -98,13 +98,8 @@ if [[ "$auto" == 1 ]]; then
   # No automatic deletes, pruning, overwrite, new bucket or retention downgrade.
   rclone --config "$work/rclone.conf" --retries 1 size --json "${JB_BACKUP_REMOTE_PREFIX%/}" > "$work/scheduled-budget.json" ||
     fail 'T075 scheduled offsite quota unreadable, refuse live export'
-  python3 - "$work/scheduled-budget.json" <<'PY'
-import json,sys
-d=json.load(open(sys.argv[1],encoding='utf-8'))
-n=d.get('bytes')
-if not isinstance(n,int) or n<0 or n>2*1024**3:
- raise SystemExit('T075 scheduled backup offsite limit exceeded/unknown')
-PY
+  python3 ci/phase4/b11/t075-scheduled-budget.py preflight "$work/scheduled-budget.json" ||
+    fail 'T075 scheduled existing B2 quota unknown or exceeded; no DB export permitted'
   echo 'T075_SCHEDULED_EXISTING_ENCRYPTED_OFFSITE_BYTES_WITHIN_2GIB=PASS_METADATA_ONLY'
 fi
 # Validate age recipient can encrypt public, disposable synthetic data without private key.
@@ -275,8 +270,10 @@ tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
 if [[ "$auto" == 1 ]]; then
-  [[ "$(wc -c < "$work/backup.age")" -le 536870912 ]] ||
-    fail 'T075 scheduled ciphertext bundle exceeds single-run 512MiB cap; no remote upload'
+  # Counts BOTH existing B2 ciphertext AND new encrypted archive. Never silently
+  # cross the selected footprint cap with another weekly backup.
+  python3 ci/phase4/b11/t075-scheduled-budget.py upload "$work/scheduled-budget.json" "$work/backup.age" ||
+    fail 'T075 combined B2 footprint or new 512MiB ciphertext cap failed, no remote upload'
 fi
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
