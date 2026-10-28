@@ -21,7 +21,7 @@ const key=x=>{if(typeof x!=='string'||!x||x.length>800||x.startsWith('/')||x.inc
 export function verifyJointStorageBinding(dbRows,receipt,postRows){
  if(!Array.isArray(dbRows)||dbRows.length!==5||!receipt||receipt.project_ref!=='vrffsnkycvjithwtiylt'||
  receipt.schema!=='janta-bol-b11-storage-readonly-receipt-v1'||
- receipt.capture_method!=='MANUAL_OWNER_SERVICE_ROLE_READ_ONLY'||
+ !['MANUAL_OWNER_SERVICE_ROLE_READ_ONLY','SCHEDULED_PROTECTED_SERVICE_ROLE_READ_ONLY'].includes(receipt.capture_method)||
  receipt.stable_double_listing!==true||receipt.object_count!==5||
  !Array.isArray(receipt.sha_records)||receipt.sha_records.length!==5||
  JSON.stringify(receipt.buckets)!==JSON.stringify(['grievance-private','private-editorial','public-media']))

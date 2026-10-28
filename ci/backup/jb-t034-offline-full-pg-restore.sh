@@ -55,8 +55,11 @@ if [[ "$source_label" == 'SYNTHETIC ONLY' ]]; then
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
          ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
-           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
+           "${GITHUB_REPOSITORY:-}" == 'jantabol/JANTA-BOL-Website' &&
+           "${JB_B11_SERVICE_ROLE_KEY:-}" == '' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
      "${SUPABASE_DB_PASSWORD:-}" == '' ]] ||
@@ -224,8 +227,11 @@ docker exec -u postgres "$clone" psql -X -v ON_ERROR_STOP=1 \
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
          ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
-           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
+           "${GITHUB_REPOSITORY:-}" == 'jantabol/JANTA-BOL-Website' &&
+           "${JB_B11_SERVICE_ROLE_KEY:-}" == '' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
           "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
@@ -438,8 +444,11 @@ if [[ "${GITHUB_EVENT_NAME:-}" == pull_request &&
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca8-metric10-private-diagnostics-20261015' ||
          "${GITHUB_HEAD_REF:-}" == 'review/t034-rca9-null-vs-default-acl-20261015' ||
          ( ( "${GITHUB_HEAD_REF:-}" == 'codex/b11-t070-real-restore-identity-preflight-20261025' ||
-           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ) &&
+           "${GITHUB_HEAD_REF:-}" == 'codex/t070-safe-timestamp-postread-20261026' ||
+           "${GITHUB_HEAD_REF:-}" == 'codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028' ) &&
            "${GITHUB_BASE_REF:-}" == 'main' &&
+           "${GITHUB_REPOSITORY:-}" == 'jantabol/JANTA-BOL-Website' &&
+           "${JB_B11_SERVICE_ROLE_KEY:-}" == '' &&
            "${SUPABASE_DB_PASSWORD:-}" == '' &&
            "${JB_BACKUP_B2_APPLICATION_KEY:-}" == '' ) ) ) ) ) ) &&
       "$(cat "$src/source_project.txt" 2>/dev/null)" == 'SYNTHETIC ONLY' &&
@@ -457,12 +466,17 @@ printf 'T034_DATABASE_OWNER_ACL_LOCALE=EXACT_MATCH\n'
 # object identities with the ORIGINAL source MVCC snapshot while clone is alive.
 # All paths/IDs remain in 0600 private runner temp files and encrypted B2 bundle.
 if [[ "${JB_T070_JOINT_PROBE:-0}" == 1 ]]; then
-  [[ "${GITHUB_ACTIONS:-}" == true &&
-     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
-     "${GITHUB_ACTOR:-}" == jantabol &&
-     "${GITHUB_REF:-}" == refs/heads/main &&
-     "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' ]] ||
-    fail 'T070 original metadata proof only permitted under reviewed manual main workflow'
+  if [[ "${JB_T075_AUTO_JOINT_BACKUP:-0}" == 1 ]]; then
+    node --input-type=module -e "import {assertScheduledBackupContext} from './ci/phase4/b11/t075-scheduled-backup-identity.mjs'; assertScheduledBackupContext();" ||
+      fail 'T075 protected scheduled original DB/Storage restore context denied'
+  else
+    [[ "${GITHUB_ACTIONS:-}" == true &&
+       "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+       "${GITHUB_ACTOR:-}" == jantabol &&
+       "${GITHUB_REF:-}" == refs/heads/main &&
+       "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' ]] ||
+      fail 'T070 original metadata proof only permitted under reviewed manual main workflow'
+  fi
   [[ -s "$src/t070_snapshot_storage.json" ]] ||
     fail 'missing original encrypted T070 source MVCC media identities'
   docker cp ci/phase4/b11/t070-joint-storage-snapshot-identity.sql \
