@@ -4,7 +4,9 @@ on:
     branches: [codex/t071-c1-android-published-loading-guard-20261027]
     paths:
       - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/add-news.html'
       - 'ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs'
+      - 'ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs'
       - '.github/workflows/b11-t071-c1-published-android-no-stuck-loading.yml'
 permissions:
   contents: read
@@ -27,14 +29,16 @@ jobs:
           test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
           test -z "${VERCEL_TOKEN:-}"
           node --check ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --check ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs
           node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
           node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
       - name: New exact Published Android no-spinner and AAL2 gate tests
         shell: bash
         run: |
           set -Eeuo pipefail
-          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs
           echo 'T071_C1_ANDROID_PUBLISHED_LOADING_GUARD_SOURCE=PASS'
+          echo 'T071_C1_UNKNOWN_NEWS_TIME_NOT_AUTOFILLED=PASS'
       - name: All existing PR47 News, B9, LIVE and protected client tests unaffected
         shell: bash
         run: |
