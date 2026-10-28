@@ -127,7 +127,7 @@ test('T075/E8 cross-component, independent scheduling, Auth/Edge/Vercel restore 
   founder_final_release_acceptance:false
  };
  assert.equal(Object.values(requirements).every(x=>x===true),false);
- console.log('T075_E8_REQUIRED_PROOFS_NOT_AVAILABLE='+Object.keys(requirements).join(','));
+ console.log('T075_E8_REQUIRED_PROOFS_NOT_AVAILABLE='+Object.entries(requirements).filter(([,proved])=>proved!==true).map(([name])=>name).join(','));
  console.log('T075_RUN10_FINAL_PASS_LOCK=HOLD');
  console.log('T075_SOFT_LAUNCH_DEPLOYED_BY_THIS_WORKFLOW=false');
 });
