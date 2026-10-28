@@ -9,7 +9,6 @@ const read=p=>readFileSync(p,'utf8');
 const v3='JANTA_BOL_PHASE_3C_WORKING/';
 const truth=JSON.parse(read('JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'));
 test('P0 B0-B10 stable root immutable phase3 site baseline',()=>{
- const fs=requireClosure(); // avoid touching production
  const paths=['index.html','script.js','style.css','JANTA_BOL_PHASE_3C_WORKING/backend-client.js',
   'ci/phase4/b9-client-and-ui.test.mjs','ci/phase4/b10-whole-platform-security-source.test.mjs',
   '.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml'];
@@ -18,7 +17,6 @@ test('P0 B0-B10 stable root immutable phase3 site baseline',()=>{
  assert(root.includes('<title>JANTA BOL</title>'));
  assert(read('JANTA_BOL_PHASE_3C_WORKING/backend-client.js').includes('JBBackend'));
 });
-function requireClosure(){return Object.freeze({});}
 test('P1 B12 safely patches original B10 T063 Owner MFA redirect, not replaces role/MFA authority',()=>{
  const s=read(v3+'admin-login.html');
  assert.match(s,/<script src="b12-safe-nav\.js"><\/script>/);
