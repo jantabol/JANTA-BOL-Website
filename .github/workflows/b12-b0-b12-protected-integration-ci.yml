@@ -300,3 +300,69 @@ jobs:
             ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs
           echo 'B11_NO_LIVE_DB_NO_B2_T072_CLIENT_AND_BACKUP_CODING_TESTS=PASS_SCOPED'
           echo 'B11_T070_REAL_MANUAL_RESTORE_AND_T075_SCHEDULED_PRODUCTION=HOLD'
+
+  b11_t072_pg17_consolidated:
+    name: B11 Owner T072 protected original B8 real isolated PG17 + Android source E7 (NO LIVE)
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: T072_DISPOSABLE_NO_REAL_SECRETS
+          POSTGRES_DB: jb_t072_idempotent
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t072_idempotent"
+          --health-interval 3s --health-timeout 3s --health-retries 25
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: T072_DISPOSABLE_NO_REAL_SECRETS
+      PGDATABASE: jb_t072_idempotent
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Check real B11 source proposal blob identities and NO Production or Cricket
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/b12-b0-b12-reconcile-20261028'
+          test "$PGDATABASE" = jb_t072_idempotent
+          test "$PGHOST" = 127.0.0.1
+          test "$(git hash-object JANTA_BOL_PHASE_4_WORKING/db/20261028_t072_b8_case_idempotency_PROPOSAL_REVIEW_ONLY.sql)" = 1397b938a8a807e88db9ea15c608087053bd4b63
+          test "$(git hash-object ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql)" = 7ce88ffe0f96d594f65b0001f54e157848610c0c
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c 'SHOW server_version_num' | cut -c1-2)" = 17
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${CRICKET_DATABASE_URL:-}"
+      - name: Real disposable original B8 PG17 fixture plus reviewed idempotency SQL, NO PROD DDL
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -q -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-disposable-fixture.sql
+          psql -X -q -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          psql -X -q -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261028_t072_b8_case_idempotency_PROPOSAL_REVIEW_ONLY.sql
+          psql -X -q -v ON_ERROR_STOP=1 -f ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql
+      - name: Original B8 Owner UI connected to genuine disposable PG17 and existing Android regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test \
+            ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs \
+            ci/phase4/b11/t072-b8-owner-app-optin-integration.test.mjs \
+            ci/phase4/b8-g3-cp01-android-workflow.test.mjs \
+            ci/phase4/b8-g1-mobile-case-picker.test.mjs \
+            ci/phase4/b8-mobile-focused-workflow.test.mjs \
+            ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs \
+            ci/phase4/b8-g4-public-projection-contract.test.mjs \
+            ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+          node --test ci/phase4/b11/t072-full-original-b8-client-real-pg17-e2.test.mjs
+          echo 'B11_T072_ORIGINAL_B8_RPC_CLIENT_PG17=PASS_SCOPED_DISPOSABLE_ONLY'
+          echo 'B11_T072_PROD_RPC_UNDEPLOYED_AND_ANDROID_REAL=HOLD'
