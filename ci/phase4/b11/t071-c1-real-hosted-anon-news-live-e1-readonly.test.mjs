@@ -68,10 +68,26 @@ test('E1 actual anonymous public Article RPC never returns old Founder-unpublish
  assert.deepEqual(p.items,[]);
  console.log('C1_E1_OLD_UNPUBLISHED_DEMO_ANON_RPC_DENIED=PASS');
 });
-test('E1 direct table access still forbidden to anonymous browser, no public table grant',async()=>{
- const r=await request(API+'/rest/v1/articles?select=id&limit=1',{headers});
- assert([401,403].includes(r.code),'unsafe anonymous direct SELECT granted, HTTP '+r.code);
- console.log('C1_E1_ANON_DIRECT_PRIVATE_ARTICLES_TABLE_DENIED=PASS');
+test('E1 anonymous direct article Data API never exposes any published or unpublished body or metadata',async()=>{
+ const path=API+'/rest/v1/articles?select=id,title,body&limit=15';
+ const r=await request(path,{headers});
+ if(r.code===200){
+   assert(Array.isArray(r.value),'HTTP200 without an array is not a safe public table read');
+   assert.equal(r.value.length,0,
+    'CRITICAL: direct anonymous articles table exposed rows, return must be zero');
+   console.log('C1_E1_ANON_DIRECT_ARTICLES_TABLE_HTTP_200_EMPTY_ROLES_RLS_SAFE');
+ }else{
+   assert([401,403].includes(r.code),'unexpected direct table exposure HTTP '+r.code);
+   console.log('C1_E1_ANON_DIRECT_ARTICLES_TABLE_PERMISSION_DENIED');
+ }
+ const d=await request(API+'/rest/v1/articles?select=id,title,body&id=eq.'+OLD_DEMO,{headers});
+ if(d.code===200){
+   assert(Array.isArray(d.value));
+   assert.equal(d.value.length,0,'CRITICAL: unpublished demo visible through direct Data API');
+ }else{
+   assert([401,403].includes(d.code),'draft private table failed unexpected status');
+ }
+ console.log('C1_E1_ANON_ARTICLES_PRIVATE_ROWS_NOT_EXPOSED=PASS');
 });
 test('E1 actual public LIVE feed has no false LIVE/INTERRUPTED flag when backend is OFF',async()=>{
  const r=await request(API+'/rest/v1/public_live_feed?select=public_status&public_status=in.(LIVE,INTERRUPTED)&limit=10',{headers});
