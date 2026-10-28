@@ -7,6 +7,19 @@
   <title>JANTA BOL</title>
 
   <link rel="stylesheet" href="style.css">
+<style>
+#jb-news,#jb-tech-news{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:20px;padding:16px 0}
+.jb-live-news-card{background:#141414;border:1px solid #393939;border-radius:14px;padding:20px;color:#eee;overflow:hidden}
+.jb-live-news-card h3{color:#fff;font-size:clamp(21px,4vw,25px);line-height:1.4;margin:10px 0}
+.jb-live-news-card p{color:#ccc;line-height:1.7;overflow-wrap:anywhere}
+.jb-live-news-card .jb-news-meta{color:#ff7777;font-size:13px}
+.jb-news-image{width:100%;max-height:300px;object-fit:cover;border-radius:9px}
+.jb-news-read{display:inline-block;padding:10px 16px;border:1px solid #ec171d;border-radius:22px;color:#fff;text-decoration:none;font-weight:700}
+.jb-news-read:focus-visible{outline:3px solid #fff}
+#citizen-news-form,#official-reporter-form{display:none!important}
+.jb-submission-disabled{border:1px solid #777;border-radius:9px;padding:13px;color:#f5eeee;background:#191919;line-height:1.65}
+
+</style>
 </head>
 
 <body>
@@ -25,9 +38,7 @@
 <section class="hero">
 
     <div class="hero-overlay">
-<div class="live-badge">
-    🔴 LIVE
-</div>
+<div class="live-badge">JANTA BOL</div>
         <p class="tagline">
             जहाँ सच बोलता है
         </p>
@@ -47,28 +58,7 @@
     </div>
 
 </section>
-<section class="breaking-news" id="top-story">
-
-    <div class="breaking-label">
-        ⚡ ब्रेकिंग न्यूज़
-    </div>
-
-    <div class="breaking-content">
-    <div class="ticker">
-        <span>शिवपुरी अस्पताल में भ्रष्टाचार का आरोप।</span>
-
-        <span>•</span>
-
-        <span>पिछोर में भारी बारिश से कई रास्ते बंद।</span>
-
-        <span>•</span>
-
-        <span>मध्य प्रदेश सरकार का नया नोटिफिकेशन जारी।</span>
-
-    </div>
-    </div>
-
-</section>
+<section class="breaking-news" id="top-story"><div class="breaking-label">📰 प्रकाशित समाचार</div><div class="breaking-content">Founder द्वारा प्रकाशित और सार्वजनिक रूप से उपलब्ध खबरें नीचे पढ़ें।</div></section>
 <!-- Hero End -->
 
 <!-- 👇 ISKE NICHE PASTE KARNA -->
@@ -76,31 +66,7 @@
 
 <!-- 👇 Featured News Start -->
 
-<section class="featured-news">
-
-   <div class="section-title">
-    <h2>आज की प्रमुख खबरें</h2>
-</div>
-
-<div class="news-grid">
-
-    <div class="news-card">
-        <img src="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=800" alt="News">
-        <span class="news-tag">टॉप स्टोरी</span>
-
-        <h3>शिवपुरी में भारी बारिश, कई रास्ते बंद</h3>
-
-        <p>
-            लगातार बारिश के कारण कई ग्रामीण क्षेत्रों का संपर्क टूटा।
-            प्रशासन ने अलर्ट जारी किया।
-        </p>
-
-        <button type="button" class="read-more top-story-open">पूरी खबर पढ़ें →</button>
-    </div>
-
-</div>
-
-</section>
+<section class="featured-news" aria-label="प्रकाशित खबरें"><div class="section-title"><h2>प्रकाशित खबरें</h2></div><div id="jb-news" aria-live="polite"><p>प्रकाशित समाचार लोड हो रहे हैं…</p></div></section>
 <section class="district-section">
 
     <h2><span class="pin">📍</span> शिवपुरी जिला</h2>
@@ -155,71 +121,13 @@
 
 </div>
 </section>
-<div class="breaking-news">
-    <span class="breaking-label">🔴 ब्रेकिंग</span>
-    <marquee behavior="scroll" direction="left">
-        शिवपुरी में भारी बारिश • करैरा में सड़क हादसा • नरवर में बिजली कटौती •
-    </marquee>
-</div>
-<section class="video-section" id="videos">
 
-<h2>🎥 वीडियो न्यूज़</h2>
-
-<div class="featured-video video-news-open" role="button" tabindex="0" aria-label="वीडियो रिपोर्ट खोलें">
-
-<img src="https://picsum.photos/600/350" alt="Video">
-<div class="live-badge">🔴 LIVE</div>
-<div class="play-btn">▶</div>
-
-<div class="video-info">
-<div class="video-meta">⏱ 2:45</div>
-
-<h3>शिवपुरी में भारी बारिश, देखें पूरी रिपोर्ट</h3>
-
-</div>
-
-</div>
-
-</section>
+<section class="video-section" id="videos"><h2>🎥 वीडियो न्यूज़</h2><p>सत्यापित वीडियो रिपोर्ट उपलब्ध होने पर यहाँ दिखाई जाएगी।</p></section>
 <!-- ========================= -->
 <!-- 📰 ताज़ा खबरें Section -->
 <!-- ========================= -->
 
-<section class="latest-news-section">
 
-    <h2>📰 ताज़ा खबरें</h2>
-    <p class="latest-subtitle">
-        शिवपुरी और आसपास की ताज़ा खबरें
-    </p>
-
-    <!-- News Card 1 -->
-    <div class="news-card">
-
-        <div class="news-image">
-            <img src="https://picsum.photos/600/350?random=10" alt="News">
-            <span class="news-category">ब्रेकिंग</span>
-        </div>
-
-        <div class="news-content">
-
-            <h3>शिवपुरी में भारी बारिश, कई गांवों का संपर्क टूटा</h3>
-
-            <div class="news-meta">
-                📍 शिवपुरी &nbsp;&nbsp; 🕒 2 घंटे पहले
-            </div>
-
-            <p>
-                लगातार बारिश के कारण कई गांवों की सड़कें बंद हो गई हैं।
-                प्रशासन ने अलर्ट जारी किया है।
-            </p>
-
-            <button type="button" class="read-more latest-news-open">और पढ़ें →</button>
-
-        </div>
-
-    </div>
-
-</section>
 <!-- ========================= -->
 <!-- 🌍 कवरेज नेटवर्क -->
 <!-- ========================= -->
@@ -375,17 +283,9 @@
 <!-- 💻 तकनीकी Category -->
 <!-- ========================= -->
 
-<section class="category-section category-open" id="technology" role="button" tabindex="0" data-category="technology">
-
-    <div class="category-header">
-        <h2>💻 तकनीकी</h2>
-        <p>तकनीकी, डिजिटल अपडेट्स, गैजेट्स और इनोवेशन से जुड़ी ताज़ा खबरें।</p>
-    </div>
-
-    <div class="category-news">
-        <p>तकनीकी की ताज़ा खबरें यहाँ पढ़ें।</p>
-    </div>
-
+<section class="category-section" id="technology">
+  <div class="category-header"><h2>💻 तकनीकी</h2><p>Founder द्वारा प्रकाशित तकनीकी और अंतरिक्ष समाचार।</p></div>
+  <div class="category-news" id="jb-tech-news" aria-live="polite"><p>तकनीकी खबरें लोड हो रही हैं…</p></div>
 </section>
 <!-- 🎬 मनोरंजन Category -->
 
@@ -405,103 +305,7 @@
 <!-- 📈 ट्रेंडिंग न्यूज़ -->
 <!-- ========================= -->
 
-<section class="trending-section" id="trending">
-
-    <h2>📈 ट्रेंडिंग न्यूज़</h2>
-
-    <p class="trending-subtitle">
-        JANTA-BOL पर सबसे ज्यादा पढ़ी गई खबरें
-    </p>
-
-    <div class="trending-list">
-
-        <div class="trending-item trending-open" role="button" tabindex="0">
-            <span class="trending-rank">1</span>
-
-            <div class="trending-content">
-                <span class="trending-source">📍 शिवपुरी</span>
-
-                <h3>
-                    शिवपुरी में भारी बारिश के कारण कई गांवों का संपर्क टूटा
-                </h3>
-
-                <div class="trending-meta">
-                    👁 28.4K व्यूज़
-                </div>
-            </div>
-        </div>
-
-        <div class="trending-item trending-open" role="button" tabindex="0">
-            <span class="trending-rank">2</span>
-
-            <div class="trending-content">
-                <span class="trending-source">🌍 दुनिया</span>
-
-                <h3>
-                    दुनिया की बड़ी घटना पर नए अपडेट सामने आए
-                </h3>
-
-                <div class="trending-meta">
-                    👁 24.7K व्यूज़
-                </div>
-            </div>
-        </div>
-
-        <div class="trending-item trending-open" role="button" tabindex="0">
-            <span class="trending-rank">3</span>
-
-            <div class="trending-content">
-                <span class="trending-source">🇮🇳 भारत</span>
-
-                <h3>
-                    देशभर के लोगों से जुड़ा बड़ा फैसला लिया गया
-                </h3>
-
-                <div class="trending-meta">
-                    👁 21.3K व्यूज़
-                </div>
-            </div>
-        </div>
-
-        <div class="trending-item trending-open" role="button" tabindex="0">
-            <span class="trending-rank">4</span>
-
-            <div class="trending-content">
-                <span class="trending-source">❤️ मध्य प्रदेश</span>
-
-                <h3>
-                    मध्य प्रदेश में नई योजना को लेकर बड़ी घोषणा
-                </h3>
-
-                <div class="trending-meta">
-                    👁 18.6K व्यूज़
-                </div>
-            </div>
-        </div>
-
-        <div class="trending-item trending-open" role="button" tabindex="0">
-            <span class="trending-rank">5</span>
-
-            <div class="trending-content">
-                <span class="trending-source">📍 शिवपुरी</span>
-
-                <h3>
-                    शहर की मुख्य सड़क के निर्माण कार्य में तेजी
-                </h3>
-
-                <div class="trending-meta">
-                    👁 15.1K व्यूज़
-                </div>
-            </div>
-        </div>
-
-    </div>
-
-    <button type="button" class="trending-button trending-all-open">
-    सभी ट्रेंडिंग खबरें देखें →
-</button>
-
-</section>
+<section class="trending-section" id="trending"><h2>📈 ट्रेंडिंग न्यूज़</h2><p>वास्तविक पाठक आँकड़े उपलब्ध होने पर यहाँ दिखाई जाएँगे।</p></section>
 <!-- ========================= -->
 <!-- 👥 JANTA-BOL के बारे में -->
 <!-- ========================= -->
@@ -564,7 +368,8 @@
         <h3>📢 अपनी खबर भेजें</h3>
         <p>सिर्फ जरूरी जानकारी भरें और अपने क्षेत्र की खबर JANTA BOL तक पहुँचाएँ।</p>
 
-        <form class="citizen-news-form" id="citizen-news-form">
+        <p class="jb-submission-disabled" role="status">यह ऑनलाइन फ़ॉर्म अभी चालू नहीं है। अभी यहाँ भेजी गई जानकारी जमा नहीं होगी। खबर देने के लिए नीचे संपर्क सेक्शन में उपलब्ध WhatsApp का उपयोग करें।</p>
+<form class="citizen-news-form" id="citizen-news-form">
             <label for="citizen-name">आपका नाम</label>
             <input id="citizen-name" name="name" type="text" placeholder="अपना नाम लिखें" required>
 
@@ -855,7 +660,8 @@
     <div class="reporter-modal-kicker">🎙️ JANTA BOL</div>
     <h2 id="reporter-modal-title">आधिकारिक रिपोर्टर आवेदन</h2>
 
-    <form id="official-reporter-form" class="official-reporter-form">
+    <p class="jb-submission-disabled" role="status">आधिकारिक रिपोर्टर के ऑनलाइन आवेदन अभी स्वीकार नहीं किए जा रहे हैं। यह फ़ॉर्म अभी सक्रिय नहीं है।</p>
+<form id="official-reporter-form" class="official-reporter-form">
       <div class="form-section-title">👤 व्यक्तिगत जानकारी</div>
 
       <label for="r-name">पूरा नाम*</label>
@@ -953,6 +759,7 @@
 </div>
 
 <script src="script.js"></script>
+<script src="public-news.js" defer></script>
 
 
   
