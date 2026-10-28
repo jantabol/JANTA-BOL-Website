@@ -1,0 +1,76 @@
+# Protected Founder/manual ONLY. Candidate in draft PR; no branch auto-read of production.
+# A real representative joint encrypted B2 capture and in-one-ephemeral-runner restore:
+# same PG17 MVCC snapshot baseline + live original 5 private/public Storage bytes.
+# Does NOT claim live GoTrue, Edge, Vercel runtime or an instantaneous universal writer freeze.
+name: JANTA BOL P4 T070 Real Representative Joint DB and Original Media (Founder manual only)
+on:
+  workflow_dispatch:
+    inputs:
+      confirmation:
+        description: Type JANTA_BOL_T070_REAL_JOINT_READ_ONLY
+        type: string
+        required: true
+      reviewed_sha:
+        description: Exact reviewed 40-character protected MAIN SHA after PR review and merge
+        type: string
+        required: true
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-free-backup
+  cancel-in-progress: false
+jobs:
+  founder_only_joint_restore:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.repository == 'jantabol/JANTA-BOL-Website' && github.actor == 'jantabol' && github.ref == 'refs/heads/main' && github.run_attempt == 1 && github.event.inputs.confirmation == 'JANTA_BOL_T070_REAL_JOINT_READ_ONLY' && github.event.inputs.reviewed_sha == github.sha }}
+    environment: janta-bol-production-backup
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Syntax and adversarial security gates WITHOUT secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$GITHUB_REF" = refs/heads/main
+          test "$GITHUB_ACTOR" = jantabol
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/backup/jb-t034-shared-snapshot.sh
+          node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-readonly-export.test.mjs
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T070_SAFETY_PREFLIGHT=PASS; LIVE_EXPORT_NOT_YET_STARTED'
+      - name: Install approved AGE, B2 and compression clients
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone zstd >/dev/null
+      - name: Pinned official Supabase CLI v2.120.0
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Real encrypted single-bundle same-run source snapshot DB plus original Storage readback and offline restore
+        shell: bash
+        env:
+          JB_T034_DUAL_RESTORE_PROBE: '1'
+          JB_T070_JOINT_PROBE: '1'
+          B11_MEDIA_EXPORT_CONFIRMATION: JANTA_BOL_T070_JOINT_EXPORT_ONLY
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          JB_B11_SERVICE_ROLE_KEY: ${{ secrets.JB_B11_SERVICE_ROLE_KEY }}
+          JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+          JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+          JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+          JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          bash ci/backup/jb-free-offsite-backup.sh

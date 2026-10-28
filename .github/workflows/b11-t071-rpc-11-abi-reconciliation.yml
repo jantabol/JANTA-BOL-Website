@@ -1,0 +1,62 @@
+name: B11 T071 Reconcile 11 reviewed B7 RPCs (READ ONLY / NO PROD)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-rpc-reconciliation-manifest-20261027.json'
+      - 'ci/phase4/b11/t071-rpc-reconciliation.mjs'
+      - 'ci/phase4/b11/t071-rpc-reconciliation.test.mjs'
+      - '.github/workflows/b11-t071-rpc-11-abi-reconciliation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t071-rpc-reconciliation-manifest-20261027.json'
+      - 'ci/phase4/b11/t071-rpc-reconciliation.mjs'
+      - 'ci/phase4/b11/t071-rpc-reconciliation.test.mjs'
+      - '.github/workflows/b11-t071-rpc-11-abi-reconciliation.yml'
+permissions:
+  contents: read
+jobs:
+  audited_read_only_candidate_abi:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout PR-only reconciliation code (do not persist credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Checkout exact independently inspected B8 client and reviewed SQL (NO LIVE)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 658f474d6ee0f24efac60f069979e8adee1e9221
+          path: t071-rpc-fixture
+          persist-credentials: false
+      - name: No secrets, no cross-project scope, exact source SHA
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$(git -C t071-rpc-fixture rev-parse HEAD)" = 658f474d6ee0f24efac60f069979e8adee1e9221
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check ci/phase4/b11/t071-rpc-reconciliation.mjs
+          node --check ci/phase4/b11/t071-rpc-reconciliation.test.mjs
+      - name: Verify all 27 client ABI names, exactly 11 REVIEW-ONLY gaps, fail-closed safety
+        shell: bash
+        env:
+          T071_PINNED_B8_ROOT: t071-rpc-fixture
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-rpc-reconciliation.test.mjs
+          node ci/phase4/b11/t071-rpc-reconciliation.mjs
+          echo 'T071_RPC_RECONCILIATION_DOCUMENTARY_SCOPE=PASS_IF_ALL_TESTS_GREEN'
+          echo 'T071_CONNECTED_SUPABASE_MUTATION_OR_RPC_CALL=NONE'
+          echo 'T071_REVIEW_ONLY_SQL_PROD_DEPLOYMENT=NOT_AUTHORIZED'
+          echo 'T071_12_REAL_FUNCTIONAL_MODULES_FULL_E8=HOLD'
+          echo 'T071_CUSTOM_DOMAIN_jantaboli.in=DUE'
+          echo 'T071_FINAL_PASS_LOCK=false'

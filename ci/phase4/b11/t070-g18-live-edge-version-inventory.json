@@ -1,0 +1,104 @@
+{
+  "project_ref": "vrffsnkycvjithwtiylt",
+  "as_of_date": "2026-10-26",
+  "scope": "DEPLOYED_SOURCE_METADATA_ONLY_NO_CONFIG_SECRETS_OR_RESTORED_RUNTIME",
+  "deployed_function_count": 13,
+  "list": [
+    {
+      "slug": "jb-b11-t069-media-backup",
+      "version": 4,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "d3b62490ee432d35ecbd471aa3e7320071f632aa3f55355a5a1252b2907fa974"
+    },
+    {
+      "slug": "jb-encoder-connector-lols",
+      "version": 6,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "source_bundle_sha256": "35b7700ff05232fb1888f7235a9d322636130ae7efaefdc0f2186a1238c6cf7e"
+    },
+    {
+      "slug": "jb-encoder-handoff",
+      "version": 14,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "source_bundle_sha256": "c60246e60142098a436dd7accd7988c33e6689a9c4af07d8fa3f484dfa371a93"
+    },
+    {
+      "slug": "jb-encoder-launch",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "source_bundle_sha256": "f5cf2d19e87d17dc176738b661b4a98e0e28a0967fc53732048f60b0a305045f"
+    },
+    {
+      "slug": "jb-grievance-assets",
+      "version": 6,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "4d38e5b6db24ae269b0707585fd77f4cd3d6d6bdb8f959123a060ab4a958a8a2"
+    },
+    {
+      "slug": "jb-live-api",
+      "version": 39,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "33b9d63a1df219b91ef6305863d766c67a8ff94a78876a79b39c7335e72d3985"
+    },
+    {
+      "slug": "jb-live-worker",
+      "version": 24,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "source_bundle_sha256": "1f0b08c8fdf74997f76a628d051f3fb982dbaf7ae948292eadbcc89fc6349282"
+    },
+    {
+      "slug": "jb-records-api",
+      "version": 5,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "8b696778acf0a71f3c9de740939121618abc84eb04a888ad584912c6b7d98489"
+    },
+    {
+      "slug": "jb-recovery-delete-mfa",
+      "version": 14,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "f3a5059271b3f14fdcb60a84183af28923c6c454fa23b41e4a884f0e9fffc71a"
+    },
+    {
+      "slug": "jb-team-api",
+      "version": 12,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "82c063f70ac818f8ba9fc642eaffa5a7754dcdfe48f165c77ccf983710c23788"
+    },
+    {
+      "slug": "jb-youtube-oauth-callback",
+      "version": 15,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "source_bundle_sha256": "023874b6d79c06d7be2632d4942a0872e02231c5f5239749e33d4a21a4fd901d"
+    },
+    {
+      "slug": "jb-youtube-oauth-start",
+      "version": 17,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "c5d063a11757bc44a0de58213e1c71d9f72ee86f3feb1d2daf84aea827812784"
+    },
+    {
+      "slug": "jb-youtube-provider",
+      "version": 29,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "source_bundle_sha256": "0ee1d84fb704b99cfcd337e338fb444284e1815f63ab4f14acb47b77d56148f9"
+    }
+  ],
+  "edge_sources_retrieved_directly_outside_github": true,
+  "edge_runtime_restored": false,
+  "platform_secrets_recovered": false,
+  "vercel_config_recovered": false,
+  "full_t070_pass": false
+}

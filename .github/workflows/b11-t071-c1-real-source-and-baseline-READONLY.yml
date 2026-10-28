@@ -1,0 +1,86 @@
+name: B11 T071 C1 E1 source+original News LIVE baseline (HOLD if runtime unproved)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-evidence-20261027.json'
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-audit.mjs'
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-audit.test.mjs'
+      - '.github/workflows/b11-t071-c1-real-source-and-baseline-READONLY.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-evidence-20261027.json'
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-audit.mjs'
+      - 'ci/phase4/b11/t071-c1-release-source-baseline-audit.test.mjs'
+      - '.github/workflows/b11-t071-c1-real-source-and-baseline-READONLY.yml'
+permissions:
+  contents: read
+jobs:
+  c1_exact_source_and_baseline_without_prod_mutation:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Inspect PR45 C1 audit repo — no credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Pin live Vercel's actual main source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: f447231c0677644ca5a44cc19f12cf0314ff38ea
+          path: t071-c1-production-source
+          persist-credentials: false
+      - name: Pin complete but unmerged 27 October News/Article/LIVE candidate
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: b509c60fceb053a51686f67e587d4922a40fa6f4
+          path: t071-c1-news-candidate
+          persist-credentials: false
+      - name: Verify exact single-source identities and no permissions to alter real site
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$(git -C t071-c1-production-source rev-parse HEAD)" = f447231c0677644ca5a44cc19f12cf0314ff38ea
+          test "$(git -C t071-c1-news-candidate rev-parse HEAD)" = b509c60fceb053a51686f67e587d4922a40fa6f4
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          node --check ci/phase4/b11/t071-c1-release-source-baseline-audit.mjs
+          node --check ci/phase4/b11/t071-c1-release-source-baseline-audit.test.mjs
+      - name: Independently assert production-source route gaps and fresh read-only public news/off states
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-release-source-baseline-audit.test.mjs
+          node ci/phase4/b11/t071-c1-release-source-baseline-audit.mjs
+          echo 'C1_RELEASE_SOURCE_AND_HTTP_READONLY_CHECK=SCOPED_RECONCILED'
+      - name: One exact candidate source — truthful news/branding/Search and article guard regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd t071-c1-news-candidate
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          echo 'C1_SAME_CANDIDATE_NEWS_ARTICLE_SEARCH_SOURCE=PASS_SCOPED'
+      - name: Same exact candidate source — Owner/AAL2 News publish fail-closed and LIVE source regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          cd t071-c1-news-candidate
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+          echo 'C1_SAME_CANDIDATE_OWNER_PUBLISH_AND_LIVE_SOURCE=PASS_SCOPED_SIMULATION'
+          echo 'C1_SAME_CANDIDATE_OWNER_PUBLISH_REAL_HOSTED_E2E=NOT_RUN'
+      - name: Preserve accurate C1 and T071 decisions
+        shell: bash
+        run: |
+          echo 'C1_ACTUAL_PRODUCTION_ARTICLE_LIVE_SEARCH_ROUTES=404'
+          echo 'C1_ACTUAL_LIVE_DATABASE_STATUS=OFF'
+          echo 'C1_PRODUCTION_PUBLIC_HOME_STATIC_LIVE_BADGE=UNRECONCILED'
+          echo 'C1_FINAL_PASS=false'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T072_NOT_STARTED=true'

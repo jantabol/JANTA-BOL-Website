@@ -1,0 +1,41 @@
+name: B11 T071 C3 C4 C5 independent timestamp E5 E8 scope review on same runner
+# Stacked draft PR49; this checks real original GH logs only, no production calls.
+on:
+  push:
+    branches: [codex/b11-t071-e5-e8-independent-single-runner-20261028]
+    paths:
+      - '.github/workflows/b11-t071-e5-e8-independent-single-runner-review-20261028.yml'
+      - 'ci/phase4/b11/t071-c4-c5-same-run-e5-independent-review-20261028.test.mjs'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent_real_github_log_audit_no_prod_change:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t071-e5-e8-independent-single-runner-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout review only no write auth
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Run independent original 13-family time-series and recovery evidence audit
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test -z "${DATABASE_URL:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          node --check ci/phase4/b11/t071-c4-c5-same-run-e5-independent-review-20261028.test.mjs
+          node --test ci/phase4/b11/t071-c4-c5-same-run-e5-independent-review-20261028.test.mjs
+          echo 'C3_RECOVERY_POLICY_DISPOSABLE_RPO_RTO_REVIEW=PASS_SCOPED'
+          echo 'C4_SAME_RUN_ALL_13_NEGATIVE_E5_REAL_LOG_AUDIT=PASS_SCOPED'
+          echo 'C5_INDEPENDENT_PRELIMINARY_AUDIT=PASS_SCOPED'
+          echo 'C2_REAL_HOSTED_ALL_13_PROVIDER_INTEGRATION=HOLD'
+          echo 'C5_FULL_E8_FOUNDER_FINAL_LOCK=HOLD'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T072_STARTED=false'
