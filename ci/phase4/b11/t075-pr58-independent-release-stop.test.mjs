@@ -78,7 +78,7 @@ test('T075 no $0 future billing assertion or fake full E8 PASS',()=>{
  const doc=readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T075_E3_NO_PAID_SYSTEM_FOUNDER_POLICY_AND_53_PASS_20261028.md','utf8');
  assert.match(doc,/account-wide/);
  assert.match(doc,/(?:does not guarantee zero spend|not an absolute zero-billing guarantee)/i);
- assert.match(doc,/Class D/);
+ assert.match(doc,/Some transaction categories are not fully subject to data caps/i);
  const s=readFileSync(WF,'utf8');
  assert.match(s,/JB_BACKUP_B2_APPLICATION_KEY: \$\{\{ secrets.JB_BACKUP_B2_APPLICATION_KEY \}\}/);
  assert.match(s,/T075_SCHEDULED_ORIGINAL_JOINT_BACKUP_RUN_PASS=SCOPED_GENUINE_OFFSITE_AFTER_REAL_EXECUTION/);
