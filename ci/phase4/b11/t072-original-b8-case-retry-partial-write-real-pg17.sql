@@ -29,6 +29,8 @@ SELECT public.jb_b8_g1_owner_create_case(
  'Pichhore','R1'
 ) AS first_uuid \gset
 RESET ROLE;
+CREATE TEMP TABLE t072_attempt_ids(kind text PRIMARY KEY,id uuid NOT NULL UNIQUE);
+INSERT INTO t072_attempt_ids VALUES ('first', :'first_uuid'::uuid);
 DO $first$
 BEGIN
  IF (SELECT count(*) FROM public.b8_cases)<>1
@@ -44,9 +46,10 @@ SELECT public.jb_b8_g1_owner_create_case(
  'Pichhore','R1'
 ) AS retry_uuid \gset
 RESET ROLE;
+INSERT INTO t072_attempt_ids VALUES ('retry', :'retry_uuid'::uuid);
 DO $dup$
 BEGIN
- IF :'first_uuid'::uuid = :'retry_uuid'::uuid
+ IF (SELECT id FROM t072_attempt_ids WHERE kind='first') = (SELECT id FROM t072_attempt_ids WHERE kind='retry')
  THEN RAISE EXCEPTION 'T072_SOURCE_CHANGED_EXPECTED_IDENTITY_RECHECK_REQUIRED'; END IF;
  IF (SELECT count(*) FROM public.b8_cases
       WHERE title='T072 ambiguous acknowledgement repeated business request') <> 2
@@ -113,10 +116,10 @@ DO $grant$
 DECLARE one boolean;two boolean;
 BEGIN
  one:=public.jb_b8_g1_owner_assign_reporter(
-   :'first_uuid'::uuid,'22222222-2222-2222-2222-222222222222'::uuid,
+   (SELECT id FROM t072_attempt_ids WHERE kind='first'),'22222222-2222-2222-2222-222222222222'::uuid,
    now()+interval '1 day');
  two:=public.jb_b8_g1_owner_assign_reporter(
-   :'first_uuid'::uuid,'22222222-2222-2222-2222-222222222222'::uuid,
+   (SELECT id FROM t072_attempt_ids WHERE kind='first'),'22222222-2222-2222-2222-222222222222'::uuid,
    now()+interval '2 days');
  IF NOT coalesce(one,false) OR NOT coalesce(two,false)
  THEN RAISE EXCEPTION 'T072_ORIGINAL_GRANT_RETRY_FAILED';END IF;
@@ -125,7 +128,7 @@ RESET ROLE;
 DO $end$
 BEGIN
  IF (SELECT count(*) FROM public.b8_case_reporter_grants
-     WHERE case_id=:'first_uuid'::uuid
+     WHERE case_id=(SELECT id FROM t072_attempt_ids WHERE kind='first')
        AND reporter_user_id='22222222-2222-2222-2222-222222222222'::uuid)<>1
  THEN RAISE EXCEPTION 'T072_RETRY_DUPLICATED_REPORTER_GRANT';END IF;
  IF (SELECT count(*) FROM public.b8_cases)<>2
