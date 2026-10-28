@@ -7,6 +7,23 @@
   <title>JANTA BOL</title>
 
   <link rel="stylesheet" href="style.css">
+<style id="jb-live-public-feed-styles">
+/* Keep the legacy V2 demo newsroom invisible; only show verified C1 published data. */
+.breaking-news,.video-section,.trending-section{display:none!important}
+body:not(.jb-feed-ready) .featured-news,
+body:not(.jb-feed-ready) .latest-news-section,
+body:not(.jb-feed-ready) .category-news{display:none!important}
+.jb-live-card{background:#141414;color:#fff;border:1px solid #3d3d3d;border-radius:16px;overflow:hidden;margin:16px 0;max-width:900px;overflow-wrap:anywhere}
+.jb-live-image{width:100%;height:auto;max-height:340px;object-fit:cover;display:block}
+.jb-live-card-body{padding:18px}
+.jb-live-title{color:#fff;font-size:clamp(1.15rem,3.8vw,1.55rem);line-height:1.45;font-weight:700;display:block;text-decoration:none;margin:8px 0}
+.jb-live-title:hover,.jb-live-read:hover{text-decoration:underline}
+.jb-live-meta{color:#bfbfbf;font-size:.9rem;margin:8px 0}
+.jb-live-excerpt{color:#dedede;line-height:1.6;white-space:pre-line}
+.jb-live-read{display:inline-block;color:#ff3434;font-size:1rem;font-weight:700;text-decoration:none;margin-top:12px}
+.jb-live-message{padding:16px;line-height:1.6;color:#ddd}
+</style>
+
 </head>
 
 <body>
@@ -953,6 +970,7 @@
 </div>
 
 <script src="script.js"></script>
+<script src="public-feed.js" defer></script>
 
 
   
