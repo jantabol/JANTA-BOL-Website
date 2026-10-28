@@ -37,8 +37,8 @@ jobs:
           test "$GITHUB_REF" = refs/heads/main
           test "$GITHUB_ACTOR" = jantabol
           test "$GITHUB_RUN_ATTEMPT" = 1
-          bash -n ci/backup/jb-free-offsite-backup.sh
-          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          bash -n ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh
+          bash -n ci/phase4/b11/backup/jb-t034-offline-full-pg-restore-joint-CANDIDATE.sh
           bash -n ci/backup/jb-t034-shared-snapshot.sh
           node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
@@ -73,4 +73,4 @@ jobs:
           set -Eeuo pipefail
           set +x
           umask 077
-          bash ci/backup/jb-free-offsite-backup.sh
+          bash ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh

@@ -27,40 +27,16 @@ command -v zstd >/dev/null || fail "zstd not installed"
 # Existing manual backup remains the DEFAULT, unchanged path (mode=0).
 # A dual-identity real clone run requires distinct manual workflow authorization.
 dual="${JB_T034_DUAL_RESTORE_PROBE:-0}"
-joint="${JB_T070_JOINT_PROBE:-0}"
-auto="${JB_T075_AUTO_JOINT_BACKUP:-0}"
-[[ "$auto" == 0 || "$auto" == 1 ]] || fail 'invalid T075 scheduled backup mode'
-if [[ "$auto" == 1 ]]; then
-  [[ "$dual" == 1 && "$joint" == 1 ]] ||
-    fail 'T075 scheduled mode cannot skip real original PG17 plus media restore'
-  node --input-type=module -e "import {assertScheduledBackupContext} from './ci/phase4/b11/t075-scheduled-backup-identity.mjs'; assertScheduledBackupContext();" ||
-    fail 'T075 scheduled workflow not independently approved'
-fi
 [[ "$dual" == 0 || "$dual" == 1 ]] || fail 'invalid dual-restore mode'
-[[ "$joint" == 0 || "$joint" == 1 ]] || fail 'invalid joint-restore mode'
-[[ "$joint" == 0 || "$dual" == 1 ]] || fail 'joint media restore requires existing dual-recipient PG restore'
 if [[ "$dual" == 1 ]]; then
-  if [[ "$auto" == 0 ]]; then
-    [[ "${GITHUB_ACTIONS:-}" == true &&
-       "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
-       "${GITHUB_REF:-}" == refs/heads/main &&
-       "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
-       "${GITHUB_ACTOR:-}" == jantabol &&
-       "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
-      fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
-    if [[ "$joint" == 1 ]]; then
-      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
-         "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
-         -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
-        fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
-    else
-      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
-        fail 'legacy T034 manual workflow identity required'
-    fi
-  else
-    [[ "$joint" == 1 && "${JB_B11_SERVICE_ROLE_KEY:-}" != "" ]] ||
-      fail 'T075 scheduled mode requires original protected service role and joint export'
-  fi
+  [[ "${GITHUB_ACTIONS:-}" == true &&
+     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+     "${GITHUB_REF:-}" == refs/heads/main &&
+     "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
+     "${GITHUB_ACTOR:-}" == jantabol &&
+     "${GITHUB_RUN_ATTEMPT:-}" == 1 &&
+     "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
+    fail 'real isolated clone verification denied: manual Founder/main/exact workflow first attempt required'
   command -v age-keygen >/dev/null || fail 'AGE key generator missing'
 fi
 
@@ -93,17 +69,6 @@ python3 ci/backup/jb-b2-rclone-config.py "$work/rclone.conf" || fail "JANTA BOL 
 rclone --config "$work/rclone.conf" listremotes | grep -Fxq 'jbbackup:' || fail "rclone [jbbackup] remote is not configured"
 rclone --config "$work/rclone.conf" --retries 1 lsf "jbbackup:jantabol-backup-euc-2026" >/dev/null ||
  fail "JANTA BOL bucket unavailable or scoped key missing list/read permissions; no DB export was attempted"
-if [[ "$auto" == 1 ]]; then
-  # FREE-TIER COST CAP: metadata-only read of EXISTING remote before DB export.
-  # B2 charges for older/hidden object versions too: --b2-versions includes
-  # historical versions rather than only the visible current object list.
-  # No automatic deletes, pruning, overwrite, new bucket or retention downgrade.
-  rclone --config "$work/rclone.conf" --retries 1 --b2-versions size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
-    fail 'T075 scheduled offsite quota unreadable, refuse live export'
-  python3 ci/phase4/b11/t075-scheduled-budget.py preflight "$work/scheduled-budget.json" ||
-    fail 'T075 scheduled existing B2 quota unknown or exceeded; no DB export permitted'
-  echo 'T075_SCHEDULED_EXISTING_ENCRYPTED_OFFSITE_BYTES_WITHIN_2GIB=PASS_METADATA_ONLY'
-fi
 # Validate age recipient can encrypt public, disposable synthetic data without private key.
 printf 'JANTA_BOL_ONLY_NON_SECRET_PREFLIGHT\n' | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/public-recipient-probe.age" ||
  fail "invalid JANTA BOL age public recipient; no DB export was attempted"
@@ -179,71 +144,6 @@ if [[ "$dual" == 1 ]]; then
     fail 'invalid private metric10 evidence'
   sha256sum ci/backup/jb-t034-metric10-components.sql | cut -d' ' -f1 > "$work/plain/metric10_components_contract_sha256.txt"
   sha256sum ci/backup/jb-t034-security-parity.sql | cut -d' ' -f1 > "$work/plain/security_parity_contract_sha256.txt"
-  if [[ "$joint" == 1 ]]; then
-    # Capture original media while authoritative raw DB MVCC snapshot is still held.
-    # All payloads/manifests remain in 0700 ephemeral runner and later AGE ciphertext.
-    jb_t034_snapshot_query ci/phase4/b11/t070-joint-storage-snapshot-identity.sql \
-      "$work/plain/t070_snapshot_storage.json" ||
-      fail 'cannot capture private original-file identities from same full DB snapshot'
-    [[ -s "$work/plain/t070_snapshot_storage.json" ]] ||
-      fail 'empty protected snapshot media metadata'
-    # The SAME exported PostgreSQL MVCC snapshot supplies editorial, Auth,
-    # Live and Ads identity proof. Never print digest or identifier contents.
-    jb_t034_snapshot_query ci/phase4/b11/t070-representative-identity.sql \
-      "$work/plain/t070_representative_identity.txt" || \
-      fail 'cannot capture source representative identity and relationship proof'
-    [[ "$(wc -l < "$work/plain/t070_representative_identity.txt")" == 25 ]] || \
-      fail 'T070 incomplete representative identity manifest'
-    for n in 19 20 21 22 23 24 25; do
-      grep -Fxq "${n}_orphan_check=0" "$work/plain/t070_representative_identity.txt" || \
-        fail 'T070 source relationship integrity not verified'
-    done
-    mkdir -m 700 "$work/plain/media"
-    node ci/phase4/b11/storage-media-manual-cli.mjs export-manual \
-      --root "$work/plain/media" > "$work/private-media-export.log" 2>&1 ||
-      fail 'original Storage media read-only export did not finish cleanly'
-    node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
-      --root "$work/plain/media" > "$work/private-media-verify.log" 2>&1 ||
-      fail 'source original five Storage file bytes fail SHA256 validation'
-    # Fresh READ-ONLY PG lookup AFTER original-byte GET and stable listing;
-    # never reuse the exported MVCC snapshot for this current-state gate.
-    {
-      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
-      cat ci/phase4/b11/t070-joint-storage-snapshot-identity.sql
-      printf '\nCOMMIT;\n'
-    } | docker run --rm -i --network=host postgres:17 \
-      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
-      > "$work/plain/t070_post_media_current_storage.json" \
-      2> "$work/private-post-media-db.err" || \
-      fail 'fresh read-only Storage DB post-media identity check unavailable'
-    [[ -s "$work/plain/t070_post_media_current_storage.json" ]] || \
-      fail 'fresh Storage DB post-media identity empty'
-    # One additional FRESH single-statement READ ONLY source transaction, after
-    # media GET. All 25 representative row/relationship digests must match the
-    # authoritative raw-dump MVCC snapshot; else do not assert a trusted point.
-    # No auth identities, PURL, private grievance records or digests reach logs.
-    {
-      printf 'BEGIN TRANSACTION ISOLATION LEVEL READ COMMITTED, READ ONLY;\n'
-      cat ci/phase4/b11/t070-representative-identity.sql
-      printf '\nCOMMIT;\n'
-    } | docker run --rm -i --network=host postgres:17 \
-      psql -X -qAt -v ON_ERROR_STOP=1 "$JB_DB_URI" \
-      > "$work/plain/t070_post_media_representative_identity.txt" \
-      2> "$work/private-post-representative-db.err" || \
-      fail 'fresh read-only representative DB post-media identity unavailable'
-    [[ "$(wc -l < "$work/plain/t070_post_media_representative_identity.txt")" == 25 ]] || \
-      fail 'T070 post-media representative identity scope incomplete'
-    cmp -s "$work/plain/t070_representative_identity.txt" \
-      "$work/plain/t070_post_media_representative_identity.txt" || \
-      fail 'source Article/Grievance/LIVE/Ads/Auth changed during joint media acquisition'
-    echo 'T070_FRESH_PG_POST_MEDIA_25_IDENTITY_FAMILIES=STABLE'
-    node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
-      "$work/plain/t070_snapshot_storage.json" \
-      "$work/plain/media/config/storage-export-readonly-summary.json" \
-      "$work/plain/t070_post_media_current_storage.json" || \
-      fail 'source Storage original five objects mismatch raw PG snapshot file identities'
-    echo 'T070_REAL_SOURCE_FIVE_MEDIA_CAPTURED_WITH_PG_MVCC_SNAPSHOT=PASS'
-  fi
   jb_t034_snapshot_finish
   printf 'T034_SOURCE_RAW_DUMP_AND_MANIFEST_SHARED_SNAPSHOT=CONFIRMED\n'
   [[ "$(wc -l < "$work/plain/source_db_identity.json")" == 1 ]] ||
@@ -265,23 +165,9 @@ bundle=(roles.sql schema.sql data.sql raw_full.dump raw_inventory.txt backup_utc
 if [[ "$dual" == 1 ]]; then
   bundle+=(expected_identity.txt source_db_identity.json expected_security_identity.txt raw_dump_snapshot_id.txt snapshot_scope.txt security_parity_contract_sha256.txt expected_metric10_components.txt metric10_components_contract_sha256.txt)
 fi
-if [[ "$joint" == 1 ]]; then
-  bundle+=(t070_snapshot_storage.json t070_post_media_current_storage.json t070_representative_identity.txt t070_post_media_representative_identity.txt media)
-fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
-if [[ "$auto" == 1 ]]; then
-  # Refresh bucket-wide account usage after long PG17/media capture: a
-  # concurrent original manual Founder run may have written new B2 objects.
-  # Never trust only the old pre-DB-export listing at upload time.
-  rclone --config "$work/rclone.conf" --retries 1 --b2-versions size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
-    fail 'T075 fresh bucket-wide B2 quota unknown before upload'
-  # Count existing JANTA BOL bucket bytes + NEW ciphertext; scope is the
-  # whole approved bucket, not just the scheduled subfolder/prefix.
-  python3 ci/phase4/b11/t075-scheduled-budget.py upload "$work/scheduled-budget.json" "$work/backup.age" ||
-    fail 'T075 combined B2 bucket footprint or new 512MiB ciphertext cap failed, no remote upload'
-fi
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
 # Fail if collision or remote access unavailable; no overwrites.
@@ -346,43 +232,7 @@ if [[ "$dual" == 1 ]]; then
   # Fail closed if Supabase public functions require additional extensions/auth.
   bash ci/backup/jb-t034-offline-full-pg-restore.sh "$work/recovered" ||
     fail 'full isolated PG17 restore verification refused; B2 encrypted archive is preserved'
-  if [[ "$joint" == 1 ]]; then
-    cmp -s "$work/plain/t070_snapshot_storage.json" \
-      "$work/recovered/t070_snapshot_storage.json" ||
-      fail 'encrypted DB snapshot original media manifest changed in B2 roundtrip'
-    [[ -s "$work/recovered/t070_representative_identity.txt" ]] || \
-      fail 'representative identity absent in encrypted archive'
-    cmp -s "$work/plain/t070_representative_identity.txt" \
-      "$work/recovered/t070_representative_identity.txt" || \
-      fail 'representative identity changed during AGE B2 roundtrip'
-    [[ -s "$work/recovered/t070_post_media_representative_identity.txt" ]] || \
-      fail 'fresh post-media representative identity absent in encrypted archive'
-    cmp -s "$work/plain/t070_post_media_representative_identity.txt" \
-      "$work/recovered/t070_post_media_representative_identity.txt" || \
-      fail 'fresh post-media representative identity changed in AGE B2 roundtrip'
-    cmp -s "$work/recovered/t070_representative_identity.txt" \
-      "$work/recovered/t070_post_media_representative_identity.txt" || \
-      fail 'source representative identity became inconsistent during media acquisition'
-    [[ -s "$work/recovered/t070_post_media_current_storage.json" ]] || \
-      fail 'fresh PG post-media identity absent in encrypted archive'
-    cmp -s "$work/plain/t070_post_media_current_storage.json" \
-      "$work/recovered/t070_post_media_current_storage.json" || \
-      fail 'post-media PG identity changed during AGE B2 roundtrip'
-    node ci/phase4/b11/storage-media-manual-cli.mjs verify-offline \
-      --root "$work/recovered/media" > "$work/private-media-restored.log" 2>&1 ||
-      fail 'five ORIGINAL Storage file bytes not recovered from encrypted B2 archive'
-    node ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs \
-      "$work/recovered/t070_snapshot_storage.json" \
-      "$work/recovered/media/config/storage-export-readonly-summary.json" \
-      "$work/recovered/t070_post_media_current_storage.json" ||
-      fail 'restored real PG snapshot does not match restored original media identities'
-    echo 'T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS'
-    echo 'T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED'
-    echo 'T070_FINAL_INDEPENDENT_E8=NOT_RUN'
-    echo 'T070_FINAL_LOCK=HOLD'
-  else
-    printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
-  fi
+  printf 'T034_FULL_PG_DATABASE_SCOPE=PASS; STORAGE_MEDIA_AND_PLATFORM_CONFIG_NOT_PROVEN=true\n'
 else
   printf 'RESTORE_VERIFIED=false (needs separate offline age identity + disposable isolated restore)\n'
 fi
