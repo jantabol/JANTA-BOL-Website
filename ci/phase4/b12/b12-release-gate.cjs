@@ -52,7 +52,7 @@ function audit(doc){
 }
 if(require.main===module){
  try{
-  if(process.argv.some(x=>!['--status'].includes(x)&&x!=='node'&&!x.endsWith('b12-release-gate.cjs')))throw Error('NO_DEPLOY_COMMAND_SUPPORTED');
+  if(process.argv.slice(2).some(x=>x!=='--status'))throw Error('NO_DEPLOY_COMMAND_SUPPORTED');
   const state=audit(read());
   process.stdout.write(JSON.stringify(state,null,2)+'\n');
   // 3 denotes explicitly incomplete fail-closed status, NOT test failure.
