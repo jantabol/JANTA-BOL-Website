@@ -20,7 +20,7 @@ function articleDateLabels(item){
   const published=dateValid
     ? 'प्रकाशित: '+new Intl.DateTimeFormat('hi-IN',{timeZone:'Asia/Kolkata',day:'numeric',month:'long',year:'numeric'}).format(date)+' • '+new Intl.DateTimeFormat('en-IN',{timeZone:'Asia/Kolkata',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(date)+' IST'
     : 'प्रकाशन समय उपलब्ध नहीं';
-  const original=/^\\d{4}-\\d{2}-\\d{2}$/.test(String(item?.newsDate||''))
+  const original=/^\d{4}-\d{2}-\d{2}$/.test(String(item?.newsDate||''))
     ? ' • समाचार की तिथि: '+new Intl.DateTimeFormat('hi-IN',{timeZone:'UTC',day:'numeric',month:'long',year:'numeric'}).format(new Date(item.newsDate+'T00:00:00Z'))
     : '';
   return published+original+(item?.location?' • '+String(item.location):'')+' • JANTA BOL';
