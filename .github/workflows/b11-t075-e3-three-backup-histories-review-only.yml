@@ -6,6 +6,7 @@ on:
       - '.github/workflows/b11-t075-e3-three-backup-histories-review-only.yml'
       - 'ci/phase4/b11/t075-e3-three-backup-layers-real-history.mjs'
       - 'ci/phase4/b11/t075-e3-three-backup-layers-real-history.test.mjs'
+      - 'ci/phase4/b11/t075-readonly-original-evidence-and-recovery-coverage.test.mjs'
 permissions:
   contents: read
   actions: read
@@ -41,6 +42,15 @@ jobs:
             ci/phase4/b11/t069-backup-run-health.test.mjs \
             ci/phase4/b11/t075-e3-three-backup-layers-real-history.test.mjs
           echo 'T075_E3_ORIGINAL_AND_TRI_FAMILY_METADATA_NEGATIVE_TESTS=PASS_SCOPED'
+      - name: Independently verify authentic T070 same-bundle original DB and five-media restore (plus four original run families)
+        shell: bash
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t075-readonly-original-evidence-and-recovery-coverage.test.mjs
+          echo 'T075_E1_ORIGINAL_T070_SAME_RUN_DB_FIVE_MEDIA=PASS_SCOPED'
+          echo 'T075_E8_FULL_AUTH_EDGE_VERCEL_AND_ATOMIC_FREEZE=NOT_PROVEN'
       - name: Actually inspect GitHub run history across ALL three original backup workflows
         shell: bash
         env:
