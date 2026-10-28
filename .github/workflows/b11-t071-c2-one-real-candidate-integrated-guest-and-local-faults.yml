@@ -4,6 +4,7 @@ on:
     branches: [codex/b11-t071-failure-isolation-preflight-20261027]
     paths:
       - '.github/workflows/b11-t071-c2-one-real-candidate-integrated-guest-and-local-faults.yml'
+      - 'ci/phase4/b11/t071-c2-seven-remaining-real-http-faults.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_ONE_CANDIDATE_REAL_EXECUTION_20261028.md'
 permissions:
   contents: read
