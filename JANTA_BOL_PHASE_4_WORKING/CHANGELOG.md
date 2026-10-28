@@ -538,3 +538,11 @@ Protected workflow run #246 completed:
 - **ENV05**: `loadedmetadata` shows local video dimensions/duration only (including representative 15s MP4); image source tests cover 3264×1840, 2448×2448, 1600×2000 and 4000×1000 without crop (contain). All local metadata and magic-byte preflight are NOT FFmpeg/AV, server-side poster, clean release, remote storage or original-file proof. **SOURCE/CI VERIFIED, REAL PHOTOS/VIDEO AND BACKEND E2/E3/E5/E7 DUE**.
 - New independent `ci/phase4/b7-cp06-android-environment.test.cjs` executes 7 focused environment/security/media cases through existing source; older `ci/phase4/b7-media-preview-regression.cjs`, CP04, CP05, E1, PostgreSQL and Phase3 protections remain wired to CI. Changed only `JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js`, new regression, and existing Candidate workflow test step. All Source and CI candidates untouched otherwise.
 - All 6 × 5 CP groups now have an engineering source/checkpoint record; **30/30 findings accounted for, NOT 30/30 production resolved**. Original test manifest `P4-T034..P4-T042` **0/9 FINAL PASS+LOCK**, ZIP release **BLOCKED**. Founder's next stage = bounded Android E3 on exact SHA SPCK test copy, original SPCK project and database kept intact. Required E2/E5/E6/E7 remain separately DUE; no hidden positive approval and no real money test.
+
+
+### 2026-10-28: B12 coding-only packet before ordered T076-T083 testing
+- Review branch `codex/b12-full-production-integration-coding-review-20261028` based on protected C1 code. Vercel existing Phase3C home redirect retained; response headers and private/no-store HTML caching proposed for eventual release.
+- Fix after-login and local device-unlock open redirect via restricted same-directory page allowlist; preserve AAL2/role.
+- Article public error changed to generic message; canonical Article UUID URL and single canonical tag proposed.
+- Read-only production Supabase RLS/Article catalog query, external provider DUE candidate adapter, rollback NO-WRITE decision gate, and T076-T083 evidence truth gate added.
+- No actual production deploy, migration, public story, paid provider, credentials or live backup. Full B12 testing MUST occur one test at a time following coding. B11 full E8 and T072 live P2 remain open.
