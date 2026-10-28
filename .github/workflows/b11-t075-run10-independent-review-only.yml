@@ -1,0 +1,58 @@
+name: B11 T075 RUN-10 independent original E1 E3 E7 E8 truth gate (review only)
+on:
+  push:
+    branches: [codex/b11-t075-run10-truthful-release-gate-20261028]
+    paths:
+      - '.github/workflows/b11-t075-run10-independent-review-only.yml'
+      - 'ci/phase4/b11/t075-readonly-original-evidence-and-recovery-coverage.test.mjs'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  run10_readonly_evidence_and_old_recovery_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t075-run10-truthful-release-gate-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout immutable-source-anchored review branch without saved credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Prohibit Production/Cricket credentials, restore, deployment or hidden release authorization
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/b11-t075-run10-truthful-release-gate-20261028'
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${CRICKET_SUPABASE_URL:-}"
+          test -z "${CRICKET_DATABASE_URL:-}"
+          echo 'T075_RUN10_READONLY_REVIEW_SCOPE_FENCE=PASS'
+      - name: Source tests for existing Phase 3A Live/recovery and old B11 security regressions (E7 partial)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test \
+            ci/phase4/b11/t069-backup-run-health.test.mjs \
+            ci/phase4/b11/t070-g8-existing-recovery-contract.test.mjs \
+            ci/phase4/b11/t070-g17-maintenance-go-no-go.test.mjs \
+            ci/phase4/b11/t070-g18-edge-version-inventory.test.mjs \
+            ci/phase4/b11/t070-final-e8-gate.test.mjs \
+            ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          echo 'T075_E7_OLD_BACKUP_LIVE_SECURITY_RECOVERY_REGRESSION=PASS_SCOPED'
+      - name: Independently fetch original real E1 GitHub jobs, audit automation gaps and final E8 non-closure
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t075-readonly-original-evidence-and-recovery-coverage.test.mjs
+          echo 'T075_E1_E3_E7_INDEPENDENT_REAL_LOG_AUDIT=PASS_SCOPED'
+          echo 'T075_E8_HOSTED_WHOLE_PLATFORM_AND_AUTOMATIC_BACKUP=HOLD'
+          echo 'T075_FINAL_PASS_LOCK=false'
+          echo 'T075_FOUNDER_MANUAL_ACTION_IN_THIS_RUN=NONE'
