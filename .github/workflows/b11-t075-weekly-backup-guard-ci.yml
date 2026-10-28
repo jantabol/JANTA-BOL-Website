@@ -12,10 +12,12 @@ on:
       - 'ci/phase4/b11/t075-scheduled-backup-auth.test.mjs'
       - 'ci/phase4/b11/t075-scheduled-budget.py'
       - 'ci/phase4/b11/t075-scheduled-budget.test.mjs'
+      - 'ci/phase4/b11/t075-pr58-independent-release-stop.test.mjs'
       - '.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml'
       - '.github/workflows/b11-t075-weekly-backup-guard-ci.yml'
 permissions:
   contents: read
+  pull-requests: read
 jobs:
   review_only_original_manual_regression:
     if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028' }}
@@ -58,3 +60,12 @@ jobs:
           echo 'T075_SCHEDULED_GENUINE_PRODUCTION_BACKUP=NOT_RUN'
           echo 'T075_AUTO_SCHEDULER_NOT_ENABLED_IN_MAIN=true'
           echo 'T075_E3_PRODUCTION_ACTIVATION=HOLD'
+      - name: Independent GitHub Main plus PR 58 and zero-fee release HOLD audit
+        shell: bash
+        env:
+          GH_REVIEW_ONLY: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t075-pr58-independent-release-stop.test.mjs
+          echo 'T075_PR58_GO_NO_GO=HOLD_ZERO_COST_UNATTESTED_AND_PRODUCTION_NOT_RELEASED'
+
