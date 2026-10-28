@@ -56,7 +56,7 @@ jobs:
               ci/phase4/b8-g1-mobile-case-picker.test.mjs
           )
           echo 'T072_ORIGINAL_B8_UNMODIFIED_ANDROID_LEGACY_REGRESSION=PASS_SCOPED'
-          echo 'T072_CLIENT_PROPOSAL_NOT_INTEGRATED=false'
+          echo 'T072_CLIENT_PROPOSAL_INTEGRATED=false'
           echo 'T072_ORIGINAL_RPC_DUPLICATE_P2_STILL_OPEN=true'
           echo 'T072_FINAL_PASS_LOCK=false'
           echo 'T075_FULL_E8=HOLD'
