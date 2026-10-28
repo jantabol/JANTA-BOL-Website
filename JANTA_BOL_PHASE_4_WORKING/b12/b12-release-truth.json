@@ -19,10 +19,14 @@
   "external_providers_available": false,
   "tests": {
     "P4-T076": {
-      "status": "NOT_RUN",
+      "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "existing V3 redirect + response headers; real HTTPS still requires on exact candidate"
+      "implementation_note": "2026-10-28 real live public PROD test 40699768744: old main default Vercel home HTTPS 200/TLS valid (scoped), but /JANTA_BOL_PHASE_3C_WORKING/index.html and /website-v3.js both HTTP 404; PR61 exact candidate has no Vercel preview and is unmerged; full T076 production E1/E6/E7 BLOCKED; no official complete evidence.",
+      "partial_proofs": [
+        "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
+        "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged"
+      ]
     },
     "P4-T077": {
       "status": "NOT_RUN",

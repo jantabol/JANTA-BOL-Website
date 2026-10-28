@@ -101,10 +101,10 @@ test('P7 B11 real recovery and T072 original duplicate P2 cannot be falsely clea
  assert.equal(truth.release_mode,'REVIEW_ONLY_NOT_PRODUCTION');
  for(const [id,r] of Object.entries(truth.tests)) {
   assert(/^P4-T0(?:7[6-9]|8[0-3])$/.test(id));
-  assert.equal(r.status,'NOT_RUN');
+  if(id==='P4-T076'){assert.equal(r.status,'IN_PROGRESS')} else assert.equal(r.status,'NOT_RUN');
   assert.deepEqual(r.evidence,[]);
  }
  console.log('B12_B0_B12_CODING_SOURCE=REVIEW_ONLY');
  console.log('B12_B11_E8_AND_T072_PROD=HOLD');
- console.log('B12_T076_TO_T083_TESTING=NOT_STARTED');
+ console.log('B12_T076=IN_PROGRESS_LIVE_V3_ROUTE_404;B12_T077_TO_T083=NOT_STARTED');
 });

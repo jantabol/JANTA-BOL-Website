@@ -1,5 +1,5 @@
-# P4-B12 / RUN-11 — one-test-at-a-time start order (DO NOT EXECUTE YET)
-Master source: Final Test Blueprint P4-T076–T083, Sections 657–734. This checklist is for AFTER the B12 coding gate. Merely having code in a PR never marks any test PASS.
+# P4-B12 / RUN-11 — one-test-at-a-time start order (T076 STARTED; T077–T083 NOT STARTED)
+Master source: Final Test Blueprint P4-T076–T083, Sections 657–734. B12 coding gate review-source is complete. T076 started from current production source mismatch; later tests remain one-at-a-time. Merely having code in a PR never marks any test PASS.
 
 | Order | Test | What to execute later | Required evidence | Founder step? |
 |---|---|---|---|---|
@@ -14,4 +14,4 @@ Master source: Final Test Blueprint P4-T076–T083, Sections 657–734. This che
 
 **Hard gate:** never automate a real Founder-authenticated Publish/Delete, Supabase migration, DNS cutover, or paid B2 operation just because source coding is complete. Existing B11 T072 duplicate P2 and E8 full hosted restore remain unresolved. If blocked, report exactly HOLD/DUE, do not fake the test.
 
-**Test register initial state**: all eight tests NOT RUN, no series-level PASS; previous main-host-only smoke is independent preflight, not a shortcut.
+**Test register current state (2026-10-28)**: T076 IN PROGRESS / current Production V3 site and script return HTTP 404; authentic Actions run 40699768744 has 2 scoped PASS and 2 genuine FAIL. Exact PR61 candidate was not deployed. T077–T083 NOT RUN. B12 final PASS/LOCK still HOLD.
