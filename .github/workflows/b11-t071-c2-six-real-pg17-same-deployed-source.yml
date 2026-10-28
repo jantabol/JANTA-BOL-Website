@@ -89,7 +89,8 @@ jobs:
           set -Eeuo pipefail
           export PGDATABASE=jb_t071_c2_analytics
           d=t071-c2-full-actual
-          psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b7-payment-fixture.sql"
+          # Original immutable B7 source retained; only redundant GLOBAL ROLE bootstrap removed from disposable 2nd DB.
+          sed '/^create role .* nologin;$/d' "$d/ci/phase4/b7-payment-fixture.sql" | psql -X -q -v ON_ERROR_STOP=1
           psql -X -q -v ON_ERROR_STOP=1 -c "CREATE TABLE public.articles(id uuid primary key, status text NOT NULL); INSERT INTO public.articles(id,status) VALUES('10000000-0000-0000-0000-000000000001','published');"
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b7-view-ticket-fixture.sql"
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql"
@@ -102,7 +103,16 @@ jobs:
           export PGDATABASE=jb_t071_c2
           d=t071-c2-full-actual
           n=0
-          apply() { psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null; n=$((n+1)); }
+          apply() {
+            if [ "$1" = 'ci/phase4/b8-g1-disposable-fixture.sql' ]; then
+              # Roles anon/authenticated/service_role are shared cluster-wide. Keep immutable
+              # B8 original content and skip only redundant global role creation in DB 3/4.
+              sed '/^create role .* nologin;$/d' "$d/$1" | psql -X -q -v ON_ERROR_STOP=1 >/dev/null
+            else
+              psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null
+            fi
+            n=$((n+1))
+          }
           apply ci/phase4/b8-g1-disposable-fixture.sql
           apply JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
           apply JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_owner_mobile_case_picker_REVIEW_ONLY.sql
@@ -128,7 +138,16 @@ jobs:
           export PGDATABASE=jb_t071_e8
           d=t071-c2-full-actual
           n=0
-          apply() { psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null; n=$((n+1)); }
+          apply() {
+            if [ "$1" = 'ci/phase4/b8-g1-disposable-fixture.sql' ]; then
+              # Roles anon/authenticated/service_role are shared cluster-wide. Keep immutable
+              # B8 original content and skip only redundant global role creation in DB 3/4.
+              sed '/^create role .* nologin;$/d' "$d/$1" | psql -X -q -v ON_ERROR_STOP=1 >/dev/null
+            else
+              psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null
+            fi
+            n=$((n+1))
+          }
           apply ci/phase4/b8-g1-disposable-fixture.sql
           apply JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
           apply JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_owner_mobile_case_picker_REVIEW_ONLY.sql
@@ -153,7 +172,7 @@ jobs:
           set -Eeuo pipefail
           export PGDATABASE=jb_t071_c2_commit
           d=t071-c2-full-actual
-          psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b8-g1-disposable-fixture.sql"
+          sed '/^create role .* nologin;$/d' "$d/ci/phase4/b8-g1-disposable-fixture.sql" | psql -X -q -v ON_ERROR_STOP=1
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql"
           psql -X -q -v ON_ERROR_STOP=1 -f ci/phase4/b11/t071-c2-db-no-false-commit-real-pg17.sql
           echo 'C2_13_DATABASE_REAL_PG17_FAILED_WRITE_FALSE_ACK_DENIED_RECOVERED=PASS'
