@@ -125,3 +125,17 @@ test('T075 new scheduled authorization does not imply offsite current-byte reten
  assert.match(w,/T075_FULL_E8_FINAL_LOCK=HOLD/);
  assert.match(w,/do not merge without signed Founder/i);
 });
+
+test('T075 weekly cost exposure is bounded BEFORE original DB export and immutable offsite upload',()=>{
+ const source=readFileSync('ci/backup/jb-free-offsite-backup.sh','utf8');
+ const budget=source.indexOf('T075 scheduled offsite quota unreadable');
+ const firstDb=source.indexOf('supabase db dump --db-url');
+ const upload=source.indexOf('rclone --config "$work/rclone.conf" copyto --immutable');
+ const cap=source.indexOf('T075 scheduled ciphertext bundle exceeds');
+ assert(budget>0&&budget<firstDb,'remote metadata must be checked BEFORE live DB export');
+ assert(cap>firstDb&&cap<upload,'single ciphertext cap must happen BEFORE B2 upload');
+ assert.match(source,/n>2\*1024\*\*3/);
+ assert.match(source,/536870912/);
+ assert.match(source,/--immutable/);
+ assert.doesNotMatch(source,/rclone.*(?:delete|purge|sync|moveto)/);
+});
