@@ -6,6 +6,7 @@ on:
       - '.github/workflows/b11-t072-minimum-idempotency-proposal-pg17.yml'
       - 'JANTA_BOL_PHASE_4_WORKING/db/20261028_t072_b8_case_idempotency_PROPOSAL_REVIEW_ONLY.sql'
       - 'ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql'
+      - 'ci/phase4/b11/t072-concurrent-idempotency-real-pg17.test.mjs'
 permissions:
   contents: read
 jobs:
@@ -75,6 +76,9 @@ jobs:
         run: |
           set -Eeuo pipefail
           psql -X -q -v ON_ERROR_STOP=1 -f ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql
+          node --check ci/phase4/b11/t072-concurrent-idempotency-real-pg17.test.mjs
+          node --test ci/phase4/b11/t072-concurrent-idempotency-real-pg17.test.mjs
+          echo 'T072_PG17_REAL_CONCURRENT_REQUESTS_8_AND_CROSS_OWNER=PASS_SCOPED'
           echo 'T072_ADDITIVE_FIX_PG17_NEGATIVE_E2=PASS_SCOPED'
           echo 'T072_CLIENT_REUSES_PERSISTENT_KEY_ON_NETWORK_TIMEOUT=NOT_YET_PROVEN'
           echo 'T072_EXISTING_OLD_RPC_REMAINS_NON_IDEMPOTENT=OPEN'
