@@ -10,6 +10,8 @@ on:
       - 'ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs'
       - 'ci/phase4/b11/t075-scheduled-backup-identity.mjs'
       - 'ci/phase4/b11/t075-scheduled-backup-auth.test.mjs'
+      - 'ci/phase4/b11/t075-scheduled-budget.py'
+      - 'ci/phase4/b11/t075-scheduled-budget.test.mjs'
       - '.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml'
       - '.github/workflows/b11-t075-weekly-backup-guard-ci.yml'
 permissions:
@@ -47,6 +49,7 @@ jobs:
           node --check ci/phase4/b11/storage-media-manual-cli.mjs
           node --test \
             ci/phase4/b11/t075-scheduled-backup-auth.test.mjs \
+            ci/phase4/b11/t075-scheduled-budget.test.mjs \
             ci/phase4/b11/t070-real-joint-manual-safety.test.mjs \
             ci/phase4/b11/storage-media-manual-safety.test.mjs \
             ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs \
