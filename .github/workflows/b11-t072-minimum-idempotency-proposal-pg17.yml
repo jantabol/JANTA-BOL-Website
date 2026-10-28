@@ -1,0 +1,84 @@
+name: B11 T072 minimum additive Owner idempotency proposal real PG17 (REVIEW ONLY)
+on:
+  push:
+    branches: [codex/b11-t072-partial-write-retry-idempotency-audit-20261028]
+    paths:
+      - '.github/workflows/b11-t072-minimum-idempotency-proposal-pg17.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261028_t072_b8_case_idempotency_PROPOSAL_REVIEW_ONLY.sql'
+      - 'ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql'
+permissions:
+  contents: read
+jobs:
+  real_original_db_plus_additive_review_only_fix:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t072-partial-write-retry-idempotency-audit-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: T072_PROPOSAL_LOCAL_ONLY
+          POSTGRES_USER: postgres
+          POSTGRES_DB: jb_t072_idempotent
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t072_idempotent"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: T072_PROPOSAL_LOCAL_ONLY
+      PGDATABASE: jb_t072_idempotent
+    steps:
+      - name: Read-only checkout no credentials persistence
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Checkout exact immutable original deployed C1 & B8 SQL source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 89849ba47f443f423d8bfe4f966bb2d38087201f
+          path: original-t072-sql
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Fail-closed source identity, database, production secret fence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$PGDATABASE" = jb_t072_idempotent
+          test "$PGHOST" = 127.0.0.1
+          test "$(git -C original-t072-sql rev-parse HEAD)" = 89849ba47f443f423d8bfe4f966bb2d38087201f
+          git -C original-t072-sql diff --exit-code 659bcdc2ec4e270ea066863b4b456aeb65cb7c73 HEAD -- JANTA_BOL_PHASE_3C_WORKING
+          git -C original-t072-sql diff --exit-code 658f474d6ee0f24efac60f069979e8adee1e9221 HEAD -- ci/phase4/b8-g1-disposable-fixture.sql JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c 'SHOW server_version_num' | cut -c1-2)" = 17
+          echo 'T072_PROPOSED_ADDENDUM_ORIGINAL_CASE_SOURCE_IDENTITY_PG17=PASS'
+      - name: Apply actual original B8 source plus add-only REVIEW SQL only in disposable PG17
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          d=original-t072-sql
+          psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b8-g1-disposable-fixture.sql"
+          psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql"
+          psql -X -q -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261028_t072_b8_case_idempotency_PROPOSAL_REVIEW_ONLY.sql
+          echo 'T072_PROPOSED_PRIVATE_LEDGER_AND_OWNER_WRAPPER_LOADED_ON_ISOLATED_PG17=PASS'
+      - name: Real SQL original Authorization and idempotent request-key retry behavior
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -q -v ON_ERROR_STOP=1 -f ci/phase4/b11/t072-original-b8-case-idempotent-minimum-fix-pg17.sql
+          echo 'T072_ADDITIVE_FIX_PG17_NEGATIVE_E2=PASS_SCOPED'
+          echo 'T072_CLIENT_REUSES_PERSISTENT_KEY_ON_NETWORK_TIMEOUT=NOT_YET_PROVEN'
+          echo 'T072_EXISTING_OLD_RPC_REMAINS_NON_IDEMPOTENT=OPEN'
+          echo 'T072_NO_REAL_PRODUCTION_DB_OR_SERVICE_CHANGED=true'
+          echo 'T072_FINAL_PASS_LOCK=false'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T075_B11_FINAL_PASS_LOCK=false'
