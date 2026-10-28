@@ -1,0 +1,55 @@
+name: B11 T075 E3 three original GH backup run histories READONLY review only
+on:
+  push:
+    branches: [codex/b11-t075-e3-real-readonly-dual-backup-health-20261028]
+    paths:
+      - '.github/workflows/b11-t075-e3-three-backup-histories-review-only.yml'
+      - 'ci/phase4/b11/t075-e3-three-backup-layers-real-history.mjs'
+      - 'ci/phase4/b11/t075-e3-three-backup-layers-real-history.test.mjs'
+permissions:
+  contents: read
+  actions: read
+jobs:
+  independent_metadata_only:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t075-e3-real-readonly-dual-backup-health-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - name: Read only checkout (never persist credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Tight scope fence no production credentials no B2 no Cricket
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_REF" = "refs/heads/codex/b11-t075-e3-real-readonly-dual-backup-health-20261028"
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${CRICKET_DATABASE_URL:-}"
+          echo 'T075_E3_GITHUB_METADATA_ONLY_NO_LIVE_OR_CRICKET_SECRETS=PASS'
+      - name: Recheck existing history monitor and all new tri-family negative tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test \
+            ci/phase4/b11/t069-backup-run-health.test.mjs \
+            ci/phase4/b11/t075-e3-three-backup-layers-real-history.test.mjs
+          echo 'T075_E3_ORIGINAL_AND_TRI_FAMILY_METADATA_NEGATIVE_TESTS=PASS_SCOPED'
+      - name: Actually inspect GitHub run history across ALL three original backup workflows
+        shell: bash
+        env:
+          GH_T075_READONLY: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          node ci/phase4/b11/t075-e3-three-backup-layers-real-history.mjs
+          echo 'T075_E3_ORIGINAL_GITHUB_HISTORY_READ=EXECUTED'
+          echo 'T075_E3_PRODUCTION_BACKUP_AUTOMATION=NOT_DEPLOYED'
+          echo 'T075_E3_PRIVATE_OFFSITE_BYTE_AND_RETENTION=NOT_READ'
+          echo 'T075_E3_FINAL_PASS_LOCK=HOLD'
+          echo 'T075_E8_INDEPENDENT_FULL_PLATFORM_RESTORE=HOLD'
