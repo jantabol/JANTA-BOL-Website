@@ -33,6 +33,8 @@ CREATE TEMP TABLE t072_attempt_ids(kind text PRIMARY KEY,id uuid NOT NULL UNIQUE
 -- The one disposable session switches to authenticated while still referencing the test UUID.
 GRANT SELECT ON t072_attempt_ids TO authenticated;
 INSERT INTO t072_attempt_ids VALUES ('first', :'first_uuid'::uuid);
+-- The original B8 RPC executes SET ROLE authenticated; permit this fixture read only.
+GRANT SELECT ON t072_attempt_ids TO authenticated;
 DO $first$
 BEGIN
  IF (SELECT count(*) FROM public.b8_cases)<>1
