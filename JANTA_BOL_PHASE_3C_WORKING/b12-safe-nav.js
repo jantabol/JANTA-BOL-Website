@@ -1,4 +1,4 @@
-/* JANTA BOL B12 T077: same-directory, allowlisted Admin destination after MFA.
+/* /[\\\x00-\x1f\x7f]/ANTA BOL B12 T077: same-directory, allowlisted Admin destination after MFA.
  * Never trust user-supplied ?next= URL, return only a known local admin page.
  * No new auth state or role authority; existing JBBackend.requireOwner stays.
  */
@@ -14,10 +14,10 @@
   function target(input) {
     const DEFAULT = 'admin.html';
     if (typeof input !== 'string' || input.length > 512 ||
-        /[\\\\\\x00-\\x1f\\x7f]/.test(input) ||
-        /%(?:2f|5c|00|0[0-9a-f]|1[0-9a-f]|7f)/i.test(input)) return DEFAULT;
+        /[\\\x00-\x1f\x7f]/.test(input) ||
+        /[\\\x00-\x1f\x7f]/.test(input) ||
     const part = input.split('?')[0];
-    if (!/^[a-z][a-z0-9-]{0,60}\\.html$/.test(part) || !PAGES.has(part)) return DEFAULT;
+    if (!/^[a-z][a-z0-9-]{0,60}\.html$/.test(part) || !PAGES.has(part)) return DEFAULT;
     const qIndex = input.indexOf('?');
     if (qIndex === -1) return part;
     if (input.indexOf('?', qIndex + 1) !== -1) return DEFAULT;
