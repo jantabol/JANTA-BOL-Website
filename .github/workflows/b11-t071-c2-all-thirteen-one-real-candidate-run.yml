@@ -6,13 +6,6 @@ on:
       - '.github/workflows/b11-t071-c2-all-thirteen-one-real-candidate-run.yml'
 permissions:
   contents: read
-on:
-  push:
-    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
-    paths:
-      - '.github/workflows/b11-t071-c2-six-real-pg17-same-deployed-source.yml'
-permissions:
-  contents: read
 jobs:
   original_pg17_six_component_faults_single_original_release_candidate:
     if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027' }}
