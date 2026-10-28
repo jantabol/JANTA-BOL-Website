@@ -56,7 +56,9 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <label for="caseTitle">मामले का शीर्षक</label><input id="caseTitle" required minlength="12" maxlength="200" autocomplete="off">
 <label for="caseArea">क्षेत्र</label><input id="caseArea" required minlength="2" maxlength="120" autocomplete="off">
 <label for="caseRisk">जोखिम</label><select id="caseRisk"><option value="R0">R0 — सामान्य</option><option value="R1">R1 — गंभीर, संपादक की समीक्षा</option><option value="R2">R2 — केवल संस्थापक की अनुमति से</option></select>
-<button type="submit">निजी मामला बनाएँ</button></fieldset></form>
+<button type="submit">निजी मामला बनाएँ / उसी Request को सुरक्षित Retry करें</button>
+<button id="t072NewCaseIntent" type="button" class="secondary">नया अलग मामला शुरू करें (पिछले की पुष्टि जरूरी)</button>
+<p class="hint">T072 सुरक्षित समीक्षा: इंटरनेट रुकने पर वही शीर्षक, क्षेत्र और जोखिम भरकर Retry करें। पहले प्रयास की स्थिति अज्ञात होने पर नया मामला शुरू नहीं होगा। यह सुविधा केवल सुरक्षित Server RPC उपलब्ध होने पर काम करेगी; पुराने असुरक्षित RPC पर नहीं जाएगी।</p></fieldset></form>
 <form id="assignStaff"><fieldset><legend>कर्मचारी को किसी मामले की अनुमति दें</legend>
 <label for="assignCase">मामले की पहचान (UUID)</label><input id="assignCase" required autocomplete="off">
 <label for="staffRole">भूमिका</label><select id="staffRole"><option value="reporter">संवाददाता</option><option value="editor">संपादक</option></select>

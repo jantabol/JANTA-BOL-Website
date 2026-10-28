@@ -1,0 +1,88 @@
+name: B11 T071 C1 safe published Article RPC real PG17 (NO LIVE)
+on:
+  push:
+    branches: [codex/t071-c1-public-read-secure-20261027]
+    paths:
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261027_t071_c1_scoped_published_article_rpc_REVIEW_ONLY.sql'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b11/t071-c1-public-article-isolated-pg17-*.sql'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
+      - '.github/workflows/b11-t071-c1-public-read-isolated-pg17.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'JANTA_BOL_PHASE_4_WORKING/db/20261027_t071_c1_scoped_published_article_rpc_REVIEW_ONLY.sql'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b11/t071-c1-public-article-isolated-pg17-*.sql'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
+      - '.github/workflows/b11-t071-c1-public-read-isolated-pg17.yml'
+permissions:
+  contents: read
+jobs:
+  c1_real_anon_published_article_postgres17_only:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/t071-c1-public-read-secure-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/t071-c1-public-read-secure-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: T071_C1_DISPOSABLE_PASSWORD_ONLY
+          POSTGRES_USER: postgres
+          POSTGRES_DB: jb_t071_c1_ephemeral
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t071_c1_ephemeral"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 30
+    env:
+      PGHOST: '127.0.0.1'
+      PGPORT: '5432'
+      PGDATABASE: jb_t071_c1_ephemeral
+      PGUSER: postgres
+      PGPASSWORD: T071_C1_DISPOSABLE_PASSWORD_ONLY
+    steps:
+      - name: Checkout only candidate C1 safe-source branch
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Safety guard - no live production connection or secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$GITHUB_HEAD_REF" = codex/t071-c1-public-read-secure-20261027 || test "$GITHUB_REF" = refs/heads/codex/t071-c1-public-read-secure-20261027
+          test "$PGDATABASE" = jb_t071_c1_ephemeral
+          test "$PGHOST" = 127.0.0.1
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          for x in 1 2 3 4 5 6 7 8 9 10; do
+            if psql -X -v ON_ERROR_STOP=1 -qAtc 'select 1' | grep -qx 1; then break; fi
+            sleep 1
+          done
+          test "$(psql -X -v ON_ERROR_STOP=1 -qAtc 'show server_version_num' | cut -c 1-2)" = 17
+          echo 'C1_EXACT_REAL_PG17_EPHEMERAL=VERIFIED'
+      - name: 10 true JS client adapter negative and private owner-path tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          echo 'C1_CLIENT_GUEST_PUBLISHED_AND_OWNER_PRIVATE_GATES=PASS_SCOPE'
+      - name: Apply synthetic fixture and actual candidate SECURITY DEFINER RPC in temporary PG17
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -q -f ci/phase4/b11/t071-c1-public-article-isolated-pg17.sql
+          psql -X -v ON_ERROR_STOP=1 -q -f JANTA_BOL_PHASE_4_WORKING/db/20261027_t071_c1_scoped_published_article_rpc_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -q -f ci/phase4/b11/t071-c1-public-article-isolated-pg17-assertions.sql
+          echo 'C1_REAL_PG17_PUBLIC_ARTICLE_RPC=PASS_SCOPED'
+          echo 'C1_REAL_SUPABASE_PRODUCTION_PRIVILEGES=NOT_MODIFIED'
+          echo 'C1_TRUE_SAME_SHA_PUBLIC_BROWSER=NOT_VERIFIED'
+          echo 'C1_FINAL_LOCK=false'

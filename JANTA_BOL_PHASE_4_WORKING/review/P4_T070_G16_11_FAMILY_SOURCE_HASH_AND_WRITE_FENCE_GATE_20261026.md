@@ -1,0 +1,26 @@
+# JANTA BOL P4-T070 — G16 Protected Consistent-Point and Identity Preflight
+**Date:** Monday, 26 October 2026 IST. **Verdict:** G16 LIVE READ-ONLY SOURCE FINGERPRINT + FAIL-CLOSED RELEASE SAFETY AUDIT PASS. Real write-quiescence, joint backup and real E8 recovery NOT EXECUTED. Full T070 FINAL HOLD.
+
+## Verified real production evidence (READ ONLY)
+- Supabase project: JANTA BOL `vrffsnkycvjithwtiylt`, PostgreSQL 17 and ACTIVE_HEALTHY. No managed production clone or paid development branch created.
+- Fresh G16 single-statement MVCC `ci/phase4/b11/t070-g16-identity-fingerprint-readonly.sql`: returned **11/11 family count+opaque SHA256 identity fingerprints**. Counts: Articles 32; Versions 878; Grievances 6; History 57; Evidence records 2; LIVE sessions 16; LIVE updates **0**; Ad campaigns 7; Ad payments **0**; Auth users 5; Storage metadata objects 5.
+- G16 SHA256 identity fingerprints cover stable IDs/relationships/slugs and storage *metadata only*. They never return names, private paths, raw IDs, JWTs, passwords, or actual media bytes. The family identifiers and row counts, not the actual private identity hashes, are recorded in this report.
+- **First SQL implementation audit correction:** An early SQL version grouped populated rows only and inadvertently omitted two zero-row families; correction used an explicit family list and `LEFT JOIN`, yielding **11/11 source categories** with deterministically SHA256-hashed `[]` and counts 0 for LIVE updates and Ad payments. This is G16 source-scope integrity, NOT recovery. Actual remote SQL rerun verified correction.
+- Source storage count remains 5 (2 grievance-private, 1 private-editorial, 2 public-media). Individual actual original bytes were already verified in T069 separate job, not re-read here.
+- Read-only writer inventory: 3 active cron jobs, 48 enabled application triggers, no active replication slots at observation. Source activity inspection reported 2 active connections and zero idle transactions/lock waiters at an instant only. These observations **do not** indicate an effective database+Storage write freeze. 13 source Edge Functions ACTIVE; missing current deployable version source for functions in checked-in main; Vercel config has not been reconstructed.
+
+## Strict owner/cross-component safety gates
+- Added `ci/phase4/b11/t070-g16-write-fence-gate.mjs`: 20 security assertions covering Founder-specific authorization; in-flight public/editorial/reporter writes; offline queues; grievance/ads; Storage create/delete/upload; all 3 cron jobs; Edge workers; retries/webhooks; LIVE updates; DB active transactions; Storage duplicate scan+byte receipt; same-point DB+media manifest; actual config version inventory; encrypted immutable B2 readback; verified rollback/reopen; post-reopen offline edit preservation.
+- G16 evaluator **never** itself authorizes Production pause, final PASS, LOCK or T071. A self-assertion `true` is NOT an independently verified runtime proof. If even ONE of the 20 controls is absent/unknown, status is HOLD.
+- Added `ci/phase4/b11/t070-g16-write-fence-gate.test.mjs` 7 adversarial/contract tests, wired to existing synthetic-only branch CI. Tested missing each of 20 controls, string vs boolean forged proof, Cricket isolation, no billed account, and read-only SQL scope.
+- Official GitHub Actions **run 40294659920**, job **121477657082**, **SUCCESS**, native runner TAP **80/80 PASS, 0 FAIL** across 10 suites (prior 73 plus G16 7). Marker: `T070_SYNTHETIC_COMPARATOR_ONLY=PASS; T070_REAL_RESTORE_E8=NOT_RUN`. This is a real executed CI gate, but does not execute full production E8 disaster drill.
+
+## Hard blockers G16→G19
+1. Need one externally witnessed, reversible, timeboxed, Founder-approved **Production write quiescence** including direct endpoints/background worker/cron/upload and Android offline shadow. Never casually pause Supabase project, disable cron jobs or revoke sessions. Must have verified rollback before any action.
+2. Need one **same-point signed manifest** binding actual DB transaction snapshot and original 5 media byte/object generations and correct platform source version, followed by B2 immutable encrypted offsite readback. Historic T034 database-only and T069 media-only evidence are two different recovery points; do NOT relabel them one.
+3. Need entirely **private/disposable** actual combined restore to true Auth, RLS, Storage private/public, 13 Edge functions and Vercel runtime, with real retained IDs, original URL, grievance history and security negative access. Must preserve private complainant material and cannot attach restored plaintext/identity to public GitHub artifacts.
+4. Source empty LIVE updates + Ad payments mean fake positive-data evidence only in **disposable** test target. Actual E1/E2/E4/E5/E8, Founder Android and independent review still require real results.
+
+## Safety and status
+No live transaction blocked, cron disabled, triggers changed, Supabase/Auth/Storage mutation, original media accessed, paid environment created, production secret revealed or used by branch CI, GitHub main touched, or Cricket/Saarthi project touched.
+**G16 CODE + CURRENT READ-ONLY IDENTITY/WRITER AUDIT = PASS. REAL SAME-POINT CAPTURE = NOT_RUN. T070 FINAL = HOLD. T071 = NOT_STARTED.**

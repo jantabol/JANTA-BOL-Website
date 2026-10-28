@@ -1,0 +1,66 @@
+name: B11 T071 C1 pinned full News candidate real isolated HTTP (NO PROD)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - '.github/workflows/b11-t071-c1-candidate-isolated-http-actual.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/b11-t071-c1-candidate-isolated-http-actual.yml'
+permissions:
+  contents: read
+jobs:
+  actual_local_http_source_sha_smoke_no_live_auth:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Checkout C1 guard only
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Checkout full original Founder-approved News candidate immutable SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: b509c60fceb053a51686f67e587d4922a40fa6f4
+          path: t071-c1-http-candidate
+          persist-credentials: false
+      - name: Verify root/source and loopback-only server guard
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$(git -C t071-c1-http-candidate rev-parse HEAD)" = b509c60fceb053a51686f67e587d4922a40fa6f4
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+      - name: Serve real candidate static HTML over actual loopback HTTP, no JS simulation success
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory t071-c1-http-candidate >"$RUNNER_TEMP/t071-c1-http-server.log" 2>&1 &
+          pid=$!
+          trap 'kill "$pid" 2>/dev/null || true' EXIT
+          ok=0
+          for i in $(seq 1 30); do
+            if curl --noproxy '*' --silent --fail --max-time 2 http://127.0.0.1:8765/JANTA_BOL_PHASE_3C_WORKING/index.html -o /dev/null; then ok=1; break; fi
+            sleep 0.25
+          done
+          test "$ok" -eq 1
+          for page in index.html article.html live.html b9-search.html backend-client.js phase3a-live-client.js; do
+            url="http://127.0.0.1:8765/JANTA_BOL_PHASE_3C_WORKING/$page"
+            code=$(curl --noproxy '*' --silent --output "$RUNNER_TEMP/t071-c1-$(basename "$page")" --write-out '%{http_code}' --max-time 4 "$url")
+            test "$code" = 200
+            test -s "$RUNNER_TEMP/t071-c1-$(basename "$page")"
+            echo "C1_PINNED_SOURCE_REAL_LOOPBACK_HTTP_PAGE_$page=200"
+          done
+          test "$(curl --noproxy '*' --silent --output /dev/null --write-out '%{http_code}' http://127.0.0.1:8765/JANTA_BOL_PHASE_3C_WORKING/does-not-exist.html)" = 404
+          echo 'C1_PINNED_FULL_CANDIDATE_HTTP_PATHS=6_PASS_ISOLATED'
+          echo 'C1_REAL_PUBLIC_AUTHORIZED_FULL_ARTICLE_BODY=NOT_PROVEN'
+          echo 'C1_REAL_SUPABASE_OWNER_AAL2_PUBLISH=NOT_RUN'
+          echo 'C1_EXACT_SHA_VERCEL_PREVIEW=BLOCKED_QUOTA_402'
+          echo 'C1_FINAL_PASS_LOCK=false'

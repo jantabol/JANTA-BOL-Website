@@ -1,0 +1,59 @@
+name: T071 C1 full news candidate same-source existing regression (NO DEPLOY)
+on:
+  push:
+    branches: [codex/t071-c1-public-read-secure-20261027]
+    paths:
+      - '.github/workflows/b11-t071-c1-candidate-full-source-regression.yml'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
+  pull_request:
+    branches: [codex/t071-public-truth-forms-20261027]
+    paths:
+      - '.github/workflows/b11-t071-c1-candidate-full-source-regression.yml'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs'
+permissions:
+  contents: read
+jobs:
+  c1_integrated_source_regression_and_live_off_contract:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.event_name == 'push' && github.ref == 'refs/heads/codex/t071-c1-public-read-secure-20261027') || (github.event_name == 'pull_request' && github.head_ref == 'codex/t071-c1-public-read-secure-20261027')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact tested candidate source with no persisted token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify no production credentials and that old public article file is unchanged
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${DATABASE_URL:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/website-v3.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/script.js
+      - name: Run unchanged B9 public truth and search tests, authored exact HTML
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          echo 'C1_ORIGINAL_B9_BRAND_NEWS_SEARCH_REGRESSION=PASS'
+      - name: Run original Phase3 LIVE read-only guard and Founder AAL2/publishing failure simulation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo 'C1_ORIGINAL_OWNER_AAL2_PUBLISH_SIMULATION=PASS'
+          echo 'C1_REAL_FOUNDER_HOSTED_PUBLISH=NOT_PERFORMED'
+      - name: Run actual secure public Article source negative cases again
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          echo 'C1_SAME_SOURCE_SECURE_ANON_ARTICLE_RPC=PASS_SOURCE'
+          echo 'C1_ACTUAL_PROD_ARTICLE_RPC=NOT_DEPLOYED'
+          echo 'C1_FINAL_PASS_LOCK=false'

@@ -1,0 +1,32 @@
+name: T069 Media-Only Safe Review Preflight (No LIVE Access)
+on:
+  push:
+    branches: [codex/b11-t069-media-only-safe-review-20261024]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  scoped_code_qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Storage original-file read-only exporter and receipt failure negatives
+        run: node --test ci/phase4/b11/storage-readonly-export.test.mjs
+      - name: Founder-only media + encrypted B2 restore security static and denial tests
+        run: |
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --check ci/phase4/b11/storage-media-manual-cli.mjs
+          bash -n ci/phase4/b11/storage-media-encrypted-b2-MANUAL.sh
+      - name: GitHub manual backup run-history stale/missing/failure alarm negatives
+        run: node --test ci/phase4/b11/t069-backup-run-health.test.mjs
+      - name: No production manual workflow dispatch and no secret environment
+        run: |
+          set -euo pipefail
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          ! grep -Eq '^  (push|schedule|pull_request):' .github/workflows/b11-storage-media-MANUAL.yml
+          ! grep -Eq '^  (push|schedule|pull_request):' .github/workflows/b11-t069-backup-run-health-readonly.yml
+          echo 'T069_NARROW_REVIEW_ONLY; REAL_MEDIA_BACKUP_NOT_RUN; FOUNDER_PERMISSION_REQUIRED'

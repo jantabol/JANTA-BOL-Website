@@ -1,0 +1,101 @@
+{
+  "project": "vrffsnkycvjithwtiylt",
+  "cricket_touched": false,
+  "database": {
+    "run_id": "40223103797",
+    "pgp17_offline_clone": true,
+    "encrypted_offsite_readback": true,
+    "all_26_parity": true,
+    "all_16_security_parity": true
+  },
+  "media": {
+    "run_id": "40274621191",
+    "file_count": 5,
+    "grievance_file_count": 2,
+    "b2_ciphertext_readback": true,
+    "isolated_original_byte_sha256_parity": true,
+    "non_destructive": true,
+    "b2_ciphertext_sha256": "8b46443493245e06db6859de464ba4a2e3882a33b832ef3ae46add650528de21",
+    "ciphertext_file_bytes": 4781378
+  },
+  "observations": {
+    "as_of_utc": "2026-10-26T05:38:16Z",
+    "postgres_major": 17,
+    "source_project_healthy": true,
+    "public_tables": 100,
+    "public_tables_rls_enabled": 100,
+    "policies": {
+      "public": 74,
+      "storage": 4,
+      "private": 3,
+      "cron": 2
+    },
+    "auth_users": 5,
+    "auth_sessions_count": 72,
+    "edge_functions_active": 13,
+    "source_rows": {
+      "articles": 32,
+      "article_versions": 878,
+      "grievances": 6,
+      "grievance_history": 57,
+      "grievance_evidence": 2,
+      "live_sessions": 16,
+      "live_updates": 0,
+      "ad_campaigns": 7,
+      "ad_payments": 0
+    },
+    "storage_object_counts": {
+      "grievance-private": 2,
+      "private-editorial": 1,
+      "public-media": 2
+    },
+    "latest_source_fk_checks_consistent": 12,
+    "unexercised_checks": [
+      "live_update_session_fk",
+      "payment_campaign_fk"
+    ],
+    "dev_supabase_branches": 0,
+    "vercel_envs_visible_without_decrypt": 0,
+    "warning": "Metadata/source inventories and individually independent backup runs are NOT an atomic/full-system restore."
+  },
+  "limited_evidence_scope": "TRUSTED_GITHUB_LOGS_AND_READONLY_SOURCE_METADATA_NOT_COMBINED_RESTORE",
+  "private_object_paths_or_ids_included": false,
+  "secrets_included": false,
+  "coherence": {
+    "database_point_id": "T034-2026-10-26-database-only",
+    "media_point_id": "T069-2026-10-26-media-only"
+  },
+  "owner": {
+    "android_observation_ist": "2026-10-26T13:27:00+05:30",
+    "founder_private_key_available_off_ci": true,
+    "founder_primary_recipient_decrypted_offline": true,
+    "github_ciphertext_equals_android_sha256": true,
+    "android_ciphertext_sha256": "8b46443493245e06db6859de464ba4a2e3882a33b832ef3ae46add650528de21",
+    "android_ciphertext_bytes": 4781378,
+    "age_engine_selftest_pass": true,
+    "key_material_recorded": false,
+    "new_isolated_restore_from_b2_after_original_runner_destroyed": false,
+    "all_5_sha256_verified": false,
+    "caveat": "Off-runner complete AGE authenticated decrypt to /dev/null does NOT prove extracted plaintext manifest/per-object SHA or full combined platform recovery."
+  },
+  "platform": {},
+  "identity": {},
+  "audit": {},
+  "sandbox": {
+    "run_id": "40291268018",
+    "job_id": "121466638578",
+    "github_head_sha": "4bea8a4969bc1a99f2110e8afc5b05d66c4a6550",
+    "no_production_secrets": true,
+    "ephemeral_local_supabase_stack_booted": true,
+    "local_db_auth_storage_containers_up": true,
+    "local_pg_major_verified": false,
+    "real_janta_bol_database_restored": false,
+    "real_media_five_originals_restored_here": false,
+    "real_edge_functions_restored": false,
+    "real_auth_negative_tests": false,
+    "real_vercel_runtime_restored": false,
+    "actual_same_point_e8": false,
+    "cloud_paid_clone_created": false,
+    "log_scope": "EMPTY_STACK_RUNTIME_SMOKE_ONLY"
+  }
+}

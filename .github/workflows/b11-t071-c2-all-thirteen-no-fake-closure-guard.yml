@@ -1,0 +1,31 @@
+name: T071 C2 all 13 original families scoped proof; no fake E8 closure
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - 'ci/phase4/b11/t071-c2-all-13-source-transport-pg17-evidence-index-20261027.json'
+      - 'ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs'
+      - '.github/workflows/b11-t071-c2-all-thirteen-no-fake-closure-guard.yml'
+permissions:
+  contents: read
+jobs:
+  verify_exact_thirteen_real_evidence_scope:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Exactly thirteen original families six PG17 seven HTTP and E8 HOLD
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
+          echo 'C2_ALL_13_LOCAL_EVIDENCE_CLASSES_RECONCILED=PASS_SCOPED'
+          echo 'C2_PRODUCTION_HOSTED_INTEGRATED_E8=HOLD'
+          echo 'C2_FINAL_PASS_LOCK=false'
+          echo 'C1_FINAL_PASS_LOCK=false'
+          echo 'T071_FINAL_PASS_LOCK=false'
+          echo 'T072_STARTED=false'

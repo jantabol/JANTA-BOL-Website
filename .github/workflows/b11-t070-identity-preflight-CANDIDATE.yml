@@ -1,0 +1,144 @@
+name: T070 Isolated Restore Identity Preflight (Synthetic Only)
+on:
+  push:
+    branches: [codex/b11-t070-real-restore-identity-preflight-20261025]
+permissions:
+  contents: read
+jobs:
+  t070_identity_preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Validate E8 identity and security parity on mock source vs isolated restore
+        run: node --test ci/phase4/b11/t070-restore-parity.test.mjs
+      - name: Assert source-only 14-rule safe evidence collector contract
+        run: node --test ci/phase4/b11/t070-live-source-integrity-contract.test.mjs
+      - name: Verify real media byte-checker against disconnected synthetic fixtures
+        run: node --test ci/phase4/b11/t070-media-byte-verifier.test.mjs
+      - name: Guard G2 Storage metadata read-only query and privacy
+        run: node --test ci/phase4/b11/t070-storage-source-preflight.test.mjs
+      - name: Guard T070 FINAL against missing platform/grievance/all-media evidence
+        run: node --test ci/phase4/b11/t070-final-e8-gate.test.mjs
+      - name: Prove existing T069 original-media recovery is gated and not an E8 PASS
+        run: node --test ci/phase4/b11/t070-g8-existing-recovery-contract.test.mjs
+      - name: G11 one-recovery-point and durable Founder-key restoration fail-closed audit
+        run: node --test ci/phase4/b11/t070-g11-cross-component-gate.test.mjs
+      - name: Guard G11 real observed DB/Media proof scope and live read-only source counts
+        run: node --test ci/phase4/b11/t070-g11-observed-recovery-scope.test.mjs
+      - name: G13 Founder ciphertext recovery and no-cost full-system E8 honesty checks
+        run: node --test ci/phase4/b11/t070-g13-readiness-proof.test.mjs
+      - name: G16 independent twenty-writer freeze plan and read-only identity digest guard
+        run: node --test ci/phase4/b11/t070-g16-write-fence-gate.test.mjs
+      - name: G18 source Edge version metadata hash and no-secret restore truth guards
+        run: node --test ci/phase4/b11/t070-g18-edge-version-inventory.test.mjs
+      - name: G17 source writer surface and non-automatic maintenance release decision
+        run: node --test ci/phase4/b11/t070-g17-maintenance-go-no-go.test.mjs
+      - name: G17 verify actual three cron schedules and 5-second writer source evidence
+        run: node --test ci/phase4/b11/t070-g17-cron-readonly-source-evidence.test.mjs
+      - name: G18 genuine legacy DB and media runs drift proof, NEVER fake joint E8
+        run: node --test ci/phase4/b11/t070-g18-legacy-backup-reuse-gate.test.mjs
+      - name: T070 new real joint original DB+media manual candidate STATIC TESTS ONLY, never dispatch LIVE
+        run: |
+          set -Eeuo pipefail
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          node --check ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs
+          node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+      - name: Strictly no production restore or secrets at this checkpoint
+        run: |
+          set -euo pipefail
+          node --check ci/phase4/b11/t070-restore-parity.mjs
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T070_SYNTHETIC_COMPARATOR_ONLY=PASS; T070_REAL_RESTORE_E8=NOT_RUN'
+
+  t070_g14_empty_local_stack_runtime:
+    # Deliberate single-run smoke test. Never receives Production credentials, B2 or JANTA BOL data.
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && contains(github.event.head_commit.message, '[G14-local-runtime]') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Confirm no protected production secrets or targets are passed
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_REF" = "refs/heads/codex/b11-t070-real-restore-identity-preflight-20261025"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'G14_NO_PRODUCTION_SECRETS=PASS'
+      - name: Install reviewed official Supabase local CLI
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Start isolated EMPTY local Supabase Auth Storage Postgres Edge stack
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          d="$(mktemp -d)"
+          network="jb-t070-g14-local"
+          cleanup() {
+            (cd "$d" && supabase stop --no-backup >/dev/null 2>&1) || true
+            docker network rm "$network" >/dev/null 2>&1 || true
+            rm -rf -- "$d"
+          }
+          trap cleanup EXIT
+          cd "$d"
+          supabase init --yes >/dev/null
+          docker info >/dev/null
+          docker network create -o 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1' "$network" >/dev/null
+          if ! supabase start --network-id "$network" >"$d/local-start.log" 2>&1; then
+            echo 'G14_EMPTY_STACK_BOOT=HOLD'
+            exit 3
+          fi
+          docker ps --format '{{.Names}}' >"$d/containers"
+          for service in db auth storage; do
+            if ! grep -Eq "^supabase_${service}_" "$d/containers"; then
+              echo "G14_LOCAL_${service}_MISSING=HOLD"
+              exit 3
+            fi
+          done
+          echo 'G14_EMPTY_PG17_AUTH_STORAGE_STACK_BOOT=PASS'
+          echo 'G14_PRODUCTION_DATA_RESTORED=false'
+          echo 'G14_PLATFORM_EDGE_VERCEL_RECONSTRUCTED=false'
+          echo 'T070_REAL_JOINT_E8=NOT_RUN'
+
+  t070_g15_local_joint_synthetic:
+    # Run only on a deliberate source-reviewed candidate commit. Never reads JANTA BOL data.
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && (contains(github.event.head_commit.message, '[G15-local-synthetic]') || contains(github.event.head_commit.message, '[G17-local-fence]')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify static safety contract and shell syntax before local boot
+        run: |
+          set -euo pipefail
+          bash -n ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.sh
+          bash -n ci/phase4/b11/t070-g17-local-reversible-pg-fence.sh
+          node --test ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.test.mjs
+          node --test ci/phase4/b11/t070-g17-local-reversible-pg-fence.test.mjs
+      - name: Install pinned official local Supabase CLI
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Execute LOCAL synthetic DB/Media/Auth and optional G17 real transaction-release probe
+        shell: bash
+        env:
+          G17_LOCAL_SYNTHETIC_ONLY: ${{ contains(github.event.head_commit.message, '[G17-local-fence]') && 'YES' || 'NO' }}
+        run: bash ci/phase4/b11/t070-g15-local-synthetic-joint-rehearsal.sh

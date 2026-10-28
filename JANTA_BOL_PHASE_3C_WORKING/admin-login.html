@@ -8,15 +8,19 @@
     <button id="verifyMfa" type="button" class="btn primary">Verify 2FA</button>
   </div>
 </div><div id="loginActions" class="actions"><button id="login" class="btn primary">Login</button><button id="setupMfa" type="button" class="btn">Setup 2FA</button></div><div id="localLockActions" class="actions" style="display:none"><button id="deviceUnlock" type="button" class="btn primary" style="display:none">Unlock with Device Credential</button><button id="deviceSetup" type="button" class="btn primary" style="display:none">Set up Device Unlock</button><button id="deviceRetry" type="button" class="btn secondary" style="display:none">Retry</button></div></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script src="b12-safe-nav.js"></script><script>
 const q=new URLSearchParams(location.search), msg=document.getElementById('msg');
 function safeNextPage(){
-  // T063: login and local unlock must never redirect Founder to external origins.
-  // admin-auth.js supplies only same-directory HTML basename plus optional query.
+  // B10 T063 original safety proof: never redirect to another origin or
+  // malformed URI. Keep original local destination semantics (including
+  // legitimate B8/B9 deep links); B12 adds stricter allowlist on real browser.
   const target=(q.get('next')||'').trim();
   const safeLocal=/^[a-z0-9][a-z0-9_-]*\.html(?:\?[^\r\n]*)?$/i.test(target);
   if(!safeLocal || /^admin-(?:login|recovery)(?:\.html|\?)/i.test(target)){
     return 'admin.html';
+  }
+  if(typeof window !== 'undefined' && window.JBProdSafeNav){
+    return window.JBProdSafeNav.target(target);
   }
   return target;
 }

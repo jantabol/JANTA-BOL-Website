@@ -1,0 +1,120 @@
+{
+  "schema": "P4_T071_B7_LIVE_VS_CANDIDATE_RPC_RECONCILIATION_V1",
+  "date_ist": "2026-10-27",
+  "project_id": "vrffsnkycvjithwtiylt",
+  "source_repo": "jantabol/JANTA-BOL-Website",
+  "source_ref": "658f474d6ee0f24efac60f069979e8adee1e9221",
+  "client_path": "JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js",
+  "catalog_scope": "LIVE_public_pg_proc_names_readonly_no_executions",
+  "distinct_referenced_rpc_names": 27,
+  "present_rpc_names": 16,
+  "absent_rpc_names": 11,
+  "outcome": "SOURCE_BACKEND_ABI_DOCUMENTARY_GAP_CONFIRMED_NOT_DEPLOYMENT_AUTHORIZATION",
+  "domain_name_jantaboli_in": "DUE_NOT_CONFIGURED",
+  "full_t071_e8": "HOLD",
+  "production_mutations": 0,
+  "missing": [
+    {
+      "name": "jb_ad_confirm_manual_payment_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql",
+      "intent": "MANUAL_PAYMENT_RECEIPT_CONSENT_CONFIRMATION",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_PAID_RECEIPT_OR_LIVE_PROMOTION"
+    },
+    {
+      "name": "jb_ad_creative_workflow_capability_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_creative_draft_approval_REVIEW_ONLY.sql",
+      "intent": "OWNER_CREATIVE_DRAFT_BEFORE_APPROVE",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "FRONTEND_FAIL_CLOSED_NO_LEGACY_AUTO_APPROVAL"
+    },
+    {
+      "name": "jb_ad_decide_change_request_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql",
+      "intent": "OWNER_MODERATES_PORTAL_CHANGE",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "PORTAL_CHANGE_REQUEST_DISABLED"
+    },
+    {
+      "name": "jb_ad_lifecycle_capability_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261012_b7_lifecycle_state_guard_REVIEW_ONLY.sql",
+      "intent": "POSITIVE_AD_LIFECYCLE_ATOMIC_CAPABILITY",
+      "class": "DELIBERATELY_NO_SENTINEL_SQL",
+      "gate": "NO_APPROVE_PAYMENT_PENDING_LIVE_FROM_CANDIDATE"
+    },
+    {
+      "name": "jb_ad_notification_failures_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql",
+      "intent": "OWNER_PRIVATE_FAILURE_QUEUE",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_FAKE_ZERO_NOTIFICATION_FAILURES"
+    },
+    {
+      "name": "jb_ad_notification_retry_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_unified_notifications_REVIEW_ONLY.sql",
+      "intent": "B3_IN_APP_IDEMPOTENT_RETRY",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_FAKE_EXTERNAL_DELIVERY"
+    },
+    {
+      "name": "jb_ad_owner_change_requests_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql",
+      "intent": "OWNER_CHANGE_QUEUE_AND_PORTAL_READY_SENTINEL",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_UNSAFE_LEGACY_PORTAL_ISSUE"
+    },
+    {
+      "name": "jb_ad_owner_renewals_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_portal_text_change_REVIEW_ONLY.sql",
+      "intent": "OWNER_RENEWAL_QUEUE",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_FAKE_ZERO_RENEWALS"
+    },
+    {
+      "name": "jb_ad_qualified_analytics_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_qualified_impressions_REVIEW_ONLY.sql",
+      "intent": "CLIENT_REPORTED_ESTIMATE_NOT_BOT_VERIFIED",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_IMAGINED_VIEWS_OR_REACH"
+    },
+    {
+      "name": "jb_ad_safety_transition_idempotent_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261016_b7_t036_revocation_replay_REVIEW_ONLY.sql",
+      "intent": "SAFETY_ONLY_REPLAY_BRIDGE",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "DO_NOT_REPLACE_EXISTING_EMERGENCY_HIDE_OR_BYPASS"
+    },
+    {
+      "name": "jb_ad_set_approved_quote_internal",
+      "ref": "JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql",
+      "intent": "OWNER_PRICE_AND_TERMS_LOCK",
+      "class": "REVIEW_ONLY_SQL_EXISTS",
+      "gate": "NO_UNVERIFIED_QUOTE_PAYMENT"
+    }
+  ],
+  "existing_legacy_present": [
+    "jb_ad_approve_creative_internal",
+    "jb_ad_issue_portal_internal",
+    "jb_ad_public_packages",
+    "jb_ad_public_request",
+    "jb_ad_save_creative_internal",
+    "jb_ad_save_package_internal",
+    "jb_ad_schedule_internal",
+    "jb_ad_transition_internal",
+    "jb_ad_verify_advertiser_internal",
+    "jb_compliance_approve_month_internal",
+    "jb_compliance_generate_month_internal",
+    "jb_compliance_transition_internal",
+    "jb_grievance_add_issue_internal",
+    "jb_grievance_link_duplicate_internal",
+    "jb_grievance_reopen_internal",
+    "jb_grievance_transition_internal"
+  ],
+  "notes": [
+    "All eleven names were absent in catalog on 2026-10-27, but NOT 11 production runtime calls or production outages.",
+    "Ten source functions are authored only in REVIEW_ONLY/isolated migrations; lifecycle sentinel explicitly deliberately NOT created by the guard migration.",
+    "Source and legacy backend must be treated as separate revisions. Presence of a legacy RPC is not proof of newer safer semantics.",
+    "Review-only migrations cannot be applied to production without separate Founder release approval and parity+rollback proof.",
+    "Do not connect custom domain as a substitute for backend failure evidence."
+  ]
+}

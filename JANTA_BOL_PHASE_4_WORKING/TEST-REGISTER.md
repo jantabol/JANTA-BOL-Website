@@ -96,7 +96,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T073 | Backup/Recovery | Corruption + Deletion + Security Incident + Credential/Config/Deployment Recovery | B11 | NOT RUN |
 | P4-T074 | Backup/Recovery | Post-Restore Verification + Independent Backup + Founder Device Loss | B11 | NOT RUN |
 | P4-T075 | Backup/Recovery | Automatic Recovery Operations + Implementation/Test Coverage + Final Lock | B11 | NOT RUN |
-| P4-T076 | Production | Production Baseline + Hosting + Domain + HTTPS | B12 | NOT RUN |
+| P4-T076 | Production | Production Baseline + Hosting + Domain + HTTPS | B12 | IN PROGRESS |
 | P4-T077 | Production | Permanent URL + Auth/API + Environment Separation | B12 | NOT RUN |
 | P4-T078 | Production | Production DB Migration + Secret Protection | B12 | NOT RUN |
 | P4-T079 | Production | External Provider Production Integration + Adapter Safety | B12 | NOT RUN — EXTERNAL |

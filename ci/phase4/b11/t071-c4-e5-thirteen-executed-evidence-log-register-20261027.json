@@ -1,0 +1,204 @@
+{
+  "schema": "JANTA_BOL_T071_C4_E5_LOG_REGISTER_V1",
+  "master": "Phase4 T071 RECOV-019..026 p304",
+  "gate": "C4",
+  "candidate": {
+    "source_sha": "ddd80abbec0abd4f60e1e4556334365f599005ef",
+    "branch": "codex/t071-c1-public-read-secure-20261027",
+    "pull_request": 47,
+    "hosted_preview_same_sha": false,
+    "sql_rpc_review_only_not_deployed": true
+  },
+  "source_ancestry": {
+    "original_b8_sha": "658f474d6ee0f24efac60f069979e8adee1e9221",
+    "original_news_pr46_sha": "b509c60fceb053a51686f67e587d4922a40fa6f4"
+  },
+  "events": [
+    {
+      "index": 1,
+      "module": "social",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_01_SOCIAL_REAL_HTTP_503=FAIL_CLOSED_NO_FAKE_POSTED",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 2,
+      "module": "analytics",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_RPC_PERMISSION",
+      "run_id": 40531996112,
+      "job_id": 122287010483,
+      "run_sha": "4126f44acf7173134a17b8a6bd9db586f64e8002",
+      "markers": [
+        "T071_C2_REAL_ANALYTICS_RPC_OUTAGE_PERMISSION_DENIED=PASS",
+        "T071_C2_REAL_ANALYTICS_FAILURE_DOES_NOT_CHANGE_NEWS_AD_EVENTS=PASS",
+        "T071_C2_REAL_ANALYTICS_RECOVERED_AND_COUNTS_PRESERVED=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 3,
+      "module": "notifications",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_STORAGE_INSERT",
+      "run_id": 40528474982,
+      "job_id": 122274421572,
+      "run_sha": "dc2d42db3f9b2d9dc950b4ce877bc8526accce38",
+      "markers": [
+        "T071_C2_REAL_NOTIFICATION_STORAGE_WRITE_FAILURE=OBSERVED",
+        "T071_C2_REAL_B8_CORE_CASE_COMMITTED_DURING_NOTIFICATION_OUTAGE=PASS",
+        "T071_C2_ORIGINAL_NEWS_AD_AND_OLD_NOTIFICATION_STABLE=PASS",
+        "T071_C2_REAL_NOTIFICATION_RECOVERED_AND_COMMITTED_CASE_PRESERVED=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 4,
+      "module": "grievance",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_04_GRIEVANCE_REAL_HTTP_503=FAIL_CLOSED_SOURCE_ADAPTER",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 5,
+      "module": "compliance",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_05_COMPLIANCE_REAL_HTTP_503=FAIL_CLOSED_SOURCE_ADAPTER",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 6,
+      "module": "advertising",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_AD_LIVE_TRIGGER",
+      "run_id": 40530048228,
+      "job_id": 122280044810,
+      "run_sha": "fd285b3d5000e3102e5d8efb53e8c03ff67f3767",
+      "markers": [
+        "T071_C2_AD_CANNOT_GO_LIVE_DURING_PAYMENT_OUTAGE=PASS",
+        "T071_C2_PAYMENT_STORAGE_RECOVERED_BUT_NO_RECEIPT_STILL_DENIED=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 7,
+      "module": "search",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_07_SEARCH_REAL_HTTP_503=FAIL_CLOSED_ARTICLE_HTML_STILL_200",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 8,
+      "module": "accountability",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_RPC_PERMISSION",
+      "run_id": 40504645684,
+      "job_id": 122190733649,
+      "run_sha": "47a0073828974c30b2131e8605f4ed61bac7b5db",
+      "markers": [
+        "T071_REAL_PG17_B8_ACCOUNTABILITY_FEED_MODULE_FAULT=PASS",
+        "T071_REAL_PG17_CASE_RPC_SURVIVED_FEED_OUTAGE=PASS",
+        "T071_REAL_PG17_ACCOUNTABILITY_FEED_RPC_RESTORED=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 9,
+      "module": "live",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_09_LIVE_REAL_HTTP_503=NO_FALSE_LIVE_SUCCESS",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 10,
+      "module": "provider",
+      "fault_class": "LOCAL_HTTP_503",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_10_CAMERA_PROVIDER_HTTP_503=NO_FALSE_REDIRECT",
+        "C2_ORIGINAL_NEWS_ARTICLE_LIVE_STATIC_HTTP=3x200_SAFE_404"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 11,
+      "module": "payments",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_PAYMENT_STORAGE",
+      "run_id": 40530048228,
+      "job_id": 122280044810,
+      "run_sha": "fd285b3d5000e3102e5d8efb53e8c03ff67f3767",
+      "markers": [
+        "T071_C2_REAL_PG17_PAYMENT_WRITE_FAILURE=PASS",
+        "T071_C2_AD_CANNOT_GO_LIVE_DURING_PAYMENT_OUTAGE=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 12,
+      "module": "messaging",
+      "fault_class": "LOCAL_HTTP_503_WITH_ACTUAL_DISPOSABLE_PG17_CORE_COMMIT",
+      "run_id": 40534396564,
+      "job_id": 122295571136,
+      "run_sha": "a86d6cf4b76a8cc25cb61447991ee9ae98757a19",
+      "markers": [
+        "C2_ORIGINAL_B8_CASE_ACTUALLY_COMMITTED_BEFORE_MESSAGING_FAULT=PASS",
+        "C2_12_MESSAGING_EDGE_HTTP_503=NO_FALSE_ACK",
+        "C2_ORIGINAL_B8_COMMITTED_CASE_NEWS_AD_STILL_STABLE_AFTER_REAL_HTTP_MESSAGE_FAULT=PASS"
+      ],
+      "actual_integrated_full_release": false
+    },
+    {
+      "index": 13,
+      "module": "database",
+      "fault_class": "ACTUAL_DISPOSABLE_PG17_B8_FAILED_WRITE",
+      "run_id": 40531488909,
+      "job_id": 122285201848,
+      "run_sha": "60873bcc9f24c3f466de9720ea00e87eb316f06f",
+      "markers": [
+        "T071_C2_DB_ORIGINAL_B8_WRITE_REJECTED_NO_FALSE_SUCCESS=PASS",
+        "T071_C2_DB_ABORTED_CASE_NOT_COMMITTED_PREVIOUS_NEWS_AD_OK=PASS",
+        "T071_C2_DB_ORIGINAL_B8_RECOVERY_REAL_COMMIT=PASS"
+      ],
+      "actual_integrated_full_release": false
+    }
+  ],
+  "accepted_scope": "ORIGINAL_LOGS_AND_SAME_PINNED_FULL_SOURCE_REGRESSIONS_ONLY",
+  "fake_production_faults_forbidden": true,
+  "founder_policy_approved": true,
+  "founder_numeric_rpo_rto_approved": false,
+  "regression_real_founder_hosted_authentication": "NOT_RUN",
+  "regression_full_guest_live_hosted_article_body": "NOT_PROVEN",
+  "c4_final_pass_lock": false,
+  "c3_final_pass_lock": false,
+  "t071_final_pass_lock": false,
+  "t072_started": false,
+  "domain": "JANTABOL.in"
+}
