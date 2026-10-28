@@ -12,7 +12,7 @@ const HOST='shubham-pichhore-2028-larldsm6o-shubhamshrivastava295-9848.vercel.ap
 const ORIGIN='https://'+HOST;
 const reviewedDeploy='dpl_EQC399BieUgUaLN8Xi4wB2fNijLz';
 const reviewedSha='cfd5a64661e834c801c30325b97b5a4d72dfb49f';
-const PATHS=['/','/JANTA_BOL_PHASE_3C_WORKING/index.html','/JANTA_BOL_PHASE_3C_WORKING/website-v3.js','/JANTA_BOL_PHASE_3C_WORKING/admin-login.html'];
+const PATHS=['/','/JANTA_BOL_PHASE_3C_WORKING/index.html','/JANTA_BOL_PHASE_3C_WORKING/website-v3.js','/JANTA_BOL_PHASE_3C_WORKING/admin-login.html','/JANTA_BOL_PHASE_3C_WORKING/admin.html','/JANTA_BOL_PHASE_3C_WORKING/article.html','/JANTA_BOL_PHASE_3C_WORKING/b9-search.html'];
 const fp=b=>createHash('sha256').update(b).digest('hex').slice(0,16);
 function fetchOnly(path){
  assert(PATHS.includes(path),'private/auth path not authorized');
@@ -108,4 +108,23 @@ test('T076 Preview root redirect has valid TLS, remains inside same site or retu
  console.log('T076_PREVIEW_ROOT_ROUTE=PASS_SCOPED');
  console.log('T076_LIVE_FOUNDER_AUTH_PUBLISH_ROLLBACK=NOT_TESTED');
  console.log('T076_FULL_PASS_LOCK=false');
+});
+
+test('T076 inspected Public Article, B9 Search and Founder Admin HTML shells at exact free Preview (NO login)',async()=>{
+ for(const [path,privateShell] of [
+  ['/JANTA_BOL_PHASE_3C_WORKING/article.html',false],
+  ['/JANTA_BOL_PHASE_3C_WORKING/b9-search.html',false],
+  ['/JANTA_BOL_PHASE_3C_WORKING/admin.html',true]
+ ]){
+  const r=await fetchOnly(path);
+  assertPublic(r,path,200);
+  assert.match(r.ctype,/text\/html/i);
+  assert.match(r.body.toString('utf8'),/<html\b/i);
+  if(privateShell){
+   assert.match(r.headers.cache,/no-store/i);
+   assert.equal(r.headers.nosniff,'nosniff');
+   assert.equal(r.headers.frame,'SAMEORIGIN');
+  }
+ }
+ console.log('T076_PREVIEW_ARTICLE_SEARCH_ADMIN_SHELLS=PASS_SCOPED_NO_PRIVATE_API_OR_AUTH');
 });
