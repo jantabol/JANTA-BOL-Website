@@ -1,0 +1,46 @@
+name: JB Public News - Scoped Readonly Regression
+
+on:
+  push:
+    branches:
+      - codex/public-published-news-isro-20261028
+    paths:
+      - 'api/public-news.js'
+      - 'index.html'
+      - 'article.html'
+      - 'public-news.js'
+      - 'tests/phase4/public-news.test.cjs'
+      - '.github/workflows/jb-public-news-readonly-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'api/public-news.js'
+      - 'index.html'
+      - 'article.html'
+      - 'public-news.js'
+      - 'tests/phase4/public-news.test.cjs'
+      - '.github/workflows/jb-public-news-readonly-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jb-public-readonly-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  public-news-regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout exact PR source (no persistent token)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Test runtime and source safety
+        run: |
+          node --version
+          node --check api/public-news.js
+          node --check public-news.js
+          node --test tests/phase4/public-news.test.cjs
