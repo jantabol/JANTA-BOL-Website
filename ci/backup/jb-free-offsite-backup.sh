@@ -28,25 +28,38 @@ command -v zstd >/dev/null || fail "zstd not installed"
 # A dual-identity real clone run requires distinct manual workflow authorization.
 dual="${JB_T034_DUAL_RESTORE_PROBE:-0}"
 joint="${JB_T070_JOINT_PROBE:-0}"
+auto="${JB_T075_AUTO_JOINT_BACKUP:-0}"
+[[ "$auto" == 0 || "$auto" == 1 ]] || fail 'invalid T075 scheduled backup mode'
+if [[ "$auto" == 1 ]]; then
+  [[ "$dual" == 1 && "$joint" == 1 ]] ||
+    fail 'T075 scheduled mode cannot skip real original PG17 plus media restore'
+  node --input-type=module -e "import {assertScheduledBackupContext} from './ci/phase4/b11/t075-scheduled-backup-identity.mjs'; assertScheduledBackupContext();" ||
+    fail 'T075 scheduled workflow not independently approved'
+fi
 [[ "$dual" == 0 || "$dual" == 1 ]] || fail 'invalid dual-restore mode'
 [[ "$joint" == 0 || "$joint" == 1 ]] || fail 'invalid joint-restore mode'
 [[ "$joint" == 0 || "$dual" == 1 ]] || fail 'joint media restore requires existing dual-recipient PG restore'
 if [[ "$dual" == 1 ]]; then
-  [[ "${GITHUB_ACTIONS:-}" == true &&
-     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
-     "${GITHUB_REF:-}" == refs/heads/main &&
-     "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
-     "${GITHUB_ACTOR:-}" == jantabol &&
-     "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
-    fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
-  if [[ "$joint" == 1 ]]; then
-    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
-       "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
-       -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
-      fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
+  if [[ "$auto" == 0 ]]; then
+    [[ "${GITHUB_ACTIONS:-}" == true &&
+       "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+       "${GITHUB_REF:-}" == refs/heads/main &&
+       "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
+       "${GITHUB_ACTOR:-}" == jantabol &&
+       "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
+      fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
+    if [[ "$joint" == 1 ]]; then
+      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
+         "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
+         -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
+        fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
+    else
+      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
+        fail 'legacy T034 manual workflow identity required'
+    fi
   else
-    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
-      fail 'legacy T034 manual workflow identity required'
+    [[ "$joint" == 1 && "${JB_B11_SERVICE_ROLE_KEY:-}" != "" ]] ||
+      fail 'T075 scheduled mode requires original protected service role and joint export'
   fi
   command -v age-keygen >/dev/null || fail 'AGE key generator missing'
 fi
