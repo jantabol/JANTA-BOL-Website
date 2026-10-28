@@ -93,6 +93,20 @@ python3 ci/backup/jb-b2-rclone-config.py "$work/rclone.conf" || fail "JANTA BOL 
 rclone --config "$work/rclone.conf" listremotes | grep -Fxq 'jbbackup:' || fail "rclone [jbbackup] remote is not configured"
 rclone --config "$work/rclone.conf" --retries 1 lsf "jbbackup:jantabol-backup-euc-2026" >/dev/null ||
  fail "JANTA BOL bucket unavailable or scoped key missing list/read permissions; no DB export was attempted"
+if [[ "$auto" == 1 ]]; then
+  # FREE-TIER COST CAP: metadata-only read of EXISTING remote before DB export.
+  # No automatic deletes, pruning, overwrite, new bucket or retention downgrade.
+  rclone --config "$work/rclone.conf" --retries 1 size --json "${JB_BACKUP_REMOTE_PREFIX%/}" > "$work/scheduled-budget.json" ||
+    fail 'T075 scheduled offsite quota unreadable, refuse live export'
+  python3 - "$work/scheduled-budget.json" <<'PY'
+import json,sys
+d=json.load(open(sys.argv[1],encoding='utf-8'))
+n=d.get('bytes')
+if not isinstance(n,int) or n<0 or n>2*1024**3:
+ raise SystemExit('T075 scheduled backup offsite limit exceeded/unknown')
+PY
+  echo 'T075_SCHEDULED_EXISTING_ENCRYPTED_OFFSITE_BYTES_WITHIN_2GIB=PASS_METADATA_ONLY'
+fi
 # Validate age recipient can encrypt public, disposable synthetic data without private key.
 printf 'JANTA_BOL_ONLY_NON_SECRET_PREFLIGHT\n' | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/public-recipient-probe.age" ||
  fail "invalid JANTA BOL age public recipient; no DB export was attempted"
@@ -260,6 +274,10 @@ fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
+if [[ "$auto" == 1 ]]; then
+  [[ "$(wc -c < "$work/backup.age")" -le 536870912 ]] ||
+    fail 'T075 scheduled ciphertext bundle exceeds single-run 512MiB cap; no remote upload'
+fi
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
 # Fail if collision or remote access unavailable; no overwrites.
