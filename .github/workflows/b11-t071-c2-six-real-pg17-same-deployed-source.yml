@@ -67,7 +67,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          for name in jb_c2_ads jb_c2_analytics jb_c2_notify jb_c2_account jb_c2_db; do
+          for name in jb_t071_c2_ads jb_t071_c2_analytics jb_t071_c2 jb_t071_e8 jb_t071_c2_commit; do
             createdb "$name"
             test "$(psql -X -qAt -d "$name" -c 'SELECT current_database()')" = "$name"
           done
@@ -76,7 +76,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          export PGDATABASE=jb_c2_ads
+          export PGDATABASE=jb_t071_c2_ads
           d=t071-c2-full-actual
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b7-payment-fixture.sql"
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261010_b7_manual_payment_REVIEW_ONLY.sql"
@@ -87,7 +87,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          export PGDATABASE=jb_c2_analytics
+          export PGDATABASE=jb_t071_c2_analytics
           d=t071-c2-full-actual
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b7-payment-fixture.sql"
           psql -X -q -v ON_ERROR_STOP=1 -c "CREATE TABLE public.articles(id uuid primary key, status text NOT NULL); INSERT INTO public.articles(id,status) VALUES('10000000-0000-0000-0000-000000000001','published');"
@@ -99,7 +99,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          export PGDATABASE=jb_c2_notify
+          export PGDATABASE=jb_t071_c2
           d=t071-c2-full-actual
           n=0
           apply() { psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null; n=$((n+1)); }
@@ -125,7 +125,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          export PGDATABASE=jb_c2_account
+          export PGDATABASE=jb_t071_e8
           d=t071-c2-full-actual
           n=0
           apply() { psql -X -q -v ON_ERROR_STOP=1 -f "$d/$1" >/dev/null; n=$((n+1)); }
@@ -151,7 +151,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          export PGDATABASE=jb_c2_db
+          export PGDATABASE=jb_t071_c2_commit
           d=t071-c2-full-actual
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b8-g1-disposable-fixture.sql"
           psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql"
