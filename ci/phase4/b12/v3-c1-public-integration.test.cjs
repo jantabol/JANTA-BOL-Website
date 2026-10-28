@@ -99,6 +99,23 @@ test('Fake ticker and demo submission forms cannot mislead public',()=>{
   assert.match(homepage,/जमा नहीं होगी/);
   assert.match(homepage,/अभी स्वीकार नहीं किया जा रहा/);
 });
+test('V3 article distinguishes actual publish timestamp from news date; IST is unambiguous',()=>{
+  const begin=article.indexOf('function articleDateLabels(item)');
+  const end=article.indexOf('(async()=>{try{if(adminPreview)',begin);
+  assert.ok(begin>0&&end>begin,'article date formatter missing');
+  const context={};
+  vm.runInNewContext(article.slice(begin,end)+';globalThis.formatDate=articleDateLabels',context,{timeout:1000});
+  const label=context.formatDate({
+    publishedAt:'2026-10-28T04:30:02.685Z',
+    newsDate:'2026-10-23',
+    location:'India'
+  });
+  assert.match(label,/28 अक्टूबर 2026/);
+  assert.match(label,/10:00 IST/);
+  assert.match(label,/समाचार की तिथि: 23 अक्टूबर 2026/);
+  assert.doesNotMatch(label,/am बजे/);
+  assert.match(article,/JBBackend\\.esc\\(articleDateLabels\\(item\\)\\)/);
+});
 const locks={
   'admin-auth.js':'e0c751cbaa6582aa00ffd82d23f03c01956142f7',
   'admin-login.html':'2254f94ce40d49cda0ed0076311d511685036fc3',
