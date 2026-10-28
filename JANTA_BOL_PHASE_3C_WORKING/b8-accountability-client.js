@@ -62,7 +62,7 @@ export function createB8Workflow({client,role,allowPrivateUpload=false,ownerCase
         if(typeof ownerCaseIdempotency.submit!=='function')
           deny('IDEMPOTENCY_ADAPTER_REQUIRED');
         return id(await ownerCaseIdempotency.submit({
-          client,payload:{title:p_title,area:p_area,lane:p_risk_lane}
+          client,payload:{title:p_title,area:p_area_label,lane:p_risk_lane}
         }));
       }
       return id(await rpc('jb_b8_g1_owner_create_case',{
