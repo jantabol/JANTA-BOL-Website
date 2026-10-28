@@ -1,0 +1,123 @@
+name: B11 T071 C2 exact C1 candidate + real guest continuity around seven fault adapters (local only)
+on:
+  push:
+    branches: [codex/b11-t071-failure-isolation-preflight-20261027]
+    paths:
+      - '.github/workflows/b11-t071-c2-one-real-candidate-integrated-guest-and-local-faults.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_ONE_CANDIDATE_REAL_EXECUTION_20261028.md'
+permissions:
+  contents: read
+jobs:
+  seven_actual_candidate_fault_boundaries_core_continuity:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t071-failure-isolation-preflight-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: C2_SAME_CANDIDATE_DISPOSABLE_ONLY
+          POSTGRES_USER: postgres
+          POSTGRES_DB: jb_t071_c2_same_candidate
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t071_c2_same_candidate"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 25
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: C2_SAME_CANDIDATE_DISPOSABLE_ONLY
+      PGDATABASE: jb_t071_c2_same_candidate
+    steps:
+      - name: Checkout original C2 authoritatively, no persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Pin actual real Founder published Vercel C1 candidate source (with C1 HTTP test file)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 89849ba47f443f423d8bfe4f966bb2d38087201f
+          path: t071-c2-full-actual
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Identity, no production secrets, PostgreSQL17 and exact deployed web tree check
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$PGDATABASE" = jb_t071_c2_same_candidate
+          test "$PGHOST" = 127.0.0.1
+          test -z "${DATABASE_URL:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c 'SHOW server_version_num' | cut -c1-2)" = 17
+          test "$(git -C t071-c2-full-actual rev-parse HEAD)" = '89849ba47f443f423d8bfe4f966bb2d38087201f'
+          git -C t071-c2-full-actual diff --exit-code 659bcdc2ec4e270ea066863b4b456aeb65cb7c73 HEAD -- JANTA_BOL_PHASE_3C_WORKING
+          node --check ci/phase4/b11/t071-c2-seven-remaining-real-http-faults.test.mjs
+          echo 'C2_EXACT_REAL_C1_FOUNDER_DEPLOYED_APP_SOURCE_PIN=PASS'
+          echo 'C2_PG17_DISPOSABLE_NO_PRODUCTION_WRITE=PASS'
+      - name: Baseline before any controlled localhost optional faults — REAL deployed Vercel + real anonymous Supabase RPC
+        shell: bash
+        working-directory: t071-c2-full-actual
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-real-hosted-anon-news-live-e1-readonly.test.mjs
+          echo 'C2_ACTUAL_REMOTE_PUBLIC_ARTICLE_LIVE_BEFORE_LOCAL_INJECTION=PASS'
+      - name: Independent real PostgreSQL17 original business record durable before messaging 503
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          d=t071-c2-full-actual
+          psql -X -q -v ON_ERROR_STOP=1 -f "$d/ci/phase4/b8-g1-disposable-fixture.sql"
+          psql -X -q -v ON_ERROR_STOP=1 -f "$d/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql"
+          psql -X -q -v ON_ERROR_STOP=1 -c "
+            SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
+            SELECT set_config('b8.fixture_session','on',false);
+            SELECT set_config('b8.fixture_aal','aal2',false);
+            SET ROLE authenticated;
+            SELECT public.jb_b8_g1_owner_create_case(
+              'C2 single exact web candidate actual B8 committed case survives HTTP failures',
+              'Pichhore','R1'
+            );
+          " >/dev/null
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.b8_cases WHERE title='C2 single exact web candidate actual B8 committed case survives HTTP failures'")" = 1
+          echo 'C2_ORIGINAL_CANDIDATE_B8_ACTUAL_COMMITTED_TRANSACTION_BEFORE_HTTP503=PASS'
+      - name: Seven real original SAME deployed candidate frontend adapters through actual HTTP 503 localhost, not live provider
+        shell: bash
+        env:
+          T071_C2_B8_SOURCE: ${{ github.workspace }}/t071-c2-full-actual
+          T071_C2_NEWS_SOURCE: ${{ github.workspace }}/t071-c2-full-actual
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c2-seven-remaining-real-http-faults.test.mjs
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.b8_cases WHERE title='C2 single exact web candidate actual B8 committed case survives HTTP failures'")" = 1
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.articles WHERE headline='Existing News Article' AND status='published'")" = 1
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.ad_campaigns WHERE status='requested'")" = 1
+          echo 'C2_SINGLE_EXACT_CANDIDATE_7_LOCAL_HTTP503_FAIL_CLOSED=PASS_SCOPED'
+          echo 'C2_PG17_ORIGINAL_BUSINESS_NEWS_AD_PERSISTED_AFTER_HTTP_FAILURES=PASS'
+      - name: After injected local failures REAL deployed Preview still serves 2896-character published Article and no false LIVE
+        shell: bash
+        working-directory: t071-c2-full-actual
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-real-hosted-anon-news-live-e1-readonly.test.mjs
+          echo 'C2_REAL_SAME_DEPLOYED_FOUNDER_ARTICLE_GUEST_BODY_AND_LIVE_OFF_BEFORE_AFTER=PASS_NONDESTRUCTIVE'
+          echo 'C2_ACTUAL_PRODUCTION_PROVIDER_OUTAGE_INJECTION=NOT_DONE'
+          echo 'C2_13_FAMILY_FULL_CONNECTED_E2=HOLD'
+          echo 'C2_FINAL_PASS_LOCK=false'
+          echo 'T071_FINAL_PASS_LOCK=false'
+      - name: Original News/LIVE/B9 and Founder source regression same exact candidate after faults
+        shell: bash
+        working-directory: t071-c2-full-actual
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs ci/phase4/b8-live-parity-static.test.mjs ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo 'C2_POST_FAILURE_OLD_NEWS_B9_LIVE_OWNER_SOURCE_REGRESSION=PASS'
+          echo 'C2_REAL_LARIX_AND_EXTERNAL_PAYMENT_PROVIDER=NOT_TRIGGERED'
