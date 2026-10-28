@@ -8,17 +8,12 @@
     <button id="verifyMfa" type="button" class="btn primary">Verify 2FA</button>
   </div>
 </div><div id="loginActions" class="actions"><button id="login" class="btn primary">Login</button><button id="setupMfa" type="button" class="btn">Setup 2FA</button></div><div id="localLockActions" class="actions" style="display:none"><button id="deviceUnlock" type="button" class="btn primary" style="display:none">Unlock with Device Credential</button><button id="deviceSetup" type="button" class="btn primary" style="display:none">Set up Device Unlock</button><button id="deviceRetry" type="button" class="btn secondary" style="display:none">Retry</button></div></div></main>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script src="b12-safe-nav.js"></script><script>
 const q=new URLSearchParams(location.search), msg=document.getElementById('msg');
 function safeNextPage(){
-  // T063: login and local unlock must never redirect Founder to external origins.
-  // admin-auth.js supplies only same-directory HTML basename plus optional query.
-  const target=(q.get('next')||'').trim();
-  const safeLocal=/^[a-z0-9][a-z0-9_-]*\.html(?:\?[^\r\n]*)?$/i.test(target);
-  if(!safeLocal || /^admin-(?:login|recovery)(?:\.html|\?)/i.test(target)){
-    return 'admin.html';
-  }
-  return target;
+  // B12/T077: reuse existing B10/T063 redirect safety home; stricter
+  // same-directory allowlist, no untrusted query/origin or encoded traversal.
+  return window.JBProdSafeNav.target(q.get('next'));
 }
 if(q.get('locked')){msg.style.display='block';msg.textContent='15 minutes inactivity ke baad Admin Panel local device lock hua. Existing session ko logout nahi kiya gaya.'}else if(q.get('reason')==='aal2'){msg.style.display='block';msg.textContent='Protected Admin ke liye AAL2/2FA session required hai.'}else if(q.get('reason')==='session'){msg.style.display='block';msg.textContent='Admin session available nahi hai. Secure login required.'}
 let pendingFactorId=null;
