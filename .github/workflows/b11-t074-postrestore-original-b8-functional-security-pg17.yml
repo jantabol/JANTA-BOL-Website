@@ -1,0 +1,141 @@
+name: B11 T074 REAL original B8 postrestore functional security PG17 isolated only
+on:
+  push:
+    branches: [codex/b11-t074-real-postrestore-functional-security-pg17-20261028]
+    paths:
+      - '.github/workflows/b11-t074-postrestore-original-b8-functional-security-pg17.yml'
+      - 'ci/phase4/b11/t074-postrestore-original-b8-functional-security-pg17.sql'
+permissions:
+  contents: read
+jobs:
+  isolated_postrestore_real_pg17_original_B8_security:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t074-real-postrestore-functional-security-pg17-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: T074_DISPOSABLE_ONLY
+          POSTGRES_USER: postgres
+          POSTGRES_DB: jb_t074_source
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t074_source"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 25
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: T074_DISPOSABLE_ONLY
+      PGDATABASE: jb_t074_source
+    steps:
+      - name: Checkout isolated review-only probes (no persisted credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Checkout authentic old original B8 test fixture/SQL immutable SHA
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 89849ba47f443f423d8bfe4f966bb2d38087201f
+          path: t074-authentic
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Reject production environment, changed source or unsafe credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$PGHOST" = 127.0.0.1
+          test "$PGDATABASE" = jb_t074_source
+          test "$(git -C t074-authentic rev-parse HEAD)" = 89849ba47f443f423d8bfe4f966bb2d38087201f
+          git -C t074-authentic diff --exit-code 658f474d6ee0f24efac60f069979e8adee1e9221 HEAD -- ci/phase4/b8-g1-disposable-fixture.sql JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c 'SHOW server_version_num' | cut -c1-2)" = 17
+          echo 'T074_REAL_ORIGINAL_B8_IMMUTABLE_AND_ISOLATED_DATABASE=PASS'
+      - name: Create real authenticated original owner case, reporter grant and private draft
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -q -v ON_ERROR_STOP=1 -f t074-authentic/ci/phase4/b8-g1-disposable-fixture.sql
+          psql -X -q -v ON_ERROR_STOP=1 -f t074-authentic/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          psql -X -qAt -v ON_ERROR_STOP=1 -c "
+            SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
+            SELECT set_config('b8.fixture_session','on',false);
+            SELECT set_config('b8.fixture_aal','aal2',false);
+            SET ROLE authenticated;
+            SELECT public.jb_b8_g1_owner_create_case(
+             'T074 genuine postrestore original Owner case','Pichhore','R1');
+          " | tail -n 1 > "$RUNNER_TEMP/t074_case_id"
+          id=$(cat "$RUNNER_TEMP/t074_case_id")
+          [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
+          psql -X -qAt -v ON_ERROR_STOP=1 -c "
+            SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
+            SELECT set_config('b8.fixture_session','on',false);
+            SELECT set_config('b8.fixture_aal','aal2',false);
+            SET ROLE authenticated;
+            SELECT public.jb_b8_g1_owner_assign_reporter(
+              '$id'::uuid,'22222222-2222-2222-2222-222222222222'::uuid,
+              now()+interval '3 days');
+          " | tail -n 1 | grep -qx t
+          psql -X -qAt -v ON_ERROR_STOP=1 -c "
+            SELECT set_config('b8.fixture_actor','22222222-2222-2222-2222-222222222222',false);
+            SELECT set_config('b8.fixture_session','on',false);
+            SELECT set_config('b8.fixture_aal','aal1',false);
+            SET ROLE authenticated;
+            SELECT public.jb_b8_g1_reporter_create_draft(
+              '$id'::uuid,
+              'What is the verified status of the public-interest record?',
+              'Local Public Office');
+          " | tail -n 1 > "$RUNNER_TEMP/t074_draft_id"
+          draft=$(cat "$RUNNER_TEMP/t074_draft_id")
+          [[ "$draft" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
+          test "$(psql -X -qAt -c "select count(*) from public.b8_cases where id='$id'::uuid")" = 1
+          test "$(psql -X -qAt -c "select count(*) from public.b8_question_drafts where id='$draft'::uuid and case_id='$id'::uuid")" = 1
+          echo 'T074_REAL_SOURCE_OWNER_GRANT_REPORTER_DRAFT_BASELINE=PASS'
+      - name: Capture verified local database backup; then change source case and revoke grant AFTER snapshot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          pg_dump -Fc --no-owner -f "$RUNNER_TEMP/t074_source_snapshot.dump" jb_t074_source
+          test -s "$RUNNER_TEMP/t074_source_snapshot.dump"
+          pg_restore --list "$RUNNER_TEMP/t074_source_snapshot.dump" | grep -q 'b8_question_drafts'
+          sha256sum "$RUNNER_TEMP/t074_source_snapshot.dump" | cut -d' ' -f1 > "$RUNNER_TEMP/t074_snapshot_sha256"
+          id=$(cat "$RUNNER_TEMP/t074_case_id")
+          psql -X -q -v ON_ERROR_STOP=1 -c "
+           UPDATE public.b8_cases SET risk_lane='R2' WHERE id='$id'::uuid;
+           UPDATE public.b8_case_reporter_grants SET revoked_at=now() WHERE case_id='$id'::uuid;"
+          test "$(psql -X -qAt -c "select count(*) from public.b8_cases where id='$id'::uuid and risk_lane='R2'")" = 1
+          test "$(psql -X -qAt -c "select count(*) from public.b8_case_reporter_grants where case_id='$id'::uuid and revoked_at is not null")" = 1
+          echo 'T074_REAL_TEST_SOURCE_DIVERGED_AFTER_CLEAN_SNAPSHOT=PASS'
+      - name: Restore into independent actual second PG17 database and verify same archived bytes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          echo "$(cat "$RUNNER_TEMP/t074_snapshot_sha256")  $RUNNER_TEMP/t074_source_snapshot.dump" | sha256sum -c - >/dev/null
+          createdb jb_t074_restored
+          pg_restore --exit-on-error --no-owner -d jb_t074_restored "$RUNNER_TEMP/t074_source_snapshot.dump"
+          test "$(psql -X -qAt -d jb_t074_restored -c 'select current_database()')" = jb_t074_restored
+          echo 'T074_REAL_ISOLATED_SOURCE_PGDUMP_HASH_VERIFIED_RESTORE_NEW_DATABASE=PASS'
+      - name: Execute actual restored functional and negative security tests, not mocked SQL responses
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PGDATABASE=jb_t074_restored
+          id=$(cat "$RUNNER_TEMP/t074_case_id")
+          draft=$(cat "$RUNNER_TEMP/t074_draft_id")
+          psql -X -q -v ON_ERROR_STOP=1 -v case_id="$id" -v draft_id="$draft" \
+            -f ci/phase4/b11/t074-postrestore-original-b8-functional-security-pg17.sql
+          echo 'T074_REAL_PG17_POSTRESTORE_FUNCTIONAL_RLS_OWNER_REPORTER_REVOCATION=PASS_SCOPED'
+          echo 'T074_LIVE_HOSTED_SUPABASE_AUTH_EDGE_STORAGE_VERCEL_SAME_POINT_RESTORE=NOT_TESTED'
+          echo 'T074_FOUNDER_ACTUAL_DEVICE_LOSS_RESTORED=NOT_TESTED'
+          echo 'T074_FULL_E8_FINAL_PASS_LOCK=false'
+          echo 'T075_B11_FINAL_LOCK=HOLD'
