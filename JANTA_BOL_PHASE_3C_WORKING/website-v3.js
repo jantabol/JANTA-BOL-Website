@@ -1,6 +1,6 @@
 (async function(){
   if(!window.JBBackend)return;
-  let news=[],newsError=false;try{news=await JBBackend.listPublishedPublic(30)}catch(e){newsError=true;console.error('JANTA BOL backend feed error',e)}
+  let news=[],newsError=false;try{if(!window.JBPublicC1)throw new Error('PUBLIC_C1_NOT_READY');news=await JBPublicC1.list(30)}catch(e){newsError=true;console.error('JANTA BOL public C1 feed unavailable',e)}
 
   let liveRows=[];
   try{
