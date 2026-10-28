@@ -22,10 +22,14 @@
       "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "2026-10-28 real live public PROD test 40699768744: old main default Vercel home HTTPS 200/TLS valid (scoped), but /JANTA_BOL_PHASE_3C_WORKING/index.html and /website-v3.js both HTTP 404; PR61 exact candidate has no Vercel preview and is unmerged; full T076 production E1/E6/E7 BLOCKED; no official complete evidence.",
+      "implementation_note": "T076 real READONLY Preview HOSTING/HTTPS E1/E6 scope PASS (5/5 CI run 40703558813, 7 public routes, exact source identity plus Vercel toolbar). OLD Production V3/JS paths 404 in run 40699768744, original Main unchanged; full E1/E6/E7 production/admin-auth/cutover remains HOLD. T077–T083 NOT_RUN, no paid plan.",
       "partial_proofs": [
         "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
-        "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged"
+        "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged",
+        "2026-10-28 authenticated Vercel Hobby Git-source Preview dpl_EQC399BieUgUaLN8Xi4wB2fNijLz READY, project prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI, exact source SHA cfd5a64661e834c801c30325b97b5a4d72dfb49f, production on f447231c unchanged.",
+        "Actual GitHub public HTTPS run 40703558813 (5/5 PASS) confirms Preview V3 index, V3 JS exact bytes, Admin login shell no-store/frames/nosniff, Article/Search/Admin public HTML HTTP 200, root HTTPS 307 same-site to V3; no Founder login or writes.",
+        "PR61 preview page HTML byte-identical prefix to reviewed source plus exact 163-byte Vercel opt-in toolbar; code was not modified to accept arbitrary extra payload.",
+        "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release."
       ]
     },
     "P4-T077": {
