@@ -89,6 +89,7 @@ test('T075 weekly schedule uses no push/pull_request or manual token bypass; def
  const gate=readFileSync('ci/phase4/b11/t075-scheduled-backup-identity.mjs','utf8');
  assert.match(source,/cron: '45 21 \* \* 6'/);
  assert.match(source,/vars.JB_T075_SCHEDULED_BACKUP_ENABLED == 'YES_FOUNDER_RELEASED'/);
+ assert.match(source,/vars\.JB_T075_B2_ZERO_SPEND_CAPS_CONFIRMED == 'YES_FOUNDER_VERIFIED_ZERO'/);
  assert.match(source,/environment: janta-bol-production-backup/);
  assert.match(source,/group: janta-bol-free-backup/);
  assert.match(source,/cancel-in-progress: false/);
@@ -142,4 +143,18 @@ test('T075 weekly cost exposure is bounded BEFORE original DB export and immutab
  assert.match(validator,/remote_bytes \+ new_size > MAX_PREFIX_BYTES/);
  assert.match(source,/--immutable/);
  assert.doesNotMatch(source,/rclone.*(?:delete|purge|sync|moveto)/);
+});
+
+test('T075 ZERO PAID: two independent default-OFF release approvals AND actual environment required',()=>{
+ const w=readFileSync('.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml','utf8');
+ const job=w.match(/    if: (\$\{\{[^\n]+\}\})/);
+ assert(job,'scheduled job must have explicit GitHub condition');
+ const cond=job[1];
+ assert(cond.includes("github.event_name == 'schedule'"));
+ assert(cond.includes("github.ref == 'refs/heads/main'"));
+ assert(cond.includes("vars.JB_T075_SCHEDULED_BACKUP_ENABLED == 'YES_FOUNDER_RELEASED'"));
+ assert(cond.includes("vars.JB_T075_B2_ZERO_SPEND_CAPS_CONFIRMED == 'YES_FOUNDER_VERIFIED_ZERO'"));
+ assert(cond.includes("github.run_attempt == 1"));
+ assert(w.includes('environment: janta-bol-production-backup'));
+ assert(!/permissions:\s*\n\s*contents: write/.test(w));
 });
