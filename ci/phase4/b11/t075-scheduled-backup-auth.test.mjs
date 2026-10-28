@@ -134,8 +134,12 @@ test('T075 weekly cost exposure is bounded BEFORE original DB export and immutab
  const cap=source.indexOf('T075 scheduled ciphertext bundle exceeds');
  assert(budget>0&&budget<firstDb,'remote metadata must be checked BEFORE live DB export');
  assert(cap>firstDb&&cap<upload,'single ciphertext cap must happen BEFORE B2 upload');
- assert.match(source,/n>2\*1024\*\*3/);
- assert.match(source,/536870912/);
+ assert.match(source,/t075-scheduled-budget\.py preflight/);
+ assert.match(source,/t075-scheduled-budget\.py upload/);
+ const validator=readFileSync('ci/phase4/b11/t075-scheduled-budget.py','utf8');
+ assert.match(validator,/MAX_PREFIX_BYTES = 2 \* 1024\*\*3/);
+ assert.match(validator,/MAX_NEW_CIPHERTEXT = 512 \* 1024\*\*2/);
+ assert.match(validator,/remote_bytes \+ new_size > MAX_PREFIX_BYTES/);
  assert.match(source,/--immutable/);
  assert.doesNotMatch(source,/rclone.*(?:delete|purge|sync|moveto)/);
 });
