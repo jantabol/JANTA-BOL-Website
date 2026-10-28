@@ -1,0 +1,81 @@
+# B11/T075 RELEASE GATE. DRAFT ONLY: do not merge without signed Founder
+# cost/RPO/retention review + verified protected/environment deployment.
+# Branch push of this file never reads the live DB or B2. Existing manual
+# T034/T069/T070 workflows are not modified.
+name: B11 T075 weekly encrypted original DB plus Storage recovery (Founder approved only)
+on:
+  schedule:
+    # Saturdays 21:45 UTC = Sundays 03:15 Asia/Kolkata. Weekly to minimize
+    # GitHub runner, Supabase/B2 quota. 7d is NOT an approved RPO.
+    - cron: '45 21 * * 6'
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-free-backup
+  cancel-in-progress: false
+jobs:
+  protected_scheduled_original_joint:
+    # A GitHub repository variable must be independently approved before ANY
+    # production secret is exposed; off by default, including after merge.
+    if: ${{ github.event_name == 'schedule' && github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/main' && vars.JB_T075_SCHEDULED_BACKUP_ENABLED == 'YES_FOUNDER_RELEASED' && github.run_attempt == 1 }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    environment: janta-bol-production-backup
+    env:
+      JB_T075_AUTO_JOINT_BACKUP: '1'
+      JB_T075_SCHEDULED_RELEASE_AUTH: 'JANTA_BOL_T075_SCHEDULED_ENCRYPTED_JOINT_2026'
+      JB_T034_DUAL_RESTORE_PROBE: '1'
+      JB_T070_JOINT_PROBE: '1'
+      B11_MEDIA_EXPORT_CONFIRMATION: 'JANTA_BOL_T075_SCHEDULED_JOINT_EXPORT'
+    steps:
+      - name: Checkout only protected main commit; do not persist token
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Exact GitHub event/main/workflow authorizer and old source regressions (NO secrets)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/main'
+          test "$GITHUB_EVENT_NAME" = 'schedule'
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          node --input-type=module -e "import {assertScheduledBackupContext} from './ci/phase4/b11/t075-scheduled-backup-identity.mjs'; assertScheduledBackupContext();"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          node --test ci/phase4/b11/t075-scheduled-backup-auth.test.mjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
+          echo 'T075_SCHEDULED_PROTECTED_PRELIVE_GUARDS=PASS'
+      - name: Install pinned public AGE, B2, Compression tools
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq age rclone zstd >/dev/null
+      - name: Pinned original approved Supabase CLI
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Real encrypted offsite B2 original DB and 5 media, offline PG17/media restore
+        shell: bash
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          JB_B11_SERVICE_ROLE_KEY: ${{ secrets.JB_B11_SERVICE_ROLE_KEY }}
+          JB_BACKUP_AGE_RECIPIENT: ${{ secrets.JB_BACKUP_AGE_RECIPIENT }}
+          JB_BACKUP_B2_KEY_ID: ${{ secrets.JB_BACKUP_B2_KEY_ID }}
+          JB_BACKUP_B2_APPLICATION_KEY: ${{ secrets.JB_BACKUP_B2_APPLICATION_KEY }}
+          JB_BACKUP_REMOTE_PREFIX: ${{ secrets.JB_BACKUP_REMOTE_PREFIX }}
+        run: |
+          set -Eeuo pipefail
+          set +x
+          umask 077
+          bash ci/backup/jb-free-offsite-backup.sh
+          echo 'T075_SCHEDULED_ORIGINAL_JOINT_BACKUP_RUN_PASS=SCOPED_GENUINE_OFFSITE_AFTER_REAL_EXECUTION'
+          echo 'T075_UNIVERSAL_ATOMIC_FREEZE=UNPROVEN'
+          echo 'T075_AUTH_EDGE_VERCEL_RUNTIME_RESTORE=NOT_TESTED'
+          echo 'T075_FULL_E8_FINAL_LOCK=HOLD'
