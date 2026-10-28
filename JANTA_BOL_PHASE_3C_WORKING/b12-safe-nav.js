@@ -6,7 +6,7 @@
     'admin-recovery.html', 'admin-recovery-setup.html',
     'reporters.html', 'social.html', 'ads.html', 'grievances.html',
     'compliance.html', 'settings.html', 'analytics.html',
-    'live.html', 'admin-password.html'
+    'live.html', 'admin-password.html', 'b8-accountability.html', 'b9-analytics.html'
   ]);
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   function target(input) {
@@ -20,10 +20,22 @@
     if (index === -1) return part;
     if (input.indexOf('?', index + 1) !== -1) return DEFAULT;
     const params = new URLSearchParams(input.substring(index + 1));
-    if ([...params.keys()].some(k => k !== 'id' || params.getAll(k).length !== 1)) return DEFAULT;
-    const id = params.get('id');
-    if (part !== 'add-news.html' || !UUID.test(id || '')) return DEFAULT;
-    return part + '?id=' + encodeURIComponent(id);
+    if (params.size !== 1) return DEFAULT;
+    const key=[...params.keys()][0];
+    if (params.getAll(key).length !== 1) return DEFAULT;
+    if (part === 'add-news.html' && key === 'id') {
+      const id = params.get('id');
+      return UUID.test(id || '') ? part + '?id=' + encodeURIComponent(id) : DEFAULT;
+    }
+    if (part === 'grievances.html' && key === 'tab') {
+      const tab=params.get('tab');
+      return /^(inbox|open|closed|archived)$/.test(tab || '') ? part + '?tab=' + tab : DEFAULT;
+    }
+    if (part === 'b9-analytics.html' && key === 'range') {
+      const range=params.get('range');
+      return /^(7|30|90)$/.test(range || '') ? part + '?range=' + range : DEFAULT;
+    }
+    return DEFAULT;
   }
   root.JBProdSafeNav = Object.freeze({ target });
 })(window);
