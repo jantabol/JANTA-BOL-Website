@@ -5,5 +5,33 @@
       "destination": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
       "permanent": false
     }
+  ],
+  "headers": [
+    {
+      "source": "/JANTA_BOL_PHASE_3C_WORKING/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        }
+      ]
+    },
+    {
+      "source": "/JANTA_BOL_PHASE_3C_WORKING/(admin-login|admin|admin-security|admin-recovery|admin-recovery-setup|add-news|article).html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0"
+        }
+      ]
+    }
   ]
 }
