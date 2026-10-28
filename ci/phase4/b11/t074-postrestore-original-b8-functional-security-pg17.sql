@@ -2,10 +2,12 @@
 -- P4-T074: real isolated PG17 *restored* original B8 functional/negative tests.
 -- Supabase auth/session/AAL functions are TEST FIXTURE ONLY, NOT real hosted Auth.
 -- Never run on production. Database must be jb_t074_restored.
-SELECT CASE WHEN current_database()='jb_t074_restored' AND
-  current_setting('server_version_num')::int >= 170000
- THEN 'T074_RESTORED_DATABASE_FENCE=PASS'
- ELSE 1/0::text END;
+DO $test$
+BEGIN
+ IF current_database()<>'jb_t074_restored' OR current_setting('server_version_num')::int<170000
+ THEN RAISE EXCEPTION 'T074_WRONG_DATABASE_OR_POSTGRES_VERSION'; END IF;
+END $test$;
+\echo T074_RESTORED_DATABASE_FENCE=PASS
 
 SELECT set_config('b8.fixture_case_id', :'case_id', false);
 SELECT set_config('b8.fixture_draft_id', :'draft_id', false);
@@ -124,10 +126,13 @@ SELECT set_config('b8.fixture_actor','22222222-2222-2222-2222-222222222222',fals
 SELECT set_config('b8.fixture_session','on',false);
 SELECT set_config('b8.fixture_aal','aal1',false);
 SET ROLE authenticated;
-SELECT CASE WHEN (public.jb_b8_g1_reporter_case_card(
-  current_setting('b8.fixture_case_id')::uuid)->>'title')=
-  'T074 genuine postrestore original Owner case' THEN 'T074_RESTORED_AUTHORIZED_REPORTER_CARD=PASS'
- ELSE 1/0::text END;
+DO $test$
+BEGIN
+ IF (public.jb_b8_g1_reporter_case_card(current_setting('b8.fixture_case_id')::uuid)->>'title')
+   IS DISTINCT FROM 'T074 genuine postrestore original Owner case'
+ THEN RAISE EXCEPTION 'T074_RESTORED_AUTHORIZED_REPORTER_CARD_UNAVAILABLE'; END IF;
+END $test$;
+\echo T074_RESTORED_AUTHORIZED_REPORTER_CARD=PASS
 SELECT public.jb_b8_g1_reporter_create_draft(
  current_setting('b8.fixture_case_id')::uuid,
  'After clean restore, can the assigned reporter still draft securely?',
@@ -140,11 +145,14 @@ SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',fals
 SELECT set_config('b8.fixture_session','on',false);
 SELECT set_config('b8.fixture_aal','aal2',false);
 SET ROLE authenticated;
-SELECT CASE WHEN public.jb_b8_g1_owner_revoke_reporter(
+DO $test$
+BEGIN
+ IF NOT coalesce(public.jb_b8_g1_owner_revoke_reporter(
   current_setting('b8.fixture_case_id')::uuid,
-  '22222222-2222-2222-2222-222222222222'::uuid)
- THEN 'T074_RESTORED_OWNER_REPORTER_REVOKE=PASS'
- ELSE 1/0::text END;
+  '22222222-2222-2222-2222-222222222222'::uuid),false)
+ THEN RAISE EXCEPTION 'T074_RESTORED_OWNER_REPORTER_REVOKE_FAILED'; END IF;
+END $test$;
+\echo T074_RESTORED_OWNER_REPORTER_REVOKE=PASS
 RESET ROLE;
 SELECT set_config('b8.fixture_actor','22222222-2222-2222-2222-222222222222',false);
 SELECT set_config('b8.fixture_session','on',false);
