@@ -1,0 +1,135 @@
+{
+  "schema": "janta-bol.phase4.b12.production-release-truth.v1",
+  "created_at": "2026-10-28",
+  "authority": "Founder + Master Execution Pack Appendix A/B",
+  "release_mode": "REVIEW_ONLY_NOT_PRODUCTION",
+  "git_repository": "jantabol/JANTA-BOL-Website",
+  "source_branch": "codex/b10-whole-platform-security-candidate-20261023",
+  "candidate_branch": "codex/b12-b0-b12-reconcile-20261028",
+  "canonical_site": "https://shubham-pichhore-2028.vercel.app",
+  "published_article_url_rule": "JANTA_BOL_PHASE_3C_WORKING/article.html?id=<immutable-article-uuid>",
+  "supabase_project": "vrffsnkycvjithwtiylt",
+  "zero_paid": true,
+  "phase3_baseline_verified_for_this_candidate": false,
+  "production_merged": false,
+  "production_deployed": false,
+  "production_real_smoke_complete": false,
+  "b11_full_recovery_locked": false,
+  "b11_t072_real_production_idempotency_closed": false,
+  "external_providers_available": false,
+  "tests": {
+    "P4-T076": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "existing V3 redirect + response headers; real HTTPS still requires on exact candidate"
+    },
+    "P4-T077": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "safe Admin next= redirect added; Article/PURL/Auth real lifecycle not tested"
+    },
+    "P4-T078": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "read-only DB/RLS inventory and guarded migration checklist; no production DDL"
+    },
+    "P4-T079": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "provider dependencies are fail-closed DUE-candidate, not automatically DUE"
+    },
+    "P4-T080": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "public article safe-error display; network/Android and idempotency evidence needed"
+    },
+    "P4-T081": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "rollback and cutover fail-closed preflight; B11 E8 HOLD"
+    },
+    "P4-T082": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "real multi-device Article lifecycle requires Founder E3"
+    },
+    "P4-T083": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "final production signoff requires all earlier production evidence"
+    }
+  },
+  "phase4_blocks": {
+    "B0": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B1": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B2": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B3": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B4": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B5": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B6": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B7": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B8": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B9": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B10": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B11": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B12": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    }
+  },
+  "protected": {
+    "article_id_immutable": true,
+    "permanent_master_url_single_home": true,
+    "founder_aal2_required": true,
+    "public_private_rls_not_to_change": true,
+    "never_override_newer_records_by_rollback": true,
+    "no_fake_pass": true,
+    "phase3_ci_required_on_any_candidate_code_change": true
+  },
+  "integration_status": "B10_BASE_PLUS_T071_AND_B12_SURGICAL_SOURCE_REVIEW_ONLY_B11_PENDING",
+  "source_reconciliation_complete": false
+}
