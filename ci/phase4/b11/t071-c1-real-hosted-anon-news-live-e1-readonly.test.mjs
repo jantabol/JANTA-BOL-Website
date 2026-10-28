@@ -73,6 +73,12 @@ test('E1 anonymous direct article Data API never exposes any published or unpubl
  const r=await request(path,{headers});
  if(r.code===200){
    assert(Array.isArray(r.value),'HTTP200 without an array is not a safe public table read');
+   console.log('C1_E1_ANON_DIRECT_TABLE_HTTP200_SANITIZED='+JSON.stringify({
+     count:r.value.length,
+     includes_known_published:r.value.some(x=>x.id===ARTICLE),
+     includes_old_unpublished_demo:r.value.some(x=>x.id===OLD_DEMO),
+     body_nonempty_count:r.value.filter(x=>typeof x.body==='string'&&x.body.length>0).length
+   }));
    assert.equal(r.value.length,0,
     'CRITICAL: direct anonymous articles table exposed rows, return must be zero');
    console.log('C1_E1_ANON_DIRECT_ARTICLES_TABLE_HTTP_200_EMPTY_ROLES_RLS_SAFE');
