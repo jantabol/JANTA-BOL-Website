@@ -116,9 +116,10 @@ SELECT public.jb_b8_g1_owner_create_case_idempotent(
  'T072 failed original transaction cannot leave request ledger',
  'Pichhore','R1') AS after_repair_retry \gset
 RESET ROLE;
+INSERT INTO t072_replay_ids VALUES ('repaired',:'after_repair'::uuid),('repaired_retry',:'after_repair_retry'::uuid);
 DO $fixed$
 BEGIN
- IF :'after_repair'::uuid<>:'after_repair_retry'::uuid
+ IF (SELECT case_id FROM t072_replay_ids WHERE kind='repaired') <> (SELECT case_id FROM t072_replay_ids WHERE kind='repaired_retry')
  OR (SELECT count(*) FROM public.b8_cases)<>3
  OR (SELECT count(*) FROM public.b8_owner_case_idempotency)<>3
  THEN RAISE EXCEPTION 'T072_FAILED_WRITE_RETRY_DUPLICATE_AFTER_REPAIR';END IF;
