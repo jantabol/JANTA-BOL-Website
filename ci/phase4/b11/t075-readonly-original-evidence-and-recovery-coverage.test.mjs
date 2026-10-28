@@ -15,6 +15,15 @@ const verified=[
   markers:['B11_T069_INDEPENDENT_OFFLINE_MEDIA_RESTORE=PASS',
    'B11_T069_ORIGINAL_MEDIA_FILES_RESTORED=5',
    'B11_T069_POSTGRES_OR_PLATFORM_CONFIG_RESTORED=false']},
+ {type:'T070_REAL_REPRESENTATIVE_SINGLE_RUN_DB_PLUS_5_ORIGINAL_MEDIA',run:40452402698,job:122017925138,
+  markers:['T070_REAL_SOURCE_DB_SNAPSHOT_FIVE_ORIGINAL_STORAGE_METADATA_BOUND=PASS',
+   'T070_FRESH_READ_ONLY_PG_POST_MEDIA_ID_TIMESTAMP_PARITY=PASS',
+   'T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS',
+   'T070_DB_STORAGE_UNIVERSAL_ATOMIC_FREEZE_PROVEN=false',
+   'T070_AUTH_EDGE_VERCEL_RUNTIME_REBUILT=false',
+   'T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED',
+   'T070_FINAL_INDEPENDENT_E8=NOT_RUN',
+   'T070_FINAL_LOCK=HOLD']},
  {type:'T073_REAL_LOCAL_ORIGINAL_CORRUPTION_RESTORE',run:40643194778,job:122665886470,
   markers:['T073_PG17_SNAPSHOT_RESTORES_EXACT_CASE_ARTICLE_AD_IDENTITIES=PASS_SCOPED',
    'T073_RESTORED_AUTH_OWNER_PROTECTED_WRITE_FAIL_CLOSED=PASS_SCOPED',
@@ -47,7 +56,7 @@ async function github(path,kind='json'){
  assert.equal(res.status,200,'Original GitHub evidence unavailable: '+path+' HTTP '+res.status);
  return kind==='text'?res.text():res.json();
 }
-test('T075/E1: independently recheck actual original T034, T069, T073, T074 run IDs and executed markers; no reused fixture',async()=>{
+test('T075/E1: independently recheck T034 T069 T070 T073 T074 original run IDs and executed markers; no reused fixture',async()=>{
  for(const e of verified){
   const [run,job,log]=await Promise.all([
    github('/actions/runs/'+e.run),
@@ -107,7 +116,8 @@ test('T075/E8 cross-component, independent scheduling, Auth/Edge/Vercel restore 
  assert.match(gate,/READY_FOR_INDEPENDENT_FOUNDER_REVIEW/);
  assert.match(backup,/production_mutation:false/);
  const requirements={
-  true_single_capture_db_and_original_media:false,
+  universal_atomic_single_point_db_and_media_capture_proven:false,
+  representative_db_and_five_media_same_run_restored:true,
   recovered_hosted_auth_sessions:false,
   recovered_edge_runtime_and_secrets:false,
   restored_vercel_config_and_functional_release:false,
