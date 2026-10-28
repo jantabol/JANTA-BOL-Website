@@ -30,6 +30,8 @@ SELECT public.jb_b8_g1_owner_create_case(
 ) AS first_uuid \gset
 RESET ROLE;
 CREATE TEMP TABLE t072_attempt_ids(kind text PRIMARY KEY,id uuid NOT NULL UNIQUE);
+-- The one disposable session switches to authenticated while still referencing the test UUID.
+GRANT SELECT ON t072_attempt_ids TO authenticated;
 INSERT INTO t072_attempt_ids VALUES ('first', :'first_uuid'::uuid);
 DO $first$
 BEGIN
