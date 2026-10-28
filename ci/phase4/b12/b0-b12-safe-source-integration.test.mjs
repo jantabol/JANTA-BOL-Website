@@ -23,7 +23,9 @@ test('P1 B12 safely patches original B10 T063 Owner MFA redirect, not replaces r
  const s=read(v3+'admin-login.html');
  assert.match(s,/<script src="b12-safe-nav\.js"><\/script>/);
  assert.match(s,/function safeNextPage\(\)/);
- assert.match(s,/JBProdSafeNav\.target\(q\.get\('next'\)\)/);
+ assert.match(s,/JBProdSafeNav\.target\(target\)/);
+ assert.match(s,/const safeLocal=/);
+ assert.match(s,/typeof window !== 'undefined'/);
  assert.match(s,/JBBackend\.mfaAAL/);
  assert.match(s,/finishAdminLogin/);
  assert.match(s,/location\.replace\(safeNextPage\(\)\)/);
