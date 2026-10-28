@@ -88,6 +88,9 @@ test('V3 public pages use C1 on existing homepage/article routes; admin preview 
   assert.match(article,/Permanent Article ID/);
   assert.match(homepage,/b9-home-link\.js/);
   assert.match(homepage,/public-ads\.js/);
+  assert.doesNotMatch(homepage,/category-section category-open/);
+  assert.match(website,/holder\.replaceChildren\(\)/);
+  assert.match(website,/इस श्रेणी में अभी कोई प्रकाशित खबर नहीं है।/);
 });
 test('Fake ticker and demo submission forms cannot mislead public',()=>{
   assert.doesNotMatch(homepage,/शिवपुरी में भारी बारिश • करैरा में सड़क हादसा/);
