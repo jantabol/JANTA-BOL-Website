@@ -8,6 +8,8 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
       - 'JANTA_BOL_PHASE_3C_WORKING/b8-owner-idempotency-client.js'
+      - 'ci/phase4/b11/t072-client-to-real-pg17-disposable-rpc.sql'
+      - 'ci/phase4/b11/t072-full-original-b8-client-real-pg17-e2.test.mjs'
 permissions:
   contents: read
 jobs:
@@ -84,6 +86,8 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --test             ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs             ci/phase4/b11/t072-b8-owner-app-optin-integration.test.mjs             ci/phase4/b8-g3-cp01-android-workflow.test.mjs             ci/phase4/b8-g1-mobile-case-picker.test.mjs             ci/phase4/b8-mobile-focused-workflow.test.mjs             ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs             ci/phase4/b8-g4-public-projection-contract.test.mjs             ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+          node --test ci/phase4/b11/t072-full-original-b8-client-real-pg17-e2.test.mjs
+          echo 'T072_FULL_BROWSER_ADAPTER_TO_ACTUAL_DISPOSABLE_PG17=PASS_SCOPED'
           echo 'T072_SINGLE_RUN_BACKEND_AND_ANDROID_SOURCE_SCOPED_E2=PASS'
           echo 'T072_REAL_HOSTED_SUPABASE_AUTH_E5=NOT_TESTED'
           echo 'T072_REAL_ANDROID_PHONE_E2=NOT_TESTED'
