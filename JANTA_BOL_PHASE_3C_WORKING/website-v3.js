@@ -31,7 +31,25 @@
     (latestSection||document.querySelector('.featured-news')||document.body).insertAdjacentElement(latestSection?'beforebegin':'afterend',liveBox);
   }
   if(latestSection){const box=document.createElement('section');box.id='v3-published-feed';box.style.cssText='max-width:1100px;margin:0 auto 24px;padding:0 16px';const title=document.createElement('div');title.innerHTML='<h2 style="margin:0 0 8px;color:#fff">📰 Published News</h2>';box.appendChild(title);if(!news.length){const e=document.createElement('div');e.style.cssText='padding:14px;border:1px solid #333;border-radius:10px';e.textContent=newsError?'खबरों का सर्वर अभी उपलब्ध नहीं है। पुनः प्रयास करें।':'इस समय कोई प्रकाशित खबर उपलब्ध नहीं है।';box.appendChild(e)}else news.slice(0,8).forEach(n=>box.appendChild(articleCard(n,false)));latestSection.insertAdjacentElement('beforebegin',box)}
-  const categoryMap={Politics:'politics',Crime:'crime',Education:'education',Sports:'sports',Health:'health',Business:'business',Technology:'technology',Entertainment:'entertainment',Administration:'administration',Krishi:'agriculture','Dharm-Sanskriti':'religion-culture',Mausam:'weather',Other:'other'};Object.entries(categoryMap).forEach(([category,id])=>{const section=document.getElementById(id);if(!section)return;const matches=news.filter(n=>n.category===category);if(!matches.length)return;const holder=section.querySelector('.category-news')||section;const wrap=document.createElement('div');wrap.className='v3-category-live';wrap.style.cssText='margin-top:12px';matches.slice(0,3).forEach(n=>wrap.appendChild(articleCard(n,true)));holder.appendChild(wrap)});
+  const categoryMap={Politics:'politics',Crime:'crime',Education:'education',Sports:'sports',Health:'health',Business:'business',Technology:'technology',Entertainment:'entertainment',Administration:'administration',Krishi:'agriculture','Dharm-Sanskriti':'religion-culture',Mausam:'weather',Other:'other'};Object.entries(categoryMap).forEach(([category,id])=>{
+    const section=document.getElementById(id);
+    if(!section)return;
+    const holder=section.querySelector('.category-news');
+    if(!holder)return;
+    holder.replaceChildren();
+    const matches=news.filter(n=>String(n.category||'').toLowerCase()===category.toLowerCase());
+    if(newsError||!matches.length){
+      const note=document.createElement('p');
+      note.textContent=newsError?'समाचार सेवा अभी उपलब्ध नहीं है। कृपया फिर प्रयास करें।':'इस श्रेणी में अभी कोई प्रकाशित खबर नहीं है।';
+      holder.appendChild(note);
+      return;
+    }
+    const wrap=document.createElement('div');
+    wrap.className='v3-category-live';
+    wrap.style.cssText='margin-top:12px';
+    matches.slice(0,3).forEach(n=>wrap.appendChild(articleCard(n,true)));
+    holder.appendChild(wrap);
+  });
   const top=news.find(n=>n.topStory),featured=document.querySelector('.featured-news');if(top&&featured){const box=document.createElement('div');box.style.cssText='max-width:1100px;margin:12px auto;padding:0 16px';box.innerHTML='<div style="font-size:12px;color:#ff6060;font-weight:bold;margin-bottom:8px">⭐ TOP STORY</div>';box.appendChild(articleCard(top,false));featured.insertAdjacentElement('afterend',box)}
   const breaking=news.find(n=>n.breaking),breakingSection=document.querySelector('.breaking-news');if(breaking&&breakingSection){breakingSection.hidden=false;const link=document.createElement('a');link.href='article.html?id='+encodeURIComponent(breaking.id);link.textContent=' • '+breaking.headline;link.style.cssText='color:inherit;text-decoration:none;font-weight:bold;margin-left:8px';const content=breakingSection.querySelector('.breaking-content')||breakingSection;content.appendChild(link)}
 })();
