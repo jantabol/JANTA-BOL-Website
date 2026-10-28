@@ -59,6 +59,7 @@ test('T076 actual reviewed PR61 exact preview V3 index available with public TLS
  if(!identical){
   const first=(()=>{const n=Math.min(local.length,r.body.length);for(let i=0;i<n;i++)if(local[i]!==r.body[i])return i;return n})();
   console.log('T076_HTML_BYTE_DIFFERENCE_DIAGNOSTIC: LOCAL_SIZE='+local.length+' LIVE_SIZE='+r.body.length+' FIRST_MISMATCH_OFFSET='+first+'; LOCAL_SHA16='+fp(local)+' LIVE_SHA16='+fp(r.body));
+  if(first===local.length && r.body.length-local.length<300){const suffix=r.body.subarray(local.length).toString('utf8');console.log('T076_PREVIEW_EXTRA_PUBLIC_FOOTER='+JSON.stringify(suffix).slice(0,450));}
  }
  assert(identical,'PREVIEW_HTML_NOT_EQUAL_REVIEWED_BRANCH_BYTE_SOURCE');
  console.log('T076_PREVIEW_V3_HTML_BYTES_MATCH_PR61=PASS_SCOPED');
