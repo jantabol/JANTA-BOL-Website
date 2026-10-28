@@ -11,9 +11,18 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script><script src="b12-safe-nav.js"></script><script>
 const q=new URLSearchParams(location.search), msg=document.getElementById('msg');
 function safeNextPage(){
-  // B12/T077: reuse existing B10/T063 redirect safety home; stricter
-  // same-directory allowlist, no untrusted query/origin or encoded traversal.
-  return window.JBProdSafeNav.target(q.get('next'));
+  // B10 T063 original safety proof: never redirect to another origin or
+  // malformed URI. Keep original local destination semantics (including
+  // legitimate B8/B9 deep links); B12 adds stricter allowlist on real browser.
+  const target=(q.get('next')||'').trim();
+  const safeLocal=/^[a-z0-9][a-z0-9_-]*\.html(?:\?[^\r\n]*)?$/i.test(target);
+  if(!safeLocal || /^admin-(?:login|recovery)(?:\.html|\?)/i.test(target)){
+    return 'admin.html';
+  }
+  if(typeof window !== 'undefined' && window.JBProdSafeNav){
+    return window.JBProdSafeNav.target(target);
+  }
+  return target;
 }
 if(q.get('locked')){msg.style.display='block';msg.textContent='15 minutes inactivity ke baad Admin Panel local device lock hua. Existing session ko logout nahi kiya gaya.'}else if(q.get('reason')==='aal2'){msg.style.display='block';msg.textContent='Protected Admin ke liye AAL2/2FA session required hai.'}else if(q.get('reason')==='session'){msg.style.display='block';msg.textContent='Admin session available nahi hai. Secure login required.'}
 let pendingFactorId=null;
