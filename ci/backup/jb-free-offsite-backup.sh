@@ -96,7 +96,7 @@ rclone --config "$work/rclone.conf" --retries 1 lsf "jbbackup:jantabol-backup-eu
 if [[ "$auto" == 1 ]]; then
   # FREE-TIER COST CAP: metadata-only read of EXISTING remote before DB export.
   # No automatic deletes, pruning, overwrite, new bucket or retention downgrade.
-  rclone --config "$work/rclone.conf" --retries 1 size --json "${JB_BACKUP_REMOTE_PREFIX%/}" > "$work/scheduled-budget.json" ||
+  rclone --config "$work/rclone.conf" --retries 1 size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
     fail 'T075 scheduled offsite quota unreadable, refuse live export'
   python3 ci/phase4/b11/t075-scheduled-budget.py preflight "$work/scheduled-budget.json" ||
     fail 'T075 scheduled existing B2 quota unknown or exceeded; no DB export permitted'
@@ -270,10 +270,15 @@ tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
 if [[ "$auto" == 1 ]]; then
-  # Counts BOTH existing B2 ciphertext AND new encrypted archive. Never silently
-  # cross the selected footprint cap with another weekly backup.
+  # Refresh bucket-wide account usage after long PG17/media capture: a
+  # concurrent original manual Founder run may have written new B2 objects.
+  # Never trust only the old pre-DB-export listing at upload time.
+  rclone --config "$work/rclone.conf" --retries 1 size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
+    fail 'T075 fresh bucket-wide B2 quota unknown before upload'
+  # Count existing JANTA BOL bucket bytes + NEW ciphertext; scope is the
+  # whole approved bucket, not just the scheduled subfolder/prefix.
   python3 ci/phase4/b11/t075-scheduled-budget.py upload "$work/scheduled-budget.json" "$work/backup.age" ||
-    fail 'T075 combined B2 footprint or new 512MiB ciphertext cap failed, no remote upload'
+    fail 'T075 combined B2 bucket footprint or new 512MiB ciphertext cap failed, no remote upload'
 fi
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
