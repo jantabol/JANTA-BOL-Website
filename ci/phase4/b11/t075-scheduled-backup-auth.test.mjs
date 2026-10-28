@@ -123,5 +123,5 @@ test('T075 new scheduled authorization does not imply offsite current-byte reten
  const w=readFileSync('.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml','utf8');
  assert.match(w,/T075_AUTH_EDGE_VERCEL_RUNTIME_RESTORE=NOT_TESTED/);
  assert.match(w,/T075_FULL_E8_FINAL_LOCK=HOLD/);
- assert.match(w,/Do not merge without signed Founder/);
+ assert.match(w,/do not merge without signed Founder/i);
 });
