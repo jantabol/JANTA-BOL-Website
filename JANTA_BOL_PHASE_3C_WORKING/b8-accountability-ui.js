@@ -4,6 +4,25 @@
  * Server RPC guards remain the final role/session/Case authority.
  */
 import {createB8Workflow,validId} from './b8-accountability-client.js';
+import {submitOwnerCaseIdempotentCandidate,startNewOwnerCaseIntentCandidate}
+  from './b8-owner-idempotency-client.js';
+
+// T072 REVIEW CANDIDATE ONLY. The safe backend RPC does NOT exist in
+// current Production. Refuse case creation; never retry the old unsafe RPC.
+async function t072AuthenticatedOptions(client){
+  const {data,error}=await client.auth.getUser();
+  if(error||!validId(data?.user?.id))throw Error('B8_T072_FRESH_OWNER_LOGIN_REQUIRED');
+  return {client,ownerId:data.user.id,storage:window.localStorage,
+    locks:navigator.locks,crypto:window.crypto};
+}
+const t072CaseCreate=Object.freeze({
+  async submit({client,payload}){
+    return submitOwnerCaseIdempotentCandidate({
+      ...(await t072AuthenticatedOptions(client)),payload
+    });
+  }
+});
+
 
 const $=id=>document.getElementById(id);
 const status=$('status'),guard=$('guard'),app=$('app');
@@ -375,7 +394,8 @@ async function boot(){
     // Upload UI remains initially OFF. Paired SQL G6 is server authority, not DOM.
     // Standalone JS never enables a bypass; server default is OFF.
     workflow=createB8Workflow({client:window.JBBackend.client,role,
-      allowPrivateUpload:role==='reporter'});
+      allowPrivateUpload:role==='reporter',
+      ownerCaseIdempotency:role==='owner'?t072CaseCreate:null});
     uploadReadyCase=null;
     locked=false;lastActivity=Date.now();
     $('roleName').textContent='सत्यापित उपयोगकर्ता: '+({owner:'संस्थापक',reporter:'संवाददाता',editor:'संपादक'}[role]||'अधिकृत कर्मचारी');
@@ -408,9 +428,23 @@ $('refreshLogin').addEventListener('click',()=>window.location.reload());
 
 form('createCase',async()=>{
   const id=await workflow.ownerCreateCase(v('caseTitle'),v('caseArea'),v('caseRisk'));
+  // The server might have committed AFTER this UI auto-locked: NEVER show
+  // private Case details on the already-locked screen.
+  if(locked||role!=='owner'||!workflow||Date.now()-lastActivity>LOCK_MS)
+    throw Error('B8_T072_SCREEN_LOCKED_AFTER_SERVER_RESPONSE');
   onOwnerCreatedCase(id);
   return 'निजी मामला सफलतापूर्वक बना। पहचान (UUID): '+id+'\nकोई खबर प्रकाशित नहीं हुई और कोई सवाल अधिकारी को नहीं भेजा गया।';
 });
+// A *new* case is deliberate, never an automatic retry on unknown ACK.
+// Pending/unknown requests cannot be discarded even by this button.
+$('t072NewCaseIntent').addEventListener('click',()=>execute($('createCase'),async()=>{
+  if(role!=='owner'||locked)throw Error('B8_T072_OWNER_SCREEN_LOCKED');
+  const opts=await t072AuthenticatedOptions(window.JBBackend.client);
+  await startNewOwnerCaseIntentCandidate(opts);
+  if(locked||role!=='owner')throw Error('B8_T072_SCREEN_LOCKED_AFTER_SERVER_RESPONSE');
+  $('createCase').reset();
+  return 'नया अलग मामला बनाने की अनुमति तैयार। पिछली पुष्ट Request अब दोबारा उपयोग नहीं होगी।';
+}));
 form('assignStaff',async()=>{
   const expiry=new Date(v('grantUntil'));
   if(Number.isNaN(+expiry))throw Error('B8_INVALID_EXPIRY');

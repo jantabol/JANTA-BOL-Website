@@ -1,0 +1,146 @@
+name: B11 T073 real original B8 PG17 data corruption + verified restore SECURITY preflight (no production)
+on:
+  push:
+    branches: [codex/b11-t073-corruption-security-rollback-preflight-20261028]
+    paths:
+      - '.github/workflows/b11-t073-pg17-real-data-corruption-restore-preflight.yml'
+permissions:
+  contents: read
+jobs:
+  real_isolated_pg17_original_case_corruption_and_clean_restore:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t073-corruption-security-rollback-preflight-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 11
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: T073_ONLY_DISPOSABLE
+          POSTGRES_USER: postgres
+          POSTGRES_DB: jb_t073_corrupt
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t073_corrupt"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 25
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: T073_ONLY_DISPOSABLE
+      PGDATABASE: jb_t073_corrupt
+    steps:
+      - name: Checkout code-only review branch (no persisted GitHub credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Get original immutable B8 source and same C1 real deployed Source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 89849ba47f443f423d8bfe4f966bb2d38087201f
+          path: t073-original
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Fail-closed project, exact original source and protected non-production DB fence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$PGHOST" = 127.0.0.1
+          test "$PGDATABASE" = jb_t073_corrupt
+          test "$(git -C t073-original rev-parse HEAD)" = 89849ba47f443f423d8bfe4f966bb2d38087201f
+          git -C t073-original diff --exit-code 659bcdc2ec4e270ea066863b4b456aeb65cb7c73 HEAD -- JANTA_BOL_PHASE_3C_WORKING
+          git -C t073-original diff --exit-code 658f474d6ee0f24efac60f069979e8adee1e9221 HEAD -- ci/phase4/b8-g1-disposable-fixture.sql JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c 'SHOW server_version_num' | cut -c1-2)" = 17
+          echo 'T073_ORIGINAL_B8_SOURCE_AND_C1_PREVIEW_SHA_IDENTITY=PASS'
+      - name: Actually create original B8 synthetic Founder protected case and verify baseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -q -v ON_ERROR_STOP=1 -f t073-original/ci/phase4/b8-g1-disposable-fixture.sql
+          psql -X -q -v ON_ERROR_STOP=1 -f t073-original/JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+          psql -X -qAt -v ON_ERROR_STOP=1 -c "
+            SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
+            SELECT set_config('b8.fixture_session','on',false);
+            SELECT set_config('b8.fixture_aal','aal2',false);
+            SET ROLE authenticated;
+            SELECT public.jb_b8_g1_owner_create_case('T073 original case to preserve after database corruption','Pichhore','R1');
+          " | tail -n 1 > "$RUNNER_TEMP/t073_original_case_id"
+          id=$(cat "$RUNNER_TEMP/t073_original_case_id")
+          [[ "$id" =~ ^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$ ]]
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.b8_cases WHERE id='$id'::uuid AND title='T073 original case to preserve after database corruption'")" = 1
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.articles WHERE headline='Existing News Article' AND status='published'")" = 1
+          test "$(psql -X -qAt -v ON_ERROR_STOP=1 -c "SELECT count(*) FROM public.ad_campaigns WHERE status='requested'")" = 1
+          echo 'T073_SOURCE_ORIGINAL_PROTECTED_CASE_ARTICLE_AD_BEFORE_CORRUPTION=PASS'
+      - name: Verified offline PG17 archive (not a production Supabase backup)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$PGDATABASE" = jb_t073_corrupt
+          pg_dump -Fc --no-owner -f "$RUNNER_TEMP/t073_verified_pg17.dump" -d jb_t073_corrupt
+          test -s "$RUNNER_TEMP/t073_verified_pg17.dump"
+          pg_restore --list "$RUNNER_TEMP/t073_verified_pg17.dump" | grep -q 'b8_cases'
+          sha256sum "$RUNNER_TEMP/t073_verified_pg17.dump" | cut -d ' ' -f 1 > "$RUNNER_TEMP/t073_verified_backup_sha"
+          echo 'T073_DISPOSABLE_PG17_BACKUP_ARCHIVE_EXISTS_AND_HAS_SOURCE_CASE=PASS'
+      - name: Corrupt actual original committed case and prove live TEST DB differs from last clean snapshot
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          id=$(cat "$RUNNER_TEMP/t073_original_case_id")
+          test "$PGDATABASE" = jb_t073_corrupt
+          psql -X -q -v ON_ERROR_STOP=1 -c "UPDATE public.b8_cases SET title='T073 CORRUPTED RECORD - must not be accepted as restored' WHERE id='$id'::uuid"
+          test "$(psql -X -qAt -c "SELECT count(*) FROM public.b8_cases WHERE id='$id'::uuid AND title LIKE 'T073 CORRUPTED RECORD%'")" = 1
+          echo 'T073_ACTUAL_LOCAL_PG17_COMMITTED_DATA_CORRUPTION_OBSERVED=PASS'
+      - name: Restore from verified archived snapshot into separate test DB, compare permanent IDs and RLS
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$PGDATABASE" = jb_t073_corrupt
+          createdb jb_t073_restored
+          pg_restore --exit-on-error --no-owner -d jb_t073_restored "$RUNNER_TEMP/t073_verified_pg17.dump"
+          id=$(cat "$RUNNER_TEMP/t073_original_case_id")
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT count(*) FROM public.b8_cases WHERE id='$id'::uuid AND title='T073 original case to preserve after database corruption'")" = 1
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT count(*) FROM public.b8_cases WHERE title LIKE 'T073 CORRUPTED RECORD%'")" = 0
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT count(*) FROM public.articles WHERE id='aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa' AND status='published' AND headline='Existing News Article'")" = 1
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT count(*) FROM public.ad_campaigns WHERE id='bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb' AND status='requested'")" = 1
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT relrowsecurity FROM pg_class WHERE oid='public.b8_cases'::regclass")" = t
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT has_table_privilege('anon','public.b8_cases','SELECT')")" = f
+          test "$(psql -X -qAt -d jb_t073_restored -c "SELECT has_table_privilege('authenticated','public.b8_cases','SELECT')")" = f
+          echo 'T073_PG17_SNAPSHOT_RESTORES_EXACT_CASE_ARTICLE_AD_IDENTITIES=PASS_SCOPED'
+          echo 'T073_RESTORED_ORIGINAL_RLS_PRIVATE_CASE_BOUNDARY=PASS_SCOPED'
+      - name: AAL2 and current-session denial after restored endpoint, no false recovery success
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          export PGDATABASE=jb_t073_restored
+          psql -X -q -v ON_ERROR_STOP=1 <<'SQL'
+          SELECT set_config('b8.fixture_actor','11111111-1111-1111-1111-111111111111',false);
+          SELECT set_config('b8.fixture_session','off',false);
+          SELECT set_config('b8.fixture_aal','aal2',false);
+          SET ROLE authenticated;
+          DO $test$
+          DECLARE denied boolean:=false;
+          BEGIN
+            BEGIN
+              PERFORM public.jb_b8_g1_owner_create_case('T073 forbidden new case without active restored session','Pichhore','R1');
+            EXCEPTION WHEN OTHERS THEN
+              denied:=SQLERRM='B8_OWNER_AAL2_REQUIRED';
+            END;
+            IF NOT denied THEN RAISE EXCEPTION 'T073_RESTORED_OWNER_SESSION_SECURITY_BYPASS'; END IF;
+          END $test$;
+          RESET ROLE;
+          SQL
+          test "$(psql -X -qAt -c 'SELECT count(*) FROM public.b8_cases')" = 1
+          echo 'T073_RESTORED_AUTH_OWNER_PROTECTED_WRITE_FAIL_CLOSED=PASS_SCOPED'
+          echo 'T073_OFFSITE_REAL_SUPABASE_SECRETS_ROTATION_DEPLOYMENT_ROLLBACK=NOT_TESTED'
+          echo 'T073_FINAL_E1_E5_E7_E8_PASS_LOCK=false'
+          echo 'T071_FULL_E8=HOLD'
+          echo 'T075_B11_FINAL_LOCK=HOLD'
