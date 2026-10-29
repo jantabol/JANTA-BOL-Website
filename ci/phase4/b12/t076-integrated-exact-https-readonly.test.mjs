@@ -24,7 +24,14 @@ const sha=b=>createHash('sha256').update(b).digest('hex').slice(0,16);
 function scope(){
  assert.equal(process.env.GITHUB_ACTIONS,'true');
  assert.equal(process.env.GITHUB_REPOSITORY,'jantabol/JANTA-BOL-Website');
- assert.equal(process.env.GITHUB_REF,'refs/heads/codex/b12-main-v3-integrated-review-20261029');
+ const branch='codex/b12-main-v3-integrated-review-20261029';
+ if(process.env.GITHUB_EVENT_NAME==='pull_request'){
+  assert.equal(process.env.GITHUB_HEAD_REF,branch);
+  assert.equal(process.env.GITHUB_BASE_REF,'main');
+ }else{
+  assert.equal(process.env.GITHUB_EVENT_NAME,'push');
+  assert.equal(process.env.GITHUB_REF,'refs/heads/'+branch);
+ }
  for(const key of ['SUPABASE_SERVICE_ROLE_KEY','SUPABASE_DB_PASSWORD','VERCEL_TOKEN','JB_BACKUP_B2_APPLICATION_KEY']){
   assert(!process.env[key],key+' must not be available in anonymous read-only HTTP test');
  }
