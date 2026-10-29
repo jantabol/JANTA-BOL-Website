@@ -22,7 +22,7 @@
       "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "T076 real READONLY Preview HOSTING/HTTPS E1/E6 scope PASS (5/5 CI run 40703558813, 7 public routes, exact source identity plus Vercel toolbar). OLD Production V3/JS paths 404 in run 40699768744, original Main unchanged; full E1/E6/E7 production/admin-auth/cutover remains HOLD. T077–T083 NOT_RUN, no paid plan.",
+      "implementation_note": "B12 source staging Main+V3 candidate REAL reconciled merge completed in Draft PR #67. Protected core B0-B10 CI PASS (40818502097). Official T076 HOLD: exact merged candidate hosted public/admin route + final production SHA + GoDaddy jantabol.in DNS/HTTPS and rollback release gates not yet proven; B11 E8/T072 P2 separately HOLD.",
       "partial_proofs": [
         "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
         "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged",
@@ -30,7 +30,8 @@
         "Actual GitHub public HTTPS run 40703558813 (5/5 PASS) confirms Preview V3 index, V3 JS exact bytes, Admin login shell no-store/frames/nosniff, Article/Search/Admin public HTML HTTP 200, root HTTPS 307 same-site to V3; no Founder login or writes.",
         "PR61 preview page HTML byte-identical prefix to reviewed source plus exact 163-byte Vercel opt-in toolbar; code was not modified to accept arbitrary extra payload.",
         "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release.",
-        "2026-10-29 PR #67 Draft: REAL isolated Git two-parent merge Main f447231c + B12/V3 review branch, commit 552c3bd; four B11 conflicts resolved by audited policy. Staged not Main, independent full B0-B10 PG17 CI running; official T076 STILL HOLD pending actual production/domain HTTPS E1/E6/E7."
+        "2026-10-29 PR #67 Draft: REAL isolated Git two-parent merge Main f447231c + B12/V3 review branch, commit 552c3bd; four B11 conflicts resolved by audited policy. Staged not Main, independent full B0-B10 PG17 CI running; official T076 STILL HOLD pending actual production/domain HTTPS E1/E6/E7.",
+        "2026-10-29 GitHub Actions run 40818502097: full historical protected B0–B8/Phase3 G0+G1, B9/B10 source, B10 isolated PG17, B10 whole-block coding gate all SUCCESS on integrated PR #67. Main and GoDaddy DNS unchanged. Hosting on exact merged candidate and LIVE T076 still HOLD."
       ]
     },
     "P4-T077": {
@@ -42,7 +43,8 @@
         "2026-10-29 GitHub Actions run 40818185844: 10/10 scoped T077 source tests PASS; UUID canonical PURL, mock correction keeps UUID, draft/unrelated/invalid ID denied, Owner AAL2 admin preview/share separation, safer post-2FA redirects, no secrets.",
         "2026-10-29 real Supabase READ-ONLY transaction as anon: ISRO ID f17f6507-02a3-4881-ad37-0b02cadf3d3f remains published and exactly visible; sample draft ID 690405f8-21af-4e46-9ddc-3c2e45abca9c not publicly visible (0 rows); anon raw articles SELECT denied.",
         "Real Founder user screenshots 2026-10-29: login/MFA, Published News v15 id, Article full public route PURL same ID, published timestamp 28 Oct and news date 23 Oct. NOT evidence for real correction/unpublish/republish lifecycle.",
-        "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit."
+        "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit.",
+        "2026-10-29 follow-up exact isolated integrated code: T077 offline PURL/auth/anon tests CI run 40818501913 SUCCESS after Stage C1 merge. No mutable real correction/unpublish/republish conducted."
       ]
     },
     "P4-T078": {
@@ -155,7 +157,7 @@
     "real_merge_commit_on_isolated_branch": true,
     "main_merged": false,
     "actual_no_loss_rehearsal_56_tests": "PASS_SCOPED",
-    "hosted_full_regression": "PENDING",
+    "hosted_full_regression": "B0-B10 protected original Phase3 G0/G1, B9/B10 static and isolated PG17: GitHub run 40818502097 SUCCESS on exact code SHA 4b961283041dc47e72260b4a97e172f3040f8451; this is SOURCE/PG17 only, not live production or B11 E8.",
     "live_dns_cutover": false
   },
   "last_reviewed": "2026-10-29"
