@@ -23,6 +23,6 @@
   root.JB_PREVIEW_NO_PRODUCTION_BACKEND = false;
   root.JB_SUPABASE_CONFIG = Object.freeze({
     url: 'https://vrffsnkycvjithwtiylt.supabase.co',
-    publishableKey: 'sb_publishable_g6TzLABZ0_6nq02Gmcpv7g_W71M90JT'
+    publishableKey: 'sb_publishable_6l_UCUEpr4qTKgWtZfK5rA_E2-ggahs'
   });
 })(window);
