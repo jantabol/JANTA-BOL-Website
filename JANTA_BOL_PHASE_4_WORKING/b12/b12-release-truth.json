@@ -22,7 +22,7 @@
       "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "B12 source staging Main+V3 candidate REAL reconciled merge completed in Draft PR #67. Protected core B0-B10 CI PASS (40818502097). Official T076 HOLD: exact merged candidate hosted public/admin route + final production SHA + GoDaddy jantabol.in DNS/HTTPS and rollback release gates not yet proven; B11 E8/T072 P2 separately HOLD.",
+      "implementation_note": "29 Oct: exact PR67 integrated candidate public PREVIEW HTTPS E1/E6 scoped PASS 5/5 on real deployed SHA 991495eb (CI 40821340519, 9 HTML pages + 23 byte-identical assets + no-store admin headers). Official T076 final LOCK HOLD: custom jantabol.in DNS still GoDaddy website builder, protected Production Main remains f447231c, production rollback/recovery E8 not proved.",
       "partial_proofs": [
         "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
         "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged",
@@ -31,20 +31,23 @@
         "PR61 preview page HTML byte-identical prefix to reviewed source plus exact 163-byte Vercel opt-in toolbar; code was not modified to accept arbitrary extra payload.",
         "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release.",
         "2026-10-29 PR #67 Draft: REAL isolated Git two-parent merge Main f447231c + B12/V3 review branch, commit 552c3bd; four B11 conflicts resolved by audited policy. Staged not Main, independent full B0-B10 PG17 CI running; official T076 STILL HOLD pending actual production/domain HTTPS E1/E6/E7.",
-        "2026-10-29 GitHub Actions run 40818502097: full historical protected B0–B8/Phase3 G0+G1, B9/B10 source, B10 isolated PG17, B10 whole-block coding gate all SUCCESS on integrated PR #67. Main and GoDaddy DNS unchanged. Hosting on exact merged candidate and LIVE T076 still HOLD."
+        "2026-10-29 GitHub Actions run 40818502097: full historical protected B0–B8/Phase3 G0+G1, B9/B10 source, B10 isolated PG17, B10 whole-block coding gate all SUCCESS on integrated PR #67. Main and GoDaddy DNS unchanged. Hosting on exact merged candidate and LIVE T076 still HOLD.",
+        "2026-10-29 exact PR67 review-source CI run 40821340519 job 123274269428: 5/5 real public TLS 200/redirect; 9/9 critical HTML shells, 23/23 byte-identical linked first-party assets, admin headers, source SHA 991495eb and Vercel deployment dpl_4BojWuSUhLK5wuL4Th2MBTEZgSoQ READY. Preview gate PASS only.",
+        "2026-10-29 independent Vercel DNS configuration check: jantabol.in attached but misconfigured=true, GoDaddy A records 76.223.105.230, 13.248.243.5, no custom domain cutover. Production Main unchanged. T076 official final HOLD."
       ]
     },
     "P4-T077": {
       "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "T077 STARTED (SCOPED READONLY), no real mutable lifecycle authorized/executed; Final PASS + LOCK HOLD. Hard gate: T076 still IN_PROGRESS.",
+      "implementation_note": "T077 SCOPED READONLY: CI 40821340519 10/10 PASS source PURL/Owner/anon and exact T076 hosted preview 5/5 PASS. 29 Oct real DB transaction AS anon: published ISRO 1 row, draft 0; anon raw articles SELECT/UPDATE denied; public projection EXECUTE permitted. Actual Founder-authorized correction→unpublish→republish same UUID E2/E4 and production/dev boundary NOT RUN. Final lock HOLD.",
       "partial_proofs": [
         "2026-10-29 GitHub Actions run 40818185844: 10/10 scoped T077 source tests PASS; UUID canonical PURL, mock correction keeps UUID, draft/unrelated/invalid ID denied, Owner AAL2 admin preview/share separation, safer post-2FA redirects, no secrets.",
         "2026-10-29 real Supabase READ-ONLY transaction as anon: ISRO ID f17f6507-02a3-4881-ad37-0b02cadf3d3f remains published and exactly visible; sample draft ID 690405f8-21af-4e46-9ddc-3c2e45abca9c not publicly visible (0 rows); anon raw articles SELECT denied.",
         "Real Founder user screenshots 2026-10-29: login/MFA, Published News v15 id, Article full public route PURL same ID, published timestamp 28 Oct and news date 23 Oct. NOT evidence for real correction/unpublish/republish lifecycle.",
         "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit.",
-        "2026-10-29 follow-up exact isolated integrated code: T077 offline PURL/auth/anon tests CI run 40818501913 SUCCESS after Stage C1 merge. No mutable real correction/unpublish/republish conducted."
+        "2026-10-29 follow-up exact isolated integrated code: T077 offline PURL/auth/anon tests CI run 40818501913 SUCCESS after Stage C1 merge. No mutable real correction/unpublish/republish conducted.",
+        "2026-10-29 PR67 CI run 40821340519 job 123274269677 10/10 T077 PURL security source checks PASS; real Supabase transaction SET LOCAL ROLE anon shows ISRO UUID visible exactly once, sample draft UUID 0 rows, anon raw articles SELECT and UPDATE denied; no content mutations."
       ]
     },
     "P4-T078": {
