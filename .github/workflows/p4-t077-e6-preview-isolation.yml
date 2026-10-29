@@ -8,6 +8,7 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
       - 'ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs'
       - '.github/workflows/p4-t077-e6-preview-isolation.yml'
+      - 'ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs'
   pull_request:
     branches: [main]
     paths:
@@ -15,6 +16,7 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
       - 'ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs'
       - '.github/workflows/p4-t077-e6-preview-isolation.yml'
+      - 'ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs'
 permissions:
   contents: read
 jobs:
@@ -31,3 +33,7 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/supabase-config.js
           node --check ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs
           node --test ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs
+      - name: Actual pinned Preview HTTPS fail-closed and untouched production regression (GET ONLY)
+        run: |
+          node --check ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
+          node --test ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
