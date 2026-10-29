@@ -1,0 +1,68 @@
+{
+  "schema": "janta-bol.p4.t078.current-live-noop-acceptance.v1",
+  "observed_date_ist": "2026-10-29",
+  "project": "vrffsnkycvjithwtiylt",
+  "release_scope": "CURRENT_DEPLOYED_PRODUCTION_SHA_ONLY",
+  "production_commit": "c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c",
+  "previous_production_commit": "532261e335a235dbdaf9697ccdbfe274122a8580",
+  "changed_paths": [
+    ".github/workflows/t077-e6-publishable-rotation-candidate.yml",
+    "JANTA_BOL_PHASE_3C_WORKING/supabase-config.js"
+  ],
+  "production_sql_migration_delta_count": 0,
+  "controlled_schema_migration": "NOT_REQUIRED_FOR_THIS_DEPLOYMENT",
+  "database_project": "vrffsnkycvjithwtiylt",
+  "db_read_only_at_approval": true,
+  "db_migration_count": 188,
+  "db_latest_migration": "20261027171751",
+  "public_tables": 100,
+  "rls_enabled_tables": 100,
+  "anonymous_private_storage_visible": 0,
+  "raw_article_anon_select": false,
+  "raw_version_anon_select": false,
+  "raw_audit_anon_select": false,
+  "published_article_public_rpc_rows": 1,
+  "draft_article_public_rpc_rows": 0,
+  "public_article_id_preserved": "c49f00b6-0359-400c-a957-2082142ff8dd",
+  "public_article_version_preserved": 12,
+  "second_article_id_preserved": "f17f6507-02a3-4881-ad37-0b02cadf3d3f",
+  "second_article_version_preserved": 15,
+  "postcheck_counts": {
+    "articles": 34,
+    "article_versions": 919,
+    "audit_logs": 1629,
+    "grievances": 6,
+    "live_sessions": 16
+  },
+  "e7_protected_ci": {
+    "run": 40869372490,
+    "conclusion": "success",
+    "candidate_head": "1f42c78a8af4215177a5158d6cf75af958229bbd"
+  },
+  "e7_t078_ci_before_acceptance": {
+    "run": 40879348307,
+    "conclusion": "success"
+  },
+  "e8_historical_original_restore": {
+    "run": 40452402698,
+    "job": 122017925138,
+    "conclusion": "success",
+    "source_clone_metrics": "26_MATCH",
+    "security_metrics": "16_MATCH",
+    "five_original_media_restored": true,
+    "postgres17_full_source_db_restored": true,
+    "restored_at": "2026-10-27"
+  },
+  "e8_interpretation": "RECOVERY_PATH_VERIFIED_HISTORICALLY; NO_NEW_DB_WRITE_IN_T078_CURRENT_RELEASE",
+  "b11_full_platform_restore_proven": false,
+  "current_point_in_time_restore_proven": false,
+  "future_schema_change_requires_fresh_t078": true,
+  "t081_full_backup_rollback_cutover_status": "HOLD",
+  "no_live_db_ddl_dml_run_by_this_test": true,
+  "production_env_secret_values_read": false,
+  "production_main_merged_by_this_test": false,
+  "public_secret_scan_scope": "TRACKED_HTML_JS_CSS_EDGE_WORKFLOWS_AND_ZIP; NOT_ALL_HISTORICAL_LOGS",
+  "remaining_security_advisory_notices_not_auto_passed": true,
+  "acceptance_kind": "PASS_SCOPED_ONLY_CURRENT_LIVE_ZERO_MIGRATION",
+  "dangerous_rollback_allowed": false
+}
