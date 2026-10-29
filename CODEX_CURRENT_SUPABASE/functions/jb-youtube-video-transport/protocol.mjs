@@ -41,6 +41,15 @@ function validateSessionUrl(uri){
  if(typeof uri!=="string"||uri.length>2048||!URL_PREFIX.test(uri))fail("UPLOAD_SESSION_ORIGIN_DENIED");
  const url=new URL(uri);
  if(url.protocol!=="https:"||url.username||url.password||url.hash||url.port)fail("UPLOAD_SESSION_ORIGIN_DENIED");
+ // Location is an OAuth-bearing Google capability URL. Exact upload path only:
+ // a general googleapis host match would allow an attacker to redirect our
+ // server-only Bearer credential to a different Google API operation.
+ if(!["www.googleapis.com","upload.youtube.com"].includes(url.hostname)||
+    url.pathname!=="/upload/youtube/v3/videos"||
+    !url.searchParams.has("upload_id")||
+    !url.searchParams.get("upload_id")||
+    url.searchParams.has("access_token")||url.searchParams.has("key"))
+    fail("UPLOAD_SESSION_PATH_DENIED");
  return url.href;
 }
 function resumeRange(status,range,total){
