@@ -38,7 +38,7 @@ jobs:
 
   t076_integrated_public_https:
     name: T076 Exact Integrated PR67 Preview HTTPS — READ ONLY
-    if: github.event_name == 'push' && github.ref == 'refs/heads/codex/b12-main-v3-integrated-review-20261029'
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/codex/b12-main-v3-integrated-review-20261029') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'jantabol/JANTA-BOL-Website' && github.event.pull_request.head.ref == 'codex/b12-main-v3-integrated-review-20261029' && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     timeout-minutes: 9
     permissions:
@@ -47,6 +47,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Real pinned deployed static website HTTPS E1 E6 — no credentials
         run: |
           node --check ci/phase4/b12/t076-integrated-exact-https-readonly.test.mjs
