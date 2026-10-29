@@ -87,10 +87,20 @@
       ]
     },
     "P4-T078": {
-      "status": "NOT_RUN",
+      "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "read-only DB/RLS inventory and guarded migration checklist; no production DDL"
+      "implementation_note": "2026-10-29 T078 actual LIVE Supabase read-only migration/RLS/private Storage/catalog and Vercel env metadata preflight completed; original same-run T070 DB+5 media isolated restore job independently checked. E1/E2 PASS_SCOPED, E7 previous full protected CI PASS_SCOPED, E8 full hosted Auth/Edge/Vercel+independent rollback NOT PROVEN. No production DDL, migrations, keys, grants, backups or env values changed. FINAL PASS+LOCK HOLD.",
+      "partial_proofs": [
+        "2026-10-29 real JANTA BOL Postgres17: 188 migration history entries, latest 20261027171751; exact T078 source inventory 100/100 public base RLS, 0 RLS off, 219 functions, 74 policies, 7 module tables present, T072 production 4-arg protected RPC NOT DEPLOYED.",
+        "2026-10-29 real read-only data snapshot: articles=34, article_versions=919, audit_logs=1629, verification_history=18, grievances=6, ads campaigns=7, live sessions=16. No data mutated or bulk extracted.",
+        "Read-only SET LOCAL ROLE anon public-private Storage probe returned ZERO private bucket objects though actual inventory totals grievance-private=2, private-editorial=1. Sensitive direct anon SELECT grants denied on 11 checked key objects; no anon-readable public view found.",
+        "Supabase Advisor: 43 no-policy INFO (possible deliberate deny-all), 23 anon callable SECURITY DEFINER WARN, 118 auth callable SECURITY DEFINER WARN and leaked password protection WARN. Remediation requires independent targeted authorization review; no blanket grants/revokes.",
+        "GitHub Actions 40869372490 SUCCESS on exact PR67 source SHA 1f42c78a8af4215177a5158d6cf75af958229bbd, including prior original T064 tracked source/ZIP scans, B0–B10 Phase3 protected source and isolated PG17 checks (scoped).",
+        "GitHub Actions original Founder T070 real joint restore Run 40452402698 / job 122017925138 SUCCESS; actual job log contains DB plus five original media isolated restore PASS and FINAL E8 / LOCK HOLD markers; full Auth+Edge+Vercel runtime and newer-record-safe production rollback NOT PROVED.",
+        "Vercel project production-only JB_PUBLIC_SUPABASE_KEY env metadata present; JB_PUBLIC_SUPABASE_URL still configured for preview+production. Neither environment values nor credentials inspected. Preview/production absolute isolation not presumed.",
+        "Review-only T078 source no-write test/report on isolated codex/b12-t078-readonly-preflight-20261029. NO production migration executed. Mandatory E8 full final evidence missing; T078 FINAL HOLD."
+      ]
     },
     "P4-T079": {
       "status": "NOT_RUN",
