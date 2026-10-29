@@ -29,14 +29,21 @@
         "2026-10-28 authenticated Vercel Hobby Git-source Preview dpl_EQC399BieUgUaLN8Xi4wB2fNijLz READY, project prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI, exact source SHA cfd5a64661e834c801c30325b97b5a4d72dfb49f, production on f447231c unchanged.",
         "Actual GitHub public HTTPS run 40703558813 (5/5 PASS) confirms Preview V3 index, V3 JS exact bytes, Admin login shell no-store/frames/nosniff, Article/Search/Admin public HTML HTTP 200, root HTTPS 307 same-site to V3; no Founder login or writes.",
         "PR61 preview page HTML byte-identical prefix to reviewed source plus exact 163-byte Vercel opt-in toolbar; code was not modified to accept arbitrary extra payload.",
-        "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release."
+        "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release.",
+        "2026-10-29 PR #67 Draft: REAL isolated Git two-parent merge Main f447231c + B12/V3 review branch, commit 552c3bd; four B11 conflicts resolved by audited policy. Staged not Main, independent full B0-B10 PG17 CI running; official T076 STILL HOLD pending actual production/domain HTTPS E1/E6/E7."
       ]
     },
     "P4-T077": {
-      "status": "NOT_RUN",
+      "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "safe Admin next= redirect added; Article/PURL/Auth real lifecycle not tested"
+      "implementation_note": "T077 STARTED (SCOPED READONLY), no real mutable lifecycle authorized/executed; Final PASS + LOCK HOLD. Hard gate: T076 still IN_PROGRESS.",
+      "partial_proofs": [
+        "2026-10-29 GitHub Actions run 40818185844: 10/10 scoped T077 source tests PASS; UUID canonical PURL, mock correction keeps UUID, draft/unrelated/invalid ID denied, Owner AAL2 admin preview/share separation, safer post-2FA redirects, no secrets.",
+        "2026-10-29 real Supabase READ-ONLY transaction as anon: ISRO ID f17f6507-02a3-4881-ad37-0b02cadf3d3f remains published and exactly visible; sample draft ID 690405f8-21af-4e46-9ddc-3c2e45abca9c not publicly visible (0 rows); anon raw articles SELECT denied.",
+        "Real Founder user screenshots 2026-10-29: login/MFA, Published News v15 id, Article full public route PURL same ID, published timestamp 28 Oct and news date 23 Oct. NOT evidence for real correction/unpublish/republish lifecycle.",
+        "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit."
+      ]
     },
     "P4-T078": {
       "status": "NOT_RUN",
@@ -139,5 +146,17 @@
     "phase3_ci_required_on_any_candidate_code_change": true
   },
   "integration_status": "B10_BASE_PLUS_T071_AND_B12_SURGICAL_SOURCE_REVIEW_ONLY_B11_PENDING",
-  "source_reconciliation_complete": false
+  "source_reconciliation_complete": false,
+  "isolated_integration": {
+    "branch": "codex/b12-main-v3-integrated-review-20261029",
+    "merge_commit": "552c3bd96fa581b0b960e1fd39450325c87dda74",
+    "main_reference": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "pull_request": 67,
+    "real_merge_commit_on_isolated_branch": true,
+    "main_merged": false,
+    "actual_no_loss_rehearsal_56_tests": "PASS_SCOPED",
+    "hosted_full_regression": "PENDING",
+    "live_dns_cutover": false
+  },
+  "last_reviewed": "2026-10-29"
 }
