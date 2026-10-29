@@ -1,0 +1,11 @@
+name: T079 Upload Worker Offline
+on:
+  push:
+    branches: [codex/t079-upload-worker-isolated-20261029]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo T079 review only
