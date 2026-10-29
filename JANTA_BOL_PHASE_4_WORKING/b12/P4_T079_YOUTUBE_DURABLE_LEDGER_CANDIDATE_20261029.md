@@ -24,3 +24,7 @@ No migration was recorded in production's 188 historical migration chain, no Sup
 5. T079 overall remains IN_PROGRESS; Provider E6 actual YouTube video posting DUE. OAuth real token refresh/channel verify is separately **PASS+LOCK**, do not redo it.
 
 **NO PRODUCTION POST / NO LIVE DB WRITE / NO FAKE PASS / NO CRICKET PROJECT TOUCH.**
+
+## CI-discovered exact-final-chunk boundary defect — fixed in review candidate
+Running the existing synthetic Google resumable transport tests alongside actual PG17 ledger verification exposed a **real boundary bug** in the separately staged `protocol.mjs`: the code classified a final chunk ending at `totalBytes-1` as a non-final chunk and incorrectly required 256KiB alignment. This would reject a perfectly valid final small MP4 chunk in production.
+The candidate code now validates `end < totalBytes` and requires 256KiB alignment **only when end != totalBytes - 1**. Out-of-bounds and non-final unaligned chunks still fail closed. Existing synthetic tests already exercise a 100-byte final chunk, and the candidate source is **not deployed**. No LIVE/Google token/account/production database state changed.
