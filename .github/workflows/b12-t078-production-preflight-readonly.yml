@@ -4,6 +4,9 @@ on:
     branches: [codex/b12-t078-readonly-preflight-20261029]
     paths:
       - '.github/workflows/b12-t078-production-preflight-readonly.yml'
+      - 'ci/phase4/b12/t078-production-no-write.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'
   workflow_dispatch:
 
 permissions:
