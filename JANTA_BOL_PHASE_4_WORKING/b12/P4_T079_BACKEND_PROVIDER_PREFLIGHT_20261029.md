@@ -55,3 +55,11 @@ Another scoped real read-only PostgreSQL check confirmed all **5** current `soci
 
 ### Verified CI checkpoint
 GitHub Actions run **40882972280** on this isolated T079 branch passed every completed offline test job. Its existence proves only source/fail-closed readiness, **not E6 external account success**. The updated report must be reconfirmed on the final branch HEAD before the Founder creates real social accounts.
+
+### VERIFIED EXISTING YOUTUBE CHANNEL — DO NOT CREATE AGAIN (29 Oct 2026)
+
+Founder correctly noted YouTube was already created. Actual JANTA BOL LIVE Supabase `public.youtube_integration` independently checked **read-only**: `verified_channel_name='JANTA BOL'`, `expected_channel_id=verified_channel_id='UCLCQbOIxaajO-ttkdhZTt7g'`, `connection_state='CONNECTED'`, `control_auth_state='OK'`, `connected_at=2026-09-27 16:17:12 UTC`, `last_verified_at=2026-09-30 15:34:19 UTC`. The existing project also has ACTIVE `jb-youtube-oauth-start`, `jb-youtube-oauth-callback`, and `jb-youtube-provider` Edge Functions; and **16** historical `live_sessions` rows with `provider='youtube'`.
+
+**Material caveat:** `last_refresh_status='internal_failure'` and latest recorded verification is from September 30, so a successful **current OAuth token refresh / T079 real news-social post** has NOT been independently proved. Existing YouTube Live OAuth/streaming is not interchangeable with automatic upload/post permissions for news distribution. The channel already exists, and the Founder should **NOT create a duplicate channel**. Reuse the verified Channel ID after a current safe OAuth health check; do not print or request access tokens.
+
+**Corrected next-account scope:** create or verify **Facebook Page + Instagram professional account**. WhatsApp Channel vs WhatsApp Business API capability needs an explicit product choice later; no WhatsApp account creation was verified in this check. YouTube account creation = **ALREADY DONE**; T079 external-news-posting **E6 remains DUE**.
