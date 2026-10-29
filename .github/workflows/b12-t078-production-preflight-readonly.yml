@@ -7,6 +7,8 @@ on:
       - 'ci/phase4/b12/t078-production-no-write.test.cjs'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md'
+      - 'ci/phase4/b12/t078-current-live-noop-evidence.json'
   workflow_dispatch:
 
 permissions:
@@ -29,8 +31,10 @@ jobs:
           git diff --name-only 1f42c78a8af4215177a5158d6cf75af958229bbd HEAD | sort > /tmp/t078-file-delta
           cat > /tmp/t078-expected <<'EOF'
           .github/workflows/b12-t078-production-preflight-readonly.yml
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md
           JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md
           JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json
+          ci/phase4/b12/t078-current-live-noop-evidence.json
           ci/phase4/b12/t078-production-no-write.test.cjs
           EOF
           diff -u /tmp/t078-expected /tmp/t078-file-delta
@@ -44,7 +48,7 @@ jobs:
           test -z "${VERCEL_TOKEN:-}"
           test -z "${B2_APPLICATION_KEY:-}"
           test -z "${AGE_SECRET_KEY:-}"
-      - name: T078 catalog SELECT-only and explicit E8 no-fake-lock negative contract
+      - name: T078 29 Oct real no-schema-delta evidence, Source/Secret negative and E8 stop gate
         run: node --test ci/phase4/b12/t078-production-no-write.test.cjs
       - name: Preserve original T064 all tracked frontend workflow Edge source secret inventory
         run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
