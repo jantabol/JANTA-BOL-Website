@@ -31,3 +31,28 @@ function requireExplicitProviderEvidence(name,proof){
  return {provider:name,status:'E6_RECORDED_NOT_P4_T079_PASS'};
 }
 module.exports={OPTIONS,summarize,requireExplicitProviderEvidence};
+
+/* Provider account preparation is metadata-only. No OAuth flow, token read,
+ * provider API mutation or positive "Posted/SENT/PAID" may occur here.
+ * Post-account real E2/E6 must be recorded by an independent E2E run.
+ */
+const SOCIAL_CHANNELS=Object.freeze(['facebook','instagram','whatsapp','youtube']);
+function socialAccountReadiness(channel,facts={}){
+ if(!SOCIAL_CHANNELS.includes(channel))throw Error('B12_UNKNOWN_SOCIAL_CHANNEL_DENY');
+ if(!facts || typeof facts!=='object' || Array.isArray(facts))throw Error('B12_INVALID_SOCIAL_ACCOUNT_METADATA');
+ const fields=['account_exists','founder_controls_account','provider_permissions_approved','server_only_token_storage','production_callback_verified'];
+ if(Object.keys(facts).some(k=>!fields.includes(k)))throw Error('B12_UNKNOWN_SOCIAL_ACCOUNT_METADATA_DENY');
+ for(const field of fields)if(facts[field]!==undefined && typeof facts[field]!=='boolean')
+  throw Error('B12_INVALID_SOCIAL_ACCOUNT_METADATA');
+ const missing=fields.filter(k=>facts[k]!==true);
+ return Object.freeze({
+  channel,
+  state:missing.length?'ACCOUNT_OR_APPROVAL_DUE':'REAL_PROVIDER_E2E_DUE',
+  missing:Object.freeze(missing),
+  confirmed_posted:false,
+  canonical_publishing_dependent:false,
+  credentials_requested_in_chat:false
+ });
+}
+module.exports.SOCIAL_CHANNELS=SOCIAL_CHANNELS;
+module.exports.socialAccountReadiness=socialAccountReadiness;
