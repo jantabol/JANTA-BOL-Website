@@ -42,7 +42,11 @@ test('session URL host and origin cannot be SSRF or redirect',()=>{
  for(const uri of ['http://www.googleapis.com/upload/youtube/v3/videos','https://evil.com/upload',
  'https://www.googleapis.com.evil.com/upload','https://user:pass@www.googleapis.com/upload',
  'https://www.googleapis.com:8443/upload','https://www.googleapis.com/upload#secret',
- 'https://169.254.169.254/upload','javascript:fetch'])assert.throws(()=>validateSessionUrl(uri));
+ 'https://169.254.169.254/upload','javascript:fetch',
+ 'https://www.googleapis.com/youtube/v3/videos?upload_id=fake',
+ 'https://www.googleapis.com/upload/youtube/v3/videos?other=fake',
+ 'https://upload.youtube.com/youtube/v3/videos?upload_id=fake',
+ 'https://www.googleapis.com/upload/youtube/v3/videos?upload_id=ok&access_token=steal'])assert.throws(()=>validateSessionUrl(uri));
 });
 test('Google create-session request explicitly PRIVATE; no duplicate on network ambiguity',async()=>{
  let calls=0,request;
