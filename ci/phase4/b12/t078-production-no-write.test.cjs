@@ -81,7 +81,7 @@ test('T078 current-live NO-OP proof is pinned and cannot authorize a migration',
 });
 test('T078 final no-op decision is scoped, original E8 remains BLOCKED',()=>{
  const txt=read('JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md');
- for(const marker of ['official T078 = BLOCKED','T081','ZERO DATABASE MIGRATION DELTA','40452402698','T070_FINAL_INDEPENDENT_E8=NOT_RUN']){
+ for(const marker of ['official T078 = BLOCKED','T081','production_sql_migration_delta_count=0','40452402698','T070_FINAL_INDEPENDENT_E8=NOT_RUN']){
   assert.ok(txt.includes(marker),marker);
  }
  const t=JSON.parse(read(truthPath)).tests['P4-T078'];
