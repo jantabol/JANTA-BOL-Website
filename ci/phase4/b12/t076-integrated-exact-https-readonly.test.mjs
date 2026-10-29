@@ -2,7 +2,7 @@
  * P4-T076 E1/E6: authenticated Vercel metadata pin in the separate review log,
  * then REAL public HTTPS GET checks. Public GETs only: NO cookies, secrets,
  * writes, Vercel API token, Supabase mutation, or production operations.
- * Pin deployment dpl_5tBrqPfYMkrQvk5nXuf58F4e6jq8, source 2623bfe1.
+ * Pin deployment dpl_4BojWuSUhLK5wuL4Th2MBTEZgSoQ, source 2623bfe1.
  * New CI files do not alter the reviewed product assets on that deployment.
  */
 import test from 'node:test';
@@ -11,9 +11,9 @@ import https from 'node:https';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
 
-const HOST='shubham-pichhore-2028-1co3h32kj-shubhamshrivastava295-9848.vercel.app';
-const DEPLOY='dpl_5tBrqPfYMkrQvk5nXuf58F4e6jq8';
-const REVIEWED_SOURCE='2623bfe17e70c9618821199b4b4f09b1c34e41c1';
+const HOST='shubham-pichhore-2028-8q3i9oxq9-shubhamshrivastava295-9848.vercel.app';
+const DEPLOY='dpl_4BojWuSUhLK5wuL4Th2MBTEZgSoQ';
+const REVIEWED_SOURCE='991495eb208f2fc1b165c7d6e8de844949b68eb8';
 const ORIGIN='https://'+HOST;
 const PREFIX='/JANTA_BOL_PHASE_3C_WORKING/';
 const ROOT='JANTA_BOL_PHASE_3C_WORKING/';
