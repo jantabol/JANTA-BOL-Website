@@ -1,4 +1,4 @@
-import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+// Deno Edge supplies its runtime APIs natively; avoid an optional JSR bundle dependency.
 import { createClient } from "npm:@supabase/supabase-js@2";
 
 /**
