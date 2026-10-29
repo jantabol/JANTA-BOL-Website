@@ -1,0 +1,37 @@
+name: B12 Founder Login Security Readonly Regression
+
+on:
+  push:
+    branches:
+      - codex/founder-auth-readonly-regression-20261028
+    paths:
+      - 'ci/phase4/b12/founder-auth-readonly-regression.test.cjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/admin-auth.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/admin-login.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js'
+      - '.github/workflows/b12-founder-login-security-readonly.yml'
+  pull_request:
+    branches:
+      - codex/b12-b0-b12-reconcile-20261028
+    paths:
+      - 'ci/phase4/b12/founder-auth-readonly-regression.test.cjs'
+      - '.github/workflows/b12-founder-login-security-readonly.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  founder-auth-guard:
+    name: Offline Synthetic Owner, MFA, Lock and SafeNav Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Read-only source and mocked security regressions
+        run: |
+          node --version
+          node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
