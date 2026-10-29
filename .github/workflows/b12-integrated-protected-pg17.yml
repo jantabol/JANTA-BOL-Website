@@ -14,7 +14,7 @@ permissions:
 jobs:
   old_protected:
     name: B0–B8 immutable protected PG17 + Phase3 Auth/News/B7/B8 checks
-    uses: ./.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
 
   b10_static:
     name: B10 T060-T068 Source + prior B9 + Phase3 security contracts
