@@ -2,7 +2,7 @@
   "schema": "janta-bol.phase4.b12.production-release-truth.v1",
   "created_at": "2026-10-28",
   "authority": "Founder + Master Execution Pack Appendix A/B",
-  "release_mode": "REVIEW_ONLY_NOT_PRODUCTION",
+  "release_mode": "ISOLATED_INTEGRATION_BRANCH_PRODUCTION_MAIN_UNMERGED",
   "git_repository": "jantabol/JANTA-BOL-Website",
   "source_branch": "codex/b10-whole-platform-security-candidate-20261023",
   "candidate_branch": "codex/b12-b0-b12-reconcile-20261028",
@@ -12,17 +12,25 @@
   "zero_paid": true,
   "phase3_baseline_verified_for_this_candidate": false,
   "production_merged": false,
-  "production_deployed": false,
-  "production_real_smoke_complete": false,
+  "production_deployed": true,
+  "production_real_smoke_complete": true,
   "b11_full_recovery_locked": false,
   "b11_t072_real_production_idempotency_closed": false,
   "external_providers_available": false,
   "tests": {
     "P4-T076": {
-      "status": "IN_PROGRESS",
-      "evidence": [],
+      "status": "PASS_LOCK",
+      "evidence": [
+        "Founder GoDaddy screenshot 2026-10-29 12:12 IST DNS success A @ 76.76.21.21",
+        "Vercel authenticated DNS config apex misconfigured=false, www redirect and certs for apex/www",
+        "GitHub Actions 40831061538 attempt 2: six actual external jantabol.in TLS/DNS/HTTP checks PASS",
+        "GitHub Actions 40830173701 attempt 2: six production-origin HTTP/byte-identity checks PASS",
+        "Founder Android screenshot 2026-10-29 12:18 IST: jantabol.in homepage fully rendered",
+        "Vercel release SHA 532261e3 READY; scoped real rollback to f447231c and promote back alias checks",
+        "JANTA_BOL_PHASE_4_WORKING/b12/20261029_T076_LIVE_DOMAIN_HTTPS_EVIDENCE.md"
+      ],
       "manual_required": false,
-      "implementation_note": "29 Oct: exact PR67 integrated candidate public PREVIEW HTTPS E1/E6 scoped PASS 5/5 on real deployed SHA 991495eb (CI 40821340519, 9 HTML pages + 23 byte-identical assets + no-store admin headers). Official T076 final LOCK HOLD: custom jantabol.in DNS still GoDaddy website builder, protected Production Main remains f447231c, production rollback/recovery E8 not proved.",
+      "implementation_note": "29 Oct 2026: P4-T076 scoped E1/E6/E7 hosted domain & HTTPS FINAL PASS + LOCK. GoDaddy A @ 76.76.21.21 saved 12:12 IST; Vercel apex/www DNS correctly configured and certificates auto-renew. Real production source 532261e3 (deployment dpl_23HiFAWh8m9e5sVh3QQxYorfdxTJ), actual production origin 6/6 (Actions 40830173701 attempt 2), custom jantabol.in external HTTPS 6/6 (Actions 40831061538 attempt 2). Actual Android domain screenshot 12:18 IST confirms JANTA BOL homepage. Prior production traffic-routing rollback/re-promotion observed. Protected GitHub Main not merged; B11 full E8 restore HOLD; B12 full launch HOLD; T077 real correction/unpublish/republish NOT_RUN.",
       "partial_proofs": [
         "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
         "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged",
@@ -38,7 +46,9 @@
     },
     "P4-T077": {
       "status": "IN_PROGRESS",
-      "evidence": [],
+      "evidence": [
+        "2026-10-29 CI 40831391424: T077 permanent UUID/share/privacy source checks 10/10 PASS; real Founder correction/unpublish/republish NOT_RUN"
+      ],
       "manual_required": false,
       "implementation_note": "T077 SCOPED READONLY: CI 40821340519 10/10 PASS source PURL/Owner/anon and exact T076 hosted preview 5/5 PASS. 29 Oct real DB transaction AS anon: published ISRO 1 row, draft 0; anon raw articles SELECT/UPDATE denied; public projection EXECUTE permitted. Actual Founder-authorized correction→unpublish→republish same UUID E2/E4 and production/dev boundary NOT RUN. Final lock HOLD.",
       "partial_proofs": [
