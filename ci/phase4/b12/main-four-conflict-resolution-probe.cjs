@@ -86,7 +86,7 @@ try{
   'ci/phase4/b11/t075-scheduled-backup-identity.test.mjs'
  ].filter(f=>fs.existsSync(path.join(work,f)));
  const tests=cp.spawnSync('node',['--test',...suite],{cwd:work,encoding:'utf8',maxBuffer:16*1024*1024,timeout:210000});
- const x=(tests.stdout||'').split('\n').filter(l=>/^(?:#|ℹ)\\s+(?:tests|pass|fail|cancelled)\\s/.test(l));
+ const x=(tests.stdout||'').split('\n').filter(l=>/^(?:#|ℹ)\s+(?:tests|pass|fail|cancelled)\s/.test(l));
  if(tests.status!==0)errors.push('LOCAL_SOURCE_TESTS_FAILED: '+tests.status);
  report={
   gate:'PROPOSED four-file conflict resolution / TEMP TREE ONLY',
