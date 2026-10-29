@@ -1,0 +1,58 @@
+name: T079 Founder Health Unlock Redirect — Strict Additive Page Allowlist
+on:
+  push:
+    branches: [codex/t079-health-return-nav-onepath-20261029]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js'
+      - '.github/workflows/t079-founder-health-unlock-allowlist-only.yml'
+permissions:
+  contents: read
+jobs:
+  strict_whitelist:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: One previously deployed NAV file + this CI only
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only a71cf0b64e0ada8b1cc8efd8c9016cc17276ba16 HEAD | sort >/tmp/actual
+          cat >/tmp/expected <<'EOF'
+          .github/workflows/t079-founder-health-unlock-allowlist-only.yml
+          JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          git diff -- JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js
+          test "$(git diff --numstat a71cf0b64e0ada8b1cc8efd8c9016cc17276ba16 HEAD -- JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js)" = $'1\t1\tJANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js'
+      - name: Device-credential/Fresh-AAL2 return path, no open redirects
+        run: |
+          node <<'NODE'
+          const assert=require('node:assert/strict'), fs=require('node:fs'),vm=require('node:vm');
+          const filename='JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js';
+          const code=fs.readFileSync(filename,'utf8');
+          const sandbox={window:{},URLSearchParams};
+          vm.runInNewContext(code,sandbox,{filename});
+          const target=sandbox.window.JBProdSafeNav.target;
+          assert.equal(target('youtube-oauth-health.html'),'youtube-oauth-health.html');
+          assert.equal(target('live.html'),'live.html');
+          assert.equal(target('admin.html'),'admin.html');
+          assert.equal(target('add-news.html?id=invalid'),'admin.html');
+          for(const bad of ['../youtube-oauth-health.html','/youtube-oauth-health.html','https://evil.example/youtube-oauth-health.html','//evil.example','youtube-oauth-health.html?next=https%3A%2F%2Fevil.com','youtube-oauth-health.html%2f..%2fadmin.html','youtube-oauth-health.html#random','youtube-oauth-health.html?x=1','youtube-oauth-health.html?x=1&x=2','unknown-file.html']){
+            assert.equal(target(bad),'admin.html','blocked unsafe '+bad);
+          }
+          assert.equal(fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/admin-auth.js','utf8').includes("LOCK_MINUTES=15"),true);
+          assert.equal(fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html','utf8').includes('admin-auth.js'),true);
+          assert.equal(fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/admin-login.html','utf8').includes('JBProdSafeNav.target(target)'),true);
+          console.log('T079 secure return to health page after Founder device unlock PASS');
+          NODE
+      - name: Old production security and recovery contract guards
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py

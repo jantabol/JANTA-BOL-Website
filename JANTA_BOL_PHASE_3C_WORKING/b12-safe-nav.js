@@ -6,7 +6,7 @@
     'admin-recovery.html', 'admin-recovery-setup.html',
     'reporters.html', 'social.html', 'ads.html', 'grievances.html',
     'compliance.html', 'settings.html', 'analytics.html',
-    'live.html', 'admin-password.html', 'b8-accountability.html', 'b9-analytics.html'
+    'live.html', 'youtube-oauth-health.html', 'admin-password.html', 'b8-accountability.html', 'b9-analytics.html'
   ]);
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   function target(input) {
