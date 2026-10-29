@@ -49,3 +49,9 @@ Actual production also has 100/100 public base tables RLS enabled, verified prev
 - Actual read-only Supabase catalog/aggregate, 2026-10-29 (project locked above).
 - Previous B3 and B4 source migrations / existing B7/Phase3 security and payment guards (untouched).
 - Dedicated current GitHub CI run link to be verified against exact candidate SHA before marking E7 pass.
+
+### 18:59 IST independent LIVE Social source-of-truth detail
+Another scoped real read-only PostgreSQL check confirmed all **5** current `social_distribution` rows are explicitly `provider_mode='MANUAL'`; 9 recorded attempt states are **4 Pending + 4 Failed + 1 Manual Share**, with **0 Posted**. The actual deployed `jb_social_record_attempt_internal` body contains published-Article, Manual/Posted and global-switch guards (presence verified via SQL catalog boolean probes; positive live write not executed). This gives a strong starting safety baseline and confirms **no automated Facebook/Instagram/WhatsApp/YouTube news post has been demonstrated**.
+
+### Verified CI checkpoint
+GitHub Actions run **40882972280** on this isolated T079 branch passed every completed offline test job. Its existence proves only source/fail-closed readiness, **not E6 external account success**. The updated report must be reconfirmed on the final branch HEAD before the Founder creates real social accounts.
