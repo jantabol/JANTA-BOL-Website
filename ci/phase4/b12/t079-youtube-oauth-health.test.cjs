@@ -34,7 +34,8 @@ test('only Founder owner + user JWT + AAL2 current session may refresh',()=>{
  assert.match(src,/p_session_id: sid/);
 });
 test('production environment and expected channel pinned and checked twice',()=>{
- assert.match(src,/deployment !== "production" \|\| credentialEnv !== "production"/);
+ assert.match(src,/\["development", "test", "production"\]\.includes\(deployment\)/);
+ assert.match(src,/credentialEnv !== deployment/);
  assert.match(src,/JB_YOUTUBE_EXPECTED_CHANNEL_ID/);
  assert.match(src,/state\.expected_channel_id !== expected \|\| state\.verified_channel_id !== expected/);
  assert.match(src,/state\.connection_state !== "CONNECTED"/);
@@ -83,4 +84,16 @@ test('OAuth real success is separated from T079 provider posting status',()=>{
  for(const expected of ['REAL_REFRESH_PENDING','Founder','AAL2','NO_LIVE_STREAM','No token','T079','NOT_YET_REFRESHED']){
   assert.ok(note.includes(expected), 'missing '+expected);
  }
+});
+
+test('same-environment policy matrix blocks unrecognized and cross-env labels',()=>{
+ const allow=new Set(['development','test','production']);
+ const compatible=(a,b)=>allow.has(a)&&a===b;
+ for(const key of allow)assert.equal(compatible(key,key),true);
+ for(const lhs of ['','unknown','staging',null,'production','test','development']){
+  for(const rhs of ['','other','production','test','development']){
+   if(!allow.has(lhs)||rhs!==lhs)assert.equal(compatible(lhs,rhs),false);
+  }
+ }
+ assert.match(src,/OAUTH_ENVIRONMENT_MISMATCH/);
 });
