@@ -34,3 +34,15 @@ This changes ONLY the isolated OAuth **health verifier** and its unit tests. No 
 - Original YouTube Start, Callback, Provider, and Live API not redeployed. No Google client key/secret, active refresh token, publishing controls, production DB schema, article or social record modified.
 - **Official status at deploy:** database still `CONNECTED`, channel ID match TRUE, `control_auth_state=OK`, `last_refresh_status=NOT_YET_REFRESHED`. No real refreshed Google access token or post verified yet. Founder must do exactly one Owner+AAL2 Health Check for E6. Do not claim automatic YouTube posting.
 
+
+## REAL FOUNDER GOOGLE REFRESH — FINAL VERIFIED (2026-10-29 20:56:57 IST)
+Founder provided actual Android production screenshot `jantabol.in/JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html` showing green **REAL GOOGLE REFRESH PASS — Same JANTA BOL Channel MATCH** at 20:56:57 IST. **Independent authoritative verification was run separately** against the actual JANTA BOL production Supabase project `vrffsnkycvjithwtiylt`, without accessing Google or stored token values:
+- `public.youtube_integration.connection_state='CONNECTED'`
+- `control_auth_state='OK'`; `credential_incident_state='CLEAR'`; `expected_channel_id=verified_channel_id=TRUE`; channel name **JANTA BOL**.
+- `last_refresh_status='OK'`, actual `last_verified_at=2026-10-29 15:26:57.24+00` (20:56:57 IST); this supersedes the earlier `NOT_YET_REFRESHED` historical baseline.
+- Actual append-only audit `youtube_oauth_refresh_verified`: **one** row at `2026-10-29 15:26:57.393436+00`; original OAuth reconnect audits still preserved.
+- Actual Supabase Function gateway logs on **Edge version 2**: authorized `POST /functions/v1/jb-youtube-oauth-health` **HTTP 200**, OPTIONS HTTP 200, in the same time window.
+- Private secret metadata still exactly **one ACTIVE** and **three RETIRED** encrypted credential records; no refresh/access tokens, private values, Google code or secrets were printed/read by assistant.
+- Health function v2 reads existing encrypted refresh credential server-side, executes Google OAuth refresh and `channels.mine` exact expected channel matching, records audit on success, and has no LIVE broadcast, Article editing or external video upload path. CI source tests confirm the narrow execution behavior; independent DB and HTTP logs confirm this real call succeeded.
+
+**Verdict: P4-T079 / YOUTUBE EXISTING CHANNEL OAUTH RECONSENT + REAL REFRESH AND CHANNEL ID sub-gate = PASS + LOCK (REAL E6 SUB-GATE).** This is NOT approval for YouTube news-video upload or automatic social distribution. **Full P4-T079 remains IN_PROGRESS with other providers and real posting E6 DUE.** Existing T078 E8 hold and global B12 release gate are unaffected. No further Founder OAuth action necessary at this point. Do NOT reauthorize/retest unnecessarily.
