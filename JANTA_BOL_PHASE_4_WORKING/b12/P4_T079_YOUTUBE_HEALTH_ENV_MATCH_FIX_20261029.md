@@ -25,3 +25,12 @@ This changes ONLY the isolated OAuth **health verifier** and its unit tests. No 
 - The health verifier in `development` mode can verify currently authorized **development-labelled** credentials used by existing real Founder channel, but must **not** be represented as separately approved YouTube production API publishing.
 - If Google denies refresh for another cause, record its safe error, don't auto-reconnect, don't rotate/unset secrets.
 - **P4-T079 Final** remains `IN_PROGRESS` until real YouTube news/video API post evidence (E6), and separate other provider proof, are complete.
+
+## Actual implementation evidence — 29 Oct 2026
+- Original Founder screenshot digests were cryptographically compared only to public known environment words. Both labels are **development**; there is no reason to overwrite the two current values just to satisfy the new QA-only function.
+- Existing OAuth trust boundary and exact same channel were retained.
+- Dedicated GitHub workflow **40898511174 SUCCESS** with strict change scope and old Owner/AAL2/channel/secret/security suites.
+- New **jb-youtube-oauth-health Edge version 2 ACTIVE**, `verify_jwt=true`; live deployed code read back and verified to contain the paired 3-label check instead of the erroneous hardcoded production-only check.
+- Original YouTube Start, Callback, Provider, and Live API not redeployed. No Google client key/secret, active refresh token, publishing controls, production DB schema, article or social record modified.
+- **Official status at deploy:** database still `CONNECTED`, channel ID match TRUE, `control_auth_state=OK`, `last_refresh_status=NOT_YET_REFRESHED`. No real refreshed Google access token or post verified yet. Founder must do exactly one Owner+AAL2 Health Check for E6. Do not claim automatic YouTube posting.
+
