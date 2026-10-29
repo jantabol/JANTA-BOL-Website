@@ -19,7 +19,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Exactly four additive paths and original Live/news/auth files unchanged
+      - name: Exactly six additive paths and original Live/news/auth files unchanged
         shell: bash
         run: |
           set -euo pipefail
@@ -27,8 +27,10 @@ jobs:
           cat > /tmp/expected <<'EOF'
           .github/workflows/t079-youtube-video-readonly-preflight.yml
           CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-preflight/index.ts
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-transport/protocol.mjs
           JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_VIDEO_DISTRIBUTION_BACKEND_20261029.md
           ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+          ci/phase4/b12/t079-youtube-video-transport.test.mjs
           EOF
           diff -u /tmp/expected /tmp/actual
           test -z "$(git diff --diff-filter=M --name-only 57a837b559dde49b7dd0f8800aefa6ecb71299fd HEAD)"
