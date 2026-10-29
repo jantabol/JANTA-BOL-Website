@@ -1,0 +1,75 @@
+name: T076 Real Custom Domain DNS HTTPS (READ ONLY)
+
+on:
+  push:
+    branches: [codex/b12-main-v3-integrated-review-20261029]
+    paths:
+      - '.github/workflows/t076-real-custom-domain-http.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  custom-domain:
+    name: jantabol.in & www real external HTTP/TLS
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Actual public DNS HTTPS and origin contract, no credentials or mutations
+        env:
+          NODE_OPTIONS: --dns-result-order=ipv4first
+        run: |
+          node --input-type=module <<'NODE'
+          import assert from 'node:assert/strict';
+          import fs from 'node:fs';
+          import crypto from 'node:crypto';
+          import dns from 'node:dns/promises';
+          const base='https://jantabol.in';
+          const prefix='/JANTA_BOL_PHASE_3C_WORKING/';
+          const checked=[];
+          const res=async u=>fetch(u,{redirect:'manual',signal:AbortSignal.timeout(18000),headers:{'user-agent':'JANTA-BOL-T076-real-custom-domain-readonly'}});
+          const test=async(label,fn)=>{try{await fn();checked.push('PASS '+label)}catch(e){checked.push('FAIL '+label+': '+e.message);process.exitCode=1}};
+          await test('Public DNS A @ points to accepted Vercel IPv4',async()=>{
+            const a=await dns.resolve4('jantabol.in');
+            assert.ok(a.some(ip=>['76.76.21.21','216.198.79.1','64.29.17.1'].includes(ip)),'Observed A: '+a.join(','));
+          });
+          await test('HTTPS apex root redirects to V3 home on SAME origin',async()=>{
+            const r=await res(base+'/');
+            assert.ok([301,302,307,308].includes(r.status),'HTTP '+r.status);
+            const dst=new URL(r.headers.get('location'),base);
+            assert.equal(dst.origin,base);
+            assert.equal(dst.pathname,prefix+'index.html');
+          });
+          await test('HTTPS apex home loads real JANTA BOL',async()=>{
+            const r=await res(base+prefix+'index.html');
+            assert.equal(r.status,200);
+            const html=await r.text();
+            assert.match(html,/JANTA.BOL/);
+          });
+          await test('HTTPS V3 JavaScript matches exact protected source',async()=>{
+            const r=await res(base+prefix+'website-v3.js');
+            assert.equal(r.status,200);
+            const bytes=Buffer.from(await r.arrayBuffer());
+            const original=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/website-v3.js');
+            const hash=b=>crypto.createHash('sha256').update(b).digest('hex');
+            assert.equal(hash(bytes),hash(original));
+          });
+          await test('HTTPS Founder login shell loads no-store only',async()=>{
+            const r=await res(base+prefix+'admin-login.html');
+            assert.equal(r.status,200);
+            assert.match(r.headers.get('cache-control')||'',/no-store/);
+            assert.equal(r.headers.get('x-content-type-options'),'nosniff');
+          });
+          await test('www hostname HTTPS redirects ONLY to apex',async()=>{
+            const r=await res('https://www.jantabol.in/');
+            assert.ok([301,302,307,308].includes(r.status),'HTTP '+r.status);
+            const dst=new URL(r.headers.get('location'),'https://www.jantabol.in/');
+            assert.equal(dst.hostname,'jantabol.in');
+            assert.equal(dst.protocol,'https:');
+          });
+          for(const x of checked)console.log(x);
+          console.log('T076 custom-domain HTTP checks: '+checked.filter(x=>x.startsWith('PASS')).length+'/6 PASS');
+          NODE
