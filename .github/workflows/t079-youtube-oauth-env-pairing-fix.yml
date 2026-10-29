@@ -1,0 +1,59 @@
+name: T079 YouTube OAuth Health Paired Environment Fix
+on:
+  push:
+    branches: [codex/t079-youtube-health-development-pair-fix-20261029]
+    paths:
+      - '.github/workflows/t079-youtube-oauth-env-pairing-fix.yml'
+      - 'CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts'
+      - 'ci/phase4/b12/t079-youtube-oauth-health.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_HEALTH_ENV_MATCH_FIX_20261029.md'
+permissions:
+  contents: read
+jobs:
+  t079_owner_channel_and_env:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Four allowed files only, no existing OAuth and Live code modified
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 434ebe97ba83506f03577658d77a31084a12b8b2 HEAD | sort > /tmp/actual
+          cat >/tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-oauth-env-pairing-fix.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_HEALTH_ENV_MATCH_FIX_20261029.md
+          ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          for path in CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts JANTA_BOL_PHASE_3C_WORKING/social.html JANTA_BOL_PHASE_3C_WORKING/live.html; do
+            test "$(git hash-object "$path")" = "$(git rev-parse 434ebe97ba83506f03577658d77a31084a12b8b2:"$path")"
+          done
+      - name: Strict Founder Owner AAL2 and paired environment negative matrix
+        run: node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+      - name: T079 provider four-domain no-fake-pass regression
+        run: node --test ci/phase4/b12/t079-provider-backend.test.cjs
+      - name: Existing hardcoded source and ZIP secret gates
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: Phase3 LIVE and Recovery unchanged
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+      - name: T079 global real external E6 still DUE, no launch authorization
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/status.json
+          code=$?
+          set -e
+          test "$code" -eq 3
+          node -e "const r=require('/tmp/status.json');if(r.release!=='HOLD'||!r.issues.includes('P4-T079:IN_PROGRESS')||!r.issues.includes('P4-T079:MISSING_E6'))process.exit(1)"
