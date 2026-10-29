@@ -13,6 +13,24 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Six isolated T079 paths, existing JANTA BOL sources unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only bd660e58682888f643fd282c7c3dcdd24900457b HEAD | sort > /tmp/t079-actual
+          cat > /tmp/t079-expected <<'EOF'
+          .github/workflows/t079-youtube-upload-worker-isolated-e2e.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-transport/protocol.mjs
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/worker.mjs
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_UPLOAD_WORKER_ISOLATED_QA_20261029.md
+          ci/phase4/b12/t079-youtube-upload-worker.test.mjs
+          ci/phase4/b12/t079-youtube-video-transport.test.mjs
+          EOF
+          diff -u /tmp/t079-expected /tmp/t079-actual
+          for file in JANTA_BOL_PHASE_3C_WORKING/live.html JANTA_BOL_PHASE_3C_WORKING/social.html JANTA_BOL_PHASE_3C_WORKING/admin-auth.js CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts; do
+            git diff --quiet bd660e58682888f643fd282c7c3dcdd24900457b HEAD -- "$file"
+          done
+          test ! -f CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/index.ts
       - name: Worker upload negative and private receipt simulations
         run: node --test ci/phase4/b12/t079-youtube-upload-worker.test.mjs
       - name: Existing private video Google resumable protocol negative tests
@@ -22,3 +40,18 @@ jobs:
           node --test ci/phase4/b12/t079-youtube-video-preflight.test.cjs
           node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
           node --test ci/phase4/b12/t079-provider-backend.test.cjs
+      - name: Existing Phase3 and B10 original source/secret and recovery regression
+        run: |
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: T079 real E6 and entire B12 must stay on HOLD
+        shell: bash
+        run: |
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/release.json
+          code=$?
+          set -e
+          test "$code" -eq 3
+          node -e "const j=require('/tmp/release.json');if(j.release!=='HOLD'||!j.issues.includes('P4-T079:IN_PROGRESS')||!j.issues.includes('P4-T079:MISSING_E6'))process.exit(1)"
