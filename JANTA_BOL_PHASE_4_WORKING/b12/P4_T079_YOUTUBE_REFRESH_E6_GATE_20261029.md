@@ -1,0 +1,24 @@
+# T079 / YouTube — Controlled Existing OAuth Token Refresh, 29 October 2026
+**Founder priority:** JANTA BOL same YouTube channel first; then external news-video posting; other provider accounts later.
+**Current status:** Real authorized Google OAuth reconsent succeeded at 2026-10-29 19:35:41 IST and exact YouTube ID remained unchanged. One active encrypted server credential; previous credential retired. `last_refresh_status=NOT_YET_REFRESHED`. Real token refresh check **REAL_REFRESH_PENDING**; do not claim successful Google provider refresh until the new server function actually completes.
+
+## Problem
+Existing `jb-youtube-provider` can refresh tokens inside a LIVE generation action (`provision_generation`, `get_state`, `transition_live`, etc.). Triggering a LIVE action merely to test OAuth can allocate/update broadcast/stream resources or require service credentials. Do NOT make an artificial LIVE session for this test or expose keys.
+
+## Surgical solution
+One isolated ADDITIVE server-only Supabase Edge Function at `CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts`, called only by Founder/AAL2 on explicit request. It preserves old functions, old YouTube channel, old Article IDs, media, and LIVE encoder/worker paths.
+- `POST` with **exactly** `{"action":"refresh_verify"}`; rejects all other actions, extra body fields, unauthenticated/expired sessions, non-Owner or non-AAL2 claims, unauthorized browser Origins and wrong production environment.
+- Server config only: `JB_GOOGLE_CLIENT_ID`, `JB_GOOGLE_CLIENT_SECRET`, `JB_OAUTH_TOKEN_ENC_KEY_B64`, `JB_YOUTUBE_EXPECTED_CHANNEL_ID`, existing `JB_SUPABASE_SERVICE_ROLE_KEY`. Never pass to the browser. Supabase source handler deployed with `verify_jwt=true`, and also checks authenticated user + active Owner AAL2 server context.
+- Check `CONNECTED`, `control_auth_state=OK`, `credential_incident_state=CLEAR`, existing expected/verified channel IDs both equal server-pinned expected, required YouTube OAuth scope present.
+- Decrypt existing authorized refresh credential **only in the Edge Function process**, perform POST to Google's official token endpoint (12-second cap), then GET Google `channels?part=id&mine=true` and check same exact Channel ID. No LIVE stream or video upload/post occurs.
+- Only on verified refresh and channel match: update `last_refresh_status=OK`, `last_verified_at`, write `youtube_oauth_refresh_verified` audit; if Google rotates refresh credential, encrypt and activate new server-only secret. The response returns only timestamp/safe states (no access_token/refresh_token).
+- Failure returns bounded safe code. It does NOT fake PASS or revoke/overwrite an existing LIVE credential on transient/ambiguous failures. Wrong Channel fails.
+- No automatic polling; one deliberate Founder-initiated check, then source-of-truth Supabase metadata and audit independently confirmed by backend.
+
+## Safety, gate and operation
+- Offline CI tests verify no live stream creation/transition, Owner/AAL2, negative origins/actions, server encryption, Google endpoints, channel match, audit, no token leakage; old protected Phase3/B7 source/security checks are also rerun.
+- New Edge deployment does NOT modify existing `jb-youtube-provider`, `jb-live-api`, `jb-youtube-oauth-start`, `jb-youtube-oauth-callback`, DB schema, GoDaddy/Vercel DNS, SPADEX or NVS03 articles. **NO_LIVE_STREAM**.
+- **No token/password/OTP/callback URL with OAuth code should be sent in chat**. Founder will click the dedicated single authenticated Health Check once on `jantabol.in`, after safe UI deployment. No additional Google consent unless backend health explicitly says `GOOGLE_REAUTH_REQUIRED`.
+- Frontend helper must be shipped on the exact current production baseline with one new protected HTML path (not the unmerged B12 review tree). No blindly promoting old review branches.
+- A green CI or successful function deployment alone is not real Google refresh E6. **T079 stays IN_PROGRESS** until remote Google result is independently verified. The YouTube news-video upload adapter and actual posting proof are separate T079 external provider E6, still DUE.
+- Additive source review branch: `codex/t079-youtube-refresh-health-20261029` -> Draft PR based on T079 PR69; no automatic Main merge.
