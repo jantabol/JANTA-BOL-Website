@@ -1,0 +1,33 @@
+name: P4-T077 E6 Non-Canonical Preview Fail-Closed (NO SECRETS, READ ONLY)
+on:
+  push:
+    branches:
+      - codex/b12-main-v3-integrated-review-20261029
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/supabase-config.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs'
+      - '.github/workflows/p4-t077-e6-preview-isolation.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/supabase-config.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
+      - 'ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs'
+      - '.github/workflows/p4-t077-e6-preview-isolation.yml'
+permissions:
+  contents: read
+jobs:
+  offline-negative-boundary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: No-secret, no-network preview isolation simulation
+        run: |
+          node --version
+          node --check JANTA_BOL_PHASE_3C_WORKING/supabase-config.js
+          node --check ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs
+          node --test ci/phase4/b12/t077-e6-preview-no-prod-backend.test.cjs
