@@ -22,6 +22,7 @@ New `CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-preflight/index.ts`:
 - No Google video API call, no LIVE-stream creation, no update/insert/delete, no outbound arbitrary fetch. No new backend secrets or paid services.
 
 ## Original YouTube video upload adapter — what remains before external E6
+**DUPLICATE publishing guard is mandatory:** one durable, idempotent reservation per immutable article+video+channel; an UNKNOWN Google outcome must never be retried as a second upload.
 An actual Google `videos.insert` upload is a side effect that cannot honestly be tested without a real Founder-owned video (video exists nowhere in current backend). This is **not** the same as YouTube channel OAuth being connected.
 
 Before enabling any media upload worker, independently prove:
