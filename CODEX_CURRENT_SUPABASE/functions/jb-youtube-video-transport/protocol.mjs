@@ -95,6 +95,29 @@ async function querySession({fetcher,accessToken,sessionUrl,totalBytes}){
  }
  return Object.freeze(resumeRange(response.status,response.headers?.get("range"),totalBytes));
 }
+async function uploadChunk({fetcher,accessToken,sessionUrl,totalBytes,startByte,bytes}){
+ if(typeof fetcher!=="function"||typeof accessToken!=="string"||accessToken.length<10)fail("SERVER_AUTH_REQUIRED");
+ const valid=validateSessionUrl(sessionUrl);
+ if(!Number.isSafeInteger(totalBytes)||totalBytes<1||totalBytes>MAX)fail("MEDIA_SIZE_UNSUPPORTED");
+ if(!Number.isSafeInteger(startByte)||startByte<0||startByte>=totalBytes)fail("UPLOAD_RANGE_INVALID");
+ if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>4*1024*1024)fail("UPLOAD_CHUNK_INVALID");
+ const end=startByte+bytes.length-1;
+ if(end>=totalBytes) {
+  if(end!==totalBytes-1)fail("UPLOAD_RANGE_INVALID");
+ }else if(bytes.length%(256*1024)!==0)fail("UPLOAD_CHUNK_ALIGN_INVALID");
+ let response;
+ try{response=await fetcher(valid,{method:"PUT",redirect:"manual",
+  headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"video/mp4",
+   "Content-Length":String(bytes.length),"Content-Range":`bytes ${startByte}-${end}/${totalBytes}`},
+  body:bytes,signal:AbortSignal.timeout(20000)});
+ }catch{return Object.freeze({state:"UNKNOWN_RECONCILE_ONLY"})}
+ if(response.status===200||response.status===201){
+  const data=await response.json().catch(()=>null);
+  if(!data||!VIDEO_ID.test(data.id||""))return Object.freeze({state:"RECEIPT_UNVERIFIED_HOLD"});
+  return Object.freeze({state:"UPLOAD_RESPONSE_PENDING_CHANNEL_VERIFY",videoId:data.id});
+ }
+ return Object.freeze(resumeRange(response.status,response.headers?.get("range"),totalBytes));
+}
 async function verifyPrivateVideo({fetcher,accessToken,videoId,expectedChannelId}){
  if(typeof fetcher!=="function"||typeof accessToken!=="string"||accessToken.length<10)fail("SERVER_AUTH_REQUIRED");
  if(!VIDEO_ID.test(videoId||"")||!/^UC[A-Za-z0-9_-]{22}$/.test(expectedChannelId||""))fail("VIDEO_OR_CHANNEL_INVALID");
@@ -109,4 +132,4 @@ async function verifyPrivateVideo({fetcher,accessToken,videoId,expectedChannelId
  if(item?.status?.privacyStatus!=="private")return Object.freeze({state:"NOT_PRIVATE_HOLD"});
  return Object.freeze({state:"PRIVATE_VIDEO_VERIFIED",videoId,channelMatch:true,posted:false});
 }
-export {mediaDescriptor,reserveGate,metadata,validateSessionUrl,resumeRange,initiate,querySession,verifyPrivateVideo};
+export {mediaDescriptor,reserveGate,metadata,validateSessionUrl,resumeRange,initiate,querySession,uploadChunk,verifyPrivateVideo};
