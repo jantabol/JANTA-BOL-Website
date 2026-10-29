@@ -241,7 +241,7 @@ test('unsafe server job row, lease, owner, and metadata cannot resume upload',as
 });
 test('review-only source has no Edge entrypoint, cron, stored tokens, service secrets or social Posted',()=>{
  assert.doesNotMatch(workerSource,/Deno\.serve|setInterval\(|setTimeout\(|cron\.schedule|console\.log|\.from\("social_distribution"\)|posted:true|public_video_created:true/);
- assert.doesNotMatch(workerSource,/service_role|refresh_token|GOOGLE_CLIENT_SECRET|credentials\.txt/);
+ assert.doesNotMatch(workerSource,/Deno\.env\.get|process\.env|refresh_token|GOOGLE_CLIENT_SECRET|credentials\.txt/);
  assert.match(workerSource,/readAndVerify/);
  assert.match(workerSource,/SHA-256/);
  assert.match(workerSource,/DUPLICATE_OR_EXISTING_JOB_HOLD/);
