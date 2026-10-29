@@ -1,0 +1,72 @@
+name: T077 E6 New Publishable Key + Exact Production Candidate (READ ONLY)
+on:
+  push:
+    branches: [codex/t077-e6-prod-publishable-rotation-20261029]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/supabase-config.js'
+      - '.github/workflows/t077-e6-publishable-rotation-candidate.yml'
+permissions:
+  contents: read
+jobs:
+  verify-isolated-candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exactly one website runtime file changed from production baseline
+        run: |
+          set -euo pipefail
+          git diff --name-only 532261e335a235dbdaf9697ccdbfe274122a8580 HEAD > /tmp/t077-change-list
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const files=fs.readFileSync('/tmp/t077-change-list','utf8').trim().split('\n').sort();
+          assert.deepEqual(files,[
+            '.github/workflows/t077-e6-publishable-rotation-candidate.yml',
+            'JANTA_BOL_PHASE_3C_WORKING/supabase-config.js'
+          ]);
+          console.log('E6_EXACT_PROD_BASELINE_DIFF=PASS; ONE_RUNTIME_FILE_ONLY');
+          NODE
+      - name: Canonical host guard, preview fail-closed, new key public projection (NO SECRETS OR MUTATIONS)
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import vm from 'node:vm';
+          import assert from 'node:assert/strict';
+          const source=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/supabase-config.js','utf8');
+          const check=(host,protocol='https:')=>{
+            const win={location:{hostname:host,protocol}};
+            const doc={readyState:'complete',body:{innerHTML:''},documentElement:{style:{}}};
+            vm.runInNewContext(source,{window:win,document:doc},{timeout:1000});
+            return {win,doc};
+          };
+          const prod=check('jantabol.in');
+          assert.equal(prod.win.JB_PREVIEW_NO_PRODUCTION_BACKEND,false);
+          assert.equal(prod.win.JB_SUPABASE_CONFIG.url,'https://vrffsnkycvjithwtiylt.supabase.co');
+          const key=prod.win.JB_SUPABASE_CONFIG.publishableKey;
+          assert.match(key,/^sb_publishable_/);
+          for(const [host,protocol] of [
+             ['shubham-pichhore-2028.vercel.app','https:'],
+             ['eviljantabol.in','https:'],
+             ['jantabol.in.attacker.invalid','https:'],
+             ['jantabol.in','http:']
+          ]){
+            const x=check(host,protocol);
+            assert.equal(x.win.JB_SUPABASE_CONFIG,null,host+' must fail shut');
+            assert.match(x.doc.body.innerHTML,/Isolated Preview/);
+          }
+          const u=prod.win.JB_SUPABASE_CONFIG.url+'/rest/v1/rpc/jb_c1_public_articles';
+          const r=await fetch(u,{method:'POST',
+             headers:{'apikey':key,'content-type':'application/json','accept':'application/json'},
+             body:JSON.stringify({p_article_id:'c49f00b6-0359-400c-a957-2082142ff8dd',p_limit:1}),
+             signal:AbortSignal.timeout(14000)});
+          assert.equal(r.status,200,'new public key must pass real anon read-only API');
+          const data=await r.json();
+          assert.equal(data?.items?.length,1,'ISRO published item visible with new publishable key');
+          assert.equal(data.items[0].id,'c49f00b6-0359-400c-a957-2082142ff8dd');
+          console.log('T077_E6_NEW_PUBLIC_KEY_ANON_REAL_API=PASS; KEY_VALUE_NOT_LOGGED');
+          console.log('T077_E6_PREVIEW_ORIGIN_WRITE_GUARD=PASS');
+          NODE
