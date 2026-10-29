@@ -1,4 +1,4 @@
-name: T079 Upload Worker Offline
+name: T079 Upload Worker Offline Verification
 on:
   push:
     branches: [codex/t079-upload-worker-isolated-20261029]
@@ -7,5 +7,18 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - run: echo T079 review only
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Worker upload negative and private receipt simulations
+        run: node --test ci/phase4/b12/t079-youtube-upload-worker.test.mjs
+      - name: Existing private video Google resumable protocol negative tests
+        run: node --test ci/phase4/b12/t079-youtube-video-transport.test.mjs
+      - name: Existing read-only and original Owner AAL2 guards
+        run: |
+          node --test ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+          node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+          node --test ci/phase4/b12/t079-provider-backend.test.cjs
