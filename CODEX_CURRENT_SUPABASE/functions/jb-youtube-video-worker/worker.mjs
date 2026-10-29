@@ -226,6 +226,11 @@ async function resumeOneChunk({ports,jobId}){
   return recordReceipt({ports,row,intent,accessToken,origin:row.state,videoId:status.videoId});
  }
  if(row.state==='UNKNOWN')return safeState('UNKNOWN_RECONCILIATION_REQUIRED');
+ // A previous execution may still be sending the chunk. A second execution
+ // MUST NOT send the same bytes merely because the server replied 308.
+ // Only the original invocation that atomically claimed SESSION_OPEN may send.
+ if(row.state==='UPLOADING'&&status.state==='INCOMPLETE')
+  return safeState('IN_FLIGHT_SESSION_RECONCILIATION_HOLD');
  if(status.state!=='INCOMPLETE'){
   // Never blindly retry Google on an uncertain status. If a request may have
   // succeeded, quarantine the same durable job, not create a second one.
