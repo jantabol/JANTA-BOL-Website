@@ -20,9 +20,9 @@ async function read(host,file){
     const req=https.request(u,{method:'GET',timeout:16000,headers:{
       'User-Agent':'JB-T077-E6-GET-ONLY','Accept':'*/*','Cache-Control':'no-cache'
     }},res=>{
-      const chunks=[];let bytes=0;
+      const chunks=[];let bytes=0;const tls=res.socket?.authorized===true;
       res.on('data',b=>{bytes+=b.length;if(bytes>120000){req.destroy(new Error('response too large'));return;}chunks.push(b);});
-      res.on('end',()=>resolve({status:res.statusCode,tls:res.socket.authorized===true,body:Buffer.concat(chunks),headers:res.headers}));
+      res.on('end',()=>resolve({status:res.statusCode,tls,body:Buffer.concat(chunks),headers:res.headers}));
     });
     req.on('timeout',()=>req.destroy(new Error('timeout')));
     req.on('error',reject);req.end();
