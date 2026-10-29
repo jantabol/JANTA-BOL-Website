@@ -1,0 +1,66 @@
+name: P4-T078 LIVE DB preflight evidence guard (CI NO PROD / NO SECRETS)
+on:
+  push:
+    branches: [codex/b12-t078-readonly-preflight-20261029]
+    paths:
+      - '.github/workflows/b12-t078-production-preflight-readonly.yml'
+      - 'ci/phase4/b12/t078-production-no-write.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md'
+      - 'ci/phase4/b12/t078-current-live-noop-evidence.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  no_write_release_preflight:
+    name: T078 read-only SQL / secret hygiene / guarded evidence (NO LIVE)
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Single-purpose exact-source delta, no previous runtime changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 1f42c78a8af4215177a5158d6cf75af958229bbd HEAD | sort > /tmp/t078-file-delta
+          cat > /tmp/t078-expected <<'EOF'
+          .github/workflows/b12-t078-production-preflight-readonly.yml
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json
+          ci/phase4/b12/t078-current-live-noop-evidence.json
+          ci/phase4/b12/t078-production-no-write.test.cjs
+          EOF
+          diff -u /tmp/t078-expected /tmp/t078-file-delta
+      - name: Prohibit live authority/secret-bearing runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${B2_APPLICATION_KEY:-}"
+          test -z "${AGE_SECRET_KEY:-}"
+      - name: T078 29 Oct real no-schema-delta evidence, Source/Secret negative and E8 stop gate
+        run: node --test ci/phase4/b12/t078-production-no-write.test.cjs
+      - name: Preserve original T064 all tracked frontend workflow Edge source secret inventory
+        run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+      - name: Preserve old tracked ZIP secret and traversal inventory
+        run: python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: B12 launch stop gate remains HOLD until real E8 and other release evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/t078-release-status.json
+          code=$?
+          set -e
+          test "$code" -eq 3
+          node -e "const a=require('/tmp/t078-release-status.json');if(a.release!=='HOLD'||a.ready_to_consider_founder_release||!a.issues.includes('P4-T078:BLOCKED')||!a.issues.includes('B11_E8_REAL_RECOVERY_NOT_LOCKED'))process.exit(1)"
