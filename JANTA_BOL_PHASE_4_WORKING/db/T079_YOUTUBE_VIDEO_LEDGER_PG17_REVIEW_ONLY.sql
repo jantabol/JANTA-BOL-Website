@@ -40,7 +40,8 @@ ALTER TABLE private.jb_t079_youtube_video_jobs ENABLE ROW LEVEL SECURITY;
 CREATE POLICY jb_t079_service_role_only ON private.jb_t079_youtube_video_jobs
  FOR ALL TO service_role USING (true) WITH CHECK (true);
 REVOKE ALL ON TABLE private.jb_t079_youtube_video_jobs FROM PUBLIC;
-REVOKE ALL ON SCHEMA private FROM PUBLIC;
+-- Preserve existing private-schema privileges in a future production review:
+-- never revoke schema-wide legacy grants to install a new isolated journal.
 GRANT USAGE ON SCHEMA private TO service_role;
 GRANT SELECT, INSERT, UPDATE ON private.jb_t079_youtube_video_jobs TO service_role;
 -- SECURITY INVOKER: caller must really be service_role; no RLS bypassing definer.
