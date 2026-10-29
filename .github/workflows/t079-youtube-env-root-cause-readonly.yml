@@ -1,0 +1,40 @@
+name: T079 YouTube OAuth env root-cause, no-live-no-secret checks
+on:
+  push:
+    branches: [codex/t079-youtube-health-paired-env-parity-20261029]
+    paths:
+      - 'ci/phase4/b12/t079-youtube-env-guard-diff.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_OAUTH_ENV_PARITY_ROOT_CAUSE_20261029.md'
+      - '.github/workflows/t079-youtube-env-root-cause-readonly.yml'
+permissions:
+  contents: read
+jobs:
+  diagnose_no_mutation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exactly 3 new read-only source paths from prior T079 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 434ebe97ba83506f03577658d77a31084a12b8b2 HEAD | sort > /tmp/actual
+          cat > /tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-env-root-cause-readonly.yml
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_OAUTH_ENV_PARITY_ROOT_CAUSE_20261029.md
+          ci/phase4/b12/t079-youtube-env-guard-diff.test.cjs
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          test -z "$(git diff --diff-filter=M --name-only 434ebe97ba83506f03577658d77a31084a12b8b2 HEAD)"
+      - name: Real deployed guard comparison and no unsafe relaxation
+        run: node --test ci/phase4/b12/t079-youtube-env-guard-diff.test.cjs
+      - name: Previous LIVE/YouTube source and security regressions
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
