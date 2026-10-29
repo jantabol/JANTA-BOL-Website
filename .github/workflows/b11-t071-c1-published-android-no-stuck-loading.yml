@@ -1,0 +1,50 @@
+name: T071 C1 Published Android loading fail-closed, preserve old News/LIVE/AAL2
+on:
+  push:
+    branches: [codex/t071-c1-android-published-loading-guard-20261027]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/add-news.html'
+      - 'ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs'
+      - 'ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs'
+      - '.github/workflows/b11-t071-c1-published-android-no-stuck-loading.yml'
+permissions:
+  contents: read
+jobs:
+  android_published_auth_and_original_news_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/t071-c1-android-published-loading-guard-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Immutable source review only, no token persistence
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check reviewed existing branch provenance and no live keys
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          node --check ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --check ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
+      - name: New exact Published Android no-spinner and AAL2 gate tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs ci/phase4/b11/t071-c1-news-unknown-time-correction.test.mjs
+          echo 'T071_C1_ANDROID_PUBLISHED_LOADING_GUARD_SOURCE=PASS'
+          echo 'T071_C1_UNKNOWN_NEWS_TIME_NOT_AUTOFILLED=PASS'
+      - name: All existing PR47 News, B9, LIVE and protected client tests unaffected
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs ci/phase4/b8-live-parity-static.test.mjs ci/phase4/b11/t071-c1-public-frontend-rpc-client.test.mjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo 'T071_C1_ORIGINAL_NEWS_OWNER_LIVE_REGRESSION=PASS'
+          echo 'T071_C1_REAL_FOUNDER_AAL2_AND_HOSTED_BODY=NOT_TESTED'
+          echo 'T071_FINAL_LOCK=false'

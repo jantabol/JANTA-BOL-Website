@@ -1,0 +1,52 @@
+name: T071 Soft Launch Public Truth REVIEW ONLY
+on:
+  pull_request:
+    branches:
+      - review/b8-softlaunch-factual-public-20261022
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/script.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/website-v3.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/public-ads.js'
+      - 'ci/phase4/b11/t071-softlaunch-public-truth.test.mjs'
+      - 'ci/phase4/b11/t071-b9-search-reuse.test.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b9-*.css'
+      - '.github/workflows/t071-softlaunch-public-truth-review.yml'
+      - 'vercel.json'
+permissions:
+  contents: read
+jobs:
+  public_truth_source_only:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read-only checkout without persisted GitHub credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: No secrets, no service, no production mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$GITHUB_REPOSITORY" = jantabol/JANTA-BOL-Website
+          test "$GITHUB_EVENT_NAME" = pull_request
+          test "$GITHUB_BASE_REF" = review/b8-softlaunch-factual-public-20261022
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          node --check ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-search-ui.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b9-home-link.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/script.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/website-v3.js
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          echo 'T071_PUBLIC_TRUTH_SOURCE_REVIEW=CHECKED'
+          echo 'T071_HOSTED_PUBLIC_PREVIEW=NOT_YET_DEVICE_VERIFIED'
+          echo 'T071_13_HOSTED_FAILURES=NOT_RUN'
+          echo 'T071_FINAL_LOCK=HOLD'
+          echo 'SOFT_LAUNCH_PRODUCTION_APPROVAL=NO'

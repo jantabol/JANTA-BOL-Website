@@ -1,0 +1,48 @@
+# This is NOT a full integrated product E8 acceptance. Independent
+# artifact/log-contract review only, with protected fail-closed verdict.
+name: B11 T071 G4 INDEPENDENT Evidence Scope Review — E8 HOLD
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'ci/phase4/b11/t071-e8-independent-observation-register-20261027.json'
+      - 'ci/phase4/b11/t071-e8-independent-review.mjs'
+      - 'ci/phase4/b11/t071-e8-independent-review.test.mjs'
+      - 'ci/phase4/b11/t071-failure-isolation-contract.mjs'
+      - '.github/workflows/b11-t071-g4-independent-e8-review.yml'
+permissions:
+  contents: read
+jobs:
+  t071_g4_independent_review_no_live:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.event_name == 'pull_request' && github.head_ref == 'codex/b11-t071-failure-isolation-preflight-20261027' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Read-only repo checkout (no stored GitHub credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check scope — no deployment or SQL effects, no privileged secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_EVENT_NAME" = pull_request
+          test "$GITHUB_HEAD_REF" = codex/b11-t071-failure-isolation-preflight-20261027
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${DATABASE_URL:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          node --check ci/phase4/b11/t071-e8-independent-review.mjs
+          node --check ci/phase4/b11/t071-e8-independent-review.test.mjs
+      - name: Independently cross-check G2/G3 evidence record with adversarial negative cases
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t071-e8-independent-review.test.mjs
+          node ci/phase4/b11/t071-e8-independent-review.mjs
+          echo 'G4_E8_SCOPED_EVIDENCE_RECONCILED=PASS'
+          echo 'G4_E8_ACTUAL_INTEGRATED_SYSTEM_INDEPENDENTLY_VERIFIED=false'
+          echo 'G4_REAL_PRODUCTION_RPO_RTO=NOT_ESTABLISHED'
+          echo 'G4_T071_FINAL_PASS_LOCK=false'
+          echo 'G4_SOFT_LAUNCH_APPROVAL=NO'

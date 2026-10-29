@@ -16,7 +16,8 @@ try{
   const data={
    schema:'janta-bol-b11-storage-readonly-receipt-v1',
    project_ref:src.project_ref,
-   capture_method:'MANUAL_OWNER_SERVICE_ROLE_READ_ONLY',
+   capture_method:process.env.JB_T075_AUTO_JOINT_BACKUP==='1'?
+    'SCHEDULED_PROTECTED_SERVICE_ROLE_READ_ONLY':'MANUAL_OWNER_SERVICE_ROLE_READ_ONLY',
    stable_double_listing:src.stable_double_listing,db_snapshot_bound:false,
    object_count:src.object_count,byte_count:src.byte_count,buckets:src.buckets,
    sha_records:src.storage_manifest_records};

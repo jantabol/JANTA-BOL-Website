@@ -1,0 +1,46 @@
+name: T076 Real Production HTTPS - 6 HTTP Checks - NO WRITES
+
+on:
+  push:
+    branches: [codex/b12-main-v3-integrated-review-20261029]
+    paths:
+      - 'ci/phase4/b12/t076-production-https-real-readonly.cjs'
+      - '.github/workflows/t076-production-https-real-readonly.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jb-t076-prod-https-readonly
+  cancel-in-progress: false
+
+jobs:
+  production-real-https:
+    name: Frozen Review V3 vs actual Production origin (6 GETs, no credentials)
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Frozen reviewed V3 source SHA unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          for file in \
+            JANTA_BOL_PHASE_3C_WORKING/website-v3.js \
+            JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js \
+            JANTA_BOL_PHASE_3C_WORKING/admin-auth.js \
+            JANTA_BOL_PHASE_3C_WORKING/admin-login.html \
+            JANTA_BOL_PHASE_3C_WORKING/article.html \
+            vercel.json
+          do
+            actual="$(git rev-parse "HEAD:$file")"
+            frozen="$(git rev-parse "532261e335a235dbdaf9697ccdbfe274122a8580:$file")"
+            test "$actual" = "$frozen" || { echo "FAIL source drift: $file"; exit 1; }
+          done
+      - name: Read-only production HTTP regression
+        run: |
+          node --check ci/phase4/b12/t076-production-https-real-readonly.cjs
+          node --test ci/phase4/b12/t076-production-https-real-readonly.cjs

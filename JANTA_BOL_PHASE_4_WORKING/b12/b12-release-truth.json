@@ -1,0 +1,203 @@
+{
+  "schema": "janta-bol.phase4.b12.production-release-truth.v1",
+  "created_at": "2026-10-28",
+  "authority": "Founder + Master Execution Pack Appendix A/B",
+  "release_mode": "ISOLATED_INTEGRATION_BRANCH_PRODUCTION_MAIN_UNMERGED",
+  "git_repository": "jantabol/JANTA-BOL-Website",
+  "source_branch": "codex/b10-whole-platform-security-candidate-20261023",
+  "candidate_branch": "codex/b12-b0-b12-reconcile-20261028",
+  "canonical_site": "https://shubham-pichhore-2028.vercel.app",
+  "published_article_url_rule": "JANTA_BOL_PHASE_3C_WORKING/article.html?id=<immutable-article-uuid>",
+  "supabase_project": "vrffsnkycvjithwtiylt",
+  "zero_paid": true,
+  "phase3_baseline_verified_for_this_candidate": false,
+  "production_merged": false,
+  "production_deployed": true,
+  "production_real_smoke_complete": true,
+  "b11_full_recovery_locked": false,
+  "b11_t072_real_production_idempotency_closed": false,
+  "external_providers_available": false,
+  "tests": {
+    "P4-T076": {
+      "status": "PASS_LOCK",
+      "evidence": [
+        "Founder GoDaddy screenshot 2026-10-29 12:12 IST DNS success A @ 76.76.21.21",
+        "Vercel authenticated DNS config apex misconfigured=false, www redirect and certs for apex/www",
+        "GitHub Actions 40831061538 attempt 2: six actual external jantabol.in TLS/DNS/HTTP checks PASS",
+        "GitHub Actions 40830173701 attempt 2: six production-origin HTTP/byte-identity checks PASS",
+        "Founder Android screenshot 2026-10-29 12:18 IST: jantabol.in homepage fully rendered",
+        "Vercel release SHA 532261e3 READY; scoped real rollback to f447231c and promote back alias checks",
+        "JANTA_BOL_PHASE_4_WORKING/b12/20261029_T076_LIVE_DOMAIN_HTTPS_EVIDENCE.md"
+      ],
+      "manual_required": false,
+      "implementation_note": "29 Oct 2026: P4-T076 scoped E1/E6/E7 hosted domain & HTTPS FINAL PASS + LOCK. GoDaddy A @ 76.76.21.21 saved 12:12 IST; Vercel apex/www DNS correctly configured and certificates auto-renew. Real production source 532261e3 (deployment dpl_23HiFAWh8m9e5sVh3QQxYorfdxTJ), actual production origin 6/6 (Actions 40830173701 attempt 2), custom jantabol.in external HTTPS 6/6 (Actions 40831061538 attempt 2). Actual Android domain screenshot 12:18 IST confirms JANTA BOL homepage. Prior production traffic-routing rollback/re-promotion observed. Protected GitHub Main not merged; B11 full E8 restore HOLD; B12 full launch HOLD; T077 real correction/unpublish/republish NOT_RUN.",
+      "partial_proofs": [
+        "GitHub Actions run 40699768744 job 122856080587: 4 tests, 2 PASS (old home TLS, candidate static guard), 2 FAIL (V3 routes 404)",
+        "Vercel domain shubham-pichhore-2028.vercel.app verified, prod READY git main f447231c0677644ca5a44cc19f12cf0314ff38ea; candidate PR61 source unmerged",
+        "2026-10-28 authenticated Vercel Hobby Git-source Preview dpl_EQC399BieUgUaLN8Xi4wB2fNijLz READY, project prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI, exact source SHA cfd5a64661e834c801c30325b97b5a4d72dfb49f, production on f447231c unchanged.",
+        "Actual GitHub public HTTPS run 40703558813 (5/5 PASS) confirms Preview V3 index, V3 JS exact bytes, Admin login shell no-store/frames/nosniff, Article/Search/Admin public HTML HTTP 200, root HTTPS 307 same-site to V3; no Founder login or writes.",
+        "PR61 preview page HTML byte-identical prefix to reviewed source plus exact 163-byte Vercel opt-in toolbar; code was not modified to accept arbitrary extra payload.",
+        "2026-10-28 separate current Production Main read-only run 40699768744 remains RED with V3/JS 404 because original static Main does not contain them; fixed in isolated Preview only, no Production release.",
+        "2026-10-29 PR #67 Draft: REAL isolated Git two-parent merge Main f447231c + B12/V3 review branch, commit 552c3bd; four B11 conflicts resolved by audited policy. Staged not Main, independent full B0-B10 PG17 CI running; official T076 STILL HOLD pending actual production/domain HTTPS E1/E6/E7.",
+        "2026-10-29 GitHub Actions run 40818502097: full historical protected B0–B8/Phase3 G0+G1, B9/B10 source, B10 isolated PG17, B10 whole-block coding gate all SUCCESS on integrated PR #67. Main and GoDaddy DNS unchanged. Hosting on exact merged candidate and LIVE T076 still HOLD.",
+        "2026-10-29 exact PR67 review-source CI run 40821340519 job 123274269428: 5/5 real public TLS 200/redirect; 9/9 critical HTML shells, 23/23 byte-identical linked first-party assets, admin headers, source SHA 991495eb and Vercel deployment dpl_4BojWuSUhLK5wuL4Th2MBTEZgSoQ READY. Preview gate PASS only.",
+        "2026-10-29 independent Vercel DNS configuration check: jantabol.in attached but misconfigured=true, GoDaddy A records 76.223.105.230, 13.248.243.5, no custom domain cutover. Production Main unchanged. T076 official final HOLD."
+      ]
+    },
+    "P4-T077": {
+      "status": "IN_PROGRESS",
+      "evidence": [
+        "2026-10-29 CI 40831391424: T077 permanent UUID/share/privacy source checks 10/10 PASS; real Founder correction/unpublish/republish NOT_RUN",
+        "Founder Android screenshots 2026-10-29 12:51–13:16 IST draft, publish, unpublish public denied, republish old PURL, correction form.",
+        "Read-only production Supabase 2026-10-29: corrected NVS-03 article UUID c49f00b6-0359-400c-a957-2082142ff8dd version 12, status published, location changed as intended.",
+        "Anonymous production RPC projection returns 1 corrected item; old pre-update v11 snapshot and article_update audit row preserved.",
+        "T077 E6 synthetic/source security CI GitHub run 40831391424, 10/10 PASS; actual preview/prod boundary separate NOT_RUN",
+        "2026-10-29 E6 independent LIVE configuration inspection: Vercel production deployment dpl_23HiFAWh8m9e5sVh3QQxYorfdxTJ target=production READY SHA 532261e3 and preview deployment dpl_4BojWuSUhLK5wuL4Th2MBTEZgSoQ target=preview READY SHA 991495eb are distinct builds BUT both repository commits contain IDENTICAL public JANTA_BOL_PHASE_3C_WORKING/supabase-config.js Git blob ceb2d5d3... pointing to single PRODUCTION Supabase project vrffsnkycvjithwtiylt. Vercel JB_PUBLIC_SUPABASE_URL and JB_PUBLIC_SUPABASE_KEY env records each target both preview+production with no branch scope; project has passwordProtection and ssoProtection disabled. Thus PREVIEW/PRODUCTION BACKEND ISOLATION E6 FAIL CONFIRMED. Runtime live HTTP responses for preview were not fetched in this run (Vercel deployment metadata and exact pinned source verify configs); do not claim independent DB isolation. No credentials/secret values inspected.",
+        "E6 defense-in-depth positives: production Supabase public.articles RLS enabled, anon SELECT/INSERT/UPDATE/DELETE grants all false; earlier real anon public RPC only published rows, no drafts, and T077 source 10/10 PASS. These protect unauthenticated users but do NOT make preview a separate backend or block Owner from editing production via preview.",
+        "2026-10-29 E6 remediation committed to isolated PR67 branch: JANTA_BOL_PHASE_3C_WORKING/supabase-config.js canonical-domain-only runtime guard; noncanonical preview creates no JBBackend client and shows no Founder form. No Main/Production source rewrite.",
+        "Vercel preview dpl_2NV1WiZxeVQ8CXe8EGgwp3jojrEz READY, pinned SHA d48be6d; actual external HTTPS GET proved preview deployed JS byte-identical to locked guard, attempted runtime initialize backend in controlled VM fails shut, production static config unchanged. CI 40841074439 11/11 offline negative + 2/2 hosted GET PASS (historical pre-SSO proof).",
+        "Vercel project Standard Protection enabled at zero paid cost: ssoProtection deploymentType=prod_deployment_urls_and_all_previews; existing old Preview and current new Preview get HTTP 302 to Vercel Authentication, canonical jantabol.in remains public 200. Current CI 40841900518 E6 SUCCESS; CI 40841900580 T077 source SUCCESS; T076 historical archived canonical HTTP check 40841892263 SUCCESS.",
+        "Precise RESIDUAL: production and legacy authenticated Preview deployments STILL share one physical Supabase backend and Owner authorized in Vercel could authenticate to older Preview and intentionally/accidentally change live DB. No separate preview Supabase project available under zero-paid constraint; do NOT claim absolute dev/prod write isolation. Strict E6 backend separation still HOLD; no fake full T077 lock.",
+        "2026-10-29 E6 no-paid legacy Preview cutoff and tested release/rollback runbook JANTA_BOL_PHASE_4_WORKING/b12/20261029_T077_E6_LEGACY_PREVIEW_CUTOFF_RUNBOOK.md; Supabase API-key listing only; new publishable key creation/retirement requires Founder dashboard action; production not modified.",
+        "2026-10-29 new modern Supabase publishable key 'janta_bol_production_rotated' created; legacy anon/default keys still active; never reveal key values.",
+        "Exact prior LIVE production source 532261e3 forked into isolated branch codex/t077-e6-prod-publishable-rotation-20261029. Source Git compare base→dbad1a02 changed ONLY JANTA_BOL_PHASE_3C_WORKING/supabase-config.js; config canonical HTTPS guard + new key; Preview denied.",
+        "GitHub Actions 40858428800 SUCCESS; approved source delta check + real Supabase anonymous read-only RPC with NEW key 200 and same NVS03 published UUID; synthetic noncanonical origin guard PASS.",
+        "Vercel production deployment dpl_HkNqrQGGPsuRXSNk2BahwYnUj9Ms READY on SHA c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c, aliases jantabol.in + www. Unmodified original production deployment dpl_23HiFAWh8m9e5sVh3QQxYorfdxTJ preserved READY while old default key remains valid.",
+        "Vercel environment JB_PUBLIC_SUPABASE_KEY changed to rotated key and scoped to production ONLY, Preview environment excluded; Vercel SSO protection still active. No secret values printed.",
+        "Post-cutover read-only production Supabase verification: NVS03 published version 12 unchanged, SpaDeX published version 15 unchanged.",
+        "Remaining before FINAL LOCK: Founder real custom-domain browser homepage+article+Owner MFA smoke AFTER cutover, identify and retire old modern 'default' publishable key safely only after new-key live checks, verify old authenticated preview cannot access production, verify safe rollback source with new key. No false claim full separation.",
+        "2026-10-29 16:17 IST Founder Android screenshot post-rotation: REAL jantabol.in NVS03 article loads, same UUID c49f00b6-0359-400c-a957-2082142ff8dd, corrected location 'Shreehari kota Andhra Pradesh', article headline/content/share visible; Supabase production still published v12, SpaDeX published v15. Vercel production c1a5f106 READY, CI 40858428800 PASS rotated-key real anon RPC. New rotated Publishable Key active, old default Publishable Key still active. Browser Founder MFA smoke and old-key retirement/untrusted old preview denial NOT_RUN.",
+        "2026-10-29 16:37 IST Founder dashboard screenshot verifies BOTH old default and newly created janta_bol_production_rotated publishable keys exist, old default not revoked; independent Supabase connector confirms IDs and both active. Separate pre-existing secret key must not be disclosed or changed.",
+        "2026-10-29 E6 CI regression repair after planned production rotation: 40863727270 11/11 synthetic plus 2/2 real HTTPS/SSO PASS; 40863727293 10/10 source PASS; old CI failure was stale pre-rotation SHA expectation, now pin correct live rotated production Git blob c7f427...; B10 T065 original public HTTP and API invariant adapted for Vercel SSO / real canonical site, pending full protected CI.",
+        "2026-10-29 17:01 IST Founder Android Chrome screenshot: canonical jantabol.in/JANTA_BOL_PHASE_3C_WORKING/ Published News admin list renders after rotated-key production deployment; NVS-03 id c49f00b6-0359-400c-a957-2082142ff8dd version 12 and SpaDeX f17f6507-02a3-4881-ad37-0b02cadf3d3f version 15. Independent Supabase read-only verification: both remain published at same versions and IDs. Screenshot verifies accessible Founder admin route but NOT independent proof of fresh post-cutover MFA challenge/AAL2. New rotated and old default publishable keys both currently enabled. No key revoked.",
+        "2026-10-29 17:20+ IST latest independent PRE-RETIRE verification: Supabase JANTA BOL has active modern publishable keys 'default' and 'janta_bol_production_rotated' plus legacy anon; old default STILL ENABLED. Vercel canonical jantabol.in is on READY production deployment dpl_HkNqrQGGPsuRXSNk2BahwYnUj9Ms (SHA c1a5f106) with production-only JB_PUBLIC_SUPABASE_KEY env and Preview SSO protected. New-key anon real RPC CI 40858428800 SUCCESS; review PR67 40866585888 E6 PASS, 40866586183 source PASS, 40866585884 protected B0-B10 PG17 PASS. No published article edits. EXPLICIT REMAINING FOUNDER MANUAL: safely retire/disable ONLY original modern 'default' publishable key; do not touch rotated key/legacy anon/service_role, then independently confirm old key rejects requests while new key passes and no old preview production access, and confirm production MFA/rollback safety. E6 FINAL LOCK remains HOLD until proven."
+      ],
+      "manual_required": true,
+      "implementation_note": "T077 ACTUAL article lifecycle E1/E2/E4 PASS. E6 new production publishable-key rotation, reviewed source, active canonical Vercel deployment and protection, CI/new-key anon RPC positive PASS. 17:20 IST confirmed original modern Supabase default publishable key is STILL ACTIVE; legacy authenticated preview can still use it to reach production Supabase. No connector action to revoke key. Founder must safely deactivate original default publishable key (only after current production and rollback verified), then independent old-key DENY/new-key ALLOW and fresh auth/no-loss checks; no fake PASS/LOCK. No request to touch separate Cricket project. T078 NOT_STARTED.",
+      "partial_proofs": [
+        "2026-10-29 GitHub Actions run 40818185844: 10/10 scoped T077 source tests PASS; UUID canonical PURL, mock correction keeps UUID, draft/unrelated/invalid ID denied, Owner AAL2 admin preview/share separation, safer post-2FA redirects, no secrets.",
+        "2026-10-29 real Supabase READ-ONLY transaction as anon: ISRO ID f17f6507-02a3-4881-ad37-0b02cadf3d3f remains published and exactly visible; sample draft ID 690405f8-21af-4e46-9ddc-3c2e45abca9c not publicly visible (0 rows); anon raw articles SELECT denied.",
+        "Real Founder user screenshots 2026-10-29: login/MFA, Published News v15 id, Article full public route PURL same ID, published timestamp 28 Oct and news date 23 Oct. NOT evidence for real correction/unpublish/republish lifecycle.",
+        "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit.",
+        "2026-10-29 follow-up exact isolated integrated code: T077 offline PURL/auth/anon tests CI run 40818501913 SUCCESS after Stage C1 merge. No mutable real correction/unpublish/republish conducted.",
+        "2026-10-29 PR67 CI run 40821340519 job 123274269677 10/10 T077 PURL security source checks PASS; real Supabase transaction SET LOCAL ROLE anon shows ISRO UUID visible exactly once, sample draft UUID 0 rows, anon raw articles SELECT and UPDATE denied; no content mutations.",
+        "2026-10-29 ACTUAL Founder Android 13:00–13:10 IST: new NVS-03 article c49f00b6-0359-400c-a957-2082142ff8dd draft v8 → published v9, unpublish v10, republish v11; same public PURL; actual browser screenshots show published, unavailable on unpublish, and republished.",
+        "2026-10-29 ACTUAL correction 13:17 IST: read-only real Supabase public.articles published v12 with same UUID and corrected location 'Shreehari kota Andhra Pradesh'; anon jb_c1_public_articles(...)->items exactly 1, projected location matches; prior v11 location saved in article_versions pre-update snapshot, article_update audit record exists. Protected ISRO SpaDeX article previously verified unchanged.",
+        "E6 REAL FINDING: separate Vercel deployment identities PASS; unprotected single shared Supabase backend between preview and production FAIL. Existing prod article remains published v12, same UUID, correction archived. No production changes made for this audit."
+      ]
+    },
+    "P4-T078": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "read-only DB/RLS inventory and guarded migration checklist; no production DDL"
+    },
+    "P4-T079": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "provider dependencies are fail-closed DUE-candidate, not automatically DUE"
+    },
+    "P4-T080": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "public article safe-error display; network/Android and idempotency evidence needed"
+    },
+    "P4-T081": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": false,
+      "implementation_note": "rollback and cutover fail-closed preflight; B11 E8 HOLD"
+    },
+    "P4-T082": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "real multi-device Article lifecycle requires Founder E3"
+    },
+    "P4-T083": {
+      "status": "NOT_RUN",
+      "evidence": [],
+      "manual_required": true,
+      "implementation_note": "final production signoff requires all earlier production evidence"
+    }
+  },
+  "phase4_blocks": {
+    "B0": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B1": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B2": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B3": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B4": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B5": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B6": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B7": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B8": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B9": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B10": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B11": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    },
+    "B12": {
+      "scope": "source-in-repo-branches; consolidation requires independent review",
+      "final_lock_verified": false
+    }
+  },
+  "protected": {
+    "article_id_immutable": true,
+    "permanent_master_url_single_home": true,
+    "founder_aal2_required": true,
+    "public_private_rls_not_to_change": true,
+    "never_override_newer_records_by_rollback": true,
+    "no_fake_pass": true,
+    "phase3_ci_required_on_any_candidate_code_change": true
+  },
+  "integration_status": "B10_BASE_PLUS_T071_AND_B12_SURGICAL_SOURCE_REVIEW_ONLY_B11_PENDING",
+  "source_reconciliation_complete": false,
+  "isolated_integration": {
+    "branch": "codex/b12-main-v3-integrated-review-20261029",
+    "merge_commit": "552c3bd96fa581b0b960e1fd39450325c87dda74",
+    "main_reference": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "pull_request": 67,
+    "real_merge_commit_on_isolated_branch": true,
+    "main_merged": false,
+    "actual_no_loss_rehearsal_56_tests": "PASS_SCOPED",
+    "hosted_full_regression": "B0-B10 protected original Phase3 G0/G1, B9/B10 static and isolated PG17: GitHub run 40818502097 SUCCESS on exact code SHA 4b961283041dc47e72260b4a97e172f3040f8451; this is SOURCE/PG17 only, not live production or B11 E8.",
+    "live_dns_cutover": false
+  },
+  "last_reviewed": "2026-10-29"
+}

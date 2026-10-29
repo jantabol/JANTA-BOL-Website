@@ -1,0 +1,236 @@
+name: B12 Integrated Protected B0-B10 + Phase3 PG17 Regression (NO LIVE)
+on:
+  push:
+    branches: [codex/b12-main-v3-integrated-review-20261029]
+    paths: ['.github/workflows/b12-integrated-protected-pg17.yml']
+  pull_request:
+    branches: [main]
+    paths: ['.github/workflows/b12-integrated-protected-pg17.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  old_protected:
+    name: B0–B8 immutable protected PG17 + Phase3 Auth/News/B7/B8 checks
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+
+  b10_static:
+    name: B10 T060-T068 Source + prior B9 + Phase3 security contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce baseline and stable B0–B8 root files
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor cb1b972f628104b492ba59659bb1c0f0627c8c77 HEAD
+          test "$(git hash-object index.html)" = e82e88aee6e953f0eb0f817361cb87c3a5194aae
+          test "$(git hash-object script.js)" = 8c3b52874b95fb84749c68654f385c76c7a6e1e8
+          test "$(git hash-object style.css)" = 760f1bd96441f4717618b8b025c20228100191d8
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: Original 109 test selector and 9 new B10 IDs
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/jb_manual_test.py --list >/tmp/p4-test-register.txt
+          test "$(grep -Ec '^P4-T[0-9]{3} \\|' /tmp/p4-test-register.txt)" -eq 109
+          for n in 060 061 062 063 064 065 066 067 068; do
+            python3 tools/jb_manual_test.py "P4-T$n" | grep -q 'ORIGINAL:'
+          done
+      - name: Run full B9 preserved UI and backend JS security contract tests
+        run: node --test ci/phase4/b9-client-and-ui.test.mjs
+      - name: B10 all nine Source contracts
+        run: node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+      - name: T063 Auth/MFA/Recovery/Redirect source security preflight (manual device E3 separate)
+        run: node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
+      - name: T065 real public HTTPS wire test against Preview and public JANTA BOL API (read-only)
+        run: node ci/phase4/b10-t065-public-http-actual-preview.test.mjs
+      - name: "T067 incident authority/RCA/source regression (no Founder Android step)"
+        run: node --test ci/phase4/b10-t067-incident-source-and-rca.test.mjs
+      - name: "T068 final evidence reconciliation (HOLD if incomplete, never fake official lock)"
+        run: |
+          node --test ci/phase4/b10-t068-evidence-reconciliation.test.mjs
+          node ci/phase4/b10-t068-evidence-reconciliation.mjs --audit > /tmp/b10-t068-gated-result.json
+          node -e "const r=require('/tmp/b10-t068-gated-result.json'); if(r.official_final_lock!=='HOLD'||r.outstanding_b10.length<1)process.exit(1)"
+      - name: T064 all tracked runtime/Edge/workflow source secret and environment config E1 E7 gate
+        run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+      - name: T064 inspect historical tracked ZIP source member secret and file-path integrity
+        run: python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: Protected original Phase3 Auth/Security/Incident and recovery contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+
+  b10_pg17:
+    name: B10 T060-T068 real isolated PostgreSQL17 authority negative matrix
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: b10_disposable_only
+          POSTGRES_DB: jb_b10_disposable
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_b10_disposable"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: b10_disposable_only
+      PGDATABASE: jb_b10_disposable
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Explicit no production cloud tokens
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: B9 disposable PG17 fixture + review-only migration
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
+      - name: Preserve original B9 database regression and 5K archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-t105-large-archive-pg17.sql
+      - name: Execute B10 isolated authority cross-role negative contract tests
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-whole-platform-security-pg17.sql
+      - name: Reproduce T061 old 42501 on disposable PUBLIC Live fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-fixture.sql
+      - name: Apply reviewed minimal Live policy fix ONLY to isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t061_public_live_updates_privilege_SAFE_FIX.sql
+      - name: Verify T061 8-case private boundary, session binding, soft delete and revoked visibility
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-regression.sql
+      - name: Reproduce T062 legacy Owner history access without active session (disposable PG17)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-article-version-fixture.sql
+      - name: Apply T062 minimum Owner AAL2 RLS tightening ONLY to PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_article_version_owner_aal2_SAFE.sql
+      - name: "T062 role matrix - public, Editor, Reporter, Advertiser, Owner stale AAL1, revoked session and real AAL2 positive"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-cross-module-role-negative-regression.sql
+      - name: Reproduce LIVE T062 reporter cross-author private Article visibility on isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-draft-exposure-fixture.sql
+      - name: Apply minimal Reporter/staff/public SELECT policy repair ONLY to PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_reporter_cross_draft_read_SAFE.sql
+      - name: T062 all-actor draft privacy positive, negative and revocation matrix
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-scope-regression.sql
+      - name: "T063 RED - reproduce revoked-session recovery JWT bypass only on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-fixture.sql
+      - name: "T063 GREEN - minimum recovery session guard only on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t063_recovery_revoked_session_guard_SAFE.sql
+      - name: "T063 NEGATIVES - revoked JWT, Reporter, anon denied; AAL1 valid password recovery permitted"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-regression.sql
+      - name: "T065 RED: reproduce stale Editor JWT direct Article UPDATE/INSERT on disposable PG17"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-repro-pg17.sql
+      - name: "T065 minimum Article mutation session guard on PG17 ONLY, not LIVE"
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t065_stale_article_write_session_guard_REVIEW_ONLY.sql
+      - name: "T065 GREEN: revoked Editor/Reporter denied; active Owner/Editor/Reporter mutations preserved"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-guard-regression-pg17.sql
+      - name: "T064/T065: initialize disposable signed HTTP testing actors and JWT-to-auth bridge (PG17 ONLY)"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-disposable-signed-http-fixture.sql
+      - name: "T065: real signed JWT two-Reporter cross-account HTTP wire + stale Editor PATCH (disposable PG17 ONLY)"
+        shell: bash
+        run: |
+          set -euo pipefail
+          export JB_T065_DISPOSABLE_JWT_SECRET="$(openssl rand -hex 40)"
+          docker run --rm -d --name jb-t065-disposable-postgrest --network host \
+            -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
+            -e PGRST_DB_SCHEMAS=public \
+            -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_JWT_SECRET="$JB_T065_DISPOSABLE_JWT_SECRET" \
+            postgrest/postgrest:v12.2.3 >/dev/null
+          trap 'docker stop jb-t065-disposable-postgrest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ | grep -Eq '^(200|401|403)$'; then break; fi
+            sleep 1
+          done
+          node ci/phase4/b10-t065-disposable-signed-http.test.mjs
+
+      - name: "T066: disposable signed advertiser revocation/suspended-role fixture (never LIVE)"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t066-disposable-revocation-fixture.sql
+      - name: "T066 signed revocation RED/GREEN over actual isolated PostgREST JWT HTTP"
+        shell: bash
+        run: |
+          set -euo pipefail
+          export JB_T066_DISPOSABLE_JWT_SECRET="$(openssl rand -hex 40)"
+          docker run --rm -d --name jb-t066-disposable-postgrest --network host \
+            -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
+            -e PGRST_DB_SCHEMAS=public \
+            -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_JWT_SECRET="$JB_T066_DISPOSABLE_JWT_SECRET" \
+            postgrest/postgrest:v12.2.3 >/dev/null
+          trap 'docker stop jb-t066-disposable-postgrest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ | grep -Eq '^(200|401|403)$'; then break; fi
+            sleep 1
+          done
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs red
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs green
+
+      - name: "T067 controlled incident audit-notification-contained scoped rollback-only PG17 drill"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
+      - name: "T068 final disposable PG17 post-T067 rollback and prior boundary validation"
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t068-rollback-safety-final-pg17.sql
+
+  b10_coding_gate:
+    name: B10 whole-block coding gate (not official T063/E3 or T068 LOCK)
+    needs: [old_protected, b10_static, b10_pg17]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Coding handoff only; official security closure requires later live/device E3
+        run: |
+          echo "B10 coding candidate source+isolated tests GREEN."
+          echo "P4-T063 REAL device/MFA/recovery evidence remains DUE."
+          echo "P4-T068 FINAL PASS+LOCK remains DUE until E1 E2 E5 E7 reconciled."
+          echo "B9 P4-T105 REAL 1–2-year old Android performance evidence remains DUE."
+
+  b10_complete_candidate_zip:
+    name: Assemble B0-B10 SHA256 ZIP (development candidate only)
+    needs: [b10_coding_gate]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Create and verify all tracked source files, SHA256, no secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --out dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          python3 ci/phase4/build_b0_b10_full_source_zip.py --verify dist/PHASE_4_B10_CODING_CANDIDATE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+      - uses: actions/upload-artifact@v4
+        with:
+          name: PHASE_4_B10_CODING_CANDIDATE
+          path: |
+            dist/PHASE_4_B10_CODING_CANDIDATE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30

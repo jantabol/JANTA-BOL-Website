@@ -1,0 +1,132 @@
+name: B9 - Precode Base / Protected B0-B8 Gates
+on:
+  push:
+    branches:
+      - codex/b9-precode-frozen-20261022
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  protected_b0_to_b8:
+    name: B0-B8 preserved PG17 / Phase3 News+Auth / B7 source gate
+    uses: ./.github/workflows/b8-g0-g1-disposable-pg17-and-protected-static.yml
+  b9_source_contract:
+    name: B9 baseline ancestry / original files / 109 original tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify immutable Phase4 B8 ZIP starting commit and protected originals
+        shell: bash
+        run: |
+          set -euo pipefail
+          git merge-base --is-ancestor 77bd19639d8ffe173fcd109ca234e58aef6720dc HEAD
+          test "$(git hash-object index.html)" = "e82e88aee6e953f0eb0f817361cb87c3a5194aae"
+          test "$(git hash-object script.js)" = "8c3b52874b95fb84749c68654f385c76c7a6e1e8"
+          test "$(git hash-object style.css)" = "760f1bd96441f4717618b8b025c20228100191d8"
+          test -f JANTA_BOL_PHASE_3C_WORKING/TEST-REGISTER.md
+          test -f JANTA_BOL_PHASE_3C_WORKING/b8-staff-login.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          test -f JANTA_BOL_PHASE_3C_WORKING/phase2-client.js
+          echo "No live DB, deploy, role assignment, secret, or external message in this CI."
+      - name: Verify exact Phase 4 random test selector 001-109 and Section 100-109
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 tools/jb_manual_test.py --list > /tmp/jb-tests.txt
+          test "$(grep -c '^P4-T[0-9][0-9][0-9] |' /tmp/jb-tests.txt)" -eq 109
+          for n in 001 004 034 092 099 100 101 102 103 104 105 106 107 108 109; do
+            python3 tools/jb_manual_test.py "P4-T$n" | grep -q 'ORIGINAL:'
+          done
+          echo "109 canonical IDs and all 10 B9 selectors present; TESTING NOT RUN."
+
+      - name: Run B9 frontend/controller coding regression
+        run: node --test ci/phase4/b9-client-and-ui.test.mjs
+      - name: Extended historical static Phase3 coverage - no LIVE DB / no production secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p1-functional-regression.cjs
+          node ci/phase3-regression/static-p2-core-regression.cjs
+          node ci/phase3-regression/static-p2-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+
+  b9_pg17_sql:
+    name: B9 isolated real PostgreSQL17 migration and security E2
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: b9_local_fixture_only
+          POSTGRES_DB: jb_b9_synthetic
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_b9_synthetic"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: b9_local_fixture_only
+      PGDATABASE: jb_b9_synthetic
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Enforce zero production credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: Load synthetic pg17 Article/Founder/events fixture
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-fixture.sql
+      - name: Apply B9 REVIEW-ONLY migration strictly to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
+      - name: Run B9 PG17 negative search and analytics checks
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
+      - name: P4-T105 5000 synthetic historical Articles performance and privacy (NEVER LIVE)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-t105-large-archive-pg17.sql
+
+  b9_complete_source_zip:
+    name: Full B0-B9 ZIP only AFTER PG17, Source and old-B8 GREEN
+    needs: [protected_b0_to_b8, b9_source_contract, b9_pg17_sql]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Build immutable all-Git-tracked Phase 4 B9 Block Complete ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b9_full_source_zip.py --out dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+          python3 ci/phase4/build_b0_b9_full_source_zip.py --verify dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+          test -s dist/MASTER_ZIP_SHA256.txt
+          test "$(stat -c %s dist/PHASE_4_B9_BLOCK_COMPLETE.zip)" -gt 200000
+      - name: Downloadable B0-B9 ZIP plus SHA256 checksum
+        uses: actions/upload-artifact@v4
+        with:
+          name: PHASE_4_B9_BLOCK_COMPLETE
+          path: |
+            dist/PHASE_4_B9_BLOCK_COMPLETE.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30

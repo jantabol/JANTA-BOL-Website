@@ -1,0 +1,35 @@
+name: P4-T076 Archived Preview / Current Production & Preview Protection — LIVE READONLY
+on:
+  push:
+    branches: [codex/b12-main-v3-integrated-review-20261029]
+    paths:
+      - 'ci/phase4/b12/t076-integrated-exact-https-readonly.test.mjs'
+      - '.github/workflows/b12-t076-integrated-https-readonly.yml'
+permissions:
+  contents: read
+concurrency:
+  group: jb-t076-integrated-readonly-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-https:
+    name: Historical T076 baseline protected by SSO; verify new public boundary
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Review only / exact integrated source
+        run: |
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/b12-main-v3-integrated-review-20261029'
+          node --check ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: Actual HTTPS GET 9 page shells, C1 bridge and all critical first-party assets
+        run: |
+          node --test ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
+          echo 'T076_ARCHIVED_PRE_PROTECTION_ORIGINAL_CI=40840703611; PREVIEW_ANON_200_NOW_INVALID'
+          echo 'T076_REAL_CUSTOM_DOMAIN_FINAL_LOCK_ORIGINAL_EVIDENCE=40831061538'
+          echo 'T077_E6_CURRENT_BOUNDARY_TEST=READONLY'

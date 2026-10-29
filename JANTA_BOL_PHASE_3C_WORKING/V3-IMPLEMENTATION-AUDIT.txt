@@ -1,0 +1,92 @@
+JANTA BOL V3 — IMPLEMENTATION AUDIT
+Base: latest supplied V3 janta bol.zip
+Rule: Existing working features preserved; frontend-only scope implemented; backend/API items not falsely marked working.
+
+STATUS LEGEND: PASS = frontend scope implemented and code-tested/static-validated; PARTIAL = frontend portion done but production/backend/media/API part remains; BACKEND REQUIRED = cannot honestly complete in static ZIP.
+
+1 PASS — Mobile-first admin layout retained/improved.
+2 PASS — Add News works.
+3 PASS — Published Edit/Correction added without duplicate record.
+4 PASS — Draft save/update works.
+5 PASS — Publish + Unpublish→Draft works with same ID.
+6 PASS — Controlled Delete→Trash→Restore/Permanent Delete added.
+7 PASS — Headline field.
+8 PASS — Full Article Body editor.
+9 PASS — News Date/Time fields + timestamps.
+10 PASS — Reporter/Author field.
+11 PASS — Location field.
+12 PASS — Global/India/MP/Shivpuri/Local-Pichhore classification.
+13 PASS — Category assignment expanded.
+14 PASS — Shivpuri/Guna/Ashoknagar + future district option.
+15 PARTIAL — Cover Image URL persists; real file upload/storage needs backend.
+16 PARTIAL — Additional media URLs manageable; real uploads/storage need backend.
+17 PASS — YouTube URL field and article link workflow.
+18 PARTIAL — Local published items auto-route to homepage/latest/category/breaking/top-story preview; production publishing needs API/database.
+19 BACKEND REQUIRED — Internal Source model exists, but permanent multi-year storage needs database.
+20 PASS — All locked Source Type options added.
+21 PASS — Source Name.
+22 PASS — Source URL/Reference.
+23 PASS — Source/Information Date.
+24 PASS — Internal Note.
+25 PASS — All locked Verification Status options.
+26 PARTIAL — Evidence/reference text saved; durable file evidence storage needs backend.
+27 PASS — Internal source/private note/evidence not rendered publicly.
+28 PASS — Optional Public Attribution is separate editorial field.
+29 BACKEND REQUIRED — 1–5 year availability needs durable DB/backups.
+30 PASS — Edit/correction preserves internal source object and timestamped verification trail.
+31 BACKEND REQUIRED — Real website master publishing source requires production backend/domain.
+32 BACKEND REQUIRED — Stable local ID architecture ready; real Permanent Master URL needs backend routing/canonical domain.
+33 BACKEND REQUIRED — Stable ID survives headline edits; production canonical URL still backend.
+34 BACKEND REQUIRED — Unlimited public sharing depends on deployed Master URL.
+35 PARTIAL — Top Share button exists; local preview refuses to pretend it is public Master URL.
+36 PARTIAL — Bottom Share button exists with same safeguard.
+37 PASS — Visitor login not required for frontend article/share flow.
+38 BACKEND REQUIRED — Same permanent public URL requires canonical backend URL.
+39 PASS — Future-ready Social Distribution admin module added.
+40 PASS — Facebook per-news select control.
+41 PARTIAL — Headline/caption/cover/master-URL model UI ready; Master URL backend pending.
+42 PARTIAL — Instagram select + editable caption/cover model; platform API/visual publishing backend pending.
+43 PASS — YouTube kept as separate actual-video workflow, not text-news auto-post.
+44 PARTIAL — WhatsApp quick-share workflow added but disabled for fake/local URL; real public Master URL required.
+45 PASS — Social Caption generate/edit-ready field.
+46 PASS — Social Preview added.
+47 PASS — Per-article platform select/deselect.
+48 PASS — Global Auto Social Distribution ON/OFF preference.
+49 PASS — Per-News Social Distribution ON/OFF.
+50 PASS — Posted/Pending/Failed/Manual Share/Not Selected status controls.
+51 BACKEND REQUIRED — Platform URL vs Master URL relation needs real API/post records.
+52 BACKEND REQUIRED — Social failure isolation must be enforced by backend job architecture.
+53 BACKEND REQUIRED — Frontend is independent now; production independence must be preserved by backend.
+54 PASS — Draft→Publish→Edit/Correction→Unpublish/Delete lifecycle implemented in shared data layer.
+55 BACKEND REQUIRED — Same local ID preserved; actual Master URL lifecycle needs backend canonical routing.
+56 PARTIAL — Admin manages media URLs; real upload/library/storage backend required.
+57 PASS — Image/video ad slot URL + Enable/Disable admin workflow added.
+58 PASS — YouTube link/content reference management in Add/Edit News.
+59 BACKEND REQUIRED — Reporter application exists on public frontend; secure reporter management/approval requires backend.
+60 BACKEND REQUIRED — Owner-only analytics requires analytics/auth backend.
+61 BACKEND REQUIRED — Proper auth/authorization cannot be provided by static ZIP.
+62 PARTIAL — Complete updated Offline ZIP delivered; GitHub backup remains operational workflow.
+63 PASS — New content is data-driven; no manual HTML/CSS/JS edit needed for local publishing workflow.
+64 PASS — Single mobile Add/Edit form with Draft/Publish actions.
+65 PARTIAL — Source + verification + draft/publish workflow supports Verify→Format→Publish; dedicated source scanner/shortlist is not built.
+66 PASS — Android-first breaking/local create/publish frontend workflow.
+67 PARTIAL — Source/facts + original headline/body workflow supported; editorial originality remains human policy, not enforceable code.
+68 PASS — Backend-only functionality visibly labelled and not falsely declared working.
+69 PASS — Shared JBData storage adapter and clean integration points make backend replacement possible without rebuilding Admin UI.
+70 PASS — Existing V3 visitor frontend and working admin concepts preserved; files extended rather than zero-rebuilt.
+71 PASS — Code syntax, links, forms/navigation structure, data-flow and lifecycle logic cross-checked. Full GUI automation was blocked by container local-navigation policy and is not falsely claimed.
+72 PASS — Complete updated ZIP prepared for Android/SPCK extraction/testing.
+
+IMPLEMENTED FILES ADDED:
+admin-data.js, admin-common.css, article.html, trash.html, settings.html, social.html, ads.html, website-v3.js, V3-IMPLEMENTATION-AUDIT.txt
+
+EXISTING FILES PRESERVED/EXTENDED:
+index.html, style.css, script.js, admin.html, add-news.html, drafts.html, published.html
+
+CRITICAL BACKEND INTEGRATION CONTRACT:
+- Replace JBData localStorage adapter with API/database adapter; keep Admin UI/data schema.
+- Stable article id remains immutable; server issues canonical Permanent Master URL.
+- Public API excludes internalSource.note/url/evidence by default.
+- Media file inputs upload to storage service and return URLs.
+- Website publish transaction is independent from social distribution jobs.
+- Auth/roles protect all admin endpoints/pages in production.

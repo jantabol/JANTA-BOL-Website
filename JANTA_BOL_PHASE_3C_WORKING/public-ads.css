@@ -1,0 +1,19 @@
+/* Fixed, non-overlay ad slots; independent from editorial rendering. */
+.jb-ad-region{max-width:780px;margin:16px auto;padding:0 12px;box-sizing:border-box;color:#fff}
+.jb-ad-region label{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:14px}
+.jb-ad-region select{max-width:100%;min-height:44px;background:#171717;color:#fff;border:1px solid #666;border-radius:6px;padding:8px}
+.jb-public-ad{margin:12px 0;padding:12px;border:1px solid #777;border-radius:8px;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere;color:#fff;background:#111}
+.jb-public-ad-label{font-size:14px;font-weight:700;margin-bottom:8px}
+.jb-public-ad-image,.jb-public-ad-video{display:block;width:100%;height:auto;max-height:300px;object-fit:contain}
+.jb-public-ad-text{white-space:pre-wrap;line-height:1.6}
+.jb-public-ad-cta{display:inline-flex;align-items:center;min-height:44px;margin-top:8px;text-decoration:underline;color:inherit}
+.jb-public-ad-cta:focus-visible{outline:3px solid #ff6060;outline-offset:3px}
+[data-jb-ad-placement]:empty{display:none}
+
+/* A quiet contact link, NOT a second paid advertisement or forced modal. */
+/* ADS-001 Android E3 visual finding 2026-10-12: 13px text / 36px hit area was illegible.
+   This is the SAME quiet contact link, not a second ad or intrusive overlay. */
+.jb-ad-contact{font-size:clamp(17px,4vw,20px);line-height:1.5;text-align:center;margin:14px auto;color:#ddd}
+.jb-ad-contact a{color:#ffb5b5;text-decoration:underline;text-underline-offset:3px;font-weight:600;min-height:48px;padding:9px 12px;display:inline-flex;align-items:center;justify-content:center;max-width:100%;box-sizing:border-box;overflow-wrap:anywhere}
+.jb-ad-contact a:focus-visible{outline:3px solid #ff6060;outline-offset:3px}
+.jb-ad-contact[hidden]{display:none}

@@ -1,0 +1,59 @@
+name: P4-T077 Source PURL + Founder/Anon Separation (READ ONLY)
+on:
+  push:
+    branches:
+      - codex/b12-main-v3-integrated-review-20261029
+    paths:
+      - 'ci/phase4/b12/t077-purl-safety-readonly.test.cjs'
+      - '.github/workflows/p4-t077-purl-readonly-ci.yml'
+      - 'ci/phase4/b12/t076-integrated-exact-https-readonly.test.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'ci/phase4/b12/t077-purl-safety-readonly.test.cjs'
+      - '.github/workflows/p4-t077-purl-readonly-ci.yml'
+      - 'ci/phase4/b12/t076-integrated-exact-https-readonly.test.mjs'
+      - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js'
+
+permissions:
+  contents: read
+
+jobs:
+  source-identity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Offline T077 immutable URL, draft denial and Founder route tests
+        run: |
+          node --version
+          node --check ci/phase4/b12/t077-purl-safety-readonly.test.cjs
+          node --test ci/phase4/b12/t077-purl-safety-readonly.test.cjs
+
+  t076_integrated_public_https:
+    name: T076 archived Preview protected / T077 current public security — READ ONLY
+    if: (github.event_name == 'push' && github.ref == 'refs/heads/codex/b12-main-v3-integrated-review-20261029') || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == 'jantabol/JANTA-BOL-Website' && github.event.pull_request.head.ref == 'codex/b12-main-v3-integrated-review-20261029' && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Real pinned deployed static website HTTPS E1 E6 — no credentials
+        run: |
+          # T076 original deployment ran exact identity previously (40840703611 PASS).
+          # SSO now protects that old Preview: re-running anonymous GET as 200 is INVALID.
+          # New E6 LIVE test requires old Preview 302 to auth and real custom-domain 200.
+          node --check ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
+          node --test ci/phase4/b12/t077-e6-live-preview-prod-http.test.mjs
+          echo "T076_HISTORICAL_PREVIEW_HARDENED_BY_SSO=EXPECTED"
+          echo "T076_ORIGINAL_LIVE_DOMAIN_FINAL_LOCK_EVIDENCE=40831061538"
