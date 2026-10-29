@@ -134,7 +134,15 @@ test('T076 all first-party linked scripts/styles in nine essential pages serve e
  for(const [p,file] of files){
   const r=await get(p);
   check(r,p);
-  assert(r.body.equals(readFileSync(ROOT+file)),'deployed asset changed: '+file);
+  // This historical T076 URL pins immutable source 991495eb. The later T077
+  // fail-closed config patch must NOT be compared with an earlier deployed asset.
+  // Check the exact Git blob identity of that archived config instead.
+  if(file==='supabase-config.js'){
+    const blob=createHash('sha1').update(Buffer.from('blob '+r.body.length)).update(Buffer.from([0])).update(r.body).digest('hex');
+    assert.equal(blob,'ceb2d5d3a5ccd1b31f561a2511f92d39c9bfdfff','historical T076 config source changed');
+  }else{
+    assert(r.body.equals(readFileSync(ROOT+file)),'deployed asset changed: '+file);
+  }
  }
  console.log('T076_INTEGRATED_CRITICAL_ASSETS='+files.size+';BYTE_IDENTICAL=YES');
  console.log('T076_PRODUCTION_CUSTOM_DOMAIN_AND_RECOVERY=HOLD_NOT_TESTED');
