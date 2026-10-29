@@ -1,0 +1,60 @@
+name: T079 YouTube Health 503 Safe-Code Display — No Token Disclosure
+on:
+  push:
+    branches: [codex/t079-health-safe-error-diagnostic-20261029]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html'
+      - '.github/workflows/t079-youtube-health-safe-error.yml'
+permissions:
+  contents: read
+jobs:
+  guarded_safe_code:
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Strict two-path delta from actual previous deployed production SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 5285cacfe409a8f730b4ed1a38d6ce8186036ae3 HEAD | sort >/tmp/actual
+          cat >/tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-health-safe-error.yml
+          JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          git diff --quiet 5285cacfe409a8f730b4ed1a38d6ce8186036ae3 HEAD -- JANTA_BOL_PHASE_3C_WORKING/admin-auth.js JANTA_BOL_PHASE_3C_WORKING/admin-login.html JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts
+      - name: Whitelist safe error metadata, no response dump, old action-only trigger unchanged
+        shell: bash
+        run: |
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+          const text=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html','utf8');
+          const script=text.match(/<script>\s*([\s\S]*?)<\/script>/i)?.[1];assert(script);
+          new vm.Script(script);
+          for(const required of [
+            "if(error?.context && typeof error.context.json==='function')",
+            "await error.context.json()",
+            "typeof remote.error==='string'",
+            "permitted.has(code)?code:'PROVIDER_HEALTH_UNKNOWN'",
+            "button.addEventListener('click',run)",
+            "if(!confirm(",
+            "data.channel_match!==true",
+            "ctx.role!=='owner'||ctx.aal!=='aal2'"
+          ]) assert(text.includes(required),required);
+          assert(text.includes("'GOOGLE_REAUTH_REQUIRED'"));
+          assert(text.includes("'YOUTUBE_SERVER_CONFIG_REQUIRED'"));
+          assert(!/response\.headers|response\.url|JSON\.stringify\(remote\)|console\.log\(|console\.error\(|refresh_token|access_token|liveBroadcasts\/insert|videos\/insert/.test(script));
+          assert.equal(fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js','utf8').includes("'youtube-oauth-health.html'"),true);
+          console.log('T079 safe non-2xx error display PASS');
+          NODE
+      - name: Original source security plus archive guards
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
