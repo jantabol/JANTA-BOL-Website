@@ -42,3 +42,15 @@ Before enabling any media upload worker, independently prove:
 This prep incurs no new paid provider, doesn't change original T078, original B4 UI, social tables, original YouTube credential, Domain/Founder security, LIVE, or JANTA BOL public news.
 
 Next actual Founder action **only after** a separate protected Video Media/Upload pipeline is ready: provide a real legally owned video and approve a private test upload. Until then, no manual step is requested. No automatic generation of a fake news video for QA.
+
+## Review-only transport source — PRIVATE upload protocol assembled OFFLINE
+A second additive artifact `CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-transport/protocol.mjs` now contains the **isolated Google resumable upload transport**. It has NO autonomous caller, Cloud Worker deployment, database mutation, API key, Browser token exposure or execution on any real video.
+- `mediaDescriptor`: only Founder-approved and rights-verified original MP4, SHA-256, <=50 MiB, `private-editorial/youtube-news/<articleUUID>/<asset>.mp4`; grievance-private source prohibited.
+- `reserveGate`: rejects absent/leased/unknown/previously-resulted persistent idempotency evidence. A real durable transaction/ledger has NOT yet been deployed; the caller cannot bypass the guard with a public article status.
+- `metadata`: ONLY explicit Founder-approved `privacy=private`, title, description, made-for-kids selection.
+- `initiate`: official Google `videos.insert` resumable create-session POST; unknown 5xx/network => `UNKNOWN_RECONCILE_ONLY` and never creates a second session by itself.
+- `querySession`: Google same-session status check, `308` exact byte resume offset, expired session HOLD, no duplicate hidden repeat.
+- `uploadChunk`: max 4 MiB chunk, 256KiB alignment unless last chunk, no automatic retries on 5xx/timeout.
+- `verifyPrivateVideo`: official `videos.list` resource ID, channel ID and `privacyStatus=private` independent confirmation; returns `posted:false`, never claims live public social distribution.
+- A Node synthetic test matrix exercises both positive simulated responses and negative failures/duplicate/SSRF/forged channel/wrong privacy/expired-session handling. No network or real uploads are involved in these tests.
+- Still required before runtime worker: transactional server-only durable upload ledger, media-provenance/rights policy, Founder-approve private video E6, current-point recovery and rollback release gate. This candidate protocol is code-reviewed in the Draft PR, **not deployed** and cannot create YouTube content.
