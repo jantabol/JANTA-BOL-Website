@@ -1,8 +1,8 @@
 # JANTA BOL Phase-4 / B12 / P4-T078 — final no-migration production checkpoint
 **Date:** 29 Oct 2026 IST | **Master:** Topic 11 / RUN-11 / Sections 677–685 | Required E1 + E2 + E7 + E8
-**Decision:** **PASS+LOCK only for CURRENT DEPLOYED PRODUCTION RELEASE WITH ZERO DATABASE MIGRATION DELTA.** Future integrated B12 migrations are **NOT** approved by this document and will require this gate to be reopened. Full B12 release gate remains **HOLD**; T081 original hosted backup/cutover tests remain **HOLD**.
+**Decision:** Current deployed NO-MIGRATION preflight PASS_SCOPED, but **official T078 final PASS+LOCK remains BLOCKED** because a current-point reversible backup/rollback for the full candidate is not demonstrated. Future integrated B12 migrations are **NOT** approved by this document and will require this gate to be reopened. Full B12 release gate remains **HOLD**; T081 original hosted backup/cutover tests remain **HOLD**.
 
-This narrows the prior T078 BLOCKED verdict **without inventing any new migration or pretending historical recovery represents a current snapshot**. Historical checkpoint (do not delete): `P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md`; it describes the earlier review-branch-wide BLOCKED conclusion. The decision below is **limited to what is actually running**.
+This explains the scope of the prior T078 BLOCKED verdict **without inventing any new migration or pretending historical recovery represents a current snapshot**. Historical checkpoint (do not delete): `P4_T078_REAL_PRODUCTION_NO_WRITE_PREFLIGHT_20261029.md`; it describes the earlier review-branch-wide BLOCKED conclusion. This report records bounded preflight evidence for what is actually running. It is NOT approval for a full B12 release.
 
 ## E1 — exact production operation and live database
 1. Real LIVE Vercel production deployment `dpl_HkNqrQGGPsuRXSNk2BahwYnUj9Ms` is **READY** on SHA `c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c`, with `jantabol.in` and `www.jantabol.in` aliases.
@@ -31,7 +31,7 @@ Independently fetched original Founder-operated run `40452402698`, job `12201792
 Crucial limitation, preserved verbatim in source output: `T070_FINAL_INDEPENDENT_E8=NOT_RUN`, `T070_ACTUAL_GO_TRUE_EDGE_VERCEL_CONFIG_RUNTIME=NOT_RESTORED`, `T070_FINAL_LOCK=HOLD`. That leaves full platform restore and safe replay of subsequent Oct 29 updates unproved. But **this T078 release did not modify the Database, so no rollback/restore of a changed database is required for its release-specific migration action**. Restoring old data to Production would be prohibited. This limited E8 precedent plus a provable **no-write** migration plan satisfies T078's *current no-op pre-migration backup/rollback safety assessment*, **not** T081's all-system recovery.
 
 ## Final execution condition (hard, machine-checked)
-**P4-T078 PASS+LOCK with strict `CURRENT_DEPLOYED_PRODUCTION_SHA_ONLY` and `production_sql_migration_delta_count=0`.**
+**P4-T078 current LIVE no-migration check PASS_SCOPED only; official T078 = BLOCKED.** The narrow result is bound to `CURRENT_DEPLOYED_PRODUCTION_SHA_ONLY` and `production_sql_migration_delta_count=0`.
 - Invalidation triggers: production SHA changes to include SQL/schema/Edge migrations, pending integrated B12 migration is proposed for deployment, migrated DB permissions change, or new required data restore. On any trigger, **reopen T078 for actual migration preflight, fresh same-point recoverable backup and independently observed rollback**.
 - Review PR #67 for full integration is NOT merged by this decision; **its unapplied DB changes remain outside this lock**.
 - **T081 still HOLD**, including safe current-point all-system backup, Auth/Edge/Vercel restoration and rollback without overwriting newer records. Entire Phase-4 B12 release remains HOLD.
