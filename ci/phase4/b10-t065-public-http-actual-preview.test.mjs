@@ -30,10 +30,23 @@ const requireNoPrivate=(res,label)=>{
  console.log('PASS HTTP anon '+label+' (no private records disclosed)');
  checks++;
 };
-const page=await get(preview+'/');
-assert.equal(page.code,200,'Vercel Preview GET / must be reachable from CI');
+// T077 E6 intentional hardening protects immutable old Preview deployments.
+const previewProbe=await get(preview+'/',{redirect:'manual'});
+assert.ok([301,302,303,307,308,401,403].includes(previewProbe.code),
+  'old Preview should be protected, not public: HTTP '+previewProbe.code);
+if([301,302,303,307,308].includes(previewProbe.code)){
+  const dst=new URL(previewProbe.head.get('location')||'',preview);
+  assert(dst.hostname==='vercel.com'||dst.hostname.endsWith('.vercel.com')||
+    /(?:sso|auth|login|protect)/i.test(dst.pathname),
+    'old Preview must redirect to authentication');
+}
+console.log('PASS historical Vercel Preview blocked for anonymous request');
+checks++;
+// Preserve the original public-site and seven private-row + four RPC invariants.
+const page=await get('https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/index.html');
+assert.equal(page.code,200,'Canonical JANTA BOL site must be public over HTTPS');
 assert.match(page.body,/JANTA\s*BOL|JANTA-BOL/i);
-console.log('PASS real Vercel Preview public HTTP GET /');
+console.log('PASS real canonical production public HTTP GET /JANTA_BOL_PHASE_3C_WORKING/index.html');
 checks++;
 
 for(const [label,relative] of [
