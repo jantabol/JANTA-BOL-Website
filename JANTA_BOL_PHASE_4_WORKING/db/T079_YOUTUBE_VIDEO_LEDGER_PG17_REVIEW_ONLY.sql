@@ -150,4 +150,17 @@ REVOKE ALL ON FUNCTION public.jb_t079_video_transition_internal(uuid,uuid,text,t
 GRANT EXECUTE ON FUNCTION public.jb_t079_video_reserve_internal(uuid,bigint,text,text,text,integer,text,text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.jb_t079_video_begin_internal(uuid,uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.jb_t079_video_transition_internal(uuid,uuid,text,text,text,text,text) TO service_role;
+-- Service-role-only read view for the immutable active upload lease.
+-- Never allow anon/authenticated or any browser-facing ledger GET.
+CREATE FUNCTION public.jb_t079_video_get_internal(p_job_id uuid)
+RETURNS jsonb
+LANGUAGE sql SECURITY INVOKER SET search_path = ''
+AS $fn$
+ SELECT to_jsonb(j)
+ FROM private.jb_t079_youtube_video_jobs AS j
+ WHERE j.job_id = p_job_id
+ LIMIT 1
+$fn$;
+REVOKE ALL ON FUNCTION public.jb_t079_video_get_internal(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.jb_t079_video_get_internal(uuid) TO service_role;
 COMMIT;
