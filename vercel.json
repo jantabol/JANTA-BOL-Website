@@ -25,7 +25,7 @@
       ]
     },
     {
-      "source": "/JANTA_BOL_PHASE_3C_WORKING/(admin-login|admin|admin-security|admin-recovery|admin-recovery-setup|add-news|article).html",
+      "source": "/JANTA_BOL_PHASE_3C_WORKING/(admin-login|admin|admin-security|admin-recovery|admin-recovery-setup|add-news|published|article).html",
       "headers": [
         {
           "key": "Cache-Control",
