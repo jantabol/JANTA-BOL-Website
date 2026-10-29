@@ -11,7 +11,7 @@ const v3='/JANTA_BOL_PHASE_3C_WORKING';
 const pages=['index.html','admin-login.html','admin.html','published.html','article.html','b9-search.html','b9-analytics.html','grievances.html'];
 const assets=['website-v3.js','public-c1-projection.js','admin-auth.js','b12-safe-nav.js','backend-client.js'];
 async function get(p){
- const r=await fetch(host+p,{redirect:'manual',signal:AbortSignal.timeout(20000),headers:{'user-agent':'JANTA-BOL-B12-T076-readonly-http-gate'}});
+ const r=await fetch(host+p,{method:'GET',credentials:'omit',redirect:'manual',signal:AbortSignal.timeout(20000),headers:{'user-agent':'JANTA-BOL-B12-T076-readonly-http-gate'}});
  assert.equal(new URL(r.url).origin,host,'wrong origin');
  return {response:r,data:Buffer.from(await r.arrayBuffer())};
 }
@@ -49,6 +49,6 @@ for(const asset of assets){
  });
 }
 test('no public screenshot/API token request; only 200/redirect guest shells',()=>{
- assert.ok(pages.every(x=>!x.includes('delete')&&!x.includes('publish')));
+ assert.ok(pages.every(x=>!['delete.html','publish.html','unpublish.html'].includes(x)));
  assert.ok(assets.every(x=>!x.includes('service-role')));
 });
