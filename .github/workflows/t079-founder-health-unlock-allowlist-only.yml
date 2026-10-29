@@ -34,7 +34,7 @@ jobs:
           const assert=require('node:assert/strict'), fs=require('node:fs'),vm=require('node:vm');
           const filename='JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js';
           const code=fs.readFileSync(filename,'utf8');
-          const sandbox={window:{}};
+          const sandbox={window:{},URLSearchParams};
           vm.runInNewContext(code,sandbox,{filename});
           const target=sandbox.window.JBProdSafeNav.target;
           assert.equal(target('youtube-oauth-health.html'),'youtube-oauth-health.html');
