@@ -59,4 +59,4 @@ jobs:
           code=$?
           set -e
           test "$code" -eq 3
-          node -e "const a=require('/tmp/t078-release-status.json');if(a.release!=='HOLD'||a.ready_to_consider_founder_release||!a.issues.includes('P4-T078:IN_PROGRESS')||!a.issues.includes('B11_E8_REAL_RECOVERY_NOT_LOCKED'))process.exit(1)"
+          node -e "const a=require('/tmp/t078-release-status.json');if(a.release!=='HOLD'||a.ready_to_consider_founder_release||!a.issues.includes('P4-T078:BLOCKED')||!a.issues.includes('B11_E8_REAL_RECOVERY_NOT_LOCKED'))process.exit(1)"
