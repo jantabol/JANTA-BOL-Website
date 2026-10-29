@@ -116,6 +116,12 @@ test('V3 article distinguishes actual publish timestamp from news date; IST is u
   assert.doesNotMatch(label,/am बजे/);
   assert.match(article,/JBBackend\\.esc\\(articleDateLabels\\(item\\)\\)/);
 });
+test('Dashboard does not falsely state Founder binding is pending',()=>{
+  const admin=fs.readFileSync(path.join(V3,'admin.html'),'utf8');
+  assert.doesNotMatch(admin,/Founder Auth account binding pending/);
+  assert.match(admin,/MFA\/AAL2 Verification/);
+  assert.match(admin,/src="admin-auth\.js"/);
+});
 const locks={
   'admin-auth.js':'e0c751cbaa6582aa00ffd82d23f03c01956142f7',
   'admin-login.html':'2254f94ce40d49cda0ed0076311d511685036fc3',
