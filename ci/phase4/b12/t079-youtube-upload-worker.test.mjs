@@ -246,7 +246,7 @@ test('review-only source has no Edge entrypoint, cron, stored tokens, service se
  assert.match(workerSource,/SHA-256/);
  assert.match(workerSource,/DUPLICATE_OR_EXISTING_JOB_HOLD/);
  assert.match(workerSource,/UNKNOWN_RECONCILIATION_REQUIRED/);
- assert.match(workerSource,/privateVideo/);
+ assert.match(workerSource,/verifyPrivateVideo/);
 });
 
 test('durable UPLOADING in-flight lease blocks overlapping bytes even if Google returns 308',async()=>{
