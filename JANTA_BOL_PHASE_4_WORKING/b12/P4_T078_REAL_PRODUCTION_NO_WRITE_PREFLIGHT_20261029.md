@@ -44,3 +44,19 @@ Read-only Supabase connector calls on the LIVE JANTA BOL Postgres 17 database:
 - GitHub original real T070 recovery run: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40452402698
 - Integrated protected source CI: https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40869372490
 - Existing cross-checked report `JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T070_REAL_JOINT_RESTORE_RECONCILIATION_AND_T075_E3_ACTUAL_BACKUP_HISTORY_20261028.md`.
+
+
+## 29 October, 17:56 IST — independent no-manual E8 dependency closure audit
+Real connected JANTA BOL production catalog and cloud metadata were rechecked read-only (not inferred from original documentation):
+
+- PostgreSQL `cron.job` has **three ACTIVE jobs**, ID 3 every **5 seconds**, ID 4 every minute, ID 5 hourly. These must be treated as real concurrent writers or potential side-effect paths until independently proven otherwise. Disabling them or claiming an atomic snapshot without a reversible, audited write fence would be unsafe.
+- All **13 JANTA BOL Supabase Edge Functions** are currently marked ACTIVE. Identity/name/version metadata were inventoried but Edge env secrets, runtime GoTrue sessions, scheduler replay, Auth MFA and Vercel deployment configuration were **NOT restored together into a detached working site**.
+- LIVE JANTA BOL Supabase migration ledger still **188** records, last `20261027171751`. Repeated read-only counts are unchanged within this observation: **34** Articles, **919** Article Versions, **1629** Audit Logs, **6** Grievances and **16** Live Sessions. This is **not a checksum of full record contents**.
+- Current canonical Vercel project production deployment `dpl_HkNqrQGGPsuRXSNk2BahwYnUj9Ms` is READY, with custom domains attached and SSO for preview/other deployment URLs. Observing an existing healthy runtime is **not proof it can be rebuilt or rolled back after total loss**.
+- There is no verified cost-free independently isolated full-stack target with a restored original GoTrue/Auth session state, 13 Edge functions and their operational secrets, cron behavior and Vercel configuration at the SAME trusted recoverable point. Existing protected Founder manual original T070 backup/restore did not assert these.
+- No touch to remote live DB, active cron, production deploy/aliases, key rotation, B2 object retention, GoDaddy, or original release workflows. No Android manual step was needed for this **read-only assessment**.
+
+### Exact final-lock decision (not a generic CI hold)
+A production-impacting T078 migration/restore cannot be honestly completed **only by repeating no-write tests**. Mandatory E8 requires safe, detached full-platform recovery and observed rollback that preserves newer records. Any future full-stack test must first establish: (1) exact same-trusted-point backup identity and proof; (2) isolated recovery host/database without an unapproved paid plan; (3) recoverable Auth/Edge/cron/Vercel configuration under protected secret policy; (4) safe write-quiescence/rollback for active 5-second cron and users; (5) independently witnessed target-side data, RLS, app and Founder AAL2 smoke; (6) independent verification before release. **No automatic migration, backup, cron disable, key/export, or deploy is authorized by an offline CI success.**
+
+**Scope closed today:** every accessible, safe, no-manual preflight and protected code gate. **Official P4-T078 final remains HOLD**, because (3)–(5) have not been performed. The Founder has not been asked for an Android step, and no one may silently mark missing evidence PASS.
