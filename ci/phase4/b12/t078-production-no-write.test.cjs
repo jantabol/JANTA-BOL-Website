@@ -47,3 +47,44 @@ test('T078 report explicitly discloses live no-migration and E8 HOLD',()=>{
   assert.ok(text.includes(phrase),phrase);
  }
 });
+
+// Current-live NO-OP scoped attestation. This is *not* official T078 PASS.
+test('T078 current-live NO-OP proof is pinned and cannot authorize a migration',()=>{
+ const m=JSON.parse(read('ci/phase4/b12/t078-current-live-noop-evidence.json'));
+ assert.equal(m.project,'vrffsnkycvjithwtiylt');
+ assert.equal(m.database_project,'vrffsnkycvjithwtiylt');
+ assert.equal(m.release_scope,'CURRENT_DEPLOYED_PRODUCTION_SHA_ONLY');
+ assert.equal(m.production_commit,'c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c');
+ assert.equal(m.previous_production_commit,'532261e335a235dbdaf9697ccdbfe274122a8580');
+ assert.deepEqual(m.changed_paths,[
+  '.github/workflows/t077-e6-publishable-rotation-candidate.yml',
+  'JANTA_BOL_PHASE_3C_WORKING/supabase-config.js'
+ ]);
+ assert.equal(m.production_sql_migration_delta_count,0);
+ assert.equal(m.controlled_schema_migration,'NOT_REQUIRED_FOR_THIS_DEPLOYMENT');
+ assert.equal(m.no_live_db_ddl_dml_run_by_this_test,true);
+ assert.equal(m.db_migration_count,188);
+ assert.equal(m.public_tables,100);
+ assert.equal(m.rls_enabled_tables,100);
+ assert.equal(m.anonymous_private_storage_visible,0);
+ assert.equal(m.published_article_public_rpc_rows,1);
+ assert.equal(m.draft_article_public_rpc_rows,0);
+ assert.equal(m.e8_historical_original_restore.run,40452402698);
+ assert.equal(m.e8_historical_original_restore.postgres17_full_source_db_restored,true);
+ assert.equal(m.e8_historical_original_restore.five_original_media_restored,true);
+ assert.equal(m.b11_full_platform_restore_proven,false);
+ assert.equal(m.current_point_in_time_restore_proven,false);
+ assert.equal(m.future_schema_change_requires_fresh_t078,true);
+ assert.equal(m.dangerous_rollback_allowed,false);
+ assert.equal(m.t081_full_backup_rollback_cutover_status,'HOLD');
+ assert.equal(m.acceptance_kind,'PASS_SCOPED_ONLY_CURRENT_LIVE_ZERO_MIGRATION');
+});
+test('T078 final no-op decision is scoped, original E8 remains BLOCKED',()=>{
+ const txt=read('JANTA_BOL_PHASE_4_WORKING/b12/P4_T078_FINAL_CURRENT_PROD_NOOP_PASS_SCOPE_20261029.md');
+ for(const marker of ['official T078 = BLOCKED','T081','ZERO DATABASE MIGRATION DELTA','40452402698','T070_FINAL_INDEPENDENT_E8=NOT_RUN']){
+  assert.ok(txt.includes(marker),marker);
+ }
+ const t=JSON.parse(read(truthPath)).tests['P4-T078'];
+ assert.equal(t.status,'BLOCKED');
+ assert.equal(t.evidence.length,0);
+});
