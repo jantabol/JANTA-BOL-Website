@@ -1,0 +1,61 @@
+name: T079 YouTube OAuth Refresh Health - Isolated/No LIVE
+on:
+  push:
+    branches: [codex/t079-youtube-refresh-health-20261029]
+    paths:
+      - '.github/workflows/b12-t079-youtube-oauth-refresh-no-live.yml'
+      - 'CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_REFRESH_E6_GATE_20261029.md'
+      - 'ci/phase4/b12/t079-youtube-oauth-health.test.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  oauth_guard:
+    name: Owner-only Google OAuth refresh with no stream side effects
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Allow exactly four additive source files, zero core changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 80981fdb18f0f95d53b6cd915309abf769babc8d HEAD | sort > /tmp/t079-changed
+          cat > /tmp/t079-expected <<'EOF'
+          .github/workflows/b12-t079-youtube-oauth-refresh-no-live.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_REFRESH_E6_GATE_20261029.md
+          ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+          EOF
+          diff -u /tmp/t079-expected /tmp/t079-changed
+          for path in CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts JANTA_BOL_PHASE_3C_WORKING/live.html JANTA_BOL_PHASE_3C_WORKING/social.html; do
+            test "$(git hash-object "$path")" = "$(git rev-parse "80981fdb18f0f95d53b6cd915309abf769babc8d:$path")"
+          done
+      - name: Strict Founder AAL2 / production channel ID / no stream mutation or leaked tokens
+        run: node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+      - name: Existing T079 four-provider fail closed source contract
+        run: node --test ci/phase4/b12/t079-provider-backend.test.cjs
+      - name: Protected existing frontend and Edge secrets regression
+        run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+      - name: Protected ZIP contents scanner
+        run: python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: Original Phase3 security and recovery guards
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+      - name: B12 global release remains HOLD and external T079 E6 DUE
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/release.json
+          result=$?
+          set -e
+          test "$result" -eq 3
+          node -e "let j=require('/tmp/release.json');if(j.release!=='HOLD'||!j.issues.includes('P4-T079:IN_PROGRESS')||!j.issues.includes('P4-T079:MISSING_E6'))process.exit(1)"
