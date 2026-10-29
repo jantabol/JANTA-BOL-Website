@@ -116,6 +116,13 @@ test('V3 article distinguishes actual publish timestamp from news date; IST is u
   assert.doesNotMatch(label,/am बजे/);
   assert.match(article,/JBBackend\.esc\(articleDateLabels\(item\)\)/);
 });
+test('Published News action is accurately labeled as a public view; Owner guard remains on admin page',()=>{
+  const published=fs.readFileSync(path.join(V3,'published.html'),'utf8');
+  assert.match(published,/Public Article View<\/button>/);
+  assert.match(published,/function previewItem\(id\)\{location\.href='article\.html\?id='\+encodeURIComponent\(id\)\}/);
+  assert.match(published,/src="admin-auth\.js"/);
+  assert.doesNotMatch(published,/&preview=admin/);
+});
 test('Dashboard does not falsely state Founder binding is pending',()=>{
   const admin=fs.readFileSync(path.join(V3,'admin.html'),'utf8');
   assert.doesNotMatch(admin,/Founder Auth account binding pending/);
