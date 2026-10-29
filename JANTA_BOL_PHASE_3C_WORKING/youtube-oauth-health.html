@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="same-origin"><meta name="robots" content="noindex,nofollow">
+<title>JANTA BOL — YouTube OAuth Health</title>
+<link rel="stylesheet" href="admin-common.css">
+<style>
+ body{background:#111;color:#eee;font:16px system-ui,Arial,sans-serif;margin:0}
+ main{max-width:780px;margin:20px auto;padding:14px}
+ .box{background:#1e1e1e;border:1px solid #353535;border-radius:14px;padding:20px;margin:14px 0}
+ h1{background:#111;border-bottom:2px solid #b00;padding:16px;margin:0;font-size:23px}
+ h2{margin:0 0 12px;font-size:22px}
+ p{line-height:1.65}a{color:#a7ccff}
+ .btn{border:0;border-radius:10px;background:#b30000;color:white;font-size:16px;padding:14px;min-height:46px}
+ .btn:disabled{background:#444;color:#aaa}
+ .good{color:#78df8d}.bad{color:#ff9999}.info{color:#d6c98d}
+ #healthResult{white-space:pre-wrap;word-break:break-word;line-height:1.6}
+</style>
+</head>
+<body>
+<h1>JANTA BOL — YouTube OAuth Health</h1>
+<main>
+<p><a href="live.html">← LIVE Control पर वापस</a></p>
+<div class="box" id="guard">Founder Session + MFA/AAL2 जाँची जा रही है…</div>
+<section id="healthPanel" hidden>
+  <div class="box">
+   <h2>Existing Channel — सुरक्षित Token Test</h2>
+   <p id="channelState">YouTube Connection की स्थिति पढ़ी जा रही है…</p>
+   <p class="info">यह केवल Google Token Refresh और पहले से Verified JANTA BOL Channel ID की पुष्टि करेगा।
+   इससे कोई नया Live Stream, Video Upload, News Publish या Social Posted नहीं बनेगा।</p>
+   <button type="button" id="verifyBtn" class="btn" disabled>Verify OAuth Token Refresh (एक बार)</button>
+   <p id="healthResult" aria-live="polite" role="status">अभी कोई Google Token Test नहीं चलाया गया है।</p>
+  </div>
+  <div class="box">
+   <b>सुरक्षा:</b> Password, OTP, Access Token या Refresh Token यहाँ नहीं माँगा जाएगा।
+   <br>अगर Connection पहले से OK है तो Reconnect YouTube दबाने की जरूरत नहीं।
+   <br>Google Provider पर किसी बाहरी वीडियो की Posting इस टेस्ट का हिस्सा नहीं है।
+  </div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+<script src="phase3a-live-client.js"></script>
+<script src="admin-auth.js"></script>
+<script>
+(function(){
+'use strict';
+const panel=document.getElementById('healthPanel');
+const guard=document.getElementById('guard');
+const button=document.getElementById('verifyBtn');
+const channel=document.getElementById('channelState');
+const result=document.getElementById('healthResult');
+let started=false, consumed=false;
+const show=(message,cls='')=>{result.className=cls;result.textContent=message};
+async function boot(){
+ if(started||document.documentElement.dataset.jbAuth!=='ready')return;
+ started=true;
+ try{
+   const ctx=await JBLive.context();
+   if(ctx.role!=='owner'||ctx.aal!=='aal2')throw new Error('FOUNDER_AAL2_REQUIRED');
+   const status=await JBLive.youtubeStatus(),y=status.youtube||{};
+   const match=y.verified_channel_id&&y.verified_channel_id===y.expected_channel_id;
+   const good=y.connection_state==='CONNECTED'&&y.control_auth_state==='OK'
+     &&y.credential_incident_state==='CLEAR'&&match;
+   channel.textContent='Channel: '+(y.verified_channel_name||'—')
+     +' | Connection: '+(y.connection_state||'UNKNOWN')
+     +' | Control: '+(y.control_auth_state||'UNKNOWN')
+     +' | Last Refresh: '+(y.last_refresh_status||'UNKNOWN')
+     +' | Last Verified: '+(y.last_verified_at?new Date(y.last_verified_at).toLocaleString('hi-IN'):'—');
+   panel.hidden=false;guard.hidden=true;
+   if(!good){show('Channel, Founder authorization या Credential state सुरक्षित नहीं। Backend verification यहीं रोक दी गई।','bad');return}
+   if(y.last_refresh_status==='OK'){show('Google Token Refresh पहले से OK है। दोबारा Test की जरूरत नहीं।','good');return}
+   button.disabled=false;
+   show('प्रस्तुत Channel सही है। Google Refresh का परीक्षण अब केवल Founder की अनुमति पर चलेगा।','info');
+ }catch(e){guard.textContent='Security/YouTube status verification failed; कोई Google Token Test नहीं चला। '+String(e?.message||'UNKNOWN').slice(0,75);guard.className='box bad'}
+}
+async function run(){
+ if(consumed||button.disabled)return;
+ if(!confirm('केवल JANTA BOL की पुराने OAuth Credential का Google Refresh + Channel ID Verify करें? LIVE/News/Video में कोई बदलाव नहीं होगा।'))return;
+ consumed=true;button.disabled=true;
+ show('Google Token Refresh / Channel Identity जाँची जा रही है…','info');
+ try{
+   const {data,error}=await JBBackend.client.functions.invoke('jb-youtube-oauth-health',{body:{action:'refresh_verify'}});
+   if(error||data?.ok!==true||data.status!=='YOUTUBE_REFRESH_VERIFIED'||data.channel_match!==true){
+     const safe=String(data?.error||error?.message||'PROVIDER_HEALTH_UNKNOWN').replace(/[^A-Za-z0-9_:-]/g,'_').slice(0,95);
+     show('Token Health PASS नहीं हुई। Safe Code: '+safe+' — कोई Reconnect या Publish अभी मत करें।','bad');return;
+   }
+   show('✅ REAL GOOGLE REFRESH PASS — Same JANTA BOL Channel MATCH — कोई Stream/Video/Article नहीं बदला। Last checked: '+new Date(data.checked_at).toLocaleString('hi-IN')+' (आधिकारिक Backend से पुष्टि बाकी)।','good');
+ }catch(_){show('Token Health का परिणाम UNKNOWN। इस स्थिति में PASS दावा नहीं; दोबारा TEST से पहले Backend Evidence जाँचें।','bad')}
+}
+button.addEventListener('click',run);
+addEventListener('jb-auth-ready',boot,{once:true});
+if(document.documentElement.dataset.jbAuth==='ready')boot();
+})();
+</script>
+</body></html>
