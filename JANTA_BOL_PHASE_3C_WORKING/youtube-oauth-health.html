@@ -84,7 +84,27 @@ async function run(){
  try{
    const {data,error}=await JBBackend.client.functions.invoke('jb-youtube-oauth-health',{body:{action:'refresh_verify'}});
    if(error||data?.ok!==true||data.status!=='YOUTUBE_REFRESH_VERIFIED'||data.channel_match!==true){
-     const safe=String(data?.error||error?.message||'PROVIDER_HEALTH_UNKNOWN').replace(/[^A-Za-z0-9_:-]/g,'_').slice(0,95);
+     // Supabase FunctionsHttpError masks the safe response as a generic non-2xx
+     // error. Read only the server-owned structured 'error' key from the
+     // response, never response headers, URL, token, body dump or credentials.
+     let code=data?.error;
+     if(error?.context && typeof error.context.json==='function'){
+       try{
+         const remote=await error.context.json();
+         if(remote && typeof remote==='object' && !Array.isArray(remote) && typeof remote.error==='string')code=remote.error;
+       }catch(_){/* response unavailable: use a fail-closed generic code */}
+     }
+     const permitted=new Set([
+       'OWNER_AAL2_REQUIRED','INVALID_FOUNDER_SESSION','ORIGIN_NOT_ALLOWED',
+       'ACTION_NOT_ALLOWED','OAUTH_ENVIRONMENT_MISMATCH',
+       'YOUTUBE_SERVER_CONFIG_REQUIRED','YOUTUBE_CONNECTION_GUARD_FAILED',
+       'YOUTUBE_ACTIVE_CREDENTIAL_MISSING','YOUTUBE_SECRET_DECRYPT_FAILED',
+       'GOOGLE_REFRESH_NETWORK_UNKNOWN','GOOGLE_REAUTH_REQUIRED','GOOGLE_REFRESH_FAILED',
+       'GOOGLE_CHANNEL_NETWORK_UNKNOWN','GOOGLE_CHANNEL_VERIFY_FAILED',
+       'WRONG_YOUTUBE_CHANNEL','YOUTUBE_REFRESH_ROTATION_FAILED',
+       'YOUTUBE_REFRESH_STATE_WRITE_FAILED','YOUTUBE_REFRESH_AUDIT_FAILED',
+     ]);
+     const safe=permitted.has(code)?code:'PROVIDER_HEALTH_UNKNOWN';
      show('Token Health PASS नहीं हुई। Safe Code: '+safe+' — कोई Reconnect या Publish अभी मत करें।','bad');return;
    }
    show('✅ REAL GOOGLE REFRESH PASS — Same JANTA BOL Channel MATCH — कोई Stream/Video/Article नहीं बदला। Last checked: '+new Date(data.checked_at).toLocaleString('hi-IN')+' (आधिकारिक Backend से पुष्टि बाकी)।','good');
