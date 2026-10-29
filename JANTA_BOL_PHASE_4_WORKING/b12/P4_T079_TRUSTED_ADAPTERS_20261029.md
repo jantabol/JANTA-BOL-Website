@@ -19,3 +19,11 @@ This review-candidate follows Draft PR #78 YouTube PRIVATE upload orchestrator w
 
 ## Next nonfake release gate
 Before a true Founder-triggered private video test: separately security review service-role RPCs, implement approval provenance, review and connect credential issuer from existing server-only Google OAuth with rotation and quotas, prove production release rollback/restore (T078 E8), then obtain Founder-controlled MP4 and legally valid rights attestation. Only then authorize actual private videos.insert; never automatically publish public or write fake Posted.
+
+## Founder real YouTube App MANUAL upload/playback E6 evidence — 29 Oct 2026 IST
+- Founder performed Android YouTube App upload on **JANTA BOL** (`@jantabolnews`) and supplied screenshots in ChatGPT of video listed on the channel and its YouTube playback page.
+- Test title: `JANTA BOL | Upload Test | NASA Moon Mission B-Roll (2025)`. Public visibility; 6:32 footage; YouTube playback page showed `1 view` at 23:42 IST. Founder explicitly confirmed the **entire** 6:32 clip played without a problem.
+- Founder-provided video URL: `https://youtu.be/4sBF6bdJ1dA`. Extracted real **video ID `4sBF6bdJ1dA`** from their shared shortened YouTube link, not synthesized. YouTube link contains an optional `si` tracking parameter; canonical link recorded without tracking.
+- **VERDICT: T079 / manual YouTube APP upload + playback sub-gate = PASS (Founder screenshots and statement).** Evidence is user-supplied; this verification is not an independent signed YouTube Data API receipt. Web fetch could not independently load the page at recording time.
+- Founder plan: **Delete test video after evidence capture**. Deletion itself **NOT YET VERIFIED**. No deletion of Youtube livestreams, channels, or unrelated historical T032 / T028 / T015 tests is authorized.
+- **Not a PASS** for JANTA BOL automated/backend upload, not a Google `videos.insert` executed by our protected worker, not an automated provider receipt, and not a PUBLIC NEWS publishing verification. **P4-T079 still IN_PROGRESS / backend real E6 DUE**. Review-only uploader still NOT deployed, no production ledger created, original T078 E8 still HOLD. Do not silently substitute manual upload evidence for automatic system E6.
