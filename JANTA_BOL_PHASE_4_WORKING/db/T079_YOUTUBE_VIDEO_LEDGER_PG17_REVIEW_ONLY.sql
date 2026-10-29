@@ -35,6 +35,10 @@ CREATE TABLE private.jb_t079_youtube_video_jobs (
    OR (state <> 'PRIVATE_VERIFIED' AND private_verified_at IS NULL))
 );
 ALTER TABLE private.jb_t079_youtube_video_jobs ENABLE ROW LEVEL SECURITY;
+-- Explicit local PG17 service_role-only policy, no need to pretend that this
+-- disposable role has production BYPASSRLS. anon/authenticated have no policy.
+CREATE POLICY jb_t079_service_role_only ON private.jb_t079_youtube_video_jobs
+ FOR ALL TO service_role USING (true) WITH CHECK (true);
 REVOKE ALL ON TABLE private.jb_t079_youtube_video_jobs FROM PUBLIC;
 REVOKE ALL ON SCHEMA private FROM PUBLIC;
 GRANT USAGE ON SCHEMA private TO service_role;
