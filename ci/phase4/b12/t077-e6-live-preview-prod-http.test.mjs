@@ -11,13 +11,13 @@ import vm from 'node:vm';
 
 const HOSTS=[
  'shubham-pichhore-2028-8q3i9oxq9-shubhamshrivastava295-9848.vercel.app',
- 'shubham-pichhore-2028-lxbei8b24-shubhamshrivastava295-9848.vercel.app',
- 'shubham-pichhore-2028.vercel.app'
+ 'shubham-pichhore-2028-lxbei8b24-shubhamshrivastava295-9848.vercel.app'
 ];
 const PROD='jantabol.in';
+const PROD_ALIAS='shubham-pichhore-2028.vercel.app'; // Explicit production domain, not a Preview.
 const DIR='/JANTA_BOL_PHASE_3C_WORKING/';
 async function get(host,file){
- assert(HOSTS.includes(host)||host===PROD);
+ assert(HOSTS.includes(host)||host===PROD||host===PROD_ALIAS);
  assert(['supabase-config.js','admin-login.html','article.html'].includes(file));
  return await new Promise((resolve,reject)=>{
   const u=new URL('https://'+host+DIR+file);
@@ -49,10 +49,11 @@ test('T077 E6 LIVE: Vercel Authentication denies public access to old and new Pr
   console.log('T077_E6_VERCEL_PROTECTION=PASS; HOST='+host+'; HTTP='+r.status);
  }
 });
-test('T077 E6 LIVE: canonical jantabol.in remains unprotected, TLS valid and original production config unchanged',async()=>{
- const [cfg,html]=await Promise.all([get(PROD,'supabase-config.js'),get(PROD,'article.html')]);
- assert.equal(cfg.status,200);assert.equal(html.status,200);
- assert.equal(cfg.tls,true);assert.equal(html.tls,true);
+test('T077 E6 LIVE: canonical jantabol.in and assigned production alias serve unchanged production config',async()=>{
+ const [cfg,html,alias]=await Promise.all([get(PROD,'supabase-config.js'),get(PROD,'article.html'),get(PROD_ALIAS,'supabase-config.js')]);
+ assert.equal(cfg.status,200);assert.equal(html.status,200);assert.equal(alias.status,200);
+ assert.equal(cfg.tls,true);assert.equal(html.tls,true);assert.equal(alias.tls,true);
+ assert(alias.body.equals(cfg.body),'public production alias not same deployed code');
  const gitBlob=createHash('sha1').update(Buffer.from('blob '+cfg.body.length)).update(Buffer.from([0])).update(cfg.body).digest('hex');
  assert.equal(gitBlob,'ceb2d5d3a5ccd1b31f561a2511f92d39c9bfdfff','unexpected production config change');
  const context={window:{},document:{}};
