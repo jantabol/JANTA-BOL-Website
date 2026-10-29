@@ -47,17 +47,23 @@
     "P4-T077": {
       "status": "IN_PROGRESS",
       "evidence": [
-        "2026-10-29 CI 40831391424: T077 permanent UUID/share/privacy source checks 10/10 PASS; real Founder correction/unpublish/republish NOT_RUN"
+        "2026-10-29 CI 40831391424: T077 permanent UUID/share/privacy source checks 10/10 PASS; real Founder correction/unpublish/republish NOT_RUN",
+        "Founder Android screenshots 2026-10-29 12:51–13:16 IST draft, publish, unpublish public denied, republish old PURL, correction form.",
+        "Read-only production Supabase 2026-10-29: corrected NVS-03 article UUID c49f00b6-0359-400c-a957-2082142ff8dd version 12, status published, location changed as intended.",
+        "Anonymous production RPC projection returns 1 corrected item; old pre-update v11 snapshot and article_update audit row preserved.",
+        "T077 E6 synthetic/source security CI GitHub run 40831391424, 10/10 PASS; actual preview/prod boundary separate NOT_RUN"
       ],
       "manual_required": false,
-      "implementation_note": "T077 SCOPED READONLY: CI 40821340519 10/10 PASS source PURL/Owner/anon and exact T076 hosted preview 5/5 PASS. 29 Oct real DB transaction AS anon: published ISRO 1 row, draft 0; anon raw articles SELECT/UPDATE denied; public projection EXECUTE permitted. Actual Founder-authorized correction→unpublish→republish same UUID E2/E4 and production/dev boundary NOT RUN. Final lock HOLD.",
+      "implementation_note": "2026-10-29: T077 real lifecycle E1/E2/E4 ✅ actual Draft(v8)->Publish(v9)->Unpublish(v10 public 0)->Republish(v11 public 1)->Correction(v12 published public 1); immutable UUID, anon projection, prior-version snapshot and audit verified read-only. CI T077 E6 source security 10/10 PASS. Remaining for unqualified T077 FINAL LOCK: independently verified real preview/prod environment separation boundary E6 (earlier recorded NOT_RUN); DO NOT claim that check passed from source-only CI. T077 IN_PROGRESS / lifecycle PASS, E6 HOLD. No more Founder manual steps for lifecycle.",
       "partial_proofs": [
         "2026-10-29 GitHub Actions run 40818185844: 10/10 scoped T077 source tests PASS; UUID canonical PURL, mock correction keeps UUID, draft/unrelated/invalid ID denied, Owner AAL2 admin preview/share separation, safer post-2FA redirects, no secrets.",
         "2026-10-29 real Supabase READ-ONLY transaction as anon: ISRO ID f17f6507-02a3-4881-ad37-0b02cadf3d3f remains published and exactly visible; sample draft ID 690405f8-21af-4e46-9ddc-3c2e45abca9c not publicly visible (0 rows); anon raw articles SELECT denied.",
         "Real Founder user screenshots 2026-10-29: login/MFA, Published News v15 id, Article full public route PURL same ID, published timestamp 28 Oct and news date 23 Oct. NOT evidence for real correction/unpublish/republish lifecycle.",
         "Real publish->correction->unpublish->republish same-UUID E2/E4 and actual full prod/dev separation remain NOT_RUN; no news modified for this audit.",
         "2026-10-29 follow-up exact isolated integrated code: T077 offline PURL/auth/anon tests CI run 40818501913 SUCCESS after Stage C1 merge. No mutable real correction/unpublish/republish conducted.",
-        "2026-10-29 PR67 CI run 40821340519 job 123274269677 10/10 T077 PURL security source checks PASS; real Supabase transaction SET LOCAL ROLE anon shows ISRO UUID visible exactly once, sample draft UUID 0 rows, anon raw articles SELECT and UPDATE denied; no content mutations."
+        "2026-10-29 PR67 CI run 40821340519 job 123274269677 10/10 T077 PURL security source checks PASS; real Supabase transaction SET LOCAL ROLE anon shows ISRO UUID visible exactly once, sample draft UUID 0 rows, anon raw articles SELECT and UPDATE denied; no content mutations.",
+        "2026-10-29 ACTUAL Founder Android 13:00–13:10 IST: new NVS-03 article c49f00b6-0359-400c-a957-2082142ff8dd draft v8 → published v9, unpublish v10, republish v11; same public PURL; actual browser screenshots show published, unavailable on unpublish, and republished.",
+        "2026-10-29 ACTUAL correction 13:17 IST: read-only real Supabase public.articles published v12 with same UUID and corrected location 'Shreehari kota Andhra Pradesh'; anon jb_c1_public_articles(...)->items exactly 1, projected location matches; prior v11 location saved in article_versions pre-update snapshot, article_update audit record exists. Protected ISRO SpaDeX article previously verified unchanged."
       ]
     },
     "P4-T078": {
