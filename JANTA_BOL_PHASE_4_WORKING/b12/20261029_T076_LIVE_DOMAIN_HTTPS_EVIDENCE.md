@@ -15,9 +15,9 @@
 
 ## Gate boundaries
 - T076 **domain/DNS/certificate/public HTTPS/production routing evidence PASS**.
-- Real Android **jantabol.in** browser visual/public and admin login on exact live custom-domain (versus prior V3 previews) **NOT YET SHOWN**. Obtain one Founder screenshot before recording T076 full E1/E6/E7 lock if the test register requires device evidence. Avoid repeating 15-minute inactivity test already Founder-confirmed unless code changed.
+- **Real Android custom-domain screenshot RECEIVED**, 29 Oct 2026 at 12:18 IST: mobile browser page header displays `jantabol.in`, JANTA BOL black/red masthead, working rendered home hero and primary `प्रकाशित खबरें देखें` button, top search entry and menu. This is genuine real-device visible homepage proof (E1); HTTPS trust is corroborated separately by actual external CI 6/6 and certificates, not inferred from a padlock icon. No backend action performed from screenshot. Historical Founder password+MFA and published ISRO view evidence exists on V3 preview; not falsely claimed as new exact-domain login proof. Avoid repeating 15-minute inactivity test already Founder-confirmed unless code changed.
 - **GitHub protected Main is not merged** with integration candidate; Vercel production SHA is on isolated reviewed integration branch. This is recorded as release discipline risk to reconcile later; do not silently claim Main updated.
 - No T077 correction/unpublish/republish lifecycle was performed by T076. T077 source-only CI is not lifecycle proof.
 - Any GoDaddy/SSL issue reopening would reopen this gate; no fake pass.
 
-**Result:** VERIFIED DOMAIN/HTTPS SUBGATE PASS; **T076 FINAL LOCK pending live Android evidence / Founder release review**. T077 runtime lifecycle remains NOT_RUN. 
+**Result 29 Oct 2026:** **P4-T076 FINAL PASS + LOCK for its explicitly scoped E1/E6/E7 hosting, domain, valid TLS, protected source/CI and public/Admin/Auth HTTP route checks.** Evidence: mobile screenshot 12:18 IST + Action 40831061538 attempt 2 (6/6 PASS) + 40830173701 attempt 2 (6/6 PASS) + Vercel DNS/cert/production + rollback and re-promotion alias proof. This lock does **not** override protected Main being unmerged, B11 E8 real restoration HOLD, Founder full prod permission lifecycle or B12 overall launch signoff. **T077 is NEXT; its actual authorized correction/unpublish/republish E2/E4 remains NOT RUN.** 
