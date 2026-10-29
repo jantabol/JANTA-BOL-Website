@@ -68,7 +68,7 @@ Deno.serve(async (req: Request) => {
   }
   const deployment = (Deno.env.get("JB_DEPLOYMENT_ENV") ?? "").toLowerCase();
   const credentialEnv = (Deno.env.get("JB_GOOGLE_CREDENTIAL_ENV") ?? "").toLowerCase();
-  if (deployment !== "production" || credentialEnv !== "production") {
+  if (!["development", "test", "production"].includes(deployment) || credentialEnv !== deployment) {
     return reply(req, { ok: false, error: "OAUTH_ENVIRONMENT_MISMATCH" }, 503);
   }
   const url = Deno.env.get("SUPABASE_URL") ?? "";
