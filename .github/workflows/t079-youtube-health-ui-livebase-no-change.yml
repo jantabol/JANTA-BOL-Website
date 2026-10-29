@@ -1,0 +1,63 @@
+name: T079 Live Baseline + Owner Android Refresh UI (No Existing File Changed)
+on:
+  push:
+    branches: [codex/t079-youtube-health-ui-livebaseline-20261029]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html'
+      - '.github/workflows/t079-youtube-health-ui-livebase-no-change.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  only_additive_ui:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact production baseline — ONLY two NEW paths, all older files unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --diff-filter=ACDMRT --name-only c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c HEAD | sort > /tmp/actual
+          cat > /tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-health-ui-livebase-no-change.yml
+          JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          git diff --diff-filter=M --name-only c1a5f1065f1c3aa64cd09bcd9c8ef1cca1054a3c HEAD | tee /tmp/modified
+          test ! -s /tmp/modified
+      - name: Founder MFA, no automatic Google access, no leaked token or LIVE control
+        shell: bash
+        run: |
+          set -euo pipefail
+          node <<'NODE'
+          const fs=require('fs'),vm=require('vm'),assert=require('assert/strict');
+          const s=fs.readFileSync('JANTA_BOL_PHASE_3C_WORKING/youtube-oauth-health.html','utf8');
+          const inner=s.match(/<script>\s*([\s\S]*?)<\/script>/i)?.[1];assert(inner);
+          new vm.Script(inner);
+          assert(s.includes('admin-auth.js'));
+          assert(s.includes("ctx.role!=='owner'||ctx.aal!=='aal2'"));
+          assert(s.includes("button.addEventListener('click',run)"));
+          assert(s.includes("if(!confirm("));
+          assert(s.includes("'jb-youtube-oauth-health'"));
+          assert(s.includes("{action:'refresh_verify'}"));
+          assert(s.includes("data?.ok!==true"));
+          assert(s.includes("data.channel_match!==true"));
+          assert(!/localStorage\.getItem\(['"]supabase|console\.log|service_role|refresh_token|access_token|liveBroadcasts\/insert|videos\/insert/.test(s));
+          console.log('T079 Android UI strict Founder AAL2, action-only, NO production publish side effect = PASS');
+          NODE
+      - name: Existing web protection and static DB/security regression
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+      - name: Old tracked HTML/JS and archived ZIP Secret Scanner
+        shell: bash
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
