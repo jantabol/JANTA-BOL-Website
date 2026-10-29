@@ -1,0 +1,270 @@
+name: B12 Reconciled B8 Protected PG17 - Newer Main Backup Baseline
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+jobs:
+  b8-g1-disposable-postgres:
+    name: G1 Actual PG17 scope/ACL/Owner/Reporter failures and rollback
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_b8_fixture_only
+          POSTGRES_DB: jb_b8_g1
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_b8_g1"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: local_b8_fixture_only
+      PGDATABASE: jb_b8_g1
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Explicit public-safety guard, no connected database secrets
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          echo 'B8 G1 isolated local postgres ONLY — never LIVE Supabase or production auth'
+      - name: Build synthetic B1 roles + Owner + normal Article and B7 sentinels
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-disposable-fixture.sql
+      - name: Apply G1 scoped review-only migration into disposable PostgreSQL17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_case_reporter_scope_REVIEW_ONLY.sql
+      - name: G1 partial B8 UI runtime handshake must FAIL CLOSED when other migrations missing
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g1-negative.sql
+      - name: REAL PostgreSQL G1 role/ACL/revoke/expiry/session/rollback negative tests
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-real-postgres-regression.sql
+      - name: Apply Founder-only case selector RPC to isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_owner_mobile_case_picker_REVIEW_ONLY.sql
+      - name: PG17 AAL2 case picker, no anon/reporter/editor/private leakage
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-owner-mobile-case-picker-regression.sql
+      - name: Apply G1 CP02 Editor/immutable review migration into the SAME disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g1_cp02_editor_immutable_review_REVIEW_ONLY.sql
+      - name: Real Editor R1/R2 negative/immutable/Founder EVIDENCE_GAP review & rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g1-cp02-editor-review-regression.sql
+      - name: Prepare synthetic original Article/source/version/verification FK CASCADE metadata
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp01-cascade-fixture.sql
+      - name: Apply B8 G2 CP01 independent provenance + unverified evidence claims to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp01_provenance_survival_REVIEW_ONLY.sql
+      - name: Verify owner/reporter privacy, unverified SHA receipts, immutable links and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp01-provenance-regression.sql
+      - name: Apply G2 CP02 linked Article hard-delete guard and append-only hold to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp02_article_hold_GUARD_REVIEW_ONLY.sql
+      - name: Real PG17 linked hard-delete rejection, original sources survive, ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp02-legal-hold-regression.sql
+      - name: Init synthetic actor JWT+session tables for scoped private upload CI
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-upload-session-fixture.sql
+      - name: Apply G2 CP03 bounded private upload intent and server-only receipts
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g2_cp03_private_upload_REVIEW_ONLY.sql
+      - name: REAL PostgreSQL17 private upload RPC/quota/session/replay/actor and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g2-cp03-private-upload-scope-regression.sql
+      - name: REAL two-session PG17 concurrent Article-link vs old hard-delete transaction race
+        run: bash ci/phase4/b8-g2-cp02-race-isolated-pg17.sh
+      - name: Build synthetic B3 notification authority fixture (NO LIVE writes)
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp02-notification-fixture.sql
+      - name: Apply G3 CP02 Founder evidence and review-proof notification schema
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp02_founder_proof_notifications_REVIEW_ONLY.sql
+      - name: PG17 G3 CP02 real R1 Editor R2 Founder and in-app truthful notice
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp02-evidence-founder-notifications-regression.sql
+      - name: Apply G3 CP03 manual handoff truth, review gates and idempotency
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp03_manual_handoff_truth_REVIEW_ONLY.sql
+      - name: PG17 G3 CP03 real R0/R1/R2 question handoff and no false delivery
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp03-handoff-truth-regression.sql
+      - name: Apply G3 CP04 immutable officer-response CLAIM (never fake E9)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g3_cp04_reply_claim_REVIEW_ONLY.sql
+      - name: REAL PG17 G3 CP04 private evidence reply ownership and Founder truth
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g3-cp04-reply-claim-regression.sql
+      - name: Prepare G4 exact public Article status enum / followup synthetic fixtures
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g4-public-article-status-fixture.sql
+      - name: Apply G4 Founder-approved public projection, safe milestone and original Article UUID SQL
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g4_cp01_cp03_public_projection_REVIEW_ONLY.sql
+      - name: REAL PG17 G4 anon privacy, Founder AAL2/hidden/revise/republication and old News PURL ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g4-cp01-cp03-public-projection-regression.sql
+      - name: REAL PG17 G4 CP04 concurrent Founder HIDE versus stale REVISE, fresh anon reads
+        run: bash ci/phase4/b8-g4-cp04-owner-hide-race-pg17.sh
+      - name: Apply G5 minimal original Topic13 private Fact/Deadline/Conflict/Reopen ledger (no LIVE)
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql
+      - name: REAL PG17 G5 original cost stage, ground, deadline, Founder conflict, closure/reopen ACL and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-original-accountability-regression.sql
+      - name: Add unverified document-projected impact category in isolated G5 PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_t093_document_projected_impact_REVIEW_ONLY.sql
+      - name: PG17 T093 proposed impact != official statement or field evidence
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-documented-projected-impact-regression.sql
+      - name: Add fail-closed exact-duplicate G5 fact retry protection in isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_no_exact_duplicate_fact_REVIEW_ONLY.sql
+      - name: PG17 duplicate facts must not append; distinct evidence and original history preserved
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-duplicate-fact-retry-pg17.sql
+      - name: Add historical document-stated project PURPOSE without false official verification in isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_g5_t093_document_stated_purpose_REVIEW_ONLY.sql
+      - name: PG17 T093 source-required PURPOSE, cross-kind, Owner AAL2, immutable and duplicate negatives
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g5-t093-source-attributed-purpose-regression.sql
+      - name: Apply additive G6 Founder private upload release control OFF by default to disposable PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g6_private_upload_release_gate_REVIEW_ONLY.sql
+      - name: REAL PG17 G6 Owner AAL2 ON/OFF + Reporter case scope, mid-flight finalize denial, immutable audit and ROLLBACK
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g6-private-upload-release-regression.sql
+      - name: Apply G7 original RUN-12 immutable factual replies, missed-deadline, correction, versioned evidence history
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g7_accountability_chronology_REVIEW_ONLY.sql
+      - name: REAL PG17 G7 unauthorized reply, no-reply, late reply, corrected summaries, original versions, cross-case, rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g7-chronology-regression.sql
+      - name: Apply G8 Founder private manual evidence verification and bounded public delivery-status guard
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g8_manual_delivery_public_status_REVIEW_ONLY.sql
+      - name: REAL PG17 G8 Founder AAL2 manual evidence, cross-case/anon privacy, no false prior sent, published safe enums and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g8-manual-delivery-public-status-regression.sql
+      - name: Apply B8 G9 Founder overdue dashboard and generic in-app B3 follow-up notifications to isolated PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g9_due_followup_safe_notifications_REVIEW_ONLY.sql
+      - name: REAL PG17 G9 overdue detection, private Founder role, B3 no-external notice, privacy and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-g9-due-followup-notification-regression.sql
+      - name: T094 CP03 apply scoped question-source linkage AFTER preserved G0-G9 baselines
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_question_evidence_binding_REVIEW_ONLY.sql
+      - name: T094 CP03 actual PG17 unsupported R0 blocked, exact-case linkage, immutable and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-source-bound-question-regression-v2.sql
+      - name: T094 CP03 Reporter fail-closed backend compatibility handshake on PG17
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t094_cp03_reporter_readiness_REVIEW_ONLY.sql
+      - name: T094 CP03 Reporter authenticated-only readiness and honest unverified/no SEND labels
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-reporter-readiness-regression.sql
+      - name: T094 CP03 POST migration R1 Editor/R2 Founder gates stay intact with source-linked question
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t094-cp03-serious-r1-r2-after-source-binding-v3.sql
+      - name: P4 T096 implement multi-article one-Master, no false closure and post-reopen public privacy safety
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t096_master_outcome_reopen_guard_REVIEW_ONLY.sql
+      - name: P4 T096 PG17 one master/article, question disposition required, immutable reopen plus rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t096-master-outcome-reopen-regression-v3.sql
+      - name: P4 T097 immutable source versions and keyset unlimited record-count paging
+        run: psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261021_b8_t097_integrity_versioned_paging_REVIEW_ONLY.sql
+      - name: P4 T097 PG17 120 evidence, 105 chronology, version/case/privacy negative and rollback
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-t097-neutral-integrity-paging-regression-v3.sql
+      - name: G0-G9 complete handshake permits UI only after EVERY expected database slice
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b8-runtime-readiness-g9-positive.sql
+  b8-master-source-backup:
+    name: Full B0–B8 Source Master ZIP / all files / SHA256 / random test selector
+    # Master archive is only for exact authoritative B8 integration branch.
+    if: github.ref_name == 'codex/b8-g5-main-based-integration-20261017'
+    needs:
+      - b8-g1-disposable-postgres
+      - b8-g0-news-unchanged
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Scope and no-LIVE guard
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ github.ref_name }}" = "codex/b8-g5-main-based-integration-20261017"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${B2_APPLICATION_KEY:-}"
+          echo "Only zip/source manifest, NO Main merge, no Supabase/Storage/Edge/Vercel writes"
+      - name: Python verified random original test selector
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m py_compile tools/jb_manual_test.py ci/phase4/build_b0_b8_master_source_zip.py
+          python3 tools/jb_manual_test.py --list > /tmp/jb-109-original-tests.txt
+          test "$(grep -c '^P4-T[0-9][0-9][0-9] |' /tmp/jb-109-original-tests.txt)" -eq 109
+          python3 tools/jb_manual_test.py T092 | grep 'ORIGINAL ACC CHECKPOINTS: ACC-001 to ACC-008'
+          python3 tools/jb_manual_test.py P4-T034 | grep 'P4-T034'
+          python3 tools/jb_manual_test.py 98 | grep 'ORIGINAL ACC CHECKPOINTS: ACC-036 to ACC-044'
+      - name: Build EXACT tracked full B0–B8 source ZIP (not an empty/synthetic archive)
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --out "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
+          python3 ci/phase4/build_b0_b8_master_source_zip.py --verify "dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_${GITHUB_SHA:0:12}.zip"
+          test "$(stat -c %s dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip)" -gt 200000
+          echo "Full tracked Git commit pinned: $GITHUB_SHA"
+          ls -lh dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip dist/MASTER_ZIP_SHA256.txt
+      - name: Upload user-saveable FULL master ZIP artifact for local backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: JANTA_BOL_B0_TO_B8_MASTER_SOURCE
+          path: |
+            dist/JANTA_BOL_B0_TO_B8_MASTER_SOURCE_*.zip
+            dist/MASTER_ZIP_SHA256.txt
+          if-no-files-found: error
+          retention-days: 30
+  b8-g0-news-unchanged:
+    name: G0 protected Phase3 News/Auth + B7 original closure unchanged
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: E7 candidate preserve protected production-main root and free backup artifacts
+        run: |
+          set -euo pipefail
+          test "$(git hash-object index.html)" = "e82e88aee6e953f0eb0f817361cb87c3a5194aae"
+          test "$(git hash-object script.js)" = "8c3b52874b95fb84749c68654f385c76c7a6e1e8"
+          test "$(git hash-object style.css)" = "760f1bd96441f4717618b8b025c20228100191d8"
+          test "$(git hash-object ci/backup/jb-free-offsite-backup.sh)" = "d9000654ff7d6fe9ba8484259e307f26cab97311"
+          test "$(git hash-object .github/workflows/b7-production-free-encrypted-backup-MANUAL.yml)" = "07e06024f8c6e543f3f8340a65e95f4914fa5a6b"
+          test -f JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html
+          test -f JANTA_BOL_PHASE_4_WORKING/db/20261017_b8_g5_cp03_original_accountability_ledger_REVIEW_ONLY.sql
+          echo 'B8 main-derived E7 additive candidate: root/backup original byte-identical, no LIVE changes'
+      - name: Original protected Phase3 STATIC News/Auth/Security
+        run: |
+          node ci/phase3-regression/static-regression.cjs
+          node ci/phase3-regression/static-security-architecture-regression.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/coverage-audit.cjs
+      - name: B8 Private Evidence Gateway real byte/MIME/SHA256 mock-storage regression
+        run: node --test ci/phase4/b8-g2-cp03-private-upload-gateway.test.mjs
+      - name: B8 G3 CP01 browser-module syntax and no-fake-SENT role tests
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
+          node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
+          node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
+          node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
+          node --test ci/phase4/b8-t094-cp03-source-binding-android.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g6-release-ready-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
+          node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
+          node --test ci/phase4/b8-spck-mime-regression.test.mjs
+          node --test ci/phase4/b8-database-readiness-android.test.mjs
+          node --test ci/phase4/b8-mobile-focused-workflow.test.mjs
+          node --test ci/phase4/b8-g1-mobile-case-picker.test.mjs
+          node --test ci/phase4/b8-g5-t093-android-document-projection.test.mjs
+          node --test ci/phase4/b8-g5-t093-purpose-mobile-contract.test.mjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+          node --test ci/phase4/b8-e5-staff-login-security.test.mjs
+      - name: B8 G4 public-only client and Founder approval Android browser ESM / privacy contract
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-public-case-ui.js
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+          node --test ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+      - name: B8 G5 original E-class and Founder real-evidence release gate (audit only)
+        run: |
+          node --check ci/phase4/b8-official-evidence-release-gate.cjs
+          node ci/phase4/b8-official-evidence-release-gate.cjs --audit
+          node --test ci/phase4/b8-official-evidence-release-gate.test.cjs
+      - name: B7 canonical 9/60 never fake PASS or paid activation
+        run: |
+          node ci/phase4/b7-closure-gate.cjs --audit
+          node --test ci/phase4/b7-closure-regression.cjs
+          node ci/phase4/b7-public-secret-scan.cjs
+      - name: Confirm no old News/B6/Ad application files modified by the G1 feature commit
+        run: |
+          set -euo pipefail
+          test -f JANTA_BOL_PHASE_3C_WORKING/article.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/index.html
+          test -f JANTA_BOL_PHASE_3C_WORKING/compliance.html
+          echo 'B8 G0 protected source present; full E2/E3/E5 original regressions NOT implied by STATIC.'
