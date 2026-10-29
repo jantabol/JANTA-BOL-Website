@@ -37,13 +37,13 @@ test('T078 no false pass: E8 and genuine recovery required',()=>{
  assert.equal(doc.b11_full_recovery_locked,false);
  assert.equal(doc.b11_t072_real_production_idempotency_closed,false);
  const item=doc.tests['P4-T078'];
- assert.equal(item.status,'IN_PROGRESS');
+ assert.equal(item.status,'BLOCKED');
  assert.notEqual(item.status,'PASS');
  assert.deepEqual(item.evidence,[]);
 });
 test('T078 report explicitly discloses live no-migration and E8 HOLD',()=>{
  const text=read(reportPath);
- for(const phrase of ['100/100','188','40869372490','40452402698','NO automatic production migration','FINAL LOCK = HOLD','no-write','every **5 seconds**','13 JANTA BOL Supabase Edge Functions','not proof it can be rebuilt']){
+ for(const phrase of ['FINAL T078 adjudication','100/100','188','40869372490','40452402698','NO automatic production migration','FINAL LOCK = HOLD','no-write','every **5 seconds**','13 JANTA BOL Supabase Edge Functions','not proof it can be rebuilt']){
   assert.ok(text.includes(phrase),phrase);
  }
 });
