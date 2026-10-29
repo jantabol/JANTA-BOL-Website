@@ -1,0 +1,70 @@
+name: T079 Trusted Video Adapters Offline & Isolated PG17
+on:
+  push:
+    branches: [codex/t079-youtube-trusted-adapters-isolated-20261029]
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      pg17:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: isolated_testing_only
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: isolated_testing_only
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact five-file review scope; no LIVE/OAuth/News/production migration edits
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 99898e2f1f75ef33d16d21b70077eca2a0f1f630 HEAD | sort > /tmp/actual
+          cat >/tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-trusted-adapters-offline-pg17.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/trusted-adapters.mjs
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_TRUSTED_ADAPTERS_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql
+          ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          test ! -f CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/index.ts
+      - name: Run actual disposable PostgreSQL 17 private ledger/owner isolation
+        run: |
+          psql -v ON_ERROR_STOP=1 --file=ci/phase4/b12/t079-youtube-ledger-isolated-pg17.sql
+          psql -v ON_ERROR_STOP=1 -tAc "SELECT has_function_privilege('anon','public.jb_t079_video_get_internal(uuid)','EXECUTE')" | grep -qx f
+          psql -v ON_ERROR_STOP=1 -tAc "SELECT has_function_privilege('authenticated','public.jb_t079_video_get_internal(uuid)','EXECUTE')" | grep -qx f
+          psql -v ON_ERROR_STOP=1 -tAc "SELECT has_function_privilege('service_role','public.jb_t079_video_get_internal(uuid)','EXECUTE')" | grep -qx t
+      - name: Read-only trusted Server Owner/Storage/Approval/AES and exact RPC fixtures
+        run: node --test ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
+      - name: Previous full private-video worker and transport synthetic E2E
+        run: |
+          node --test ci/phase4/b12/t079-youtube-upload-worker.test.mjs
+          node --test ci/phase4/b12/t079-youtube-video-transport.test.mjs
+          node --test ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+      - name: Preserve original OAuth and old security regression
+        run: |
+          node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+          node --test ci/phase4/b12/t079-provider-backend.test.cjs
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
