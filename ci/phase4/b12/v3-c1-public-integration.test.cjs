@@ -114,7 +114,7 @@ test('V3 article distinguishes actual publish timestamp from news date; IST is u
   assert.match(label,/10:00 IST/);
   assert.match(label,/समाचार की तिथि: 23 अक्टूबर 2026/);
   assert.doesNotMatch(label,/am बजे/);
-  assert.match(article,/JBBackend\\.esc\\(articleDateLabels\\(item\\)\\)/);
+  assert.match(article,/JBBackend\.esc\(articleDateLabels\(item\)\)/);
 });
 test('Dashboard does not falsely state Founder binding is pending',()=>{
   const admin=fs.readFileSync(path.join(V3,'admin.html'),'utf8');
