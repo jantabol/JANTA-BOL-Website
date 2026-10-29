@@ -1,0 +1,79 @@
+<!DOCTYPE html><html lang="hi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>JANTA-BOL Admin</title><link rel="stylesheet" href="admin-common.css"></head><body><header class="admin-header"><h1>JANTA-BOL</h1><p>Admin Dashboard</p></header><main class="dashboard"><h2>Dashboard</h2>
+<div class="notice backend"><strong>🔐 Founder सुरक्षा:</strong> इस Admin Dashboard के लिए अधिकृत Owner Session और MFA/AAL2 Verification आवश्यक है। बिना सुरक्षा जाँच के Admin कार्रवाई की अनुमति नहीं है।</div><div id="recoveryPhysicalReminder" class="notice" style="display:none"><strong>⚠ Recovery Key Physical Check DUE</strong><br>Apni Emergency Recovery Key ki offline physical copies check karein. <a href="admin-security.html">Security Center kholen</a>. Ye reminder SAFE/ROTATE confirmation tak pending rahega.</div>
+<div class="admin-card"><h3>➕ Add News</h3><p>Nayi verified news create, draft ya publish karein.</p><button class="admin-btn" onclick="location.href='add-news.html'">Add News</button></div>
+<div class="admin-card"><h3>📝 Drafts</h3><p>Unpublished/draft news edit, publish ya Trash me bhejein.</p><button class="admin-btn" onclick="location.href='drafts.html'">View Drafts</button></div>
+<div class="admin-card"><h3>📰 Published News</h3><p>Published records preview, edit/correct, unpublish ya controlled delete karein.</p><button class="admin-btn" onclick="location.href='published.html'">Manage News</button></div>
+<div class="admin-card"><h3>🗑 Deleted News</h3><p>Trash records restore ya permanently delete karein.</p><button class="admin-btn" onclick="location.href='trash.html'">Open Trash</button></div>
+<div class="admin-card"><h3>📣 Social Distribution</h3><p>Global settings + per-news platform selection/status workflow.</p><button class="admin-btn" onclick="location.href='settings.html'">Global Settings</button> <button class="admin-btn" onclick="location.href='social.html'">Per-News Status</button></div><div class="admin-card"><h3>📢 Advertising <span id="jbAdsPendingCount" class="badge" role="status" aria-live="polite">Checking…</span></h3><p id="jbAdsNewRequestAlert" role="status" aria-live="polite">Latest pending Advertisement Requests: checking backend…</p><button class="admin-btn" onclick="location.href='ads.html'">Open Requests / Manage Ads</button></div>
+<div class="admin-card"><h3>👁 Analytics</h3><p>Daily visitors / article views owner-only backend analytics phase me connect honge.</p><span class="badge">🟡 Backend/API Required</span></div>
+<div class="admin-card"><h3>🔐 Founder Security</h3><p>MFA factors, current trusted session aur logout security controls.</p><button class="admin-btn" onclick="location.href='admin-security.html'">Open Security Center</button></div>
+<div class="admin-card"><h3>📊 Phase 2 Analytics</h3><button class="admin-btn" onclick="location.href='analytics.html'">Open Analytics</button></div><div class="admin-card"><h3>🔔 Notifications</h3><p>Unified low-noise inbox: Live aur Phase-4 domains ke Action Required, Critical, Unread aur history.</p><button class="admin-btn" onclick="location.href='live.html#notifications'">Open Notifications</button></div><div class="admin-card"><h3>📚 Audit & Retention</h3><p>Common audit lookup, retention due/extension/hold/archive, view-count display controls aur controlled disposition.</p><button class="admin-btn" onclick="location.href='records.html'">Open Records</button></div><div class="admin-card"><h3>🛡 Grievance & Compliance</h3><button class="admin-btn" onclick="location.href='grievances.html'">Grievances</button> <button class="admin-btn" onclick="location.href='compliance.html'">Compliance</button></div><div class="admin-card"><h3>👥 Team & Reporters</h3><p>Phase 4 team accounts, roles, status, sessions aur Reporter controls.</p><button class="admin-btn" onclick="location.href='reporters.html'">Open Team Management</button></div><div class="admin-card"><h3>🔴 LIVE</h3><button class="admin-btn" onclick="location.href='live.html'">LIVE Control</button></div><div class="admin-card"><h3>🌐 Visitor Website</h3><p>Public website Supabase se published news fetch karegi. Backend-published article same immutable Article ID URL par open hoga.</p><button class="admin-btn" onclick="location.href='index.html'">Open Website</button></div>
+<div class="admin-card">
+  <button class="admin-btn" onclick="JBBackend.signOut().then(()=>location.href='admin-login.html')">Logout</button>
+</div>
+</main><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js?v=102fix1"></script><script src="backend-client.js?v=102fix1"></script></script><script>
+try{
+  const recoveryState=JSON.parse(
+    localStorage.getItem('jbLimitedRecoveryMode')||'null'
+  );
+
+  if(recoveryState?.verified===true){
+    location.replace('admin-recovery.html');
+  }
+}catch(_){}
+</script><script src="admin-auth.js"></script><script>
+async function jbRecoveryPhysicalReminder(){
+  try{
+    const x=await JBBackend.recoveryPhysicalStatus();
+    const box=document.getElementById('recoveryPhysicalReminder');
+    if(box)box.style.display=x?.due===true?'block':'none';
+  }catch(_){
+    // Pending migration: do not break the existing dashboard.
+  }
+}
+if(document.documentElement.dataset.jbAuth==='ready')jbRecoveryPhysicalReminder();
+else addEventListener('jb-auth-ready',jbRecoveryPhysicalReminder,{once:true});
+
+// Frontend read-only action badge; server-side B3 push/inbox delivery is a separate
+// E2/E5 gate and MUST NOT be claimed by displaying this badge.
+let jbAdLastQueueId=null;
+async function jbAdsDashboardPending(){
+ const badge=document.getElementById('jbAdsPendingCount');
+ const alertBox=document.getElementById('jbAdsNewRequestAlert');
+ if(!badge||!alertBox||document.documentElement.dataset.jbAuth!=='ready'||document.hidden)return;
+ try{
+  const {data,count,error}=await JBBackend.client
+   .from('ad_campaigns').select('id,created_at',{count:'exact'})
+   .eq('status','requested').order('created_at',{ascending:false}).limit(1);
+  if(error)throw error;
+  if(!Number.isSafeInteger(count)||count<0)throw Error('INVALID_AD_REQUEST_COUNT');
+  const latest=data?.[0];
+  const format=(v)=>{
+   const dt=new Date(v);
+   return Number.isFinite(dt.getTime())?
+    new Intl.DateTimeFormat('hi-IN',{timeZone:'Asia/Kolkata',
+     day:'2-digit',month:'short',year:'numeric',hour:'2-digit',
+     minute:'2-digit',hour12:true}).format(dt)+' IST':
+    'समय उपलब्ध नहीं';
+  };
+  badge.textContent='📬 '+count+' Pending';
+  if(jbAdLastQueueId&&latest?.id&&latest.id!==jbAdLastQueueId){
+   alertBox.textContent='🔔 नई विज्ञापन Request आई है! Latest: '+format(latest.created_at);
+  }else{
+   alertBox.textContent=count?
+    'सबसे नई Pending Request: '+format(latest?.created_at):
+    'कोई Pending Advertisement Request नहीं।';
+  }
+  jbAdLastQueueId=latest?.id||null;
+ }catch(_){
+  badge.textContent='Status unavailable';
+  alertBox.textContent='Request count अभी जाँच नहीं पाया। Manage Ads में दोबारा प्रयास करें।';
+ }
+}
+function jbAdsDashboardBoot(){
+ jbAdsDashboardPending();
+ setInterval(()=>{if(!document.hidden)jbAdsDashboardPending();},60000);
+}
+if(document.documentElement.dataset.jbAuth==='ready')jbAdsDashboardBoot();
+else addEventListener('jb-auth-ready',jbAdsDashboardBoot,{once:true});
+</script></body></html>

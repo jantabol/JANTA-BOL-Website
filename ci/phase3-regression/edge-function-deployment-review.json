@@ -1,0 +1,15 @@
+{
+  "reviewed_on": "2026-09-30",
+  "project_id": "vrffsnkycvjithwtiylt",
+  "functions": [
+    {"slug":"jb-live-api","version":30,"verify_jwt":true,"auth_model":"JWT user + current backend actor/session/role/AAL checks"},
+    {"slug":"jb-live-worker","version":20,"verify_jwt":false,"auth_model":"internal scheduled worker secret"},
+    {"slug":"jb-youtube-oauth-start","version":13,"verify_jwt":true,"auth_model":"JWT Owner + AAL2 + current session"},
+    {"slug":"jb-youtube-oauth-callback","version":11,"verify_jwt":false,"auth_model":"one-use hashed OAuth state + fixed callback/channel verification"},
+    {"slug":"jb-youtube-provider","version":25,"verify_jwt":true,"auth_model":"server service-role bearer + generation validation"},
+    {"slug":"jb-encoder-handoff","version":10,"verify_jwt":false,"auth_model":"one-use hashed handoff token"},
+    {"slug":"jb-encoder-launch","version":7,"verify_jwt":false,"auth_model":"one-use hashed handoff token"},
+    {"slug":"jb-encoder-connector-lols","version":2,"verify_jwt":false,"auth_model":"server service-role bearer + allow-listed action/input"}
+  ],
+  "live_api_source_deployment_exact_match_after_review": true
+}

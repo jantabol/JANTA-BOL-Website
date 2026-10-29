@@ -1,0 +1,2 @@
+create index if not exists record_retention_state_policy_key_idx
+on public.record_retention_state(policy_key);

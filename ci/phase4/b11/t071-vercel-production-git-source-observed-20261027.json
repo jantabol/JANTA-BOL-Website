@@ -1,0 +1,32 @@
+{
+  "schema": "P4_T071_T076_VERCEL_PRODUCTION_SOURCE_READONLY_V1",
+  "verified_at_date_ist": "2026-10-27",
+  "scope": "EXISTING_DEPLOYMENT_METADATA_NOT_LIVE_HTTP_CONTENT",
+  "team_id": "team_8axPWNjZuUp3vmEwLOxiKVhn",
+  "project_id": "prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI",
+  "project_name": "shubham-pichhore-2028",
+  "production_deployment_id": "dpl_nFSo2MXg3ASBPgUfXRYDzv2ybP8C",
+  "deployment_state": "READY",
+  "deployment_target": "production",
+  "source_repo": "jantabol/JANTA-BOL-Website",
+  "source_branch": "main",
+  "source_commit": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+  "github_main_commit_at_observation": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+  "production_aliases": [
+    "shubham-pichhore-2028.vercel.app",
+    "shubham-pichhore-2028-git-main-shubhamshrivastava295-9848.vercel.app",
+    "shubham-pichhore-2028-shubhamshrivastava295-9848.vercel.app"
+  ],
+  "checked_in_static_main_html_has_editorially_unverified_corruption_allegation": true,
+  "checked_in_static_main_html_has_unconditional_live_badge": true,
+  "checked_in_static_main_script_has_fetch_calls": false,
+  "source_commit_binding_to_production_deployment_verified": true,
+  "production_build_actual_public_html_http_inspected": false,
+  "production_public_admin_auth_routes_verified": false,
+  "source_code_safe_for_soft_launch": false,
+  "direct_web_http_read_failed": true,
+  "production_files_tree_unavailable_through_vercel_for_git_deploy": true,
+  "no_production_change_executed": true,
+  "soft_launch_release_authorized": false,
+  "comment": "Real Vercel production metadata verifies Git source repo+main SHA and aliases. This is NOT an HTTP proof of what end users currently see. Static main has mock-looking claims; Founder editorial check required before first public launch. Vercel READY does not mean release-safe."
+}

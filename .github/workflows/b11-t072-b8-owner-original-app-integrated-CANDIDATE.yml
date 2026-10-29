@@ -1,0 +1,57 @@
+name: B11 T072 B8 original Founder Android UI integrated protected idempotent proposal NO PROD
+on:
+  push:
+    branches: [codex/b11-t072-b8-owner-ui-integration-review-20261028]
+    paths:
+      - '.github/workflows/b11-t072-b8-owner-original-app-integrated-CANDIDATE.yml'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-owner-idempotency-client.js'
+      - 'ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs'
+      - 'ci/phase4/b11/t072-b8-owner-app-optin-integration.test.mjs'
+permissions:
+  contents: read
+jobs:
+  original_b8_owner_real_source_static_and_synthetic_tests:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t072-b8-owner-ui-integration-review-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - name: Checkout review branch (no persisted credentials)
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Ensure this is isolated original B8 source, no Production or Cricket secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_REF" = "refs/heads/codex/b11-t072-b8-owner-ui-integration-review-20261028"
+          test -z "${DATABASE_URL:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${CRICKET_DATABASE_URL:-}"
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-owner-idempotency-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
+          echo 'T072_ORIGINAL_APP_REVIEW_ONLY_NO_SECRET_NO_PRODUCTION=PASS'
+      - name: Original B8 post-integration client and Android synthetic negative/identity tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test             ci/phase4/b11/t072-original-b8-owner-ui-durable-client.test.mjs             ci/phase4/b11/t072-b8-owner-app-optin-integration.test.mjs
+          echo 'T072_B8_OWNER_UI_INTEGRATED_PROPOSAL_CLIENT_TESTS=PASS_SCOPED'
+      - name: Original real B8 regression tests (no rebuild)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test             ci/phase4/b8-g3-cp01-android-workflow.test.mjs             ci/phase4/b8-g1-mobile-case-picker.test.mjs             ci/phase4/b8-mobile-focused-workflow.test.mjs             ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs             ci/phase4/b8-g4-public-projection-contract.test.mjs             ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+          echo 'T072_ORIGINAL_B8_OLD_ANDROID_PUBLIC_AND_PRIVATE_REGRESSION=PASS_SCOPED'
+          echo 'T072_SAFE_RPC_DEPLOYED_IN_REAL_SUPABASE=NOT_PROVEN'
+          echo 'T072_ANDROID_REAL_PHONE_MANUAL=NOT_TESTED'
+          echo 'T072_FINAL_PASS_LOCK=false'
+          echo 'T075_FULL_E8_FINAL=HOLD'

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JANTA-BOL Founder Security</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+<body>
+<header class="topbar">
+  <h1>JANTA-BOL</h1>
+  <p>Founder Security Center</p>
+</header>
+<main class="page">
+  <a class="back-link" href="admin.html">← Dashboard</a>
+
+  <div id="msg" class="notice backend">Loading verified Founder security state…</div>
+
+  <section class="card">
+    <h2>🔐 Current Trusted Session</h2>
+    <div id="sessionInfo" class="record">Loading…</div>
+    <div id="sessionRows" style="margin-top:12px"></div>
+    <p class="hint">Current session marker JWT session_id se match hota hai. Selected OTHER session revoke karne ke liye recent MFA required hai.</p>
+  </section>
+
+  <section class="card">
+    <h2>📱 MFA / 2FA Factors</h2>
+    <div id="factorRows">Loading…</div>
+    <p class="hint"><strong>#121 / SU-T29:</strong> Final Production Phone/Tab MFA factor ka QR/secret screenshot, chat ya testing evidence me share nahi hoga. Agar factor expose ho jaye to use FINAL PRODUCTION factor na maanein; fresh private factor enroll karke exposed factor revoke karein.</p>
+
+    <h3 class="section-title">Add Fresh Device Factor</h3>
+    <div class="field">
+      <label for="deviceLabel">Founder-defined Device Label</label>
+      <input id="deviceLabel" placeholder="Example: JANTA BOL Tab">
+    </div>
+    <div class="actions">
+      <button id="addFactor" class="btn primary" type="button">Generate Fresh 2FA QR</button>
+    </div>
+
+    <div id="enrollBox" style="display:none;margin-top:16px">
+      <div id="qrBox"></div>
+      <div class="field">
+        <label for="newFactorCode">New Authenticator 6-Digit Code</label>
+        <input id="newFactorCode" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="6-digit code">
+      </div>
+      <button id="verifyNewFactor" class="btn primary" type="button">Verify Fresh Factor</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>🧾 Security Activity</h2>
+    <div class="actions" style="margin-bottom:10px">
+      <button id="refreshActivity" class="btn secondary" type="button">Refresh Activity</button>
+    </div>
+    <div id="activityRows">Loading…</div>
+    <p class="hint">App security audit yahan dikhega. Supabase Auth ke login/password/MFA platform logs alag authoritative layer hain.</p>
+  </section>
+
+  <section class="card" id="recoveryPhysicalCard">
+    <h2>🗝 Recovery Key — 6-Month Physical Check</h2>
+    <div id="physicalStatus" class="record">Loading…</div>
+    <div class="notice" style="margin-top:12px">
+      Key ko website/chat me type nahi karna hai. Dono offline physical copies ko khud physically check karein.
+      Missing/lost copy ko SAFE confirm na karein — pehle Recovery Key rotate karein.
+    </div>
+    <div class="actions">
+      <button id="physicalSafe" class="btn primary" type="button">Recovery Key Checked — Safe</button>
+      <button id="physicalRotated" class="btn warning" type="button">Rotated/Replaced + 2 Copies Safe</button>
+      <a class="btn outline" href="admin-recovery-setup.html" style="text-decoration:none">Rotate Recovery Key</a>
+    </div>
+    <p class="hint">Reminder dismiss button intentionally nahi hai. Due state SAFE confirmation ya proper rotate/replace confirmation tak pending rahegi.</p>
+  </section>
+
+  <section class="card">
+    <h2>🛑 Security Logout Controls</h2>
+    <p class="hint">Normal logout only current device. Security controls intentionally separate hain.</p>
+    <div class="actions">
+      <button id="logoutThis" class="btn secondary" type="button">Logout This Device</button>
+      <button id="logoutOthers" class="btn warning" type="button">Logout All Other Devices</button>
+      <button id="logoutAll" class="btn danger" type="button">Logout All Devices</button>
+    </div>
+  </section>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js?v=102fix1"></script>
+<script src="backend-client.js?v=102fix1"></script>
+<script src="admin-auth.js"></script>
+<script>
+'use strict';
+
+const msg=document.getElementById('msg');
+const sessionInfo=document.getElementById('sessionInfo');
+const factorRows=document.getElementById('factorRows');
+const sessionRows=document.getElementById('sessionRows');
+const activityRows=document.getElementById('activityRows');
+const refreshActivity=document.getElementById('refreshActivity');
+const physicalStatus=document.getElementById('physicalStatus');
+const physicalSafe=document.getElementById('physicalSafe');
+const physicalRotated=document.getElementById('physicalRotated');
+const deviceLabel=document.getElementById('deviceLabel');
+const addFactor=document.getElementById('addFactor');
+const enrollBox=document.getElementById('enrollBox');
+const qrBox=document.getElementById('qrBox');
+const newFactorCode=document.getElementById('newFactorCode');
+const verifyNewFactor=document.getElementById('verifyNewFactor');
+const logoutThis=document.getElementById('logoutThis');
+const logoutOthers=document.getElementById('logoutOthers');
+const logoutAll=document.getElementById('logoutAll');
+let pendingFactorId=null;
+
+function show(text){
+  msg.textContent=text;
+}
+
+function jwtPayload(token){
+  try{
+    const part=String(token||'').split('.')[1]||'';
+    const normalized=part.replace(/-/g,'+').replace(/_/g,'/');
+    const padded=normalized.padEnd(Math.ceil(normalized.length/4)*4,'=');
+    const binary=atob(padded);
+    const bytes=Uint8Array.from(binary,c=>c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  }catch(_){
+    return {};
+  }
+}
+
+async function challengeVerifiedFactor(excludeFactorId=null){
+  const factors=await JBBackend.mfaListFactors();
+
+  const verified=(factors?.totp||[]).filter(
+    f=>f.status==='verified' &&
+    String(f.id)!==String(excludeFactorId||'')
+  );
+
+  if(!verified.length){
+    throw new Error('Alternate verified MFA factor required.');
+  }
+
+  let factor=verified[0];
+
+  if(verified.length>1){
+    const options=verified.map(
+      (f,index)=>
+        `${index+1}. ${String(f.friendly_name||'Unnamed Factor')}`
+    ).join('\n');
+
+    const selected=prompt(
+      'Kaunsa Authenticator factor ka current 6-digit code use kar rahe hain?\n\n'+
+      options+
+      '\n\nFactor number enter karein.'
+    );
+
+    if(selected===null){
+      throw new Error('MFA_STEP_UP_CANCELLED');
+    }
+
+    const selectedIndex=Number(selected.trim())-1;
+
+    if(
+      !Number.isInteger(selectedIndex) ||
+      selectedIndex<0 ||
+      selectedIndex>=verified.length
+    ){
+      throw new Error('Valid Authenticator factor number select karein.');
+    }
+
+    factor=verified[selectedIndex];
+  }
+
+  const factorName=String(
+    factor.friendly_name||'selected factor'
+  );
+
+  const code=prompt(
+    `Fresh ${factorName} Authenticator 6-digit code enter karein`
+  );
+
+  if(code===null){
+    throw new Error('MFA_STEP_UP_CANCELLED');
+  }
+
+  if(!/^\d{6}$/.test(code.trim())){
+    throw new Error('Valid 6-digit Authenticator code required.');
+  }
+
+  await JBBackend.mfaChallengeAndVerify(
+    factor.id,
+    code.trim()
+  );
+
+  const recent=await JBBackend.recentMfaInfo(600);
+
+  if(!recent?.ok){
+    throw new Error('Fresh MFA step-up verify nahi hua.');
+  }
+
+  return true;
+}
+
+async function ensureRecentMfa(){
+  const recent=await JBBackend.recentMfaInfo(600);
+  if(recent?.ok)return true;
+  return challengeVerifiedFactor();
+}
+
+async function renderSessions(claims){
+  sessionRows.innerHTML='';
+  try{
+    const sessions=await JBBackend.ownerListSessions();
+    if(!sessions.length){
+      sessionRows.textContent='Server session list currently empty.';
+      return;
+    }
+
+    sessions.forEach(x=>{
+      const row=document.createElement('div');
+      row.className='record';
+      const current=String(x.session_id)===String(claims.session_id||'');
+
+      const text=document.createElement('div');
+      text.textContent=[
+        current?'CURRENT DEVICE':'OTHER SESSION',
+        x.device_label||'Unlabeled Device',
+        x.aal||'unknown AAL',
+        x.user_agent||'Unknown browser',
+        'Login: '+(x.created_at?new Date(x.created_at).toLocaleString():'-'),
+        'Last active: '+(x.refreshed_at||x.updated_at?new Date(x.refreshed_at||x.updated_at).toLocaleString():'-')
+      ].join(' • ');
+      row.appendChild(text);
+
+      const controls=document.createElement('div');
+      controls.className='actions';
+      controls.style.marginTop='8px';
+
+      const labelInput=document.createElement('input');
+      labelInput.placeholder='Device label';
+      labelInput.value=x.device_label||'';
+      labelInput.style.maxWidth='260px';
+
+      const labelBtn=document.createElement('button');
+      labelBtn.type='button';
+      labelBtn.className='btn secondary';
+      labelBtn.textContent='Save Label';
+      labelBtn.onclick=async()=>{
+        try{
+          await JBBackend.setOwnerSessionLabel(x.session_id,labelInput.value);
+          show('Device label saved.');
+          await renderSecurity();
+        }catch(e){
+          show(e.message||String(e));
+        }
+      };
+      controls.append(labelInput,labelBtn);
+
+      if(!current){
+        const revoke=document.createElement('button');
+        revoke.type='button';
+        revoke.className='btn danger';
+        revoke.textContent='Revoke This Session';
+        revoke.onclick=async()=>{
+          if(!confirm('Selected OTHER session remotely revoke karni hai?'))return;
+          try{
+            await ensureRecentMfa();
+            let evidenceSaved=true;
+            try{
+              await JBBackend.insertSecurityAudit('security_session_evidence_preserved',{
+                target_session_id:String(x.session_id||''),
+                device_label:x.device_label||null,
+                user_agent:x.user_agent||null,
+                ip:x.ip||null,
+                aal:x.aal||null,
+                created_at:x.created_at||null,
+                last_active:x.refreshed_at||x.updated_at||null
+              });
+            }catch(_){
+              evidenceSaved=false;
+            }
+            await JBBackend.ownerRevokeSession(x.session_id);
+            show(evidenceSaved
+              ?'Selected other session revoked. Pre-revoke incident evidence preserved in Security Activity.'
+              :'Selected other session revoked. WARNING: pre-revoke evidence save failed — incident details manually record karein.');
+            await renderSecurity();
+          }catch(e){
+            show(e.message||String(e));
+          }
+        };
+        controls.appendChild(revoke);
+      }
+
+      row.appendChild(controls);
+      sessionRows.appendChild(row);
+    });
+  }catch(e){
+    const note=document.createElement('div');
+    note.className='notice';
+    note.textContent='Full Active Sessions backend panel pending Founder-approved migration. Current session remains visible above.';
+    sessionRows.appendChild(note);
+  }
+}
+
+async function renderFactors(){
+  const f=await JBBackend.mfaListFactors();
+  const totp=f?.totp||[];
+  const verifiedCount=totp.filter(x=>x.status==='verified').length;
+
+  factorRows.innerHTML='';
+  if(!totp.length){
+    factorRows.textContent='Koi TOTP factor nahi mila.';
+    return;
+  }
+
+  totp.forEach(x=>{
+    const row=document.createElement('div');
+    row.className='record';
+
+    const text=document.createElement('div');
+    text.textContent=(x.friendly_name||'Unnamed Factor')+' • '+x.status;
+    row.appendChild(text);
+
+    if(x.status==='verified'){
+      const remove=document.createElement('button');
+      remove.type='button';
+      remove.className='btn danger';
+      remove.style.marginTop='8px';
+      remove.textContent=verifiedCount<=1?'Last Verified Factor — Removal Blocked':'Revoke This Factor';
+      remove.disabled=verifiedCount<=1;
+      remove.onclick=async()=>{
+        if(!confirm('Selected verified MFA factor revoke karna hai?'))return;
+        try{
+          // Always prove possession of another verified factor before removing one.
+          await challengeVerifiedFactor(x.id);
+          await JBBackend.mfaUnenroll(x.id);
+          show('MFA factor revoke request completed. Security state refresh ho rahi hai.');
+          await renderSecurity();
+        }catch(e){
+          show(e.message||String(e));
+        }
+      };
+      row.appendChild(remove);
+    }
+
+    factorRows.appendChild(row);
+  });
+}
+
+async function renderActivity(){
+  activityRows.innerHTML='';
+  try{
+    const rows=await JBBackend.ownerSecurityActivity(50);
+    if(!rows.length){
+      activityRows.textContent='Abhi app security activity record empty hai.';
+      return;
+    }
+    rows.forEach(x=>{
+      const row=document.createElement('div');
+      row.className='record';
+      const when=x.created_at?new Date(x.created_at).toLocaleString():'-';
+      const detail=x.metadata&&Object.keys(x.metadata).length?' • '+JSON.stringify(x.metadata):'';
+      row.textContent=when+' • '+String(x.action||'security_event')+detail;
+      activityRows.appendChild(row);
+    });
+  }catch(e){
+    activityRows.textContent='Security activity unavailable: '+(e.message||String(e));
+  }
+}
+
+async function renderPhysicalStatus(){
+  try{
+    const x=await JBBackend.recoveryPhysicalStatus();
+    if(!x){
+      physicalStatus.textContent='Physical-check status unavailable.';
+      return;
+    }
+    const last=x.last_checked_at?new Date(x.last_checked_at).toLocaleString():'Not checked for current key version';
+    const next=x.next_due_at?new Date(x.next_due_at).toLocaleString():'Due now';
+    physicalStatus.textContent=[
+      x.due?'STATUS: DUE / PENDING ⚠️':'STATUS: CHECKED — SAFE ✅',
+      'Recovery Key Version: '+String(x.key_version??'-'),
+      'Last Checked: '+last,
+      'Next Due: '+next,
+      'Last Outcome: '+String(x.outcome||'-')
+    ].join('\n');
+    physicalStatus.style.whiteSpace='pre-wrap';
+  }catch(e){
+    physicalStatus.textContent='6-month physical-check backend pending Founder-approved migration.';
+  }
+}
+
+async function renderSecurity(){
+  const s=await JBBackend.session();
+  const aal=await JBBackend.mfaAAL();
+  const claims=jwtPayload(s?.access_token||'');
+
+  sessionInfo.textContent=[
+    'Session ID: '+(claims.session_id||'Unavailable'),
+    'AAL: '+(aal?.currentLevel||'unknown'),
+    'Token issued: '+(claims.iat?new Date(claims.iat*1000).toLocaleString():'Unavailable'),
+    'Token expiry: '+(s?.expires_at?new Date(s.expires_at*1000).toLocaleString():'Unavailable'),
+    'Device/Browser: '+navigator.userAgent
+  ].join('\n');
+  sessionInfo.style.whiteSpace='pre-wrap';
+
+  await renderSessions(claims);
+  await renderFactors();
+  await Promise.all([renderActivity(),renderPhysicalStatus()]);
+  show('Verified Founder AAL2 security state ready.');
+}
+
+addFactor.onclick=async()=>{
+  addFactor.disabled=true;
+  try{
+    if(!confirm('Confirm: ye device known-clean/trusted hai aur fresh MFA QR/secret ko screenshot/chat me expose nahi kiya jayega.')){
+      return;
+    }
+    await ensureRecentMfa();
+
+    const label=deviceLabel.value.trim();
+    if(!label)throw new Error('Device label required. Example: JANTA BOL Tab');
+
+    const enrolled=await JBBackend.mfaEnroll(label);
+    pendingFactorId=enrolled?.id||null;
+    const qr=enrolled?.totp?.qr_code||'';
+    if(!pendingFactorId||!qr)throw new Error('Fresh MFA enrollment data missing.');
+
+    qrBox.innerHTML='';
+    const p=document.createElement('p');
+    p.textContent='QR ko sirf is fresh trusted device ke Authenticator se scan karein. Screenshot/chat me share na karein.';
+    const img=document.createElement('img');
+    img.src=qr;
+    img.alt='Fresh MFA QR';
+    img.style.width='220px';
+    img.style.maxWidth='100%';
+    qrBox.append(p,img);
+    enrollBox.style.display='block';
+    show('Fresh unverified factor created. QR scan karke code verify karein.');
+  }catch(e){
+    show(e.message||String(e));
+  }finally{
+    addFactor.disabled=false;
+  }
+};
+
+verifyNewFactor.onclick=async()=>{
+  verifyNewFactor.disabled=true;
+  try{
+    const code=newFactorCode.value.trim();
+    if(!pendingFactorId)throw new Error('Pending factor missing. Fresh QR generate karein.');
+    if(!/^\d{6}$/.test(code))throw new Error('Valid 6-digit code required.');
+
+    await JBBackend.mfaChallengeAndVerify(pendingFactorId,code);
+    pendingFactorId=null;
+    newFactorCode.value='';
+    qrBox.replaceChildren();
+    enrollBox.style.display='none';
+    show('Fresh independent MFA factor verified. Other sessions may need re-login after MFA enrollment security rotation.');
+    await renderSecurity();
+  }catch(e){
+    show(e.message||String(e));
+  }finally{
+    verifyNewFactor.disabled=false;
+  }
+};
+
+refreshActivity.onclick=()=>renderActivity();
+
+physicalSafe.onclick=async()=>{
+  if(!confirm('Dono physical Recovery Key copies available, readable aur safely stored hain?'))return;
+  try{
+    await JBBackend.confirmRecoveryPhysicalCheck('safe');
+    show('Recovery Key physical check recorded — Safe.');
+    await Promise.all([renderPhysicalStatus(),renderActivity()]);
+  }catch(e){
+    show(e.message||String(e));
+  }
+};
+
+physicalRotated.onclick=async()=>{
+  if(!confirm('Fresh Recovery Key ALREADY rotate/activate ho chuki hai aur 2 new physical copies safe hain?'))return;
+  if(!confirm('Confirm: old key invalid hai aur dono new physical copies readable + secure hain.'))return;
+  try{
+    await JBBackend.confirmRecoveryPhysicalCheck('rotated_replaced');
+    show('Rotated/Replaced physical-key check recorded. New 6-month cycle started.');
+    await Promise.all([renderPhysicalStatus(),renderActivity()]);
+  }catch(e){
+    show(e.message||String(e));
+  }
+};
+
+logoutThis.onclick=async()=>{
+  if(!confirm('Sirf is device ko logout karna hai?'))return;
+  await JBBackend.signOut();
+  location.href='admin-login.html';
+};
+
+logoutOthers.onclick=async()=>{
+  if(!confirm('Current device ko rakhkar ALL OTHER sessions revoke karni hain?'))return;
+  try{
+    await ensureRecentMfa();
+    await JBBackend.signOutOtherSessions();
+    show('All other sessions revoke request successful. Current session retained.');
+    await renderSecurity();
+  }catch(e){
+    show(e.message||String(e));
+  }
+};
+
+logoutAll.onclick=async()=>{
+  if(!confirm('ALL device sessions logout karni hain?'))return;
+  if(!confirm('Final confirmation: Founder ko har device par fresh login karna padega. Continue?'))return;
+  try{
+    await ensureRecentMfa();
+    await JBBackend.signOutAllSessions();
+    location.href='admin-login.html';
+  }catch(e){
+    show(e.message||String(e));
+  }
+};
+
+if(document.documentElement.dataset.jbAuth==='ready'){
+  renderSecurity().catch(e=>show(e.message||String(e)));
+}else{
+  addEventListener('jb-auth-ready',()=>renderSecurity().catch(e=>show(e.message||String(e))),{once:true});
+}
+</script>
+</body>
+</html>

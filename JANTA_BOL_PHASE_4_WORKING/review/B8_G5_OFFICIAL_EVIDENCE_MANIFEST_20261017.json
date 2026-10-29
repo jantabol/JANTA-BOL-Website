@@ -1,0 +1,143 @@
+{
+  "schema": "janta-bol-b8-original-topic13-evidence-v1",
+  "source_authority": "JANTA_BOL_PHASE_4_MASTER_EXECUTION_PACK 321pp Topic13 pp312-314; RUN-12",
+  "creation_commit": "a8fadc71066765be5a1ceedbbc6a7f44f0697ade",
+  "production_live_deployment_approved": false,
+  "actual_hosted_e2_verified": false,
+  "physical_android_e3_verified": false,
+  "founder_e5_verified": false,
+  "production_source_e7_verified": false,
+  "official_e9_verified": false,
+  "tests": [
+    {
+      "id": "P4-T092",
+      "checkpoints": [
+        1,
+        8
+      ],
+      "required_evidence": [
+        "E7",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T093",
+      "checkpoints": [
+        9,
+        12
+      ],
+      "required_evidence": [
+        "E2",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T094",
+      "checkpoints": [
+        13,
+        19
+      ],
+      "required_evidence": [
+        "E2",
+        "E5",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T095",
+      "checkpoints": [
+        20,
+        24
+      ],
+      "required_evidence": [
+        "E2",
+        "E5",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T096",
+      "checkpoints": [
+        25,
+        28
+      ],
+      "required_evidence": [
+        "E2",
+        "E4",
+        "E5",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T097",
+      "checkpoints": [
+        29,
+        35
+      ],
+      "required_evidence": [
+        "E2",
+        "E5",
+        "E7",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T098",
+      "checkpoints": [
+        36,
+        44
+      ],
+      "required_evidence": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    },
+    {
+      "id": "P4-T099",
+      "checkpoints": [
+        45,
+        51
+      ],
+      "required_evidence": [
+        "E1",
+        "E2",
+        "E5",
+        "E7",
+        "E9"
+      ],
+      "status": "DUE",
+      "verified_evidence": [],
+      "founder_signature": null
+    }
+  ],
+  "notes": [
+    "Engineering 2/2 PASS is source/isolated only.",
+    "No official delivery or reply proven.",
+    "Vercel Free API deployment daily quota exhausted 17 Oct 2026; no paid upgrade authorized."
+  ]
+}

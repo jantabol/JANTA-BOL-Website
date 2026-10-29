@@ -1,0 +1,71 @@
+name: B11 T075 Schedule Protected Original Backup PREPROD Static Guard No Secrets
+on:
+  push:
+    branches: [codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028]
+    paths:
+      - 'ci/backup/jb-free-offsite-backup.sh'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - 'ci/phase4/b11/storage-readonly-export.mjs'
+      - 'ci/phase4/b11/storage-media-manual-cli.mjs'
+      - 'ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs'
+      - 'ci/phase4/b11/t075-scheduled-backup-identity.mjs'
+      - 'ci/phase4/b11/t075-scheduled-backup-auth.test.mjs'
+      - 'ci/phase4/b11/t075-scheduled-budget.py'
+      - 'ci/phase4/b11/t075-scheduled-budget.test.mjs'
+      - 'ci/phase4/b11/t075-pr58-independent-release-stop.test.mjs'
+      - '.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml'
+      - '.github/workflows/b11-t075-weekly-backup-guard-ci.yml'
+permissions:
+  contents: read
+  pull-requests: read
+jobs:
+  review_only_original_manual_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Strict PR branch isolate and no production secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/b11-t075-scheduled-encrypted-joint-backup-safety-20261028'
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${CRICKET_DATABASE_URL:-}"
+          echo 'T075_PREPROD_SCHEDULE_NO_SECRETS=PASS'
+      - name: All existing T070 manual and new schedule guards with no live provider
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
+          node --check ci/phase4/b11/t075-scheduled-backup-identity.mjs
+          node --check ci/phase4/b11/storage-readonly-export.mjs
+          node --check ci/phase4/b11/storage-media-manual-cli.mjs
+          node --test \
+            ci/phase4/b11/t075-scheduled-backup-auth.test.mjs \
+            ci/phase4/b11/t075-scheduled-budget.test.mjs \
+            ci/phase4/b11/t070-real-joint-manual-safety.test.mjs \
+            ci/phase4/b11/storage-media-manual-safety.test.mjs \
+            ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs \
+            ci/phase4/b11/storage-readonly-export.test.mjs
+          echo 'T075_SCHEDULED_CANDIDATE_MANUAL_AND_MEDIA_NEGATIVES=PASS_SCOPED'
+          echo 'T075_SCHEDULED_GENUINE_PRODUCTION_BACKUP=NOT_RUN'
+          echo 'T075_AUTO_SCHEDULER_NOT_ENABLED_IN_MAIN=true'
+          echo 'T075_E3_PRODUCTION_ACTIVATION=HOLD'
+      - name: Independent GitHub Main plus PR 58 and zero-fee release HOLD audit
+        shell: bash
+        env:
+          GH_REVIEW_ONLY: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t075-pr58-independent-release-stop.test.mjs
+          echo 'T075_PR58_GO_NO_GO=HOLD_ZERO_COST_UNATTESTED_AND_PRODUCTION_NOT_RELEASED'
+

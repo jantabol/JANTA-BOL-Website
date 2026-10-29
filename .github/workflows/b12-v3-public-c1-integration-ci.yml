@@ -1,0 +1,51 @@
+name: V3 Public C1 + Founder Locked Source Regression (Review Only)
+
+on:
+  push:
+    branches:
+      - codex/v3-c1-news-founder-preserve-20261028
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/website-v3.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/admin.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
+      - 'ci/phase4/b12/v3-c1-public-integration.test.cjs'
+      - '.github/workflows/b12-v3-public-c1-integration-ci.yml'
+  pull_request:
+    branches:
+      - codex/b12-b0-b12-reconcile-20261028
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/website-v3.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/article.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/admin.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
+      - 'ci/phase4/b12/v3-c1-public-integration.test.cjs'
+      - '.github/workflows/b12-v3-public-c1-integration-ci.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: jb-v3-c1-readonly-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  c1-v3-founder-guard:
+    name: Offline C1 Projection and Founder Lock (No Secrets or Writes)
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - name: Syntax and source-only regressions
+        run: |
+          node --version
+          node --check JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/website-v3.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs ci/phase4/b12/founder-auth-readonly-regression.test.cjs

@@ -1,0 +1,33 @@
+name: B12 Four-Conflict Temporary Merge Proof (No Release)
+on:
+  push:
+    branches: [codex/softlaunch-no-loss-main-reconcile-20261029]
+    paths:
+      - 'ci/phase4/b12/main-four-conflict-resolution-probe.cjs'
+      - '.github/workflows/b12-four-conflict-resolution-probe.yml'
+  pull_request:
+    branches: [codex/v3-c1-news-founder-preserve-20261028]
+    paths:
+      - 'ci/phase4/b12/main-four-conflict-resolution-probe.cjs'
+      - '.github/workflows/b12-four-conflict-resolution-probe.yml'
+permissions:
+  contents: read
+concurrency:
+  group: jb-b12-proposal-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+jobs:
+  source-probe:
+    name: Four Conflict Choices + Main/Founder Blob No-Loss + Offline Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Fresh protected Main
+        run: git fetch --no-tags origin main:refs/remotes/origin/main
+      - name: Temporary-index source reconciliation (no remote writes)
+        run: |
+          node --check ci/phase4/b12/main-four-conflict-resolution-probe.cjs
+          node ci/phase4/b12/main-four-conflict-resolution-probe.cjs

@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>JANTA-BOL Emergency Recovery Setup</title>
+  <link rel="stylesheet" href="admin-common.css">
+</head>
+
+<body>
+
+<header class="topbar">
+  <h1>JANTA-BOL</h1>
+  <p>Emergency Recovery Setup</p>
+</header>
+
+<main class="page">
+  <div class="form-card">
+
+    <h2>🔐 Emergency Recovery Key</h2>
+
+    <div class="notice backend">
+      Sirf Founder/Super Admin AAL2 verified session
+      Emergency Recovery Key setup kar sakta hai.
+    </div>
+
+    <div id="msg" class="notice" style="display:none"></div>
+
+    <div id="setupArea" style="display:none">
+
+      <p>
+        Ye key sirf genuine emergency me use hogi jab trusted
+        devices available na hon.
+      </p>
+
+      <div class="actions">
+        <button id="generateKey" type="button" class="btn">
+          Generate Recovery Key
+        </button>
+      </div>
+
+      <div id="keyBox" style="display:none;margin-top:18px">
+
+        <label>
+          <strong>Your Emergency Recovery Key</strong>
+        </label>
+
+        <textarea
+          id="recoveryKey"
+          readonly
+          rows="3"
+          style="width:100%;margin-top:8px"
+        ></textarea>
+
+        <p>
+          Is key ko offline safe jagah save karein.
+          Screenshot / WhatsApp / Chat / Gallery me save na karein.
+        </p>
+
+        <label>
+          <input id="savedConfirm" type="checkbox">
+          Maine Recovery Key safely offline save kar li hai.
+        </label>
+
+        <div class="actions" style="margin-top:16px">
+          <button
+            id="activateKey"
+            type="button"
+            class="btn primary"
+            disabled
+          >
+            Activate Recovery Key
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="backend-client.js"></script>
+
+<script>
+'use strict';
+
+const msg=document.getElementById('msg');
+const setupArea=document.getElementById('setupArea');
+const generateKey=document.getElementById('generateKey');
+const keyBox=document.getElementById('keyBox');
+const recoveryKey=document.getElementById('recoveryKey');
+const savedConfirm=document.getElementById('savedConfirm');
+const activateKey=document.getElementById('activateKey');
+
+let generatedKey='';
+
+function showMessage(text){
+  msg.style.display='block';
+  msg.textContent=text;
+}
+
+async function ensureRecentMfa(){
+  const recent=await JBBackend.recentMfaInfo(600);
+  if(recent?.ok)return true;
+
+  const factors=await JBBackend.mfaListFactors();
+  const factor=(factors?.totp||[]).find(x=>x.status==='verified');
+  if(!factor)throw new Error('Verified MFA factor required.');
+
+  const code=prompt('Recovery Security Change ke liye fresh Authenticator 6-digit code enter karein');
+  if(code===null)throw new Error('MFA_STEP_UP_CANCELLED');
+  if(!/^\d{6}$/.test(code.trim()))throw new Error('Valid 6-digit Authenticator code required.');
+
+  await JBBackend.mfaChallengeAndVerify(factor.id,code.trim());
+  const after=await JBBackend.recentMfaInfo(600);
+  if(!after?.ok)throw new Error('Fresh MFA step-up verify nahi hua.');
+  return true;
+}
+
+function makeRecoveryKey(){
+  const consonants='BCDFGHJKLMNPQRSTVWXYZ';
+  const vowels='AEIOU';
+
+  function pick(chars){
+    const n=new Uint32Array(1);
+    crypto.getRandomValues(n);
+    return chars[n[0]%chars.length];
+  }
+
+  function makeWord(){
+    let word='';
+
+    for(let i=0;i<3;i++){
+      word+=pick(consonants);
+      word+=pick(vowels);
+    }
+
+    return word;
+  }
+
+  return 'JB-RK-' + [
+    makeWord(),
+    makeWord(),
+    makeWord(),
+    makeWord()
+  ].join('-');
+}
+
+async function boot(){
+  try{
+    const s=await JBBackend.session();
+
+    if(!s){
+      throw new Error('AUTH_REQUIRED');
+    }
+
+    const r=await JBBackend.role();
+
+    if(r!=='owner'){
+      throw new Error('OWNER_REQUIRED');
+    }
+
+    const aal=await JBBackend.mfaAAL();
+
+    if(aal?.currentLevel!=='aal2'){
+      throw new Error('AAL2_REQUIRED');
+    }
+
+    setupArea.style.display='block';
+
+  }catch(e){
+    showMessage(
+      e.message==='AAL2_REQUIRED'
+        ? 'Founder 2FA verification required.'
+        : 'Secure Founder/Owner session required.'
+    );
+
+    setupArea.style.display='none';
+  }
+}
+
+generateKey.onclick=()=>{
+  generatedKey=makeRecoveryKey();
+
+  recoveryKey.value=generatedKey;
+  keyBox.style.display='block';
+
+  savedConfirm.checked=false;
+  activateKey.disabled=true;
+
+  showMessage(
+    'Recovery Key generated. Isko offline safely save karein.'
+  );
+};
+
+savedConfirm.onchange=()=>{
+  activateKey.disabled=!savedConfirm.checked;
+};
+
+activateKey.onclick=async()=>{
+  activateKey.disabled=true;
+
+  try{
+    if(!generatedKey){
+      throw new Error('Recovery Key missing');
+    }
+
+    if(!savedConfirm.checked){
+      throw new Error('Pehle safe-save confirmation karein');
+    }
+
+    await ensureRecentMfa();
+    await JBBackend.setOwnerRecoveryKey(generatedKey);
+
+    generatedKey='';
+    recoveryKey.value='';
+    keyBox.style.display='none';
+
+    showMessage(
+      'Emergency Recovery Key activated successfully. Ab 2 physical copies verify karke Security Center me 6-month physical check confirm karein.'
+    );
+
+  }catch(e){
+    showMessage(
+      e.message || 'Recovery Key activation failed'
+    );
+
+    activateKey.disabled=false;
+  }
+};
+
+boot();
+</script>
+
+</body>
+</html>
