@@ -49,16 +49,26 @@ test('T077 E6 LIVE: Vercel Authentication denies public access to old and new Pr
   console.log('T077_E6_VERCEL_PROTECTION=PASS; HOST='+host+'; HTTP='+r.status);
  }
 });
-test('T077 E6 LIVE: canonical jantabol.in and assigned production alias serve unchanged production config',async()=>{
+test('T077 E6 LIVE: canonical jantabol.in and assigned production alias serve pinned post-rotation production config',async()=>{
  const [cfg,html,alias]=await Promise.all([get(PROD,'supabase-config.js'),get(PROD,'article.html'),get(PROD_ALIAS,'supabase-config.js')]);
  assert.equal(cfg.status,200);assert.equal(html.status,200);assert.equal(alias.status,200);
  assert.equal(cfg.tls,true);assert.equal(html.tls,true);assert.equal(alias.tls,true);
  assert(alias.body.equals(cfg.body),'public production alias not same deployed code');
  const gitBlob=createHash('sha1').update(Buffer.from('blob '+cfg.body.length)).update(Buffer.from([0])).update(cfg.body).digest('hex');
- assert.equal(gitBlob,'ceb2d5d3a5ccd1b31f561a2511f92d39c9bfdfff','unexpected production config change');
- const context={window:{},document:{}};
+ // Pinned live post-key-rotation config, NOT the archived pre-rotation blob.
+ // A SHA mismatch is a real unreviewed production source change: fail closed.
+ assert.equal(gitBlob,'c7f4271015cef71fbb449be344423efdf99b466e','unexpected production config change');
+ const context={window:{location:{protocol:'https:',hostname:PROD,href:'https://'+PROD+'/' }},document:{}};
  vm.runInNewContext(cfg.body.toString('utf8'),context,{timeout:1000});
+ assert.equal(context.window.JB_PREVIEW_NO_PRODUCTION_BACKEND,false);
  assert.equal(context.window.JB_SUPABASE_CONFIG.url,'https://vrffsnkycvjithwtiylt.supabase.co');
+ assert.match(context.window.JB_SUPABASE_CONFIG.publishableKey,/^sb_publishable_/);
+ // Same EXACT production bytes when interpreted as legacy Preview must deny backend boot.
+ const denied={window:{location:{protocol:'https:',hostname:HOSTS[0],href:'https://'+HOSTS[0]+'/'}},
+   document:{readyState:'complete',body:{innerHTML:''},documentElement:{style:{}}}};
+ vm.runInNewContext(cfg.body.toString('utf8'),denied,{timeout:1000});
+ assert.equal(denied.window.JB_PREVIEW_NO_PRODUCTION_BACKEND,true);
+ assert.equal(denied.window.JB_SUPABASE_CONFIG,null);
  assert.match(html.body.toString('utf8'),/JANTA\s*BOL/);
  console.log('T077_E6_CANONICAL_PUBLIC_TLS_AND_PUBLISHED_CODE_UNCHANGED=PASS');
 });
