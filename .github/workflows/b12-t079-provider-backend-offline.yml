@@ -1,0 +1,77 @@
+name: P4-T079 Social/Ads/Messaging/Notifications Backend Guards (NO REAL PROVIDER)
+on:
+  push:
+    branches: [codex/b12-t079-provider-backend-offline-20261029]
+    paths:
+      - '.github/workflows/b12-t079-provider-backend-offline.yml'
+      - 'ci/phase4/b12/t079-external-provider-failclosed.cjs'
+      - 'ci/phase4/b12/t079-provider-backend.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_BACKEND_PROVIDER_PREFLIGHT_20261029.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  t079_backend_guard:
+    name: T079 four-provider no-fake-PASS and protected old contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce strictly additive T079 source changes from last reviewed T078 branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only a67cfe7b8fc61392659fdc2e5a5f1becad573895 HEAD | sort > /tmp/t079-actual-files
+          cat > /tmp/t079-expected-files <<'EOF'
+          .github/workflows/b12-t079-provider-backend-offline.yml
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_BACKEND_PROVIDER_PREFLIGHT_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json
+          ci/phase4/b12/t079-external-provider-failclosed.cjs
+          ci/phase4/b12/t079-provider-backend.test.cjs
+          EOF
+          diff -u /tmp/t079-expected-files /tmp/t079-actual-files
+          test "$(git hash-object JANTA_BOL_PHASE_3C_WORKING/social.html)" = "$(git rev-parse a67cfe7b8fc61392659fdc2e5a5f1becad573895:JANTA_BOL_PHASE_3C_WORKING/social.html)"
+          test "$(git hash-object JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js)" = "$(git rev-parse a67cfe7b8fc61392659fdc2e5a5f1becad573895:JANTA_BOL_PHASE_3C_WORKING/phase4-domain-client.js)"
+          test "$(git hash-object JANTA_BOL_PHASE_3C_WORKING/phase2-client.js)" = "$(git rev-parse a67cfe7b8fc61392659fdc2e5a5f1becad573895:JANTA_BOL_PHASE_3C_WORKING/phase2-client.js)"
+      - name: No production credentials, paid provider or external effects
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_GOOGLE_CLIENT_SECRET:-}"
+          test -z "${META_APP_SECRET:-}"
+          test -z "${WHATSAPP_API_TOKEN:-}"
+          test -z "${PAYMENT_GATEWAY_SECRET:-}"
+          test -z "${B2_APPLICATION_KEY:-}"
+      - name: T079 Social plus Ads plus Advertiser Messaging plus Notifications fail-closed and future accounts
+        run: node --test ci/phase4/b12/t079-provider-backend.test.cjs
+      - name: Original protected B7 Owner payment evidence and no legacy approval
+        run: node --test ci/phase4/b7-t038-cp01-manual-payment-source.test.cjs ci/phase4/b7-legacy-payment-client-gate.test.cjs
+      - name: Original runtime, Edge, Admin, workflow high-confidence secret scanner
+        run: node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+      - name: Old ZIP secret and traversal regression unchanged
+        run: python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: Original Phase3 security and recovery source continuity
+        shell: bash
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+      - name: Official T079 remains E6 DUE, never pass before real provider
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/t079-stop.json
+          code=$?
+          set -e
+          test "$code" -eq 3
+          node -e "const r=require('/tmp/t079-stop.json');if(r.release!=='HOLD'||r.ready_to_consider_founder_release||!r.issues.includes('P4-T079:IN_PROGRESS')||!r.issues.includes('P4-T079:MISSING_E6')||!r.issues.includes('P4-T078:BLOCKED'))process.exit(1)"
