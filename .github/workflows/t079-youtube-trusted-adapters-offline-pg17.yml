@@ -33,16 +33,18 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Exact five-file review scope; no LIVE/OAuth/News/production migration edits
+      - name: Exact seven-file review scope; no LIVE/OAuth/News/production migration edits
         shell: bash
         run: |
           set -euo pipefail
           git diff --name-only 99898e2f1f75ef33d16d21b70077eca2a0f1f630 HEAD | sort > /tmp/actual
           cat >/tmp/expected <<'EOF'
           .github/workflows/t079-youtube-trusted-adapters-offline-pg17.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/credential-issuer.mjs
           CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/trusted-adapters.mjs
           JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_TRUSTED_ADAPTERS_20261029.md
           JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql
+          ci/phase4/b12/t079-youtube-credential-issuer.test.mjs
           ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
           EOF
           diff -u /tmp/expected /tmp/actual
@@ -55,6 +57,8 @@ jobs:
           psql -v ON_ERROR_STOP=1 -tAc "SELECT has_function_privilege('service_role','public.jb_t079_video_get_internal(uuid)','EXECUTE')" | grep -qx t
       - name: Read-only trusted Server Owner/Storage/Approval/AES and exact RPC fixtures
         run: node --test ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
+      - name: Server-only existing encrypted Google credential, same Channel ID tests
+        run: node --test ci/phase4/b12/t079-youtube-credential-issuer.test.mjs
       - name: Previous full private-video worker and transport synthetic E2E
         run: |
           node --test ci/phase4/b12/t079-youtube-upload-worker.test.mjs
