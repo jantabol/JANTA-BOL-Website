@@ -1,0 +1,77 @@
+name: T079 YouTube Video Ledger Isolated PG17 (NO LIVE DB)
+on:
+  push:
+    branches: [codex/t079-youtube-ledger-isolated-pg17-20261029]
+    paths:
+      - '.github/workflows/t079-youtube-ledger-isolated-pg17.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql'
+      - 'ci/phase4/b12/t079-youtube-ledger-isolated-pg17.sql'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_DURABLE_LEDGER_CANDIDATE_20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  disposable_pg17:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: local_pg17_only_t079
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      PGHOST: 127.0.0.1
+      PGPORT: 5432
+      PGUSER: postgres
+      PGPASSWORD: local_pg17_only_t079
+      PGDATABASE: postgres
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Five scoped T079 paths; no original LIVE, OAuth, admin, news changes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 444ce7030be636dddc920c1cae2b2b2058839835 HEAD | sort > /tmp/actual
+          cat >/tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-ledger-isolated-pg17.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-transport/protocol.mjs
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_DURABLE_LEDGER_CANDIDATE_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql
+          ci/phase4/b12/t079-youtube-ledger-isolated-pg17.sql
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          for file in CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts JANTA_BOL_PHASE_3C_WORKING/admin-auth.js JANTA_BOL_PHASE_3C_WORKING/live.html JANTA_BOL_PHASE_3C_WORKING/social.html; do
+            git diff --quiet 444ce7030be636dddc920c1cae2b2b2058839835 HEAD -- "$file"
+          done
+          test ! -f CODEX_CURRENT_SUPABASE/migrations/t079_youtube_live.sql
+      - name: Actual isolated PostgreSQL17 transactional reservation and RLS/ACL tests
+        run: |
+          set -euo pipefail
+          psql -v ON_ERROR_STOP=1 --file=ci/phase4/b12/t079-youtube-ledger-isolated-pg17.sql
+          psql -v ON_ERROR_STOP=1 -tAc "select count(*) from private.jb_t079_youtube_video_jobs" | grep -qx '2'
+      - name: Existing YouTube offline PRIVATE resumable protocol regression
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+          node --test ci/phase4/b12/t079-youtube-video-transport.test.mjs
+      - name: Security regression and no fake T079 Global PASS
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b12/t079-provider-backend.test.cjs
+          node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs

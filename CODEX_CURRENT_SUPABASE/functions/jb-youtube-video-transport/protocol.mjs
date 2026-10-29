@@ -102,9 +102,10 @@ async function uploadChunk({fetcher,accessToken,sessionUrl,totalBytes,startByte,
  if(!Number.isSafeInteger(startByte)||startByte<0||startByte>=totalBytes)fail("UPLOAD_RANGE_INVALID");
  if(!(bytes instanceof Uint8Array)||bytes.length<1||bytes.length>4*1024*1024)fail("UPLOAD_CHUNK_INVALID");
  const end=startByte+bytes.length-1;
- if(end>=totalBytes) {
-  if(end!==totalBytes-1)fail("UPLOAD_RANGE_INVALID");
- }else if(bytes.length%(256*1024)!==0)fail("UPLOAD_CHUNK_ALIGN_INVALID");
+ // The final byte index is (totalBytes - 1), not totalBytes.
+ // Permit a short exact-final chunk; all non-final chunks stay 256KiB aligned.
+ if(end>=totalBytes)fail("UPLOAD_RANGE_INVALID");
+ if(end!==totalBytes-1&&bytes.length%(256*1024)!==0)fail("UPLOAD_CHUNK_ALIGN_INVALID");
  let response;
  try{response=await fetcher(valid,{method:"PUT",redirect:"manual",
   headers:{Authorization:`Bearer ${accessToken}`,"Content-Type":"video/mp4",
