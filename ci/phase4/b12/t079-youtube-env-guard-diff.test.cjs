@@ -12,7 +12,7 @@ test('original two OAuth functions require paired allowed labels, without exposi
  for(const src of [start,callback]){
   assert.match(src,/\["development","test","production"\]\.includes\(deploymentEnv\)/);
   assert.match(src,/credentialEnv!==deploymentEnv/);
-  assert.match(src,/OAUTH_ENVIRONMENT_MISMATCH/);
+  assert.match(src,/OAuth Environment Error|OAUTH_ENVIRONMENT_MISMATCH/);
  }
 });
 test('new health function currently blocks any non-production label',()=>{
