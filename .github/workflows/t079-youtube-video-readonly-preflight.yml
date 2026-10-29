@@ -1,0 +1,60 @@
+name: T079 YouTube News Video Backend Preflight - No Upload
+on:
+  push:
+    branches: [codex/t079-youtube-video-distribution-safe-preflight-20261029]
+    paths:
+      - '.github/workflows/t079-youtube-video-readonly-preflight.yml'
+      - 'CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-preflight/index.ts'
+      - 'ci/phase4/b12/t079-youtube-video-preflight.test.cjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_VIDEO_DISTRIBUTION_BACKEND_20261029.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  safe_video_preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exactly four additive paths and original Live/news/auth files unchanged
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 57a837b559dde49b7dd0f8800aefa6ecb71299fd HEAD | sort > /tmp/actual
+          cat > /tmp/expected <<'EOF'
+          .github/workflows/t079-youtube-video-readonly-preflight.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-preflight/index.ts
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_VIDEO_DISTRIBUTION_BACKEND_20261029.md
+          ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          test -z "$(git diff --diff-filter=M --name-only 57a837b559dde49b7dd0f8800aefa6ecb71299fd HEAD)"
+      - name: Video E6 fail-closed and no-upload readiness negative contract
+        run: node --test ci/phase4/b12/t079-youtube-video-preflight.test.cjs
+      - name: Existing T079 four-provider false Posted/paid/sent negative guards
+        run: node --test ci/phase4/b12/t079-provider-backend.test.cjs
+      - name: Preserve original OAuth/MFA channel and deployed refresh tests
+        run: node --test ci/phase4/b12/t079-youtube-oauth-health.test.cjs
+      - name: Protected backend secret source and ZIP archive scans
+        run: |
+          set -euo pipefail
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 ci/phase4/b10-t064-archive-secret-inventory.py
+      - name: Original Phase3 security and Recovery guards
+        run: |
+          set -euo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+      - name: Global B12 remains HOLD and no fake T079 E6
+        shell: bash
+        run: |
+          set -euo pipefail
+          set +e
+          node ci/phase4/b12/b12-release-gate.cjs --status > /tmp/t079.json
+          status=$?
+          set -e
+          test "$status" -eq 3
+          node -e "const j=require('/tmp/t079.json');if(j.release!=='HOLD'||!j.issues.includes('P4-T079:IN_PROGRESS')||!j.issues.includes('P4-T079:MISSING_E6'))process.exit(1)"
