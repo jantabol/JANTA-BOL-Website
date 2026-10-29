@@ -1,0 +1,141 @@
+name: B12 Isolated Integration Branch Build — No Production Changes
+on:
+  push:
+    branches:
+      - codex/softlaunch-no-loss-main-reconcile-20261029
+    paths:
+      - '.github/workflows/b12-build-isolated-integration.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: jb-b12-isolated-merge-only
+  cancel-in-progress: false
+
+jobs:
+  integrate-in-isolation:
+    if: github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/softlaunch-no-loss-main-reconcile-20261029'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      STAGE_BRANCH: codex/b12-main-v3-integrated-review-20261029
+      EXPECTED_MAIN: f447231c0677644ca5a44cc19f12cf0314ff38ea
+    steps:
+      - name: Checkout exact protected review branch, no persisted credentials
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Validate immutable Main identity and stage branch not already present
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          test "$(git rev-parse refs/remotes/origin/main)" = "$EXPECTED_MAIN"
+          if git ls-remote --exit-code --heads origin "$STAGE_BRANCH" >/dev/null 2>&1; then
+            echo "::error::Stage branch already exists. Refusing overwrite."
+            exit 2
+          fi
+          git status --porcelain
+          test -z "$(git status --porcelain)"
+
+      - name: Resolve exactly four previously audited add/add conflicts on NEW local branch
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          git config user.name "JANTA BOL Isolated Release Gate"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch --create "$STAGE_BRANCH" refs/remotes/origin/main
+          set +e
+          git merge --no-commit --no-ff "$GITHUB_SHA" > /tmp/jb-b12-merge-output 2>&1
+          merge_rc=$?
+          set -e
+          test "$merge_rc" = 1
+          git diff --name-only --diff-filter=U | LC_ALL=C sort > /tmp/jb-b12-actual-conflicts
+          cat > /tmp/jb-b12-expected-conflicts <<'EOF'
+          .github/workflows/b11-t070-real-joint-restore-MANUAL.yml
+          ci/phase4/b11/storage-media-manual-cli.mjs
+          ci/phase4/b11/storage-readonly-export.mjs
+          ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs
+          EOF
+          LC_ALL=C sort -o /tmp/jb-b12-expected-conflicts /tmp/jb-b12-expected-conflicts
+          diff -u /tmp/jb-b12-expected-conflicts /tmp/jb-b12-actual-conflicts
+          git checkout --ours -- .github/workflows/b11-t070-real-joint-restore-MANUAL.yml
+          git checkout --theirs -- ci/phase4/b11/storage-media-manual-cli.mjs
+          git checkout --theirs -- ci/phase4/b11/storage-readonly-export.mjs
+          git checkout --theirs -- ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs
+          git add -- .github/workflows/b11-t070-real-joint-restore-MANUAL.yml
+          git add -- ci/phase4/b11/storage-media-manual-cli.mjs
+          git add -- ci/phase4/b11/storage-readonly-export.mjs
+          git add -- ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs
+          test -z "$(git ls-files -u)"
+          git diff --cached --check
+          echo "EXACT_FOUR_CONFLICTS_RESOLVED_IN_NEW_LOCAL_BRANCH=PASS"
+
+      - name: Full blob preservation audit on exact STAGED working tree
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node - <<'JS'
+          'use strict';
+          const cp=require('node:child_process');
+          const fs=require('node:fs');
+          function git(args){let r=cp.spawnSync('git',args,{encoding:'utf8',maxBuffer:16e6});if(r.status!==0)throw Error(r.stderr||args.join(' '));return r.stdout.trim();}
+          const base=git(['merge-base','refs/remotes/origin/main',process.env.GITHUB_SHA]);
+          const changed=rev=>new Set(git(['diff','--name-only','-z',base,rev]).split('\0').filter(Boolean));
+          const main=changed('refs/remotes/origin/main');
+          const candidate=changed(process.env.GITHUB_SHA);
+          const pathBlob=(rev,p)=>{let r=cp.spawnSync('git',['rev-parse','--verify',rev+':'+p],{encoding:'utf8'});return r.status===0?r.stdout.trim():null};
+          const workingBlob=p=>fs.existsSync(p)?git(['hash-object',p]):null;
+          let checkedMain=0,checkedCandidate=0,fail=[];
+          for(const p of main) if(!candidate.has(p)){
+            checkedMain++;
+            if(pathBlob('refs/remotes/origin/main',p)!==workingBlob(p))fail.push('MAIN_LOSS '+p);
+          }
+          for(const p of candidate) if(!main.has(p)){
+            checkedCandidate++;
+            if(pathBlob(process.env.GITHUB_SHA,p)!==workingBlob(p))fail.push('CANDIDATE_LOSS '+p);
+          }
+          const policies=new Map([
+            ['.github/workflows/b11-t070-real-joint-restore-MANUAL.yml','refs/remotes/origin/main'],
+            ['ci/phase4/b11/storage-media-manual-cli.mjs',process.env.GITHUB_SHA],
+            ['ci/phase4/b11/storage-readonly-export.mjs',process.env.GITHUB_SHA],
+            ['ci/phase4/b11/t070-joint-storage-snapshot-identity.mjs',process.env.GITHUB_SHA]
+          ]);
+          for(const [p,rev] of policies)if(workingBlob(p)!==pathBlob(rev,p))fail.push('CONFLICT_POLICY '+p);
+          const sensitive=['JANTA_BOL_PHASE_3C_WORKING/admin-auth.js','JANTA_BOL_PHASE_3C_WORKING/admin-login.html','JANTA_BOL_PHASE_3C_WORKING/admin-security.html','JANTA_BOL_PHASE_3C_WORKING/backend-client.js','JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js','JANTA_BOL_PHASE_3C_WORKING/article.html','JANTA_BOL_PHASE_3C_WORKING/website-v3.js'];
+          for(const p of sensitive)if(workingBlob(p)!==pathBlob(process.env.GITHUB_SHA,p))fail.push('FOUNDER_SECURITY_OR_ARTICLE_CHANGED '+p);
+          console.log(JSON.stringify({stage:'B12_SOURCE_PRESERVATION',main_only_checked:checkedMain,candidate_only_checked:checkedCandidate,explicit_conflict_policies:policies.size,protected_v3_paths:sensitive.length,fail},null,2));
+          if(fail.length)process.exit(2);
+          JS
+
+      - name: Offline merged-tree regression — must pass before branch creation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js
+          node --test \
+            ci/phase4/b12/v3-c1-public-integration.test.cjs \
+            ci/phase4/b12/founder-auth-readonly-regression.test.cjs \
+            ci/phase4/b11/storage-media-manual-safety.test.mjs \
+            ci/phase4/b11/storage-readonly-export.test.mjs \
+            ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs \
+            ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+
+      - name: Create isolated merge commit, then push ONLY previously absent stage branch
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -Eeuo pipefail
+          git commit -m "stage(b12): merge protected Main + complete V3 candidate, 4 audited B11 conflict choices [NO PROD]"
+          test "$(git rev-list --parents -n 1 HEAD | awk '{print NF}')" = 3
+          git -c http.extraheader="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+            push origin "HEAD:refs/heads/$STAGE_BRANCH"
+          echo "STAGED_BRANCH_CREATED=$STAGE_BRANCH"
+          echo "STAGED_SHA=$(git rev-parse HEAD)"
+          echo "PRODUCTION_MAIN_UNCHANGED=YES"
