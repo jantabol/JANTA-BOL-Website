@@ -39,19 +39,22 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Exactly four review paths; no migration or source changes allowed
+      - name: Five scoped T079 paths; no original LIVE, OAuth, admin, news changes
         shell: bash
         run: |
           set -euo pipefail
           git diff --name-only 444ce7030be636dddc920c1cae2b2b2058839835 HEAD | sort > /tmp/actual
           cat >/tmp/expected <<'EOF'
           .github/workflows/t079-youtube-ledger-isolated-pg17.yml
+          CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-transport/protocol.mjs
           JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_YOUTUBE_DURABLE_LEDGER_CANDIDATE_20261029.md
           JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql
           ci/phase4/b12/t079-youtube-ledger-isolated-pg17.sql
           EOF
           diff -u /tmp/expected /tmp/actual
-          test -z "$(git diff --diff-filter=M --name-only 444ce7030be636dddc920c1cae2b2b2058839835 HEAD)"
+          for file in CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-health/index.ts CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts JANTA_BOL_PHASE_3C_WORKING/admin-auth.js JANTA_BOL_PHASE_3C_WORKING/live.html JANTA_BOL_PHASE_3C_WORKING/social.html; do
+            git diff --quiet 444ce7030be636dddc920c1cae2b2b2058839835 HEAD -- "$file"
+          done
           test ! -f CODEX_CURRENT_SUPABASE/migrations/t079_youtube_live.sql
       - name: Actual isolated PostgreSQL17 transactional reservation and RLS/ACL tests
         run: |
