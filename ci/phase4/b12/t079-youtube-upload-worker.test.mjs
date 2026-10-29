@@ -248,3 +248,14 @@ test('review-only source has no Edge entrypoint, cron, stored tokens, service se
  assert.match(workerSource,/UNKNOWN_RECONCILIATION_REQUIRED/);
  assert.match(workerSource,/privateVideo/);
 });
+
+test('durable UPLOADING in-flight lease blocks overlapping bytes even if Google returns 308',async()=>{
+ const h=harness({size:524288});
+ const s=await startPrivateUpload({ports:h.ports,articleId});
+ h.row.state='UPLOADING'; // simulate previous server process still sending bytes
+ const out=await resumeOneChunk({ports:h.ports,jobId:s.jobId});
+ assert.equal(out.state,'IN_FLIGHT_SESSION_RECONCILIATION_HOLD');
+ assert.equal(h.counters.uploaded,0);
+ assert.equal(h.counters.postCount,1);
+ assert.equal(h.row.state,'UPLOADING');
+});
