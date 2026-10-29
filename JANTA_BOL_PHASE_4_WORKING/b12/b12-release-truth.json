@@ -106,10 +106,18 @@
       ]
     },
     "P4-T079": {
-      "status": "NOT_RUN",
+      "status": "IN_PROGRESS",
       "evidence": [],
       "manual_required": false,
-      "implementation_note": "provider dependencies are fail-closed DUE-candidate, not automatically DUE"
+      "implementation_note": "2026-10-29: T079 BACKEND ONLY active. Existing B3+B4 Social/Notification and B7 Ads/Advertiser interfaces, real JANTA BOL production tables/RLS/anon ACL and aggregates inspected without mutations. Synthetic/offline E7 provider fail-closed tests prepared; real provider E6 positive/negative and Founder-created social accounts NOT RUN. Provider-specific classification REAL_PROVIDER_DUE; cannot claim a remote post, payment or message. No paid setup, main merge, production changes or Cricket.",
+      "partial_proofs": [
+        "Actual 2026-10-29 Supabase read-only: social distribution 5, history 9, settings 1/global enabled; Owner social RPCs exist, anon EXECUTE denied; anon direct SELECT/INSERT/UPDATE on Social tables denied.",
+        "Actual read-only B7 Ads: campaigns 7, payments 0, LIVE Ads 0; verified legacy manual-payment UI refuses unauthorized direct confirmation; no provider/bank receipt was tested.",
+        "Actual read-only B3: live_notifications 160, history 11, external_delivery_outbox 0; Owner/private tables RLS on with anon direct access denied. In-app notifications are not external delivered receipts.",
+        "Advertiser Portal source has token session/request/change path, but no real WhatsApp/email/SMS sender delivery verified. Do not create real customer or payment.",
+        "Social Readiness contract prepared for Founder-owned Facebook/Instagram/WhatsApp/YouTube accounts; no OAuth tokens or API keys requested; channel creation/API permission/provider receipt later E6.",
+        "Backend E7 source/CI report: JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_BACKEND_PROVIDER_PREFLIGHT_20261029.md, test ci/phase4/b12/t079-provider-backend.test.cjs. Final CI run to be verified. All four real providers DUE pending."
+      ]
     },
     "P4-T080": {
       "status": "NOT_RUN",
