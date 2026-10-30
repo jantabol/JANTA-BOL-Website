@@ -140,6 +140,23 @@ def main():
       check("E1_ANON_DIRECT_ARTICLES_BLOCKED",
         status in (401,403) or (status==200 and isinstance(records,list) and len(records)==0),
         f"HTTP {status}, visible_rows {len(records) if isinstance(records,list) else 'not_array'}")
+      # Security triage: if public publishable key can see raw articles, prove
+      # whether ANY draft/deleted rows leak, without printing titles/IDs/content.
+      status,_,_,raw=get_api("/rest/v1/articles?select=id,status,deleted_at&limit=100",key)
+      rows=parse_json(raw)
+      if status==200 and isinstance(rows,list):
+        leaked=[x for x in rows if isinstance(x,dict) and
+          (x.get("status")!="published" or x.get("deleted_at") is not None)]
+        unknown=[x for x in rows if isinstance(x,dict) and
+          x.get("id") not in {PUBLIC_ID,SECOND_ID}]
+        print("ANON_ARTICLES_PRIVACY_DIAGNOSTIC",
+          json.dumps({"http":status,"visible_total":len(rows),
+            "unpublished_or_deleted_count":len(leaked),"not_in_current_published_allowlist":len(unknown)}))
+        check("E1_NO_DRAFT_OR_DELETED_EXPOSURE",not leaked and not unknown,
+          f"public raw rows {len(rows)}, unpublished or unexpected {len(leaked)+len(unknown)}")
+      else:
+        check("E1_NO_DRAFT_OR_DELETED_EXPOSURE",status in (401,403),
+          f"HTTP {status}, denied/no row access")
       status,_,_,raw=get_api("/rest/v1/grievances?select=id&limit=1",key)
       check("E1_ANON_PRIVATE_GRIEVANCE_BLOCKED",status in (401,403),
         f"HTTP {status} (expected forbidden)")
