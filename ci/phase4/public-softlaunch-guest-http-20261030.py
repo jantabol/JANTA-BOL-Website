@@ -134,12 +134,19 @@ def main():
       data=parse_json(raw);found=data.get("items") if isinstance(data,dict) else None
       check("E1_GUEST_NO_MATCH_SEARCH",status==200 and isinstance(found,list)
         and len(found)==0,f"HTTP {status}")
-      status,_,_,raw=get_api("/rest/v1/articles?select=id&limit=1",key)
-      # Access is deliberately denied by RLS+ACL to anon; no draft or private data.
+      # Deliberately permitted published-only article columns remain public.
+      # No unpublished/deleted row may be returned through guest RLS.
+      status,_,_,raw=get_api("/rest/v1/articles?select=id,status&limit=100",key)
       records=parse_json(raw)
-      check("E1_ANON_DIRECT_ARTICLES_BLOCKED",
-        status in (401,403) or (status==200 and isinstance(records,list) and len(records)==0),
-        f"HTTP {status}, visible_rows {len(records) if isinstance(records,list) else 'not_array'}")
+      visible_ids={x.get("id") for x in records if isinstance(x,dict)} if isinstance(records,list) else set()
+      check("E1_ANON_RAW_PUBLIC_COLUMNS_PUBLISHED_ONLY",
+        status==200 and isinstance(records,list) and len(records)==2 and
+        visible_ids=={PUBLIC_ID,SECOND_ID} and
+        all(x.get("status")=="published" for x in records if isinstance(x,dict)),
+        f"HTTP {status}, public_rows {len(records) if isinstance(records,list) else 'not_array'}")
+      status,_,_,raw=get_api("/rest/v1/articles?select=created_by&limit=1",key)
+      check("E1_ANON_PRIVATE_CREATOR_COLUMN_DENIED",status in (401,403),
+        f"HTTP {status}, creator_private_column_denied")
       # Security triage: if public publishable key can see raw articles, prove
       # whether ANY draft/deleted rows leak, without printing titles/IDs/content.
       status,_,_,raw=get_api("/rest/v1/articles?select=id,status,deleted_at&limit=100",key)
