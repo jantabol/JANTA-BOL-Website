@@ -1,0 +1,27 @@
+# JANTA BOL — 30 October 2026 | Real Production Guest Public Site Tests
+**Goal:** Before Facebook/Instagram account creation, validate actual `https://jantabol.in` public reading experience and preserve Founder/security/Soft Launch.
+**Approach:** GitHub Actions external HTTPS from an independent runner to real canonical domain + real Supabase *publishable/anonymous* REST API. READ ONLY: zero article, grievance, media, auth, DNS, Vercel or Supabase mutation. No paid service.
+
+## Verified deployment identity
+- Authenticated Vercel project `prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI`; production deployment `dpl_7ggBZ5VfMUSqj9vpDFmNR8G4yKyx` `READY`; source SHA `1ada480c51aea9fd10b0abdf0c705f990f9b1694`. Custom apex `jantabol.in` `verified=true`.
+- Production HTML **actually GET 200** on root, correctly redirects from `/` to `/JANTA_BOL_PHASE_3C_WORKING/index.html`; this prevents obsolete root V2 mock from being the public homepage.
+- Both permanent Article paths (UUID IDs `c49f00b6-0359-400c-a957-2082142ff8dd` and `f17f6507-02a3-4881-ad37-0b02cadf3d3f`) **actually GET 200**; current public projection, share, WhatsApp share, Correction links included. This HTTP/HTML test cannot alone prove DOM hydration/click.
+- B9 public Search+Archive, public correction/grievance, public accountability, Founder login shell and JS guard paths return **real HTTP 200**.
+- Real Supabase publishable-key **anonymous** RPC `jb_c1_public_articles`: returned exactly **2 published** articles; direct exact-article RPC returns correct UUID. B9 search for **ISRO** returns 2, nonsense term returns 0. Search page uses safe textContent presentation and invalid-filter fail-closed code.
+- Anonymous REST article public-column subset returns exactly the 2 expected *published* IDs; creator UUID private column request denied **HTTP 401**, deleted/private marker request denied **HTTP 401**, private grievances direct request denied **HTTP 401**. This is deliberate column-level ACL, not blanket denial of all direct raw article columns. Actual role ACL independently inspected in PostgreSQL.
+- Supabase secure read-only inspection: **34 total Articles**, **2 published**, **32 nonpublished/protected**; 0 public LIVE now; RLS active and private owner data not publicly selectable. Note: article content truth/fact-check is an editorial gate, *not* inferred from existence/accessibility.
+
+## Independent production CI
+GitHub Actions `softlaunch-public-real-domain-readonly-20261030.yml` runs immutable deployed-source baseline file diff, Python compile, the actual external HTTPS and REST checks, and older Phase3 static Security/Recovery regression. Positive and deliberate negative scenarios included, **26/26 real production guest HTTP/REST checks PASS, HOLD 0** as of GitHub Actions **run `41006745186`, source SHA `7c4807246c9c92df36414ee2a30b974c1f194c24`**, before documentation-only addition. On first attempt two overly strict checks expected nonexistent `admin-auth.js` and all anonymous article SELECT denied. Actual production uses inline MFA in admin-login and deliberate published-column-only ACL. Corrected test expectations with independent source+SQL evidence; raw private columns still require HTTP 401 and no drafts are exposed. Failed runs are preserved in history; no previous false PASS claimed.
+
+## Official scoped verdict
+- **P4 Public Guest E1 server-rendered paths / anonymous Supabase published/search / private-field negatives: PASS (26 real HTTP/REST checks).**
+- **Android device user-visible/render/interaction proof: NOT_RUN for this test pass.** Full dynamic JS hydration, scroll and correct Hindi rendering, on-screen search/filter click, WhatsApp Share interaction, correction path and reader device accessibility still need an actual anonymous Android handset screenshot/behavior check. HTTP 200 != screenshot/working UI.
+- **Public Soft Launch FULL release: HOLD** until independent Android E1 functional proof plus remaining applicable B11/T078 recovery/security release boundaries. **Don't conflate B12 global PASS or T079 automatic YouTube E6 with public site readiness.**
+- **No social accounts created yet**—Founder asked to finish Public first. When Android guest E1 is confirmed, Facebook Page and Instagram Business setup can begin in parallel with independent other release gates, without silently claiming full public launch.
+- No Main merge, public site edit, production deploy, production SQL or credentials changed. Cricket/Saarthi not touched.
+
+## Single Founder Android check (after backend proof)
+**Device:** Android Phone; **Action:** In Chrome Incognito (guest, without Founder login), open `https://jantabol.in`, open the most recent published ISRO article, use `🔎 खबरें खोजें / पुरानी खबरें` and search `ISRO`; **Expected:** Homepage shows real news, article opens with body and Share/WhatsApp options, search shows the two currently published ISRO stories and no draft/private info; **Proof:** screenshot of article body and search results (and report if any blank loader). Then test share via one article link and corrected/grievance page if requested. No need to use Founder credentials.
+
+**No fake FULL PASS: 26 verified public HTTP/REST checks ≠ complete Android guest UX or rollback release.**
