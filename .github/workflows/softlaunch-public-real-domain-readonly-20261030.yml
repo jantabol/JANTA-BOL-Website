@@ -23,8 +23,10 @@ jobs:
           cat > /tmp/expected <<'EOF'
           .github/workflows/softlaunch-public-real-domain-readonly-20261030.yml
           ci/phase4/public-softlaunch-guest-http-20261030.py
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_SOFTLAUNCH_PUBLIC_GUEST_REAL_DOMAIN_20261030.md
           EOF
-          diff -u /tmp/expected /tmp/actual
+          sort /tmp/expected > /tmp/expected.sorted
+          diff -u /tmp/expected.sorted /tmp/actual
           test -z "$(git diff --diff-filter=M --name-only 1ada480c51aea9fd10b0abdf0c705f990f9b1694 HEAD)"
       - name: Compile Python diagnostic without remote script execution
         run: python3 -m py_compile ci/phase4/public-softlaunch-guest-http-20261030.py
