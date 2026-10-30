@@ -1,0 +1,36 @@
+name: Soft Launch Public Guest Real-Domain HTTP - READ ONLY
+on:
+  push:
+    branches:
+      - codex/softlaunch-public-guest-e1-readonly-20261030
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  real_guest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prove exact deployed SHA baseline and test-only diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --name-only 1ada480c51aea9fd10b0abdf0c705f990f9b1694 HEAD | sort > /tmp/actual
+          cat > /tmp/expected <<'EOF'
+          .github/workflows/softlaunch-public-real-domain-readonly-20261030.yml
+          ci/phase4/public-softlaunch-guest-http-20261030.py
+          EOF
+          diff -u /tmp/expected /tmp/actual
+          test -z "$(git diff --diff-filter=M --name-only 1ada480c51aea9fd10b0abdf0c705f990f9b1694 HEAD)"
+      - name: Compile Python diagnostic without remote script execution
+        run: python3 -m py_compile ci/phase4/public-softlaunch-guest-http-20261030.py
+      - name: Live jantabol.in public site with ANON publishable key only
+        run: python3 ci/phase4/public-softlaunch-guest-http-20261030.py
+      - name: Protected Phase3 no-fake-public old source static checks
+        run: |
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
