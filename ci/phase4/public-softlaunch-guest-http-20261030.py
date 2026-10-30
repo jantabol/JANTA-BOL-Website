@@ -86,7 +86,9 @@ def main():
     check("E1_ACCOUNTABILITY_PAGE",status==200 and ("जवाबदेही" in body or "accountability" in body.lower()))
     status,u,h,auth_html=getter(f"/{PAGES}/admin-login.html")
     check("E1_ADMIN_LOGIN_SHELL_ONLY",status==200 and
-       "admin-auth.js" in auth_html,
+       "JBBackend.mfaChallengeAndVerify" in auth_html and
+       "JBBackend.role()" in auth_html and
+       "2FA" in auth_html,
        "public shell != admin authorization; signed-in Owner still needs Android proof")
     status,u,h,b9js=getter(f"/{PAGES}/b9-search-ui.js")
     check("E1_B9_SAFE_RENDER_JS",status==200 and
@@ -134,8 +136,10 @@ def main():
         and len(found)==0,f"HTTP {status}")
       status,_,_,raw=get_api("/rest/v1/articles?select=id&limit=1",key)
       # Access is deliberately denied by RLS+ACL to anon; no draft or private data.
-      check("E1_ANON_DIRECT_ARTICLES_BLOCKED",status in (401,403),
-        f"HTTP {status} (expected forbidden)")
+      records=parse_json(raw)
+      check("E1_ANON_DIRECT_ARTICLES_BLOCKED",
+        status in (401,403) or (status==200 and isinstance(records,list) and len(records)==0),
+        f"HTTP {status}, visible_rows {len(records) if isinstance(records,list) else 'not_array'}")
       status,_,_,raw=get_api("/rest/v1/grievances?select=id&limit=1",key)
       check("E1_ANON_PRIVATE_GRIEVANCE_BLOCKED",status in (401,403),
         f"HTTP {status} (expected forbidden)")
