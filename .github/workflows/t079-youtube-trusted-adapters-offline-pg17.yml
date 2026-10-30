@@ -33,7 +33,7 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - name: Exact seven-file review scope; no LIVE/OAuth/News/production migration edits
+      - name: Exact eleven-file review scope; no LIVE/OAuth/News/production migration edits
         shell: bash
         run: |
           set -euo pipefail
@@ -43,11 +43,16 @@ jobs:
           CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/credential-issuer.mjs
           CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/trusted-adapters.mjs
           JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_TRUSTED_ADAPTERS_20261029.md
+          JANTA_BOL_PHASE_4_WORKING/b12/P4_T079_SOFT_LAUNCH_SPLIT_20261030.md
+          JANTA_BOL_PHASE_4_WORKING/b12/t079-youtube-manual-proof.json
           JANTA_BOL_PHASE_4_WORKING/db/T079_YOUTUBE_VIDEO_LEDGER_PG17_REVIEW_ONLY.sql
           ci/phase4/b12/t079-youtube-credential-issuer.test.mjs
           ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
+          ci/phase4/b12/t079-softlaunch-release-split.cjs
+          ci/phase4/b12/t079-softlaunch-release-split.test.cjs
           EOF
-          diff -u /tmp/expected /tmp/actual
+          sort /tmp/expected > /tmp/expected.sorted
+          diff -u /tmp/expected.sorted /tmp/actual
           test ! -f CODEX_CURRENT_SUPABASE/functions/jb-youtube-video-worker/index.ts
       - name: Run actual disposable PostgreSQL 17 private ledger/owner isolation
         run: |
@@ -59,6 +64,10 @@ jobs:
         run: node --test ci/phase4/b12/t079-youtube-trusted-adapters.test.mjs
       - name: Server-only existing encrypted Google credential, same Channel ID tests
         run: node --test ci/phase4/b12/t079-youtube-credential-issuer.test.mjs
+      - name: Founder verified manual upload/delete separated from automatic E6 and global soft-launch
+        run: |
+          node --test ci/phase4/b12/t079-softlaunch-release-split.test.cjs
+          node ci/phase4/b12/t079-softlaunch-release-split.cjs
       - name: Previous full private-video worker and transport synthetic E2E
         run: |
           node --test ci/phase4/b12/t079-youtube-upload-worker.test.mjs
