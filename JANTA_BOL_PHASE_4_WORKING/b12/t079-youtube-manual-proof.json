@@ -1,0 +1,20 @@
+{
+  "schema": "janta-bol.t079.manual-youtube-app-proof.v1",
+  "scope": "MANUAL_YOUTUBE_APP_ONLY",
+  "channel_name": "JANTA BOL",
+  "channel_handle": "@jantabolnews",
+  "video_id": "4sBF6bdJ1dA",
+  "title": "JANTA BOL | Upload Test | NASA Moon Mission B-Roll (2025)",
+  "video_length_seconds": 392,
+  "upload_date_local": "2026-10-29",
+  "full_playback_confirmed_by_founder": true,
+  "view_count_observed": 1,
+  "deletion_date_time_local": "2026-10-30T10:11:00+05:30",
+  "deletion_toast_observed": "Video deleted from your uploads",
+  "evidence_class": "FOUNDER_SCREENSHOTS_AND_STATEMENT_ONLY",
+  "google_data_api_signed_receipt": false,
+  "backend_videos_insert_executed": false,
+  "automatic_social_post_verified": false,
+  "verdict": "MANUAL_UPLOAD_PLAYBACK_DELETE_PASS_ONLY",
+  "note": "No live YouTube URL after deletion. Do not relabel as backend/API E6 proof."
+}
