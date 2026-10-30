@@ -1,0 +1,26 @@
+# JANTA BOL — T079 YouTube vs Soft Launch: real checkpoints / zero fake PASS
+**Date:** 30 Oct 2026 | **Founder priority:** one-month soft launch first; protect old news, LIVE, users and original OAuth; no payments/rebuild.
+
+## Production & YouTube facts independently inspected (READ ONLY)
+- **Official domain** `jantabol.in` is attached to the existing Vercel project and shown as **verified** by authenticated Vercel metadata; production deployment `dpl_7ggBZ5VfMUSqj9vpDFmNR8G4yKyx` was **READY** at inspection, with source SHA `1ada480c51aea9fd10b0abdf0c705f990f9b1694` on isolated `codex/t079-health-safe-error-diagnostic-20261029`. This confirms a READY deployment and verified DNS binding, **not** public UX, real Android usability, complete rollback, or B12 release approval. Latest Vercel deployment source was 427 Git commits ahead of protected Main `f447231c0677644ca5a44cc19f12cf0314ff38ea` at inspection; never infer candidate PR #79 is deployed.
+- **Actual Production Supabase**, read-only: **2 published articles**, 0 owned MP4 files in storage, 0 per-article YouTube selections, 0 private T079 durable upload-ledger tables. Existing read-only `jb-youtube-video-preflight` is separate from review-only uploader code. Production automatic video upload is not deployed or proved.
+- **Existing YouTube OAuth**, real Google refresh + channel matching = verified PASS separate subgate, no need to reconnect.
+- **Founder real Android Manual YouTube App Upload** on `@jantabolnews`: video ID `4sBF6bdJ1dA` uploaded on 29 Oct, 6:32 full successful playback, 1 observed view, then Founder deleted on 30 Oct 10:11 IST; YouTube UI toast confirmed removal. All **manual upload/playback/delete = PASS** based on screenshots & Founder observation. Not a signed provider API `videos.insert` receipt.
+- `JANTA_BOL_PHASE_3C_WORKING/social.html` currently explicitly rejects setting `Posted` without provider receipt and supports `Manual Share` for Founder-selected published article. Do not disable that fail-closed behavior.
+- Existing B12 canonical release truth: **P4-T079 IN_PROGRESS**, real automatic provider E6 DUE, **P4-T078 BLOCKED** on full E8 rollback/recovery. Public limited soft-launch *readiness* is a separate site/news/security evidence decision; neither manual YouTube success nor Vercel READY alone turns that to PASS.
+
+## Durable automated guard added now
+`ci/phase4/b12/t079-softlaunch-release-split.cjs` reads the current master B12 truth and scoped Founder-manual evidence (`t079-youtube-manual-proof.json`), inspects unchanged Owner Social/manual fallback and no deployed uploader entrypoint, and returns one fail-closed machine-readable verdict:
+- `MANUAL_APP=PASS_SCREENSHOT_SCOPE_ONLY`: one-off manual upload/playback/deletion passed. Do not repeat the test for OAuth or the same clip.
+- `YOUTUBE_AUTOMATIC=E6_DUE`, `PRODUCTION_UPLOADER=DISABLED_UNTIL_RELEASE_GATES`: still missing approved owned media+rights, independent Founder approval registry, original provider private receipt, production durable ledger, review and complete current-point rollback.
+- `PUBLIC_SOFT_LAUNCH=INDEPENDENT_SITE_NEWS_SECURITY_PROOFS_REQUIRED`: YouTube automatic publication is a **separate optional module** for the initial limited public reading soft launch, not a reason to stop proof of existing news, search, corrections, archive, media, homepage and Founder-login components. This is **NOT an authorization to mark the complete site or B12 PASS**.
+- Fails if fake provider receipt is injected, Founder-only manual evidence relabeled automatic, old B12 T079/T078 locks invented, public site green marked without independent E1 proof, or production uploader enabled without rollback+ledger+rights+actual receipt.
+- Read-only check; never uploads, deletes, posts news, edits DB, touches credentials, rotates Supabase/Vercel/DNS, merges or deploys.
+
+## Protected soft-launch execution order
+1. **PUBLIC first:** independently verify current `jantabol.in` Android guest article render, published permanent link, search/Archive, corrections and Founder/login fail-closed behavior; capture actual device evidence; only mark each fully proven subgate. No assumption that READY = site runtime PASS.
+2. **YOUTUBE now:** Keep the existing JANTA BOL public channel and OAuth connected. Existing **manual** YouTube proof accepted; do not require repeat video or reconnect for one-month limited public-reading rollout. Manual Share remains the only active social fallback, never falsely `Posted`.
+3. **AUTOMATIC YouTube later:** Staged PRIVATE-only review code in PR #78/#79 is NOT a production runtime service. Do not apply review SQL or enable Google `videos.insert` until isolated service-role, rollback/reconcile, Founder-owned MP4/rights/approval and separate explicit Founder step for real private provider upload. Never fabricate a receipt or promote a preview using current production as a scratchpad.
+4. **FULL B12 release:** T078 E8 + all other independent release conditions must be independently PASS before global PASS+LOCK. T079 remains IN_PROGRESS until its full scope closed, and the dashboard must say so.
+
+**Verdict: SOFT-LAUNCH FOCUS RESTORED. Manual YouTube proof PASS, code/synthetic integration PASS scoped only, automatic Google E6 HOLD, global B12 release HOLD. No user manual step needed right now.**
