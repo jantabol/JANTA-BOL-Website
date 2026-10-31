@@ -180,49 +180,90 @@ document.addEventListener("click", () => {
   });
 })();
 
-// ===== V2.4 COVERAGE NETWORK: World + India + MP actions =====
+// ===== T080: published-only geographic coverage, reuse existing C1 public RPC =====
+// This fixes the old static preview without changing Founder Auth, publishing or news data.
 (() => {
   const modal = document.getElementById("preview-modal");
   const title = document.getElementById("preview-modal-title");
   const text = document.getElementById("preview-modal-text");
   const kicker = document.getElementById("preview-modal-kicker");
-
-  const coverageContent = {
-    world: {
-      kicker: "🌍 कवरेज नेटवर्क",
-      title: "🌍 दुनिया न्यूज़",
-      text: "दुनिया की बड़ी खबरें और ब्रेकिंग न्यूज़ अपडेट्स जल्द यहाँ उपलब्ध होंगे।"
-    },
-    india: {
-      kicker: "🌍 कवरेज नेटवर्क",
-      title: "🇮🇳 भारत न्यूज़",
-      text: "देशभर की महत्वपूर्ण खबरें और अपडेट्स जल्द यहाँ उपलब्ध होंगे।"
-    },
-    mp: {
-      kicker: "🌍 कवरेज नेटवर्क",
-      title: "❤️ मध्य प्रदेश",
-      text: "मध्य प्रदेश की प्रमुख खबरें और अपडेट्स जल्द यहाँ उपलब्ध होंगे।"
-    }
+  const regions = {
+    world: { title: "🌍 दुनिया न्यूज़", levels: ["global", "world"] },
+    india: { title: "🇮🇳 भारत न्यूज़", levels: ["india"] },
+    mp: { title: "❤️ मध्य प्रदेश", levels: ["mp", "madhya pradesh"] }
   };
+  const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+  let activeLoad = 0;
+  const normalized = value => String(value || "").trim().toLowerCase();
 
-  function openCoverage(card) {
-    if (!modal || !title || !text || !kicker) return;
-    const item = coverageContent[card.dataset.coverage];
-    if (!item) return;
-    kicker.textContent = item.kicker;
-    title.textContent = item.title;
-    text.textContent = item.text;
+  async function openCoverage(card) {
+    const region = regions[card.dataset.coverage];
+    if (!modal || !title || !text || !kicker || !region) return;
+    const request = ++activeLoad;
+    kicker.textContent = "🌍 कवरेज नेटवर्क";
+    title.textContent = region.title;
+    text.textContent = "प्रकाशित खबरें लोड हो रही हैं…";
+    const dialog = modal.querySelector(".preview-modal-card");
+    if (dialog) {
+      dialog.style.maxHeight = "min(84vh, 760px)";
+      dialog.style.overflowY = "auto";
+    }
     modal.classList.add("open");
     modal.setAttribute("aria-hidden", "false");
     document.body.style.overflow = "hidden";
+    const stillCurrent = () => request === activeLoad &&
+      modal.classList.contains("open") && title.textContent === region.title;
+    try {
+      // C1 is the audited anonymous published-only projection. Never query articles
+      // directly or use a service key in a public browser.
+      if (!window.JBPublicC1 || typeof window.JBPublicC1.list !== "function") {
+        throw new Error("PUBLIC_C1_NOT_READY");
+      }
+      const rows = await window.JBPublicC1.list(30);
+      if (!stillCurrent()) return;
+      if (!Array.isArray(rows)) throw new Error("PUBLIC_C1_INVALID");
+      const matches = rows.filter(n => n && n.status === "published" &&
+        !!n.publishedAt && UUID.test(String(n.id || "")) &&
+        !!String(n.headline || "").trim() &&
+        region.levels.includes(normalized(n.geoLevel)));
+      text.replaceChildren();
+      if (!matches.length) {
+        text.textContent = "इस क्षेत्र में अभी कोई प्रकाशित खबर उपलब्ध नहीं है।";
+        return;
+      }
+      const count = document.createElement("span");
+      count.style.cssText = "display:block;margin-bottom:12px;color:#e6e6e6;font-weight:700";
+      count.textContent = matches.length + " प्रकाशित खबरें";
+      text.appendChild(count);
+      matches.forEach(n => {
+        const item = document.createElement("span");
+        item.style.cssText = "display:block;padding:12px 0;border-top:1px solid #393939";
+        const heading = document.createElement("span");
+        heading.style.cssText = "display:block;color:#fff;font-weight:700;line-height:1.5";
+        heading.textContent = n.headline;
+        const info = document.createElement("span");
+        info.style.cssText = "display:block;font-size:13px;color:#c4c4c4;margin:5px 0";
+        info.textContent = [n.category, n.location || n.district].filter(Boolean).join(" • ");
+        const link = document.createElement("a");
+        link.href = "article.html?id=" + encodeURIComponent(n.id);
+        link.style.cssText = "display:inline-block;padding:7px 0;color:#ff6464;font-weight:700;overflow-wrap:anywhere";
+        link.textContent = "पूरी खबर पढ़ें →";
+        item.appendChild(heading);
+        if (info.textContent) item.appendChild(info);
+        item.appendChild(link);
+        text.appendChild(item);
+      });
+    } catch (_) {
+      if (stillCurrent()) text.textContent = "समाचार सेवा अभी उपलब्ध नहीं है। कृपया बाद में पुनः प्रयास करें।";
+    }
   }
 
   document.querySelectorAll(".coverage-open[data-coverage]").forEach(card => {
     card.addEventListener("click", () => openCoverage(card));
-    card.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") {
-        e.preventDefault();
-        openCoverage(card);
+    card.addEventListener("keydown", event => {
+      if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        return openCoverage(card);
       }
     });
   });
