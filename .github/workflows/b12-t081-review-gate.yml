@@ -52,6 +52,8 @@ jobs:
           set -Eeuo pipefail
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
           node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-readonly-export.test.mjs
           node --test ci/phase4/b11/t075-scheduled-budget.test.mjs
       - name: Original T075 source-integration gate (must PASS, no waivers)
         shell: bash
