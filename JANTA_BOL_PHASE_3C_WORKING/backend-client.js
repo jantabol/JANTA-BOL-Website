@@ -18,6 +18,46 @@
   );
 
   const SHADOW='jantaBolBackendShadow';
+  // Persist a UUID per new-article intent. The existing article primary key
+  // then guarantees at most one INSERT for that intent, even after lost ACKs.
+  const CREATE_INTENT='jbT080NewArticleIntentV1';
+  let tabCreateIntentId=null;
+  const validUuid=x=>/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i.test(String(x||''));
+
+  function getCreateIntent(){
+    try{
+      const record=JSON.parse(localStorage.getItem(CREATE_INTENT)||'null');
+      return validUuid(record?.id)&&typeof record.attempted==='boolean'?record:null;
+    }catch(_){return null;}
+  }
+
+  function reserveCreateIntent(){
+    if(tabCreateIntentId)return tabCreateIntentId;
+    const prior=getCreateIntent();
+    if(prior){tabCreateIntentId=prior.id;return prior.id;}
+    if(typeof crypto==='undefined'||typeof crypto.randomUUID!=='function'){
+      throw new Error('SECURE_UUID_REQUIRED');
+    }
+    const id=crypto.randomUUID();
+    if(!validUuid(id))throw new Error('SECURE_UUID_REQUIRED');
+    localStorage.setItem(CREATE_INTENT,JSON.stringify({
+      id,attempted:false,startedAt:now()
+    }));
+    tabCreateIntentId=id;
+    return id;
+  }
+
+  function markCreateIntentAttempt(id){
+    const old=getCreateIntent();
+    if(!old||old.id!==id)throw new Error('CREATE_INTENT_RECONCILIATION_REQUIRED');
+    localStorage.setItem(CREATE_INTENT,JSON.stringify({...old,attempted:true}));
+  }
+
+  function clearCreateIntent(id){
+    const old=getCreateIntent();
+    if(old?.id===id)localStorage.removeItem(CREATE_INTENT);
+    if(tabCreateIntentId===id)tabCreateIntentId=null;
+  }
   const OWNER_CACHE='jbVerifiedOwner';
 
   const now=()=>new Date().toISOString();
@@ -789,10 +829,12 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
 
   async function saveDraft(
     item,
-    {expectedVersion=null,prevVerification=''}={}
+    {expectedVersion=null,prevVerification='',retainCreateIntent=false}={}
   ){
     await requireOwner();
 
+    // Reserve before slug/media generation: one browser intent, one Article UUID.
+    let newCreateId=!item.id?reserveCreateIntent():null;
     const row=toRow(item);
     let saved;
 
@@ -824,10 +866,14 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
       saved=data[0];
 
     }else{
+      // Preserve form and intent before crossing the network boundary.
+      saveShadow(item);
+      markCreateIntentAttempt(newCreateId);
       const {data,error}=await client
         .from('articles')
         .insert({
           ...row,
+          id:newCreateId,
           status:'draft',
           saved_at:now()
         })
@@ -835,6 +881,7 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
         .single();
 
       if(error){
+        if(error.code==='23505')throw new Error('CREATE_INTENT_ALREADY_EXISTS');
         throw error;
       }
 
@@ -851,12 +898,10 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
 
     await saveSource(out,prevVerification);
 
+    const confirmed=await getArticle(saved.id,{privateData:true});
     localStorage.removeItem(SHADOW);
-
-    return await getArticle(
-      saved.id,
-      {privateData:true}
-    );
+    if(newCreateId&&!retainCreateIntent)clearCreateIntent(newCreateId);
+    return confirmed;
   }
 
   async function publish(
@@ -866,13 +911,16 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
     await requireOwner();
 
     let working=item;
+    const newlyCreated=!working.id;
+    const pendingCreateId=newlyCreated?reserveCreateIntent():null;
 
-    if(!working.id){
+    if(newlyCreated){
       working=await saveDraft(
         working,
         {
           expectedVersion:null,
-          prevVerification
+          prevVerification,
+          retainCreateIntent:true
         }
       );
     }
@@ -913,12 +961,10 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
 
     await saveSource(out,prevVerification);
 
+    const confirmed=await getArticle(out.id,{privateData:true});
     localStorage.removeItem(SHADOW);
-
-    return await getArticle(
-      out.id,
-      {privateData:true}
-    );
+    if(pendingCreateId)clearCreateIntent(pendingCreateId);
+    return confirmed;
   }
     async function unpublish(
     id,
@@ -1077,10 +1123,14 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
   }
 
   function saveShadow(item){
+    // Retain the original create identity even if another tab has already
+    // cleared the shared pending reservation after its successful write.
+    const createIntentId=!item.id?(tabCreateIntentId||getCreateIntent()?.id||null):null;
     localStorage.setItem(
       SHADOW,
       JSON.stringify({
         item,
+        createIntentId,
         savedAt:now()
       })
     );
@@ -1180,6 +1230,9 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
     listPublishedPublic,
     saveDraft,
     publish,
+    getCreateIntent,
+    reserveCreateIntent,
+    clearCreateIntent,
     unpublish,
     softDelete,
     restore,
