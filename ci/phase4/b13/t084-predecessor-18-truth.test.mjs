@@ -75,7 +75,7 @@ test('T084 cannot be final because B12 and T092–T109 are not all accepted',()=
 test('Keep zero-paid, Founder-only, no fake source/news and no destructive restore',()=>{
  assert.match(report,/Founder \*\*₹0\*\* rule/);
  assert.match(report,/do not create potentially billable Supabase branches/);
- assert.match(report,/not be destructively restored/);
+ assert.match(report,/not\*\* be destructively restored/);
  assert.match(report,/No manual user step/);
 });
 test('Exactly 18 historical classifications, no extra hidden completion',()=>{
