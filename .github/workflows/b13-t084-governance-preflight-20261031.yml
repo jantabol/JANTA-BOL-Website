@@ -7,6 +7,8 @@ on:
     paths:
       - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md'
       - 'ci/phase4/b13/t084-governance-preflight.test.mjs'
+      - 'ci/phase4/b13/t084-predecessor-18-truth.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md'
       - '.github/workflows/b13-t084-governance-preflight-20261031.yml'
   pull_request:
     branches: [codex/t083-current-live-public-truth-delta-review-20261031]
@@ -33,7 +35,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md) ;;
+              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
               *) echo "UNAUTHORIZED_T084_FILE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -47,6 +49,9 @@ jobs:
           set -Eeuo pipefail
           node --check ci/phase4/b13/t084-governance-preflight.test.mjs
           node --test ci/phase4/b13/t084-governance-preflight.test.mjs
+          node --check ci/phase4/b13/t084-predecessor-18-truth.test.mjs
+          node --test ci/phase4/b13/t084-predecessor-18-truth.test.mjs
+          echo 'B13_T084_18_PREDECESSORS_DOSSIER_RECONCILED=PASS_SCOPED'
           echo 'B13_T084_SOURCE_GOVERNANCE_PRECHECK=PASS_SCOPED'
           echo 'B12_120_120_SELECTED_SOURCE_CI=PASS_SCOPED'
           echo 'B12_CURRENT_E4_E8_FINAL=HOLD'
