@@ -9,6 +9,7 @@ on:
       - 'ci/phase4/b12/t083-build-evidence-pack.py'
       - 'ci/phase4/b12/t083-build-live-public-site-snapshot.py'
       - 'ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs'
+      - 'ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md'
   pull_request:
@@ -36,7 +37,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
+              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs|ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
               *) echo "T083_UNAUTHORIZED_CHANGE=$file"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -73,6 +74,11 @@ jobs:
           node --test "$RUNNER_TEMP/t082-anon-live-chrome.test.mjs"
           echo 'T082_PUBLIC_ANON_CHROME_TWO_ROUTES=PASS_SCOPED'
           echo 'T082_CURRENT_FOUNDER_LIFECYCLE_E4=NOT_RUN'
+      - name: Real PR84 Vercel preview source integrity vs code review SHA (no login/write)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs
       - name: Reconcile all eight T076–T083 tests + hard E8/E4/Owner release HOLD
         shell: bash
         run: |
