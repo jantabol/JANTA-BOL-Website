@@ -85,7 +85,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="backend-client.js"></script><script src="phase2-client.js?v=20261003-b4-rpc1"></script><script src="admin-auth.js"></script>
 <script>
 (function(){
-  const $=id=>document.getElementById(id); let editing=null, origin='new', previousVerification='Pending Verification', autoTimer=null, publishingItem=null, autoBusy=false, manualBusy=false, autoQueued=false, lastSavedSnapshot=null, conflictMode=false;
+  const $=id=>document.getElementById(id); let editing=null, origin='new', previousVerification='Pending Verification', autoTimer=null, publishingItem=null, autoBusy=false, manualBusy=false, autoQueued=false, lastSavedSnapshot=null, conflictMode=false, writeOutcomeUnknown=false;
   const qs=new URLSearchParams(location.search), editId=qs.get('edit'), from=qs.get('from');
   function today(){return new Date().toISOString().slice(0,10)} function currentTime(){return new Date().toTimeString().slice(0,5)}
   $('publishDate').value=today();$('publishTime').value=currentTime();$('sourceDate').value=today();
@@ -244,6 +244,10 @@
 
   async function maybeUploadCover(i){const f=$('image').files[0];if(f){state('Uploading cover image…');i.media.coverImageUrl=await JBBackend.uploadPublic(f);$('coverImageUrl').value=i.media.coverImageUrl;}return i}
   async function manualSave(){
+    if(writeOutcomeUnknown){
+      alert('पिछले Save का परिणाम स्पष्ट नहीं है। पहले Drafts/Published में जाँच करें। दोबारा Save न करें।');
+      return;
+    }
     if(conflictMode){
       alert('Version conflict resolve kiye bina save allowed nahi hai.');
       return;
@@ -268,33 +272,44 @@
     const draftBtn=document.querySelector('.btn-draft');
     manualBusy=true;
     draftBtn.disabled=true;
+    let saveStarted=false;
 
     try{
       i=await maybeUploadCover(i);
       state('Saving draft…');
+      saveStarted=true;
       const saved=await JBBackend.saveDraft(i,{
         expectedVersion:editing?editing.version:null,
         prevVerification:previousVerification
       });
+      // Article write is already confirmed. Optional social settings must never
+      // turn a successful draft save into a false failure or a duplicate retry.
       editing=saved;
-      try{
-        await persistSocial(saved.id,i.social);
-      }catch(socialError){
-        state('PUBLISHED • Social preferences failed to save',false);
-        throw new Error('Article publish ho gaya, lekin Social Distribution save nahi hua: '+(socialError?.message||'UNKNOWN_SOCIAL_ERROR'));
-      }
       previousVerification=saved.internalSource.verificationStatus;
       lastSavedSnapshot=autosaveSnapshot(saved);
-      state('SYNCED • Draft Version '+saved.version);
-      alert('Draft Supabase backend me save ho gaya.');
+      let socialSynced=true;
+      try{await persistSocial(saved.id,i.social);}catch(_){socialSynced=false;}
+      if(socialSynced){
+        state('SYNCED • Draft Version '+saved.version);
+        alert('Draft Supabase backend me save ho gaya.');
+      }else{
+        state('DRAFT SAVED • Social preferences not synced',false);
+        alert('Draft save ho gaya hai, lekin social preferences sync nahi hui. Drafts se jaanch karein.');
+      }
       location.href='drafts.html';
     }catch(e){
-      if(e.message==='VERSION_CONFLICT'){
+      if(e?.message==='VERSION_CONFLICT'){
         alert('A newer version of this article exists. Refresh/review required.');
+        state('CONFLICT • Refresh/review required',false);
+      }else if(saveStarted){
+        writeOutcomeUnknown=true;
+        JBBackend.saveShadow(i);
+        state('DRAFT SAVE OUTCOME UNKNOWN • Verify Drafts before retry',false);
+        alert('Save ka result confirm nahi ho saka. Drafts list check karein; bina jaanch dobara save na karein.');
       }else{
-        alert(e.message);
+        alert('Save shuru nahi ho saka. Network/media check karke phir try karein.');
+        state('DRAFT SAVE NOT STARTED',false);
       }
-      state('NOT SYNCED',false);
     }finally{
       manualBusy=false;
       draftBtn.disabled=false;
@@ -302,6 +317,10 @@
   }
   function showReview(i){publishingItem=i;const rows=[['Headline',i.headline],['Category',i.category],['Geography',i.geoLevel],['Location',i.location],['Cover Image',i.media.coverImageUrl?'Yes':'Not set'],['Reporter/Author',i.author||'Not set'],['Verification',i.internalSource.verificationStatus],['Preview',i.summary]];$('reviewContent').innerHTML=rows.map(r=>'<p><strong>'+JBBackend.esc(r[0])+':</strong> '+JBBackend.esc(r[1])+'</p>').join('');$('reviewModal').classList.remove('hidden')}
   async function doPublish(){
+    if(writeOutcomeUnknown){
+      alert('Pichhle Save/Publish ka result clear nahi hai. Published/Drafts check karein; duplicate action na karein.');
+      return;
+    }
     if(conflictMode){
       alert('Version conflict resolve kiye bina publish allowed nahi hai.');
       return;
@@ -315,27 +334,47 @@
     let i=publishingItem;
     manualBusy=true;
     $('confirmPublish').disabled=true;
+    let publishStarted=false;
 
     try{
       i=await maybeUploadCover(i);
       state('Publishing to backend…');
+      publishStarted=true;
       const saved=await JBBackend.publish(i,{
         expectedVersion:editing?editing.version:null,
         prevVerification:previousVerification
       });
+      // Once backend confirms, do NOT call publish again because an optional
+      // social-preferences write fails. Preserve Article ID and acknowledged version.
       editing=saved;
-      await persistSocial(saved.id,i.social);
       previousVerification=saved.internalSource.verificationStatus;
       lastSavedSnapshot=autosaveSnapshot(saved);
-      state('PUBLISHED • Backend confirmed • Version '+saved.version);
+      let socialSynced=true;
+      try{await persistSocial(saved.id,i.social);}catch(_){socialSynced=false;}
+      state(socialSynced
+        ?'PUBLISHED • Backend confirmed • Version '+saved.version
+        :'PUBLISHED • Social preferences not synced • Version '+saved.version,
+        socialSynced);
       $('reviewModal').classList.add('hidden');
-      alert('Published Successfully ✅');
+      alert(socialSynced
+        ?'Published Successfully ✅'
+        :'News publish ho gayi hai. Social preferences sync nahi hui. Published list me check karein.');
       location.href='published.html';
     }catch(e){
-      alert(e.message==='VERSION_CONFLICT'
-        ?'A newer version of this article exists. Publish blocked.'
-        :e.message);
-      state('PUBLISH FAILED / NOT SYNCED',false);
+      if(e?.message==='VERSION_CONFLICT'){
+        alert('A newer version of this article exists. Publish blocked.');
+        state('CONFLICT • Publish blocked',false);
+      }else if(publishStarted){
+        // An API timeout may happen after DB commit. Never label this FAILED or
+        // reissue a different new-article intent from this tab without reconciliation.
+        writeOutcomeUnknown=true;
+        JBBackend.saveShadow(i);
+        state('PUBLISH OUTCOME UNKNOWN • Verify Published/Drafts before retry',false);
+        alert('Publish ka result confirm nahi ho saka. Published/Drafts check karein. Bina jaanch dobara Publish na karein.');
+      }else{
+        alert('Publish start nahi ho saka. Network/media check karke phir try karein.');
+        state('PUBLISH NOT STARTED',false);
+      }
     }finally{
       manualBusy=false;
       $('confirmPublish').disabled=false;
@@ -365,6 +404,11 @@
 
   JBBackend.saveShadow(i);
 
+  if(writeOutcomeUnknown){
+    state('OUTCOME UNKNOWN • Auto-Save blocked until manual verification',false);
+    return;
+  }
+
   if(!navigator.onLine){
     state('OFFLINE / NOT SYNCED',false);
     return;
@@ -388,35 +432,39 @@
     }
 
     autoBusy=true;
+    let saveStarted=false;
 
     try{
       state('Auto-saving…');
 
       if(editing && editing.status==='published'){
-  state('LOCAL CORRECTION SAVED • NOT SYNCED',false);
-  return;
-}
+        state('LOCAL CORRECTION SAVED • NOT SYNCED',false);
+        return;
+      }
 
+      saveStarted=true;
       const saved=await JBBackend.saveDraft(fresh,{
         expectedVersion:editing?editing.version:null,
         prevVerification:previousVerification
       });
 
       editing=saved;
-      await persistSocial(saved.id,i.social);
       previousVerification=saved.internalSource.verificationStatus;
-      if(
-  savedVerificationNote &&
-  $('verificationNote').value.trim()===savedVerificationNote
-){
-  $('verificationNote').value='';
-}
+      if(savedVerificationNote &&
+         $('verificationNote').value.trim()===savedVerificationNote){
+        $('verificationNote').value='';
+      }
 
-const savedSnapshotItem=JSON.parse(JSON.stringify(saved));
-savedSnapshotItem.verificationNote='';
-lastSavedSnapshot=autosaveSnapshot(savedSnapshotItem);
+      const savedSnapshotItem=JSON.parse(JSON.stringify(saved));
+      savedSnapshotItem.verificationNote='';
+      lastSavedSnapshot=autosaveSnapshot(savedSnapshotItem);
 
-      state('SYNCED • Auto-Save Version '+saved.version);
+      let socialSynced=true;
+      try{await persistSocial(saved.id,i.social);}catch(_){socialSynced=false;}
+      state(socialSynced
+        ?'SYNCED • Auto-Save Version '+saved.version
+        :'DRAFT SAVED • Social preferences not synced • Version '+saved.version,
+        socialSynced);
 
       if(saved.id){
         $('previewLink').href='article.html?id='+encodeURIComponent(saved.id)+'&preview=admin';
@@ -424,12 +472,15 @@ lastSavedSnapshot=autosaveSnapshot(savedSnapshotItem);
       }
 
     }catch(e){
-      state(
-        e.message==='VERSION_CONFLICT'
-          ?'CONFLICT: newer version exists'
-          :'NOT SYNCED',
-        false
-      );
+      if(e?.message==='VERSION_CONFLICT'){
+        state('CONFLICT: newer version exists',false);
+      }else if(saveStarted){
+        // The server may have committed even if its reply was lost. Halt auto retry.
+        writeOutcomeUnknown=true;
+        state('AUTO-SAVE OUTCOME UNKNOWN • No automatic retry',false);
+      }else{
+        state('AUTO-SAVE NOT STARTED',false);
+      }
     }finally{
       autoBusy=false;
 
