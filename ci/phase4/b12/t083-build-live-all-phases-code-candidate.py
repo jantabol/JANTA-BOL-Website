@@ -58,10 +58,17 @@ def safe_content(name:str,b:bytes):
        rb"(?:ghp_|gho_|github_pat_)[A-Za-z0-9_]{25,}",
        rb"sb_secret_[A-Za-z0-9_-]{20,}",
        rb"(?i)(?:SUPABASE_SERVICE_ROLE_KEY|DATABASE_URL|BACKBLAZE_APPLICATION_KEY|VERCEL_TOKEN)\s*[:=]\s*['\x22][A-Za-z0-9_-]{25,}",
-       rb"postgresql://[^\s]+:[^\s]+@[^\s]+",
     )
     if any(re.search(pattern,b) for pattern in bad):
         raise SystemExit("CREDENTIAL_LIKE_VALUE_IN_SOURCE:"+name)
+    # Legacy CI may use dummy postgres credentials pointing to localhost only.
+    # Any connection string with credentials to a remote DB is BLOCKED.
+    for uri in re.findall(rb"postgresql://[^\\s\\x22\\x27]+",b):
+        if b"@" not in uri:
+            continue
+        hostname=uri.split(b"@",1)[1].split(b"/",1)[0].split(b":",1)[0].lower()
+        if not name.startswith(("ci/",".github/workflows/")) or hostname not in (b"localhost",b"127.0.0.1",b"::1"):
+            raise SystemExit("REMOTE_DATABASE_CREDENTIAL_DENIED:"+name)
 def info(name:str):
     z=ZipInfo(name,date_time=(2026,10,31,0,0,0))
     z.compress_type=ZIP_DEFLATED
