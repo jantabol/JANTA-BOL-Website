@@ -10,6 +10,7 @@ on:
       - 'ci/phase4/b12/t083-build-live-public-site-snapshot.py'
       - 'ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs'
       - 'ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs'
+      - 'ci/phase4/b12/t083-build-live-all-phases-code-candidate.py'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md'
   pull_request:
@@ -37,7 +38,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs|ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
+              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs|ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs|ci/phase4/b12/t083-build-live-all-phases-code-candidate.py|JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
               *) echo "T083_UNAUTHORIZED_CHANGE=$file"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -111,6 +112,19 @@ jobs:
         with:
           name: T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031
           path: out/T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031.zip
+          if-no-files-found: error
+          retention-days: 5
+      - name: Build immutable full live-baseline CODE ONLY all-phases candidate and verify every byte
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 ci/phase4/b12/t083-build-live-all-phases-code-candidate.py
+          sha256sum out/JANTA_BOL_B0_B12_LIVE_BASELINE_CODE_CANDIDATE_20261031.zip
+      - name: Upload immutable LIVE baseline code-only all-phases ZIP candidate (not production backup)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: JANTA_BOL_B0_B12_LIVE_BASELINE_CODE_CANDIDATE_20261031
+          path: out/JANTA_BOL_B0_B12_LIVE_BASELINE_CODE_CANDIDATE_20261031.zip
           if-no-files-found: error
           retention-days: 5
       - name: Required final GO/NO-GO gate never silently waived
