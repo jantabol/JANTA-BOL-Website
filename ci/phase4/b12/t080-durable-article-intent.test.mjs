@@ -130,6 +130,19 @@ test('T080 second tab shares original create UUID and cannot insert a duplicate'
   assert.equal(h.db.articles.size,1);
   assert.equal(h.db.attempts,2);
 });
+test('T080 second tab trying after first tab ACK must retain original ID in shadow',async()=>{
+  const h=createHarness(),a=h.tab(),b=h.tab();
+  a.reserveCreateIntent();
+  b.reserveCreateIntent();
+  await a.saveDraft(sourceItem());
+  assert.equal(a.getCreateIntent(),null);
+  await assert.rejects(b.saveDraft(sourceItem()),/CREATE_INTENT_RECONCILIATION_REQUIRED/);
+  assert.equal(h.db.articles.size,1);
+  const reloaded=h.tab();
+  const shadow=reloaded.getShadow();
+  assert.equal(shadow.createIntentId,articleId);
+  assert.equal((await reloaded.getArticle(shadow.createIntentId,{privateData:true})).id,articleId);
+});
 test('T080 lost publish response after database commit does not generate a second article',async()=>{
   const h=createHarness(),a=h.tab();
   h.db.net='lose_publish_ack';
