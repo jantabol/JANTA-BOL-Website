@@ -74,7 +74,7 @@ test('Current production source retains Owner-only publish/unpublish and version
  assert.match(publishBlock,/\.eq\('id',working\.id\)/);
  assert.match(unpublishBlock,/\.eq\('id',id\)/);
  assert.match(publishBlock,/\.eq\('version',expectedVersion\)/);
- assert.match(unpublishBlock,/\.eq\('version',expectedVersion\)/);
+ assert.match(unpublishBlock,/\.eq\(\s*'version',\s*expectedVersion\s*\)/);
  assert.match(unpublishBlock,/status:'draft'/);
  assert.match(unpublishBlock,/published_at:null/);
  assert.match(published,/JBBackend\.unpublish\(id,v\)/);
