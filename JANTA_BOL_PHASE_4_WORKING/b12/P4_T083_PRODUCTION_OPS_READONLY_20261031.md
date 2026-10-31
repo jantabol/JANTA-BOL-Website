@@ -38,3 +38,33 @@
 - Before final release: reconcile all eight T076–T083 ledgers, complete original Phase3 + B0–B11 + all impacted regressions, verify previous backups and current-point E8 real restore in isolation, artifact/ZIP SHA with secret scan, sign owner-domain maintenance/renewal, Founder AAL2 final approval, controlled rollback/cutover rehearsal preserving new data. **Do not skip ANY missing proof to meet Soft Launch**.
 
 **T083 STARTED; DNS/DEPLOYMENT VERCEL INVENTORY=PASS_SCOPED; TLS PUBLIC CHAIN=NOT_VERIFIED; REGISTRAR OWNERSHIP/RENEWAL=DUE; E8 NOT_RUN; TOPIC-11 FINAL LOCK=HOLD.**
+
+
+## 31 Oct 2026 — actual CI checkpoint and selected historical old-CI verification
+
+**Independent GitHub Actions T083 run:** `41209348710` COMPLETED **SUCCESS** on exact review HEAD `ec9938dd2ba5f4618e0a3ae396465921d7245b86`. The **seven** REAL external runner tests all passed: DNS A, WWW DNS, root TLS cert valid >7 days, WWW TLS cert valid >7 days, public HTML GET 200, WWW 308 canonical same-origin, and fail-closed final GO when E8 is DUE. Verified actual job `124560875329` steps SUCCESS. This **supersedes** the earlier source-report provisional "TLS NOT_VERIFIED" label; certificate *issuer and exact expiry date* were not retained in this evidence, only browser trusted chain, valid protocol and >7 day remaining.
+
+**Selected original CI runs independently inspected by immutable GitHub run/job IDs (not new regressions):**
+
+| Run ID | Recorded scope | Actual job outcomes | Limitation |
+| --- | --- | --- | --- |
+| `40064491171` | B10 + B0–B8 protected PG17 and Phase3 legacy source/test coverage | 6 completed SUCCESS, 1 original master ZIP job SKIPPED | not a live current-release full regression or universal protected ZIP proof |
+| `40452402698` | B11/T070 Founder original joint offline restore | joint restore job SUCCESS | original proof remains offline DB+5 media; Auth/Edge/Vercel current same-point recovery NOT_RESTORED |
+| `41183305277` | T080 newer idempotent create coding CI | selected job SUCCESS | PR is draft, never verified live Android updated code |
+| `41197924968` | T081 protected source/backup-review gate | selected job SUCCESS | no real current E8 |
+| `41198917616` | T081 alias rollback read-only dry-run | selected job SUCCESS | no actual prod traffic rollback |
+| `41199236066` | T082 live public URL GET-only smoke | selected job SUCCESS | HTML shell not JS rendered content by itself |
+| `41207099039` | T082 Original C1 negative/Owner/version-source tests | selected job SUCCESS (33/33 scoped) | not fresh Founder E4 or full cross-account penetration |
+| `41209348710` | T083 true external DNS/TLS/HTTPS | selected job SUCCESS (7/7 scoped) | not E8 or old CI total |
+
+GitHub commit-status query: main `f447231c...` and live `93df12aa...` each show a Vercel context success; that is **not** the old protected full-workflow matrix. Main is still **434 commits behind** actual live source; **no blind Main deployment**.
+
+**Verdict:** `T083_SELECTED_HISTORIC_CI_REGISTER=PASS_SCOPED`, `T083_COMPLETE_ORIGINAL_PHASE3_B0_B11_CURRENT_RELEASE_CI=NOT_VERIFIED`. An archive/ZIP existing in a historic run is not real B11 E8 restore or fresh release approval.
+
+## 31 Oct 2026 — GoDaddy renewal statement & source ZIP boundaries
+
+Founder personally reported domain auto-renew date **14 August 2027** for `jantabol.in`. This is `FOUNDER_REPORTED`, **not** independent registrar screenshot or verified Auto-Renew ON/charge/expiry policy. No DNS renewal purchase, account login or provider setting change was made. E6 operational renewal evidence remains `PARTIAL`.
+
+**Evidence-only ZIP workflow:** `ci/phase4/b12/t083-build-evidence-pack.py` builds an entirely **local** deterministic ZIP with selected public T083 documents, the test harness and a SHA256 inventory of Phase3 public source files. Every included file is scanned for embedded credential fingerprints before archival; selected byte-for-byte ZIP contents are verified and a SHA256 printed by CI. GitHub uploads this as a **short-lived private CI artifact** where repository-authorized access may be required. It contains **no actual original application source bytes, Supabase database dump, Storage object backup, Auth records, Edge Functions, credentials, or full deployable release**. It MUST be named `T083_PUBLIC_OPS_EVIDENCE_ONLY_20261031.zip` and must never be confused with final Topic-11 signed source ZIP or full recovery proof.
+
+**Hard STOP:** Archive/CI completion never changes `T081_E8=HOLD`, `T082_FRESH_E4=NOT_RUN`, `T083_FINAL_LOCK=HOLD`, or the requirement for protected CI, Founder signoff and no-fee safeguards. 
