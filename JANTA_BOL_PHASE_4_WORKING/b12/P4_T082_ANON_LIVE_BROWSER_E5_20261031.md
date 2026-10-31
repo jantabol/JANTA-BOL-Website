@@ -19,3 +19,6 @@ Original production C1 public-articles RPC returned **0** for draft T006 `fbc2a0
 - Real historic production test-only record showed 20/20 Article version and audit snapshot parity and 5 publish/5 exit/5 correction historical transitions; this was **not** a fresh 2026-10-31 Owner E4 lifecycle.
 - No free JANTA BOL Supabase branch or independent private live publish namespace was found. New branch has hourly costs; do not create it under Founder ₹0. Never promote a test-only fake article into the live news feed to get a PASS.
 - Current full Owner-only Correction→Unpublish→Republish E4 and full cross-account API E5 remain separate HOLD gates. T083 independent safe read-only work may proceed under Soft Launch priority; T081 full E8 remains HOLD.
+
+## Test output discipline
+CI outputs only pass/fail for the expected public deny messages; it does not attach any browser profile, article text, Auth user information, snapshots of private content or request headers. The underlying test uses a new empty profile for each request, then deletes it. Failures are HOLD for that automation step; they are not evidence of a public leak without direct verification.
