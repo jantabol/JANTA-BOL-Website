@@ -89,13 +89,24 @@ def main():
         name=path.decode("utf-8","strict")
         if kind!=b"blob" or not path_ok(name):continue
         if size==b"-" or int(size)>MAX_FILE_BYTES:
-            omitted.append(name)
+            omitted.append({"path":name,"reason":"oversize"})
             continue
         data=git("show",LIVE_SHA+":"+name)
-        safe_content(name,data)
+        try:
+            safe_content(name,data)
+        except SystemExit as exc:
+            reason=str(exc)
+            # Sensitive or credential-like source is QUARANTINED, NEVER
+            # bundled. Disclose name and reason only, never its content.
+            if reason.startswith(("CREDENTIAL_LIKE_VALUE_IN_SOURCE:",
+                                  "REMOTE_DATABASE_CREDENTIAL_DENIED:",
+                                  "UNSAFE_CODE_PATH_DENIED:")):
+                omitted.append({"path":name,"reason":"secret_scan_quarantine"})
+                continue
+            raise
         selected.append((name,data))
-    if omitted:
-        raise SystemExit("TRUNCATION_DENIED_DUE_OVERSIZE_CODE:"+json.dumps(omitted[:6]))
+    # An archive with exclusions is deliberately NOT called a complete code
+    # backup or final source release. The exclusions are explicit in manifest.
     if len(selected)<130:
         raise SystemExit("CODE_COVERAGE_TOO_SMALL:"+str(len(selected)))
     total=sum(len(b) for _,b in selected)
@@ -123,6 +134,8 @@ def main():
      "code_files":len(selected),
      "total_code_bytes":total,
      "source_files":[{"path":name,"sha256":sha(data)} for name,data in selected],
+     "quarantined_or_oversize_code_paths":omitted,
+     "all_eligible_code_files_included":len(omitted)==0,
      "excluded_by_design":[
       "docs, PDFs and historic approval artifacts",
       "pending DRAFT PR #84/90/91/92 revisions not deployed to live",
@@ -148,6 +161,8 @@ def main():
         for name,data in selected:assert z.read(name)==data
     print("B12_ALL_PHASES_LIVE_CODE_BYTES_INTEGRITY=PASS")
     print("B12_ALL_PHASES_LIVE_CODE_FILE_COUNT="+str(len(selected)))
+    print("B12_CODE_PATHS_QUARANTINED_OR_OVERSIZE="+str(len(omitted)))
+    print("B12_COMPLETE_CODE_ARCHIVE="+("YES" if not omitted else "NO_HOLD_QUARANTINED"))
     print("B12_ALL_PHASES_LIVE_CODE_ARCHIVE_SHA256="+sha(OUT.read_bytes()))
     print("B12_FULL_CURRENT_E8_BACKUP=NOT_RUN")
     print("B12_FULL_SIGNED_FINAL_RELEASE=NOT_PROVEN")
