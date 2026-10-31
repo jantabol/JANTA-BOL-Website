@@ -833,9 +833,10 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
   ){
     await requireOwner();
 
+    // Reserve before slug/media generation: one browser intent, one Article UUID.
+    let newCreateId=!item.id?reserveCreateIntent():null;
     const row=toRow(item);
     let saved;
-    let newCreateId=null;
 
     if(item.id){
       let q=client
@@ -865,7 +866,6 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
       saved=data[0];
 
     }else{
-      newCreateId=reserveCreateIntent();
       // Preserve form and intent before crossing the network boundary.
       saveShadow(item);
       markCreateIntentAttempt(newCreateId);
