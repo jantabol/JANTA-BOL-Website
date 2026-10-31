@@ -7,6 +7,7 @@ on:
       - '.github/workflows/b12-t083-production-ops-readonly.yml'
       - 'ci/phase4/b12/t083-production-ops-real-http.test.mjs'
       - 'ci/phase4/b12/t083-build-evidence-pack.py'
+      - 'ci/phase4/b12/t083-build-live-public-site-snapshot.py'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md'
   pull_request:
     branches: [codex/t080-admin-ack-failclosed-review-20261031]
@@ -33,7 +34,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
+              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
               *) echo "T083_UNAUTHORIZED_CHANGE=$file"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -48,6 +49,16 @@ jobs:
           set -Eeuo pipefail
           node --check ci/phase4/b12/t083-production-ops-real-http.test.mjs
           node --test ci/phase4/b12/t083-production-ops-real-http.test.mjs
+      - name: Safe selected original Founder and publishing regression on actual LIVE source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
+          echo 'T083_LIVE_SOURCE_SELECTED_FOUNDER_PUBLISHER_REGRESSION=PASS_SCOPED'
       - name: Generate deterministic scanned evidence-only ZIP (NOT source/archive/backup)
         shell: bash
         run: |
@@ -59,6 +70,19 @@ jobs:
         with:
           name: T083_PUBLIC_OPS_EVIDENCE_ONLY_20261031
           path: out/T083_PUBLIC_OPS_EVIDENCE_ONLY_20261031.zip
+          if-no-files-found: error
+          retention-days: 5
+      - name: Generate exact live-SHA public website source snapshot (NOT full B12 backup)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 ci/phase4/b12/t083-build-live-public-site-snapshot.py
+          sha256sum out/T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031.zip
+      - name: Upload scoped public website source candidate ZIP (NOT full B12 signed release)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031
+          path: out/T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031.zip
           if-no-files-found: error
           retention-days: 5
       - name: Required final GO/NO-GO gate never silently waived
