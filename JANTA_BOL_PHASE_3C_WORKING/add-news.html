@@ -543,11 +543,51 @@
     }
   }else{
     const sh=JBBackend.getShadow();
+    const intent=JBBackend.getCreateIntent?.();
+    // An HTTP response can be lost AFTER the backend creates a row. A reload,
+    // second tab or reconnect must reconcile the fixed article UUID first.
+    if(intent?.attempted){
+      writeOutcomeUnknown=true;
+      if(sh?.item && !sh.item.id)load(sh.item,'draft');
+      try{
+        const existing=await JBBackend.getArticle(intent.id,{privateData:true});
+        if(existing){
+          const exact=!!sh?.item
+            && sh.item.headline===existing.headline
+            && sh.item.content===existing.content
+            && sh.item.internalSource?.name===existing.internalSource?.name;
+          if(exact){
+            // Only a confirmed identical row/source permits a fresh operation.
+            // Continue on the SAME article ID; never submit another INSERT.
+            JBBackend.clearCreateIntent?.(intent.id);
+            JBBackend.clearShadow();
+            load(existing,existing.status==='published'?'published':'draft');
+            writeOutcomeUnknown=false;
+            state('RECONCILED • Existing '+existing.status+' article ID verified',true);
+            return;
+          }
+          state('EXISTING ARTICLE FOUND • Review Published/Drafts before any retry',false);
+        }else{
+          state('SAVE/PUBLISH OUTCOME UNKNOWN • Check Published/Drafts; auto retry blocked',false);
+        }
+      }catch(_){
+        state('CANNOT VERIFY PREVIOUS WRITE • Check network and Published/Drafts',false);
+      }
+      return;
+    }
+
+    // Reserve the same per-intent UUID as soon as the new form is opened.
+    // Multiple same-origin Android tabs share it until a confirmed save.
+    try{JBBackend.reserveCreateIntent?.();}
+    catch(_){
+      writeOutcomeUnknown=true;
+      state('SECURE CREATE INTENT UNAVAILABLE • Save blocked',false);
+      return;
+    }
 
     if(sh?.item && !sh.item.id){
       load(sh.item,'draft');
       state('RECOVERED LOCAL NEW DRAFT • NOT SYNCED',false);
-      // A recovered new draft should sync promptly once connectivity exists.
       if(navigator.onLine) scheduleAutosave(1000);
       return;
     }
