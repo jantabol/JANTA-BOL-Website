@@ -46,7 +46,10 @@ for(const key of ['tests','pass','fail','cancelled','skipped']){
 const unknown=failures.filter(name=>!oldOnlyFailures.has(name));
 const missingActive=tests.some(t=>!require('node:fs').existsSync(t));
 assert(!missingActive,'MISSING_ORIGINAL_TEST_SOURCE');
-assert.equal(stats.tests,116,'ORIGINAL_WIDE_MATRIX_TEST_COUNT_CHANGED_REQUIRE_REVIEW');
+assert.equal(stats.tests,120,'ORIGINAL_WIDE_MATRIX_120_TESTS_AFTER_RESTORED_ANDROID_SUITE');
+// 2026-10-31 original live test score was 108/116 because the Published guard
+// test file failed at import-time (counted as 1). Restored watchdog re-enables
+// its 5 individual tests, so a genuine non-regressing matrix now counts 120.
 assert.equal(failures.length,stats.fail,'ORIGINAL_CI_FAILURE_LIST_COUNT_MISMATCH');
 assert.equal(unknown.length,0,'NEW_UNREVIEWED_REGRESSION_FAILURES: '+JSON.stringify(unknown));
 assert.equal(out.status,failures.length>0?1:0,'PROCESS_STATUS_DISAGREES_WITH_ORIGINAL_TESTS');
