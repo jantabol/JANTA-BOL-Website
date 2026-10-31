@@ -7,6 +7,8 @@ on:
       - '.github/workflows/b12-t082-public-readonly-review.yml'
       - 'ci/phase4/b12/t082-public-readonly-https.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_PUBLIC_READONLY_PREFLIGHT_20261031.md'
+  pull_request:
+    branches: [codex/t081-t075-guarded-source-integration-20261031]
   workflow_dispatch:
 permissions:
   contents: read
@@ -15,7 +17,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   public-get-only:
-    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && github.ref == 'refs/heads/codex/t082-readonly-public-android-preflight-20261031' }}
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && (github.ref == 'refs/heads/codex/t082-readonly-public-android-preflight-20261031' || github.event_name == 'pull_request') }}
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -28,7 +30,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
-          test "$GITHUB_REF" = 'refs/heads/codex/t082-readonly-public-android-preflight-20261031'
+          test "$GITHUB_REF" = 'refs/heads/codex/t082-readonly-public-android-preflight-20261031' || test "$GITHUB_EVENT_NAME" = 'pull_request'
           BASE='e361ee207d9e35f26bb3a1a4fafd375e25a4ca22'
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r path; do
