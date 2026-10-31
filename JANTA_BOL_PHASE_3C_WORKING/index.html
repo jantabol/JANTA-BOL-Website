@@ -8,9 +8,9 @@
 
   <link rel="stylesheet" href="style.css">
 <link rel="stylesheet" href="public-ads.css?v=p4t035-review-2">
-<link rel="stylesheet" href="b9-home-entry.css?v=20261023-b9-ui1"><style id="jb-v3-public-truth-guard">
+<link rel="stylesheet" href="b9-home-entry.css?v=20261027-t071"><style id="jb-v3-public-truth-guard">
 /* V2-only forms never actually submit; do not imply successful reporting. */
-#citizen-news-form,#official-reporter-form{display:none!important}
+#citizen-news-form,#official-reporter-form,#top-story[hidden]{display:none!important}
 .jb-disabled-form-note{border:1px solid #666;border-radius:10px;padding:12px;background:#171717;color:#fff;line-height:1.7}
 </style></head>
 
@@ -35,7 +35,7 @@
 <section class="hero">
 
     <div class="hero-overlay">
-<div class="live-badge">JANTA BOL</div>
+
         <p class="tagline">
             जहाँ सच बोलता है
         </p>
@@ -393,8 +393,8 @@
         <h3>📢 अपनी खबर भेजें</h3>
         <p>सिर्फ जरूरी जानकारी भरें और अपने क्षेत्र की खबर JANTA BOL तक पहुँचाएँ।</p>
 
-        <p class="jb-disabled-form-note" role="status">ऑनलाइन खबर भेजने का फ़ॉर्म अभी चालू नहीं है; यहाँ दी गई जानकारी जमा नहीं होगी। कृपया आधिकारिक संपर्क विकल्प का उपयोग करें।</p>
-<form class="citizen-news-form" id="citizen-news-form">
+        <p class="jb-disabled-form-note" role="status">ऑनलाइन खबर भेजने का फ़ॉर्म अभी चालू नहीं है; यहाँ कोई जानकारी जमा नहीं होती। <a href="#contact">आधिकारिक संपर्क विकल्प देखें</a>।</p>
+<form class="citizen-news-form" id="citizen-news-form" hidden inert style="display:none" aria-hidden="true">
             <label for="citizen-name">आपका नाम</label>
             <input id="citizen-name" name="name" type="text" placeholder="अपना नाम लिखें" required>
 
@@ -411,7 +411,7 @@
         </form>
 
         <p class="citizen-verify-note">
-            🛡️ भेजी गई जानकारी को JANTA BOL द्वारा सत्यापित किया जाएगा।
+            🛡️ ऑनलाइन खबर भेजने का फ़ॉर्म फिलहाल बंद है; यहाँ कोई जानकारी जमा नहीं होती।
         </p>
     </div>
 
@@ -442,10 +442,10 @@
     <div class="district-reporter">
         <h3>🏅 आधिकारिक जिला रिपोर्टर बनें</h3>
         <p>
-            यदि आप नियमित, जिम्मेदार और भरोसेमंद रिपोर्टिंग करना चाहते हैं,
-            तो आधिकारिक रिपोर्टर आवेदन भरें।
+            आधिकारिक रिपोर्टर के ऑनलाइन आवेदन फिलहाल स्वीकार नहीं किए जा रहे हैं;
+            आवेदन फिर शुरू होने पर यहाँ सूचना दी जाएगी।
         </p>
-        <button type="button" class="district-button official-reporter-open">
+        <button type="button" class="district-button official-reporter-open" disabled aria-disabled="true" title="ऑनलाइन आवेदन फिलहाल बंद हैं">
             📝 आधिकारिक रिपोर्टर आवेदन
         </button>
     </div>
@@ -686,7 +686,7 @@
     <h2 id="reporter-modal-title">आधिकारिक रिपोर्टर आवेदन</h2>
 
     <p class="jb-disabled-form-note" role="status">आधिकारिक रिपोर्टर का ऑनलाइन आवेदन अभी स्वीकार नहीं किया जा रहा है।</p>
-<form id="official-reporter-form" class="official-reporter-form">
+<form id="official-reporter-form" class="official-reporter-form" hidden inert style="display:none" aria-hidden="true">
       <div class="form-section-title">👤 व्यक्तिगत जानकारी</div>
 
       <label for="r-name">पूरा नाम*</label>
