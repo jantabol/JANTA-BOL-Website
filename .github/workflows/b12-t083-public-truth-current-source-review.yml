@@ -8,6 +8,7 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
       - 'JANTA_BOL_PHASE_3C_WORKING/script.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'ci/phase4/b12/t083-original-legacy-regression-recheck.cjs'
       - 'ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs'
       - '.github/workflows/b12-t083-public-truth-current-source-review.yml'
   pull_request:
@@ -34,7 +35,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              JANTA_BOL_PHASE_3C_WORKING/index.html|JANTA_BOL_PHASE_3C_WORKING/script.js|JANTA_BOL_PHASE_3C_WORKING/published.html|ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs|.github/workflows/b12-t083-public-truth-current-source-review.yml) ;;
+              JANTA_BOL_PHASE_3C_WORKING/index.html|JANTA_BOL_PHASE_3C_WORKING/script.js|JANTA_BOL_PHASE_3C_WORKING/published.html|ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs|ci/phase4/b12/t083-original-legacy-regression-recheck.cjs|.github/workflows/b12-t083-public-truth-current-source-review.yml) ;;
               *) echo "UNAUTHORIZED_SOURCE_CHANGE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -68,6 +69,12 @@ jobs:
           node --test ci/phase4/b10-whole-platform-security-source.test.mjs
           node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
           echo 'SOURCE_CURRENT_B9_B10_AND_FOUNDER_REGRESSION=PASS_SCOPED'
+      - name: Original full wider 116-test source regression (historical failures classified HOLD)
+        shell: bash
+        run: |
+          node --check ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          echo 'T083_OLD_FULL_CURRENT_MATRIX_GREEN=NOT_CLAIMED_WHILE_STALE_GATE_EXISTS'
       - name: Explicitly avoid spoofed soft-launch or current E8 PASS
         run: |
           echo 'B11_LEGACY_STATIC_SOURCE_TESTS=NEED_MODERN_C1_RECONCILIATION'
