@@ -137,6 +137,29 @@ jobs:
           print('T064_SYNTHETIC_FIXTURE_EXACT_BLOB_ALLOWED=PASS')
           print('T064_MUTATED_SYNTHETIC_FIXTURE_DENIED=PASS')
           PY
+      - name: Original Phase3 plus B8-B12 wider protected source regressions on exact live source (offline, no DB secrets)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # Only original, read-only contract tests. No backup/deploy/SQL/provider write.
+          node --test \
+            ci/phase4/b8-e5-staff-login-security.test.mjs \
+            ci/phase4/b8-official-evidence-release-gate.test.cjs \
+            ci/phase4/b9-client-and-ui.test.mjs \
+            ci/phase4/b10-whole-platform-security-source.test.mjs \
+            ci/phase4/b10-t063-auth-manual-preflight.test.mjs \
+            ci/phase4/b10-t067-incident-source-and-rca.test.mjs \
+            ci/phase4/b10-t068-evidence-reconciliation.test.mjs \
+            ci/phase4/b11/t070-final-e8-gate.test.mjs \
+            ci/phase4/b11/t071-b9-search-reuse.test.mjs \
+            ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs \
+            ci/phase4/b11/t071-softlaunch-public-truth.test.mjs \
+            ci/phase4/b11/t071-closure-route-v1-contract.test.mjs \
+            ci/phase4/b11/t075-scheduled-budget.test.mjs \
+            ci/phase4/b12/t077-purl-safety-readonly.test.cjs \
+            ci/phase4/b12/b0-b12-safe-source-integration.test.mjs
+          echo 'T083_SELECTED_FULL_LIVE_SOURCE_B8_B12_REGRESSION=PASS_SCOPED'
+          echo 'T083_ALL_PROTECTED_PHASE3_B0_B12_FINAL=NOT_PROVEN'
       - name: Build immutable full live-baseline CODE ONLY all-phases candidate and verify every byte
         shell: bash
         run: |
