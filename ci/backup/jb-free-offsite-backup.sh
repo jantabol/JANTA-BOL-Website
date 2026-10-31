@@ -28,25 +28,38 @@ command -v zstd >/dev/null || fail "zstd not installed"
 # A dual-identity real clone run requires distinct manual workflow authorization.
 dual="${JB_T034_DUAL_RESTORE_PROBE:-0}"
 joint="${JB_T070_JOINT_PROBE:-0}"
+auto="${JB_T075_AUTO_JOINT_BACKUP:-0}"
+[[ "$auto" == 0 || "$auto" == 1 ]] || fail 'invalid T075 scheduled backup mode'
+if [[ "$auto" == 1 ]]; then
+  [[ "$dual" == 1 && "$joint" == 1 ]] ||
+    fail 'T075 scheduled mode cannot skip real original PG17 plus media restore'
+  node --input-type=module -e "import {assertScheduledBackupContext} from './ci/phase4/b11/t075-scheduled-backup-identity.mjs'; assertScheduledBackupContext();" ||
+    fail 'T075 scheduled workflow not independently approved'
+fi
 [[ "$dual" == 0 || "$dual" == 1 ]] || fail 'invalid dual-restore mode'
 [[ "$joint" == 0 || "$joint" == 1 ]] || fail 'invalid joint-restore mode'
 [[ "$joint" == 0 || "$dual" == 1 ]] || fail 'joint media restore requires existing dual-recipient PG restore'
 if [[ "$dual" == 1 ]]; then
-  [[ "${GITHUB_ACTIONS:-}" == true &&
-     "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
-     "${GITHUB_REF:-}" == refs/heads/main &&
-     "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
-     "${GITHUB_ACTOR:-}" == jantabol &&
-     "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
-    fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
-  if [[ "$joint" == 1 ]]; then
-    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
-       "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
-       -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
-      fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
+  if [[ "$auto" == 0 ]]; then
+    [[ "${GITHUB_ACTIONS:-}" == true &&
+       "${GITHUB_EVENT_NAME:-}" == workflow_dispatch &&
+       "${GITHUB_REF:-}" == refs/heads/main &&
+       "${GITHUB_REPOSITORY:-}" == jantabol/JANTA-BOL-Website &&
+       "${GITHUB_ACTOR:-}" == jantabol &&
+       "${GITHUB_RUN_ATTEMPT:-}" == 1 ]] ||
+      fail 'real isolated clone verification denied: manual Founder/main/first attempt required'
+    if [[ "$joint" == 1 ]]; then
+      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b11-t070-real-joint-restore-MANUAL.yml@refs/heads/main' &&
+         "${B11_MEDIA_EXPORT_CONFIRMATION:-}" == 'JANTA_BOL_T070_JOINT_EXPORT_ONLY' &&
+         -n "${JB_B11_SERVICE_ROLE_KEY:-}" ]] ||
+        fail 'T070 requires a separate, protected, reviewed, Founder-only real joint workflow'
+    else
+      [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
+        fail 'legacy T034 manual workflow identity required'
+    fi
   else
-    [[ "${GITHUB_WORKFLOW_REF:-}" == 'jantabol/JANTA-BOL-Website/.github/workflows/b7-t034-dual-recipient-real-MANUAL.yml@refs/heads/main' ]] ||
-      fail 'legacy T034 manual workflow identity required'
+    [[ "$joint" == 1 && "${JB_B11_SERVICE_ROLE_KEY:-}" != "" ]] ||
+      fail 'T075 scheduled mode requires original protected service role and joint export'
   fi
   command -v age-keygen >/dev/null || fail 'AGE key generator missing'
 fi
@@ -80,6 +93,17 @@ python3 ci/backup/jb-b2-rclone-config.py "$work/rclone.conf" || fail "JANTA BOL 
 rclone --config "$work/rclone.conf" listremotes | grep -Fxq 'jbbackup:' || fail "rclone [jbbackup] remote is not configured"
 rclone --config "$work/rclone.conf" --retries 1 lsf "jbbackup:jantabol-backup-euc-2026" >/dev/null ||
  fail "JANTA BOL bucket unavailable or scoped key missing list/read permissions; no DB export was attempted"
+if [[ "$auto" == 1 ]]; then
+  # FREE-TIER COST CAP: metadata-only read of EXISTING remote before DB export.
+  # B2 charges for older/hidden object versions too: --b2-versions includes
+  # historical versions rather than only the visible current object list.
+  # No automatic deletes, pruning, overwrite, new bucket or retention downgrade.
+  rclone --config "$work/rclone.conf" --retries 1 --b2-versions size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
+    fail 'T075 scheduled offsite quota unreadable, refuse live export'
+  python3 ci/phase4/b11/t075-scheduled-budget.py preflight "$work/scheduled-budget.json" ||
+    fail 'T075 scheduled existing B2 quota unknown or exceeded; no DB export permitted'
+  echo 'T075_SCHEDULED_EXISTING_ENCRYPTED_OFFSITE_BYTES_WITHIN_2GIB=PASS_METADATA_ONLY'
+fi
 # Validate age recipient can encrypt public, disposable synthetic data without private key.
 printf 'JANTA_BOL_ONLY_NON_SECRET_PREFLIGHT\n' | age -r "$JB_BACKUP_AGE_RECIPIENT" -o "$work/public-recipient-probe.age" ||
  fail "invalid JANTA BOL age public recipient; no DB export was attempted"
@@ -247,6 +271,17 @@ fi
 tar -C "$work/plain" -cf - "${bundle[@]}" |
  zstd -T0 -q | age "${age_args[@]}" -o "$work/backup.age"
 test -s "$work/backup.age" || fail "empty encrypted archive"
+if [[ "$auto" == 1 ]]; then
+  # Refresh bucket-wide account usage after long PG17/media capture: a
+  # concurrent original manual Founder run may have written new B2 objects.
+  # Never trust only the old pre-DB-export listing at upload time.
+  rclone --config "$work/rclone.conf" --retries 1 --b2-versions size --json "jbbackup:jantabol-backup-euc-2026" > "$work/scheduled-budget.json" ||
+    fail 'T075 fresh bucket-wide B2 quota unknown before upload'
+  # Count existing JANTA BOL bucket bytes + NEW ciphertext; scope is the
+  # whole approved bucket, not just the scheduled subfolder/prefix.
+  python3 ci/phase4/b11/t075-scheduled-budget.py upload "$work/scheduled-budget.json" "$work/backup.age" ||
+    fail 'T075 combined B2 bucket footprint or new 512MiB ciphertext cap failed, no remote upload'
+fi
 name="production/database/$(date -u +%Y%m%dT%H%M%SZ)-run${GITHUB_RUN_ID}.tar.zst.age"
 destination="${JB_BACKUP_REMOTE_PREFIX%/}/${name}"
 # Fail if collision or remote access unavailable; no overwrites.
