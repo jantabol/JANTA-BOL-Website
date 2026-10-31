@@ -1,0 +1,59 @@
+name: T082 Original Backend Lifecycle Owner-CAS No Live Writes
+on:
+  push:
+    branches: [codex/t082-lifecycle-original-backend-synthetic-review-20261031]
+    paths:
+      - '.github/workflows/b12-t082-original-lifecycle-review.yml'
+      - 'ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md'
+  pull_request:
+    branches: [codex/t082-readonly-public-android-preflight-20261031]
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-t082-original-lifecycle-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  synthetic-and-source-audit:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact production source unchanged and no live credentials
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='0d1ff76652874daa959159eda149e4cb2db6b3b6'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/b12-t082-original-lifecycle-review.yml|ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md) ;;
+              *) echo "T082_UNAUTHORIZED_PRODUCT_CHANGE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T082_PRODUCT_SOURCE_UNCHANGED=PASS'
+      - name: Execute actual production backend functions against synthetic in-memory client
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs
+          node --test ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs
+      - name: Regression of unchanged T080 admin network safety
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+      - name: Explicit limitations
+        run: |
+          echo 'T082_SYNTHETIC_ORIGINAL_BACKEND_SOURCE=PASS_SCOPED'
+          echo 'T082_REAL_CORRECTION_UNPUBLISH_REPUBLISH=NOT_RUN'
+          echo 'T082_FINAL_PASS_LOCK=HOLD'
+          echo 'T081_PRODUCTION_E8=HOLD'
