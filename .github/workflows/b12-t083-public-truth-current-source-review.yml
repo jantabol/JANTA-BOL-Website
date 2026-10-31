@@ -9,6 +9,9 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/script.js'
       - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
       - 'ci/phase4/b12/t083-original-legacy-regression-recheck.cjs'
+      - 'ci/phase4/b11/t071-b9-search-reuse.test.mjs'
+      - 'ci/phase4/b11/t071-softlaunch-public-truth.test.mjs'
+      - 'ci/phase4/b12/b0-b12-safe-source-integration.test.mjs'
       - 'ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs'
       - '.github/workflows/b12-t083-public-truth-current-source-review.yml'
   pull_request:
@@ -35,7 +38,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              JANTA_BOL_PHASE_3C_WORKING/index.html|JANTA_BOL_PHASE_3C_WORKING/script.js|JANTA_BOL_PHASE_3C_WORKING/published.html|ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs|ci/phase4/b12/t083-original-legacy-regression-recheck.cjs|.github/workflows/b12-t083-public-truth-current-source-review.yml) ;;
+              JANTA_BOL_PHASE_3C_WORKING/index.html|JANTA_BOL_PHASE_3C_WORKING/script.js|JANTA_BOL_PHASE_3C_WORKING/published.html|ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs|ci/phase4/b12/t083-original-legacy-regression-recheck.cjs|ci/phase4/b11/t071-b9-search-reuse.test.mjs|ci/phase4/b11/t071-softlaunch-public-truth.test.mjs|ci/phase4/b12/b0-b12-safe-source-integration.test.mjs|.github/workflows/b12-t083-public-truth-current-source-review.yml) ;;
               *) echo "UNAUTHORIZED_SOURCE_CHANGE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
