@@ -7,6 +7,7 @@ on:
       - '.github/workflows/b12-t083-production-ops-readonly.yml'
       - 'ci/phase4/b12/t083-production-ops-real-http.test.mjs'
       - 'ci/phase4/b12/t083-build-evidence-pack.py'
+      - 'ci/phase4/b12/t083-build-live-all-phases-code-candidate.py'
       - 'ci/phase4/b12/t083-build-live-public-site-snapshot.py'
       - 'ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs'
       - 'ci/phase4/b12/t080-pr84-preview-http-source-parity.test.mjs'
@@ -114,6 +115,28 @@ jobs:
           path: out/T083_LIVE_PUBLIC_SITE_SOURCE_CANDIDATE_20261031.zip
           if-no-files-found: error
           retention-days: 5
+      - name: T064 original secrets scanner self-test and immutable synthetic fixture anti-tamper
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          python3 - <<'PY'
+          import importlib.util, subprocess
+          p='ci/phase4/b12/t083-build-live-all-phases-code-candidate.py'
+          spec=importlib.util.spec_from_file_location('jb_t083_blob_gate',p)
+          m=importlib.util.module_from_spec(spec)
+          spec.loader.exec_module(m)
+          name='ci/phase4/b10-t064-source-secrets-gate.test.mjs'
+          original=subprocess.check_output(['git','show',m.LIVE_SHA+':'+name])
+          m.safe_content(name, original)
+          for changed in (original+b'\\n', original.replace(b'PRIVATE_PEM',b'PRIVATE_KEY',1)):
+              try:m.safe_content(name,changed)
+              except SystemExit as e:
+                  assert 'T064_TEST_FIXTURE_BLOB_CHANGED_DENIED' in str(e)
+              else:raise RuntimeError('T064 fixture modification erroneously accepted')
+          print('T064_SYNTHETIC_FIXTURE_EXACT_BLOB_ALLOWED=PASS')
+          print('T064_MUTATED_SYNTHETIC_FIXTURE_DENIED=PASS')
+          PY
       - name: Build immutable full live-baseline CODE ONLY all-phases candidate and verify every byte
         shell: bash
         run: |
