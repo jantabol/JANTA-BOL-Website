@@ -84,7 +84,7 @@ test('canonical Article frontend, Ads frontend and public root retained unchange
   assert.equal(blob(read(d+'article.html')),'98dca1e26f32846b6fba722731acd6d14f0aed41');
   const article=read(d+'article.html');
   assert.match(article,/JBBackend\.requireOwner\(\)/);
-  assert.match(article,/JBPublicC1\.get\(requestedId\)/);
+  assert.match(article,/JBPublicC1\.get\(id\)/);
   assert.match(article,/document\.querySelector\('link\[rel="canonical"\]'\)/);
   // Separate shared Ads source fingerprint is still original exact B8 code.
   assert.equal(blob(read(d+'public-ads.js')),'a450cc3158c4c72692e848d3044ee00e53582082');
