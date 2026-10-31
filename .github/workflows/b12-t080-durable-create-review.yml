@@ -6,6 +6,7 @@ on:
       - 'JANTA_BOL_PHASE_3C_WORKING/add-news.html'
       - 'JANTA_BOL_PHASE_3C_WORKING/backend-client.js'
       - 'ci/phase4/b12/t080-durable-article-intent.test.mjs'
+      - 'ci/phase4/b12/t080-android-reload-reconciliation.test.mjs'
       - '.github/workflows/b12-t080-durable-create-review.yml'
   pull_request:
     branches: [codex/t080-admin-ack-failclosed-review-20261031]
@@ -36,7 +37,9 @@ jobs:
           test -z "${CRICKET_DATABASE_URL:-}"
           node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
       - name: Real backend-client VM PK identity / reload / two tabs / lost ACK
-        run: node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+        run: |
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
       - name: Original T080 UI, Founder AAL2 and Publisher fault regressions
         run: |
           node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
@@ -49,7 +52,7 @@ jobs:
           git diff --exit-code 93df12aa8ffdfae38d9a4066b6a4556bb36969e5 HEAD --             JANTA_BOL_PHASE_3C_WORKING/admin-auth.js             JANTA_BOL_PHASE_3C_WORKING/admin-login.html             JANTA_BOL_PHASE_3C_WORKING/admin.html             JANTA_BOL_PHASE_3C_WORKING/article.html             JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js             JANTA_BOL_PHASE_3C_WORKING/website-v3.js             JANTA_BOL_PHASE_3C_WORKING/script.js             JANTA_BOL_PHASE_3C_WORKING/phase3c-live-engine-admin.js             vercel.json
           git diff --name-only 93df12aa8ffdfae38d9a4066b6a4556bb36969e5 HEAD | while IFS= read -r file; do
             case "$file" in
-              JANTA_BOL_PHASE_3C_WORKING/backend-client.js|JANTA_BOL_PHASE_3C_WORKING/add-news.html|ci/phase4/b12/t080-durable-article-intent.test.mjs|.github/workflows/b12-t080-durable-create-review.yml) ;;
+              JANTA_BOL_PHASE_3C_WORKING/backend-client.js|JANTA_BOL_PHASE_3C_WORKING/add-news.html|ci/phase4/b12/t080-durable-article-intent.test.mjs|ci/phase4/b12/t080-android-reload-reconciliation.test.mjs|.github/workflows/b12-t080-durable-create-review.yml) ;;
               *) echo "OUT_OF_SCOPE_FILE=$file"; exit 1;;
             esac
           done
