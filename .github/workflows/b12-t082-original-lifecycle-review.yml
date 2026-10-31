@@ -5,6 +5,8 @@ on:
     paths:
       - '.github/workflows/b12-t082-original-lifecycle-review.yml'
       - 'ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs'
+      - 'ci/phase4/b12/t082-historical-chain-reconcile.test.mjs'
+      - 'ci/phase4/b12/t082-lifecycle-historical-readonly.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md'
   pull_request:
     branches: [codex/t082-readonly-public-android-preflight-20261031]
@@ -31,7 +33,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t082-original-lifecycle-review.yml|ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md) ;;
+              .github/workflows/b12-t082-original-lifecycle-review.yml|ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs|ci/phase4/b12/t082-historical-chain-reconcile.test.mjs|ci/phase4/b12/t082-lifecycle-historical-readonly.sql|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md) ;;
               *) echo "T082_UNAUTHORIZED_PRODUCT_CHANGE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -46,6 +48,11 @@ jobs:
           set -Eeuo pipefail
           node --check ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs
           node --test ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs
+      - name: Historical SQL-audited 20-version chain + current original Owner/CAS invariant
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t082-historical-chain-reconcile.test.mjs
       - name: Regression of unchanged T080 admin network safety
         shell: bash
         run: |
@@ -54,6 +61,7 @@ jobs:
       - name: Explicit limitations
         run: |
           echo 'T082_SYNTHETIC_ORIGINAL_BACKEND_SOURCE=PASS_SCOPED'
+          echo 'T082_HISTORICAL_LIVE_AUDIT_READBACK=PASS_SCOPED_HISTORICAL'
           echo 'T082_REAL_CORRECTION_UNPUBLISH_REPUBLISH=NOT_RUN'
           echo 'T082_FINAL_PASS_LOCK=HOLD'
           echo 'T081_PRODUCTION_E8=HOLD'
