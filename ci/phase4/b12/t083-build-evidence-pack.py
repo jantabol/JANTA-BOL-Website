@@ -19,6 +19,8 @@ FILES = (
     ".github/workflows/b12-t083-production-ops-readonly.yml",
     "ci/phase4/b12/t083-production-ops-real-http.test.mjs",
     "ci/phase4/b12/t083-build-evidence-pack.py",
+    "ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs",
+    "JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json",
     "JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md",
     "JANTA_BOL_PHASE_4_WORKING/b12/RUN11_T076_TO_T083_ONE_AT_A_TIME_TEST_ORDER.md",
 )
