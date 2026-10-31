@@ -1,0 +1,55 @@
+# JANTA BOL Phase4 T082: public GET-only, no Founder login, secrets or writes.
+name: T082 public real-domain GET-only shell acceptance (review)
+on:
+  push:
+    branches: [codex/t082-readonly-public-android-preflight-20261031]
+    paths:
+      - '.github/workflows/b12-t082-public-readonly-review.yml'
+      - 'ci/phase4/b12/t082-public-readonly-https.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_PUBLIC_READONLY_PREFLIGHT_20261031.md'
+  pull_request:
+    branches: [codex/t081-t075-guarded-source-integration-20261031]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-t082-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-get-only:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && (github.ref == 'refs/heads/codex/t082-readonly-public-android-preflight-20261031' || github.event_name == 'pull_request') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Exact no-product-change and no-secret release guard
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
+          test "$GITHUB_REF" = 'refs/heads/codex/t082-readonly-public-android-preflight-20261031' || test "$GITHUB_EVENT_NAME" = 'pull_request'
+          BASE='e361ee207d9e35f26bb3a1a4fafd375e25a4ca22'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r path; do
+            case "$path" in
+              .github/workflows/b12-t082-public-readonly-review.yml|ci/phase4/b12/t082-public-readonly-https.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_PUBLIC_READONLY_PREFLIGHT_20261031.md) ;;
+              *) echo "T082_OUT_OF_SCOPE_CHANGE=$path"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'T082_SAME_LIVE_CODE_NO_PRODUCT_CHANGE=PASS'
+      - name: Real HTTPS public landing, home, immutable-PURL shell GET only
+        run: node --test ci/phase4/b12/t082-public-readonly-https.test.mjs
+      - name: Report boundary (not Android, publication or rollback proof)
+        run: |
+          echo 'T082_REAL_PUBLIC_HTML_GET_SCOPED=PASS'
+          echo 'T082_ANDROID_PHONE_TABLET_EXPERIENCE=NOT_RUN'
+          echo 'T082_CORRECTION_UNPUBLISH_REPUBLISH=NOT_RUN'
+          echo 'T081_FULL_RECOVERY_AND_ROLLBACK=HOLD'
+          echo 'T082_FINAL_PASS_LOCK=HOLD'
