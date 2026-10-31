@@ -61,6 +61,18 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
           node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
           echo 'T083_LIVE_SOURCE_SELECTED_FOUNDER_PUBLISHER_REGRESSION=PASS_SCOPED'
+      - name: Actual anonymous Incognito Chrome E5 on published domain (existing QA DRAFT only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          # Reuse exact source from PR91; never copy unknown private data or login tokens.
+          SOURCE='97065707d367c5f960a506300b5f384106ab68a8'
+          git cat-file -e "$SOURCE^{commit}"
+          git show "$SOURCE:ci/phase4/b12/t082-anon-live-chrome.test.mjs" > "$RUNNER_TEMP/t082-anon-live-chrome.test.mjs"
+          node --check "$RUNNER_TEMP/t082-anon-live-chrome.test.mjs"
+          node --test "$RUNNER_TEMP/t082-anon-live-chrome.test.mjs"
+          echo 'T082_PUBLIC_ANON_CHROME_TWO_ROUTES=PASS_SCOPED'
+          echo 'T082_CURRENT_FOUNDER_LIFECYCLE_E4=NOT_RUN'
       - name: Reconcile all eight T076–T083 tests + hard E8/E4/Owner release HOLD
         shell: bash
         run: |
