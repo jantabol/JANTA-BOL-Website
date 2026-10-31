@@ -543,7 +543,11 @@
     }
   }else{
     const sh=JBBackend.getShadow();
-    const intent=JBBackend.getCreateIntent?.();
+    // The shadow carries the original tab identity even if a competing tab
+    // has already confirmed and cleared the shared reservation.
+    const intent=(sh?.item&&!sh.item.id&&sh.createIntentId)
+      ?{id:sh.createIntentId,attempted:true}
+      :JBBackend.getCreateIntent?.();
     // An HTTP response can be lost AFTER the backend creates a row. A reload,
     // second tab or reconnect must reconcile the fixed article UUID first.
     if(intent?.attempted){
