@@ -72,12 +72,14 @@ jobs:
           node --test ci/phase4/b10-whole-platform-security-source.test.mjs
           node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
           echo 'SOURCE_CURRENT_B9_B10_AND_FOUNDER_REGRESSION=PASS_SCOPED'
-      - name: Original full wider 116-test source regression (historical failures classified HOLD)
+      - name: Original reconciled selected 120-test production-source regression — ZERO FAIL REQUIRED
         shell: bash
         run: |
           node --check ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
           node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
-          echo 'T083_OLD_FULL_CURRENT_MATRIX_GREEN=NOT_CLAIMED_WHILE_STALE_GATE_EXISTS'
+          echo 'T083_SELECTED_CURRENT_SOURCE_MATRIX_120_120=PASS_SCOPED'
+          echo 'T083_FULL_CURRENT_ALL_PHASE3_B0_B12_PROTECTED_CI=NOT_PROVEN'
+          echo 'T081_E8_T082_E4_B12_FINAL_LOCK=HOLD'
       - name: Explicitly avoid spoofed soft-launch or current E8 PASS
         run: |
           echo 'B11_LEGACY_STATIC_SOURCE_TESTS=NEED_MODERN_C1_RECONCILIATION'
