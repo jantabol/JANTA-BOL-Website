@@ -60,7 +60,7 @@ def safe_content(name:str,b:bytes):
     T064_TEST_PATH="ci/phase4/b10-t064-source-secrets-gate.test.mjs"
     T064_REVIEWED_BLOB="4ec400db60debe9598339cc9604d0ef0da28b6ca"
     if name==T064_TEST_PATH:
-        blob=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\\x00"+b).hexdigest()
+        blob=hashlib.sha1(b"blob "+str(len(b)).encode()+bytes([0])+b).hexdigest()
         if blob!=T064_REVIEWED_BLOB:
             raise SystemExit("T064_TEST_FIXTURE_BLOB_CHANGED_DENIED:"+name)
         for evidence in (b"synthetic",b"checkSecret",b"SUPABASE_SECRET_KEY",b"PRIVATE_PEM"):
