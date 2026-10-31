@@ -40,15 +40,20 @@ jobs:
           node --check ci/phase4/b12/t081-rollout-rollback-guard.cjs
       - name: Real source T081 production guard negative matrix
         run: node --test ci/phase4/b12/t081-release-recovery-no-write.test.mjs
-      - name: Protected original T070/T075 backup and zero-cost negative regression
+      - name: Original T070 recovery and T075 zero-paid budget regression
         shell: bash
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
           node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
-          node --test ci/phase4/b11/t075-scheduled-backup-auth.test.mjs
           node --test ci/phase4/b11/t075-scheduled-budget.test.mjs
+      - name: Original T075 source-integration gate (RED until candidate is reconciled)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t075-scheduled-backup-auth.test.mjs
       - name: Exact zero-product-change guard against current production source
+        if: ${{ always() }}
         shell: bash
         run: |
           set -Eeuo pipefail
