@@ -44,7 +44,7 @@ test('6: historical B12 provenance shows all four fixed with 120/120 selected so
  assert.match(b12,/120\/120 PASS/);
  assert.match(b12,/41222111812/);
  assert.match(b12,/B12 FINAL PASS \+ LOCK = HOLD/);
- assert.match(b12,/T081.*E8/);
+ assert.match(b12,/T081 real current-point coherent DB\+Storage\+Auth\+Edge\+Vercel recovery/);
 });
 test('7: no fake B13 complete from documentary review or source CI',()=>{
  assert.equal(readyForB13Final(),false);
