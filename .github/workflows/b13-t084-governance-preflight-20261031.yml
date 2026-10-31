@@ -1,0 +1,59 @@
+# B13 T084 preparatory source-governance audit only. Formal Final Closure
+# is not permitted while real B12 current E4/E8 and T092–T109 are outstanding.
+name: B13 T084 source governance PRECHECK (not FINAL CLOSURE)
+on:
+  push:
+    branches: [codex/b13-t084-governance-preflight-20261031]
+    paths:
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md'
+      - 'ci/phase4/b13/t084-governance-preflight.test.mjs'
+      - 'ci/phase4/b13/t084-predecessor-18-truth.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md'
+      - '.github/workflows/b13-t084-governance-preflight-20261031.yml'
+  pull_request:
+    branches: [codex/t083-current-live-public-truth-delta-review-20261031]
+permissions:
+  contents: read
+concurrency:
+  group: b13-t084-preflight-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t084_unapproved_preflight:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Protect all Founder, real article, legacy CI and production bytes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='4678fc504971fc6b9eee0c1ee810c5a2ba2296ba'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
+              *) echo "UNAUTHORIZED_T084_FILE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'B13_T084_ALL_PRODUCT_SOURCE_UNCHANGED=PASS'
+      - name: Enforce original final-closure order and missing evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13/t084-governance-preflight.test.mjs
+          node --test ci/phase4/b13/t084-governance-preflight.test.mjs
+          node --check ci/phase4/b13/t084-predecessor-18-truth.test.mjs
+          node --test ci/phase4/b13/t084-predecessor-18-truth.test.mjs
+          echo 'B13_T084_18_PREDECESSORS_DOSSIER_RECONCILED=PASS_SCOPED'
+          echo 'B13_T084_SOURCE_GOVERNANCE_PRECHECK=PASS_SCOPED'
+          echo 'B12_120_120_SELECTED_SOURCE_CI=PASS_SCOPED'
+          echo 'B12_CURRENT_E4_E8_FINAL=HOLD'
+          echo 'B13_T084_FORMAL_EXECUTION=NOT_RUN'
+          echo 'B13_FINAL_CLOSURE=HOLD'
