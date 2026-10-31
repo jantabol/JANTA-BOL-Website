@@ -1123,10 +1123,14 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
   }
 
   function saveShadow(item){
+    // Retain the original create identity even if another tab has already
+    // cleared the shared pending reservation after its successful write.
+    const createIntentId=!item.id?(tabCreateIntentId||getCreateIntent()?.id||null):null;
     localStorage.setItem(
       SHADOW,
       JSON.stringify({
         item,
+        createIntentId,
         savedAt:now()
       })
     );
