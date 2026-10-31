@@ -78,7 +78,15 @@ test('public Search failure does not invent results or leak backend error, and s
 });
 test('canonical Article frontend, Ads frontend and public root retained unchanged',()=>{
   assert.equal(blob(read('index.html')),'e82e88aee6e953f0eb0f817361cb87c3a5194aae');
-  assert.equal(blob(read(d+'article.html')),'d2d414bef645c21404bcc45baa5aebbf7f9ff43e');
+  // Original B11 pre-C1 Article blob d2d414... remains in historic PR #46.
+  // Current deployed C1 Article PURL is pinned to REAL production source
+  // 93df12a... rather than rolling it back to old B8 bytes.
+  assert.equal(blob(read(d+'article.html')),'98dca1e26f32846b6fba722731acd6d14f0aed41');
+  const article=read(d+'article.html');
+  assert.match(article,/JBBackend\.requireOwner\(\)/);
+  assert.match(article,/JBPublicC1\.get\(id\)/);
+  assert.match(article,/document\.querySelector\('link\[rel="canonical"\]'\)/);
+  // Separate shared Ads source fingerprint is still original exact B8 code.
   assert.equal(blob(read(d+'public-ads.js')),'a450cc3158c4c72692e848d3044ee00e53582082');
   const route=JSON.parse(read('vercel.json'));
   assert.deepEqual(route.redirects,[{source:'/',destination:'/JANTA_BOL_PHASE_3C_WORKING/index.html',permanent:false}]);

@@ -5,6 +5,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
 import vm from 'node:vm';
+import {createHash} from 'node:crypto';
 const read=p=>readFileSync(p,'utf8');
 const v3='JANTA_BOL_PHASE_3C_WORKING/';
 const truth=JSON.parse(read('JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json'));
@@ -91,7 +92,7 @@ test('P6 Vercel production preview config adds safe headers, no insecure proxy o
  assert(!JSON.stringify(v).includes('apiKey'));
  assert(!JSON.stringify(v).includes('service_role'));
 });
-test('P7 B11 real recovery and T072 original duplicate P2 cannot be falsely cleared in B12',()=>{
+test('P7 historical release-truth and B11 full E8 cannot falsely clear real B12',()=>{
  assert.equal(truth.zero_paid,true);
  assert.equal(truth.source_reconciliation_complete,false);
  assert.equal(truth.b11_full_recovery_locked,false);
@@ -99,12 +100,21 @@ test('P7 B11 real recovery and T072 original duplicate P2 cannot be falsely clea
  assert.equal(truth.production_merged,false);
  assert.equal(truth.production_deployed,false);
  assert.equal(truth.release_mode,'REVIEW_ONLY_NOT_PRODUCTION');
+ // This 2026-10-29 RELEASE-TRUTH is an immutable HISTORICAL candidate
+ // register, not the current 31 Oct Founder production evidence ledger.
+ // It records BOTH T076 and T077 in progress; the earlier test incorrectly
+ // expected only T076 and failed even against its own frozen fixture.
+ const raw=read('JANTA_BOL_PHASE_4_WORKING/b12/b12-release-truth.json');
+ const historicBlob=createHash('sha1')
+   .update('blob '+Buffer.byteLength(raw)+String.fromCharCode(0)+raw).digest('hex');
+ assert.equal(historicBlob,'fa4452d741adf48a5281045f221d427157f8c07f');
+ assert.equal(Object.keys(truth.tests).length,8);
  for(const [id,r] of Object.entries(truth.tests)) {
-  assert(/^P4-T0(?:7[6-9]|8[0-3])$/.test(id));
-  if(id==='P4-T076'){assert.equal(r.status,'IN_PROGRESS')} else assert.equal(r.status,'NOT_RUN');
-  assert.deepEqual(r.evidence,[]);
+   assert(/^P4-T0(?:7[6-9]|8[0-3])$/.test(id));
+   assert.equal(r.status, (id==='P4-T076'||id==='P4-T077')?'IN_PROGRESS':'NOT_RUN');
+   assert.deepEqual(r.evidence,[]);
  }
- console.log('B12_B0_B12_CODING_SOURCE=REVIEW_ONLY');
+ console.log('B12_HISTORICAL_RELEASE_TRUTH_20261029=REVIEW_ONLY_HOLD');
+ console.log('B12_CURRENT_FOUNDER_RUNTIME_EVIDENCE=REQUIRES_SEPARATE_LIVE_LEDGER');
  console.log('B12_B11_E8_AND_T072_PROD=HOLD');
- console.log('B12_T076=IN_PROGRESS_LIVE_V3_ROUTE_404;B12_T077_TO_T083=NOT_STARTED');
 });

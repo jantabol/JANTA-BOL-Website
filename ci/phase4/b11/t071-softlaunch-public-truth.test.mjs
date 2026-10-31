@@ -12,6 +12,7 @@ const adsPath = 'JANTA_BOL_PHASE_3C_WORKING/public-ads.js';
 const home = read(homePath);
 const js = read(jsPath);
 const feed = read(feedPath);
+const publishedOnlyC1=read('JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js');
 const root = read('index.html');
 const redirects = JSON.parse(read('vercel.json')).redirects;
 const gitBlob = (content) => createHash('sha1')
@@ -43,7 +44,11 @@ function problems({page=home, script=js, feedCode=feed}={}) {
     errors.push('demo submit handler lacks explicit non-receipt');
   if(/"जानकारी प्राप्त हुई"|"आवेदन प्राप्त हुआ"/.test(script))
     errors.push('deceptive form success message');
-  if(!/JBBackend\.listPublishedPublic\(30\)/.test(feedCode))
+  // The actual served C1 source uses public-only projection (NOT the old direct backend read).
+  if(!/JBPublicC1\.list\(30\)/.test(feedCode) ||
+     !/jb_c1_public_articles/.test(publishedOnlyC1) ||
+     !/row\.status !== 'published'/.test(publishedOnlyC1) ||
+     !/mapPublished/.test(publishedOnlyC1))
     errors.push('missing server-published news feed');
   if(!/newsError\s*\?/.test(feedCode) || !/breakingSection\.hidden=false/.test(feedCode))
     errors.push('offline vs no-news or real breaking gate missing');
@@ -66,7 +71,11 @@ test('actual reviewed homepage/feed/form scripts satisfy source-only truthful UI
 });
 
 test('article and advertising frontends remain byte-identical to already-reviewed B8 candidate',()=>{
-  assert.equal(gitBlob(read(articlePath)),'d2d414bef645c21404bcc45baa5aebbf7f9ff43e');
+  // PR #46's prior B11 Article Git SHA d2d414... is preserved in Git history.
+  // Current 31-Oct-2026 deployed C1 Article is pinned to original LIVE blob.
+  assert.equal(gitBlob(read(articlePath)),'98dca1e26f32846b6fba722731acd6d14f0aed41');
+  assert.match(read(articlePath),/JBPublicC1\.get\(id\)/);
+  assert.match(read(articlePath),/JBBackend\.requireOwner\(\)/);
   assert.equal(gitBlob(read(adsPath)),'a450cc3158c4c72692e848d3044ee00e53582082');
 });
 
@@ -89,7 +98,7 @@ test('negative: newly enabled citizen / reporter demo forms are rejected',()=>{
 
 test('negative: fake receipt and lost published feed contract both fail closed',()=>{
   assert.ok(problems({script:js+'"जानकारी प्राप्त हुई"'}).includes('deceptive form success message'));
-  assert.ok(problems({feedCode:feed.replace('JBBackend.listPublishedPublic(30)','[]')}).includes('missing server-published news feed'));
+  assert.ok(problems({feedCode:feed.replace('JBPublicC1.list(30)','[]')}).includes('missing server-published news feed'));
 });
 
 test('negative: broken homepage CTA anchor and unconditional breaking are rejected',()=>{

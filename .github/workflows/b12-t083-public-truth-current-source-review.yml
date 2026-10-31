@@ -1,0 +1,91 @@
+# Current live JANTA BOL source truthful-site repair, ONLY a Draft PR candidate.
+# Not production: no Supabase Auth, payment, provider, DB writes, or deployment.
+name: T083 Current Live Homepage Editorial Truth Review (NO DEPLOY)
+on:
+  push:
+    branches: [codex/t083-current-live-public-truth-delta-review-20261031]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/index.html'
+      - 'JANTA_BOL_PHASE_3C_WORKING/script.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/published.html'
+      - 'ci/phase4/b12/t083-original-legacy-regression-recheck.cjs'
+      - 'ci/phase4/b11/t071-b9-search-reuse.test.mjs'
+      - 'ci/phase4/b11/t071-softlaunch-public-truth.test.mjs'
+      - 'ci/phase4/b12/b0-b12-safe-source-integration.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_FOUR_LEGACY_CI_CURRENT_SOURCE_RECONCILIATION_20261031.md'
+      - 'ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs'
+      - '.github/workflows/b12-t083-public-truth-current-source-review.yml'
+  pull_request:
+    branches: [codex/t080-admin-ack-failclosed-review-20261031]
+permissions:
+  contents: read
+concurrency:
+  group: jb-t083-home-truth-no-deploy-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  editor_truth_no_write:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Prevent old-work regression and ensure no Founder/Auth/News/Ads/DB changes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='93df12aa8ffdfae38d9a4066b6a4556bb36969e5'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              JANTA_BOL_PHASE_3C_WORKING/index.html|JANTA_BOL_PHASE_3C_WORKING/script.js|JANTA_BOL_PHASE_3C_WORKING/published.html|ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs|ci/phase4/b12/t083-original-legacy-regression-recheck.cjs|ci/phase4/b11/t071-b9-search-reuse.test.mjs|ci/phase4/b11/t071-softlaunch-public-truth.test.mjs|ci/phase4/b12/b0-b12-safe-source-integration.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_FOUR_LEGACY_CI_CURRENT_SOURCE_RECONCILIATION_20261031.md|.github/workflows/b12-t083-public-truth-current-source-review.yml) ;;
+              *) echo "UNAUTHORIZED_SOURCE_CHANGE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          for path in JANTA_BOL_PHASE_3C_WORKING/backend-client.js JANTA_BOL_PHASE_3C_WORKING/admin-auth.js JANTA_BOL_PHASE_3C_WORKING/admin-login.html JANTA_BOL_PHASE_3C_WORKING/article.html JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js JANTA_BOL_PHASE_3C_WORKING/website-v3.js JANTA_BOL_PHASE_3C_WORKING/public-ads.js vercel.json; do
+            git diff --exit-code "$BASE" HEAD -- "$path"
+          done
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'ORIGINAL_PUBLISHING_FOUNDER_AND_PUBLIC_C1_SOURCE_DIFF=NONE'
+      - name: Current-source truth and anti-false-receipt negative tests
+        run: |
+          node --check JANTA_BOL_PHASE_3C_WORKING/script.js
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+      - name: Reconcile exact old T071 red cases with new reviewed source (selected names only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test --test-name-pattern='B9 search CTA is in public candidate ahead of the hero|empty breaking banner truly hidden' ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          node --test --test-name-pattern='Founder FINAL hero copy: only' ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          echo 'T071_SELECTED_PREVIOUSLY_RED_EDITORIAL_GATES=PASS_SCOPED'
+          echo 'T071_LEGACY_IMMUTABLE_BLOB_AND_OLD_C1_EXPECTATIONS=RECONCILIATION_DUE'
+      - name: Original B11 T071 Android Published fail-closed watchdog VM cases
+        run: |
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          echo 'T071_C1_REAL_PUBLISHED_ANDROID_5_SCOPED_VM=PASS'
+          echo 'T071_C1_REAL_FOUNDER_ANDROID_PROD=NOT_RUN'
+      - name: Preserve current B9 public and B10 security original regression contracts
+        run: |
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          echo 'SOURCE_CURRENT_B9_B10_AND_FOUNDER_REGRESSION=PASS_SCOPED'
+      - name: Original reconciled selected 120-test production-source regression — ZERO FAIL REQUIRED
+        shell: bash
+        run: |
+          node --check ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          echo 'T083_SELECTED_CURRENT_SOURCE_MATRIX_120_120=PASS_SCOPED'
+          echo 'T083_FULL_CURRENT_ALL_PHASE3_B0_B12_PROTECTED_CI=NOT_PROVEN'
+          echo 'T081_E8_T082_E4_B12_FINAL_LOCK=HOLD'
+      - name: Explicitly avoid spoofed soft-launch or current E8 PASS
+        run: |
+          echo 'B11_LEGACY_STATIC_SOURCE_TESTS=NEED_MODERN_C1_RECONCILIATION'
+          echo 'B12_T080_PR84_DURABLE_PRODUCTION=NOT_DEPLOYED'
+          echo 'B12_T081_CURRENT_E8=NOT_RUN'
+          echo 'B12_T082_FRESH_E4=NOT_RUN'
+          echo 'B12_T083_FINAL_PASS_LOCK=HOLD'
+          echo 'PRODUCTION_NEWS_AND_FOUNDER_ACCOUNT=UNCHANGED'
