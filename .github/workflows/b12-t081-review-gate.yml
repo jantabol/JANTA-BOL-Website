@@ -10,6 +10,7 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_GUARDED_T075_INTEGRATION_20261031.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_ASSET_RECOVERY_REGISTER_20261031.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_SAFE_ROLLBACK_DRYRUN_20261031.md'
       - 'ci/backup/jb-free-offsite-backup.sh'
       - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
       - '.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml'
@@ -76,7 +77,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           git diff --name-only "$BASE" HEAD | while IFS= read -r path; do
             case "$path" in
-              .github/workflows/b12-t081-review-gate.yml|ci/phase4/b12/t081-release-recovery-no-write.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_GUARDED_T075_INTEGRATION_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_ASSET_RECOVERY_REGISTER_20261031.md|ci/backup/jb-free-offsite-backup.sh|ci/backup/jb-t034-offline-full-pg-restore.sh|.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml) ;;
+              .github/workflows/b12-t081-review-gate.yml|ci/phase4/b12/t081-release-recovery-no-write.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_GUARDED_T075_INTEGRATION_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_ASSET_RECOVERY_REGISTER_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_SAFE_ROLLBACK_DRYRUN_20261031.md|ci/backup/jb-free-offsite-backup.sh|ci/backup/jb-t034-offline-full-pg-restore.sh|.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml) ;;
               *) echo "T081_OUT_OF_SCOPE_CHANGE=$path"; exit 1 ;;
             esac
           done
