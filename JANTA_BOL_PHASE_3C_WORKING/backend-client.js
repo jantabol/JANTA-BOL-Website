@@ -1228,6 +1228,7 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
     publish,
     getCreateIntent,
     reserveCreateIntent,
+    clearCreateIntent,
     unpublish,
     softDelete,
     restore,
