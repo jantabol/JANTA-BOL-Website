@@ -6,6 +6,7 @@ on:
       - '.github/workflows/b12-t082-original-lifecycle-review.yml'
       - 'ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs'
       - 'ci/phase4/b12/t082-historical-chain-reconcile.test.mjs'
+      - 'ci/phase4/b12/t082-public-c1-failclosed.test.mjs'
       - 'ci/phase4/b12/t082-lifecycle-historical-readonly.sql'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md'
   pull_request:
@@ -33,7 +34,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t082-original-lifecycle-review.yml|ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs|ci/phase4/b12/t082-historical-chain-reconcile.test.mjs|ci/phase4/b12/t082-lifecycle-historical-readonly.sql|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md) ;;
+              .github/workflows/b12-t082-original-lifecycle-review.yml|ci/phase4/b12/t082-real-backend-lifecycle-mock.test.mjs|ci/phase4/b12/t082-historical-chain-reconcile.test.mjs|ci/phase4/b12/t082-public-c1-failclosed.test.mjs|ci/phase4/b12/t082-lifecycle-historical-readonly.sql|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_OWNER_LIFECYCLE_READONLY_20261031.md) ;;
               *) echo "T082_UNAUTHORIZED_PRODUCT_CHANGE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -53,6 +54,11 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b12/t082-historical-chain-reconcile.test.mjs
+      - name: Public C1 original JS draft, private-field, RPC failure and malicious ID isolation
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t082-public-c1-failclosed.test.mjs
       - name: Regression of unchanged T080 admin network safety
         shell: bash
         run: |
