@@ -3,13 +3,19 @@
 name: T081 Production Release & Recovery Fail-Closed Review (NO LIVE WRITES)
 on:
   push:
-    branches: [codex/t081-readonly-release-recovery-20261031]
+    branches: [codex/t081-readonly-release-recovery-20261031, codex/t081-t075-guarded-source-integration-20261031]
     paths:
       - '.github/workflows/b12-t081-review-gate.yml'
       - 'ci/phase4/b12/t081-release-recovery-no-write.test.mjs'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_GUARDED_T075_INTEGRATION_20261031.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_ASSET_RECOVERY_REGISTER_20261031.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_SAFE_ROLLBACK_DRYRUN_20261031.md'
+      - 'ci/backup/jb-free-offsite-backup.sh'
+      - 'ci/backup/jb-t034-offline-full-pg-restore.sh'
+      - '.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml'
   pull_request:
-    branches: [codex/t080-admin-ack-failclosed-review-20261031]
+    branches: [codex/t080-admin-ack-failclosed-review-20261031, codex/t081-readonly-release-recovery-20261031]
   workflow_dispatch:
 permissions:
   contents: read
@@ -18,7 +24,7 @@ concurrency:
   cancel-in-progress: true
 jobs:
   review-no-live-write:
-    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && (github.ref == 'refs/heads/codex/t081-readonly-release-recovery-20261031' || github.event_name == 'pull_request') }}
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' && ((github.ref == 'refs/heads/codex/t081-readonly-release-recovery-20261031' || github.ref == 'refs/heads/codex/t081-t075-guarded-source-integration-20261031') || github.event_name == 'pull_request') }}
     runs-on: ubuntu-latest
     timeout-minutes: 18
     steps:
@@ -31,13 +37,15 @@ jobs:
         run: |
           set -Eeuo pipefail
           test "$GITHUB_REPOSITORY" = 'jantabol/JANTA-BOL-Website'
-          test "$GITHUB_REF" = 'refs/heads/codex/t081-readonly-release-recovery-20261031' || test "$GITHUB_EVENT_NAME" = 'pull_request'
+          test "$GITHUB_REF" = 'refs/heads/codex/t081-readonly-release-recovery-20261031' || test "$GITHUB_REF" = 'refs/heads/codex/t081-t075-guarded-source-integration-20261031' || test "$GITHUB_EVENT_NAME" = 'pull_request'
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
           test -z "${CRICKET_DATABASE_URL:-}"
           node --check ci/phase4/b12/t081-rollout-rollback-guard.cjs
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
       - name: Real source T081 production guard negative matrix
         run: node --test ci/phase4/b12/t081-release-recovery-no-write.test.mjs
       - name: Original T070 recovery and T075 zero-paid budget regression
@@ -46,12 +54,20 @@ jobs:
           set -Eeuo pipefail
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
           node --test ci/phase4/b11/t070-joint-storage-snapshot-identity.test.mjs
+          node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
+          node --test ci/phase4/b11/storage-readonly-export.test.mjs
           node --test ci/phase4/b11/t075-scheduled-budget.test.mjs
-      - name: Original T075 source-integration gate (RED until candidate is reconciled)
+      - name: Original T075 source-integration gate (must PASS, no waivers)
         shell: bash
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b11/t075-scheduled-backup-auth.test.mjs
+          # PR58's independent release-stop suite is HARD-PINNED to its own
+          # GITHUB_REF, GITHUB_SHA and GH_REVIEW_ONLY token. Running that
+          # identity test on this unrelated integration branch is invalid.
+          # Keep the original PR58 test source untouched; this suite runs
+          # the 12 original T075 source gates and independent current
+          # T081 rollback/Founder release-stop tests instead.
       - name: Exact zero-product-change guard against current production source
         if: ${{ always() }}
         shell: bash
@@ -61,11 +77,11 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           git diff --name-only "$BASE" HEAD | while IFS= read -r path; do
             case "$path" in
-              .github/workflows/b12-t081-review-gate.yml|ci/phase4/b12/t081-release-recovery-no-write.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md) ;;
+              .github/workflows/b12-t081-review-gate.yml|ci/phase4/b12/t081-release-recovery-no-write.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_RELEASE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_GUARDED_T075_INTEGRATION_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_CURRENT_ASSET_RECOVERY_REGISTER_20261031.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_SAFE_ROLLBACK_DRYRUN_20261031.md|ci/backup/jb-free-offsite-backup.sh|ci/backup/jb-t034-offline-full-pg-restore.sh|.github/workflows/b11-t075-scheduled-encrypted-joint-review.yml) ;;
               *) echo "T081_OUT_OF_SCOPE_CHANGE=$path"; exit 1 ;;
             esac
           done
-          echo 'T081_PROD_SOURCE_DIFF=NONE'
+          echo 'T081_PROD_SOURCE_DIFF=THREE_SCOPED_BACKUP_FILES_ONLY'
           echo 'T081_CURRENT_POINT_E8=NOT_PROVEN'
           echo 'T081_RELEASE_ROLLBACK_EXECUTION=NOT_RUN'
           echo 'T081_FINAL_PASS_LOCK=HOLD'

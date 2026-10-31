@@ -48,8 +48,8 @@ jobs:
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           test -z "${JB_B11_SERVICE_ROLE_KEY:-}"
-          bash -n ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh
-          bash -n ci/phase4/b11/backup/jb-t034-offline-full-pg-restore-joint-CANDIDATE.sh
+          bash -n ci/backup/jb-free-offsite-backup.sh
+          bash -n ci/backup/jb-t034-offline-full-pg-restore.sh
           node --test ci/phase4/b11/t075-scheduled-backup-auth.test.mjs
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
           node --test ci/phase4/b11/storage-media-manual-safety.test.mjs
@@ -78,7 +78,7 @@ jobs:
           set -Eeuo pipefail
           set +x
           umask 077
-          bash ci/phase4/b11/backup/jb-free-offsite-joint-CANDIDATE.sh
+          bash ci/backup/jb-free-offsite-backup.sh
           echo 'T075_SCHEDULED_ORIGINAL_JOINT_BACKUP_RUN_PASS=SCOPED_GENUINE_OFFSITE_AFTER_REAL_EXECUTION'
           echo 'T075_UNIVERSAL_ATOMIC_FREEZE=UNPROVEN'
           echo 'T075_AUTH_EDGE_VERCEL_RUNTIME_RESTORE=NOT_TESTED'
