@@ -8,6 +8,8 @@ on:
       - 'ci/phase4/b12/t083-production-ops-real-http.test.mjs'
       - 'ci/phase4/b12/t083-build-evidence-pack.py'
       - 'ci/phase4/b12/t083-build-live-public-site-snapshot.py'
+      - 'ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md'
   pull_request:
     branches: [codex/t080-admin-ack-failclosed-review-20261031]
@@ -34,7 +36,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
+              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|ci/phase4/b12/t083-build-evidence-pack.py|ci/phase4/b12/t083-build-live-public-site-snapshot.py|ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_B12_T076_T083_FINAL_EVIDENCE_LEDGER_20261031.json|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
               *) echo "T083_UNAUTHORIZED_CHANGE=$file"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -59,6 +61,14 @@ jobs:
           node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
           node --check JANTA_BOL_PHASE_3C_WORKING/admin-auth.js
           echo 'T083_LIVE_SOURCE_SELECTED_FOUNDER_PUBLISHER_REGRESSION=PASS_SCOPED'
+      - name: Reconcile all eight T076–T083 tests + hard E8/E4/Owner release HOLD
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs
+          node --test ci/phase4/b12/t083-b12-final-evidence-gate.test.mjs
+          echo 'B12_EIGHT_TESTS_RECONCILED=PASS_SCOPED'
+          echo 'B12_FINAL_LOCK=HOLD'
       - name: Generate deterministic scanned evidence-only ZIP (NOT source/archive/backup)
         shell: bash
         run: |
