@@ -48,6 +48,14 @@ jobs:
         run: |
           node --check JANTA_BOL_PHASE_3C_WORKING/script.js
           node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+      - name: Reconcile exact old T071 red cases with new reviewed source (selected names only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test --test-name-pattern='B9 search CTA is in public candidate ahead of the hero|empty breaking banner truly hidden' ci/phase4/b11/t071-b9-search-reuse.test.mjs
+          node --test --test-name-pattern='Founder FINAL hero copy: only' ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          echo 'T071_SELECTED_PREVIOUSLY_RED_EDITORIAL_GATES=PASS_SCOPED'
+          echo 'T071_LEGACY_IMMUTABLE_BLOB_AND_OLD_C1_EXPECTATIONS=RECONCILIATION_DUE'
       - name: Preserve current B9 public and B10 security original regression contracts
         run: |
           node --test ci/phase4/b9-client-and-ui.test.mjs
