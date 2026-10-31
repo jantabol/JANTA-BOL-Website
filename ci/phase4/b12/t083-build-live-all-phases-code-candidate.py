@@ -53,6 +53,20 @@ def safe_content(name:str,b:bytes):
         raise SystemExit("UNSAFE_CODE_PATH_DENIED:"+name)
     if len(b)>MAX_FILE_BYTES:
         raise SystemExit("SOURCE_LARGER_THAN_GUARD:"+name)
+    # The immutable original T064 scanner TEST contains literal synthetic
+    # fake-key fixtures (including a fake PEM header) to prove it rejects keys.
+    # Exact Git blob binding is the ONLY exception: a one-byte deviation still
+    # follows the normal fail-closed scan and cannot be silently allowed.
+    T064_TEST_PATH="ci/phase4/b10-t064-source-secrets-gate.test.mjs"
+    T064_REVIEWED_BLOB="4ec400db60debe9598339cc9604d0ef0da28b6ca"
+    if name==T064_TEST_PATH:
+        blob=hashlib.sha1(b"blob "+str(len(b)).encode()+b"\\x00"+b).hexdigest()
+        if blob!=T064_REVIEWED_BLOB:
+            raise SystemExit("T064_TEST_FIXTURE_BLOB_CHANGED_DENIED:"+name)
+        for evidence in (b"synthetic",b"checkSecret",b"SUPABASE_SECRET_KEY",b"PRIVATE_PEM"):
+            if evidence not in b:
+                raise SystemExit("T064_TEST_FIXTURE_PROVENANCE_MISSING:"+name)
+        return
     bad=(
        rb"-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----",
        rb"(?:ghp_|gho_|github_pat_)[A-Za-z0-9_]{25,}",
