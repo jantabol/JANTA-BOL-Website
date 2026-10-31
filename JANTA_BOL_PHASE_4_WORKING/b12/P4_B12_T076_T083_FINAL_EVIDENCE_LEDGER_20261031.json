@@ -1,0 +1,271 @@
+{
+  "schema": "janta-bol-p4-b12-evidence-ledger-v1",
+  "as_of": "2026-10-31",
+  "source": "P4 Phase4 Master Sections 657-734; master run-11 T076-T083",
+  "scope": "review_only_no_prod_change",
+  "repo": "jantabol/JANTA-BOL-Website",
+  "production": {
+    "domain": "jantabol.in",
+    "source_sha": "93df12aa8ffdfae38d9a4066b6a4556bb36969e5",
+    "deployment_id": "dpl_6XpfdMa7gCF5SDXd7EKHZfbpLfeF",
+    "protected_main_sha": "f447231c0677644ca5a44cc19f12cf0314ff38ea",
+    "main_commits_behind_production": 434,
+    "release_precondition": "do_not_deploy_main_blindly"
+  },
+  "founder_constraints": {
+    "max_new_paid_service_cost_inr": 0,
+    "keep_existing_published_news": true,
+    "protect_founder_publish_rights": true,
+    "no_fake_pass": true,
+    "no_public_testing_article_without_editorial_approval": true
+  },
+  "required_evidence_codes": [
+    "E1",
+    "E2",
+    "E3",
+    "E4",
+    "E5",
+    "E6",
+    "E7",
+    "E8"
+  ],
+  "tests": [
+    {
+      "id": "P4-T076",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E6",
+        "E7"
+      ],
+      "proven": [
+        "E1",
+        "E6"
+      ],
+      "proof_runs": [
+        40677475221,
+        40706282898,
+        41210948514
+      ],
+      "remaining": [
+        "exact current-production protected full CI baseline and release/gating review"
+      ]
+    },
+    {
+      "id": "P4-T077",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E2",
+        "E4",
+        "E6"
+      ],
+      "proven": [
+        "E1",
+        "E2",
+        "E6"
+      ],
+      "proof_runs": [],
+      "remaining": [
+        "current release full published correction-unpublish-republish with permanent URL/audit proof (see T082 E4)"
+      ]
+    },
+    {
+      "id": "P4-T078",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E2",
+        "E7",
+        "E8"
+      ],
+      "proven": [
+        "E1",
+        "E2",
+        "E7"
+      ],
+      "proof_runs": [
+        40881121212,
+        40452402698
+      ],
+      "remaining": [
+        "live current-point full E8 recovery and protected gated source/migration reconciliation"
+      ]
+    },
+    {
+      "id": "P4-T079",
+      "status": "PARTIAL",
+      "required": [
+        "E2",
+        "E6",
+        "E7"
+      ],
+      "proven": [
+        "E7"
+      ],
+      "proof_runs": [
+        40890608877,
+        40890789919,
+        40891213448
+      ],
+      "remaining": [
+        "actual external provider success and unavailable cases tracked honestly DUE; do not publish fake provider pass"
+      ]
+    },
+    {
+      "id": "P4-T080",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E2",
+        "E3",
+        "E5",
+        "E6"
+      ],
+      "proven": [
+        "E1",
+        "E2",
+        "E3",
+        "E6"
+      ],
+      "proof_runs": [
+        41183305277
+      ],
+      "remaining": [
+        "durable UUID guard in Draft PR84 not current live; verify actual interrupted/retry no-double-effect across critical actions"
+      ]
+    },
+    {
+      "id": "P4-T081",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E6",
+        "E7",
+        "E8"
+      ],
+      "proven": [
+        "E1",
+        "E6",
+        "E7"
+      ],
+      "proof_runs": [
+        40452402698,
+        41197924968,
+        41198917616
+      ],
+      "remaining": [
+        "current-point coherent full DB+original media+Auth+Edge+Vercel E8 restore and real traffic rollback; no ₹0 guaranteed B2 Class D cap"
+      ]
+    },
+    {
+      "id": "P4-T082",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "E6"
+      ],
+      "proven": [
+        "E1",
+        "E2",
+        "E3",
+        "E6"
+      ],
+      "proof_runs": [
+        41199236066,
+        41207099039
+      ],
+      "remaining": [
+        "fresh current Founder correction-unpublish-republish under nonpublic controlled environment; independent full cross-account E5 API test; PR91 new Chrome CI not yet verified"
+      ]
+    },
+    {
+      "id": "P4-T083",
+      "status": "PARTIAL",
+      "required": [
+        "E1",
+        "E3",
+        "E6",
+        "E7",
+        "E8"
+      ],
+      "proven": [
+        "E1",
+        "E3",
+        "E6"
+      ],
+      "proof_runs": [
+        41209348710,
+        41210164330,
+        41210948514
+      ],
+      "remaining": [
+        "verified registrar auto-renew, complete Phase3/B0-B11 current release CI, complete source manifest/ZIP, provider-DUE register, E8, Founder final signoff"
+      ]
+    }
+  ],
+  "global_blockers": [
+    {
+      "id": "B12-E8-CURRENT-RESTORE",
+      "state": "HOLD",
+      "required_for": "Topic11 final",
+      "evidence": "no end-to-end current DB Storage Auth Edge Vercel restore or prod rollback"
+    },
+    {
+      "id": "B12-E4-CURRENT-LIFECYCLE",
+      "state": "HOLD",
+      "required_for": "T077 T082",
+      "evidence": "only historical test-record public lifecycle and current real draft save"
+    },
+    {
+      "id": "B12-T080-PROD-IDEMPOTENCY",
+      "state": "HOLD",
+      "required_for": "T080 complete",
+      "evidence": "durable fix PR84 is Draft and not live"
+    },
+    {
+      "id": "B12-OLD-REGRESSION-FULL",
+      "state": "HOLD",
+      "required_for": "T083 full",
+      "evidence": "selected CI verified, historical master ZIP job SKIPPED"
+    },
+    {
+      "id": "B12-PROVIDER-DUE",
+      "state": "DUE",
+      "required_for": "T079 T083",
+      "evidence": "some externally gated provider success unavailable"
+    },
+    {
+      "id": "B12-REGISTRAR-AUTO-RENEW",
+      "state": "DUE",
+      "required_for": "T083 maintenance",
+      "evidence": "Founder reported 2027-08-14 date; independent auto-renew toggle not verified"
+    }
+  ],
+  "recorded_founder_date": {
+    "domain": "jantabol.in",
+    "auto_renew_date": "2027-08-14",
+    "source": "founder_reported_only",
+    "independently_verified": false
+  },
+  "CI_selected_historic_runs_status": "checked_independently_jobs_success_except_original_master_zip_skipped",
+  "archive_scope": {
+    "evidence_zip_only": true,
+    "live_public_web_source_snapshot_files": 74,
+    "full_B12_source_zip": false,
+    "full_prod_data_backup": false
+  },
+  "final_lock": "HOLD",
+  "may_unlock_without_new_evidence": false,
+  "explicitly_not_proven": [
+    "full authenticated cross-account adversarial attack",
+    "full original production E8 recovery and rollback",
+    "all old CI contemporaneously GREEN",
+    "paid provider outcome",
+    "Founder current E4 complete lifecycle"
+  ]
+}
