@@ -1,0 +1,57 @@
+# P4-T083 public operations only: no secrets/production writes, no cutover.
+name: T083 real domain DNS TLS HTTPS + release HOLD (review only)
+on:
+  push:
+    branches: [codex/t083-live-operations-preflight-20261031]
+    paths:
+      - '.github/workflows/b12-t083-production-ops-readonly.yml'
+      - 'ci/phase4/b12/t083-production-ops-real-http.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md'
+  pull_request:
+    branches: [codex/t080-admin-ack-failclosed-review-20261031]
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-t083-ops-no-write-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  public-ops-readonly:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact scoped review-only diff, no private config or secret injection
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='93df12aa8ffdfae38d9a4066b6a4556bb36969e5'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/b12-t083-production-ops-readonly.yml|ci/phase4/b12/t083-production-ops-real-http.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T083_PRODUCTION_OPS_READONLY_20261031.md) ;;
+              *) echo "T083_UNAUTHORIZED_CHANGE=$file"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T083_PRODUCT_FOUNDER_BACKUP_BYTES_UNCHANGED=PASS'
+      - name: Real external DNS, trusted cert and canonical public HTTPS checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b12/t083-production-ops-real-http.test.mjs
+          node --test ci/phase4/b12/t083-production-ops-real-http.test.mjs
+      - name: Required final GO/NO-GO gate never silently waived
+        run: |
+          echo 'T083_READONLY_EXTERNAL_HTTP_TLS=SCOPED_TESTS_ONLY'
+          echo 'T083_REGISTRAR_OWNERSHIP_RENEWAL=NOT_VERIFIED'
+          echo 'T083_MAINTENANCE_DNS_CHANGE_RECORD=PARTIAL'
+          echo 'T083_TOPIC11_ALL_REGRESSION=NOT_PROVEN'
+          echo 'T083_CURRENT_PRODUCTION_E8_FULL_RESTORE_AND_ROLLBACK=NOT_RUN'
+          echo 'T083_FINAL_PASS_LOCK=HOLD'
