@@ -1,0 +1,57 @@
+# JANTA BOL T082 E5: true public browser test on a known NON-PUBLISHED QA draft.
+# No Founder cookies, tokens, database writes, payments, or external share sends.
+name: T082 Anonymous Live Browser Draft Privacy (NO LIVE WRITES)
+on:
+  push:
+    branches: [codex/t082-anon-incognito-runtime-review-20261031]
+    paths:
+      - '.github/workflows/b12-t082-anon-live-browser-review.yml'
+      - 'ci/phase4/b12/t082-anon-live-chrome.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_ANON_LIVE_BROWSER_E5_20261031.md'
+  pull_request:
+    branches: [codex/t082-lifecycle-original-backend-synthetic-review-20261031]
+permissions:
+  contents: read
+concurrency:
+  group: janta-bol-t082-anon-live-browser-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  anonymous-readonly:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Assert app source unchanged, no protected keys, only three E5 review files
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE='c4fdbe30e096b6059f00e64cfaf55b4987e4103d'
+          git cat-file -e "$BASE^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              .github/workflows/b12-t082-anon-live-browser-review.yml|ci/phase4/b12/t082-anon-live-chrome.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_ANON_LIVE_BROWSER_E5_20261031.md) ;;
+              *) echo "UNAUTHORIZED_PRODUCT_OR_PROTECTED_FILE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T082_PROD_SOURCE_DIFF=NONE'
+      - name: Identify already installed browser (no package purchase/install)
+        run: |
+          google-chrome --version || chromium --version || chromium-browser --version
+      - name: True clean-profile Chrome DOM: anonymous QA draft and admin preview denied
+        run: |
+          node --test ci/phase4/b12/t082-anon-live-chrome.test.mjs
+      - name: Scope / no fake pass
+        run: |
+          echo 'T082_ANON_LIVE_CHROME_DRAFT_AND_ADMIN_PREVIEW=PASS_SCOPED'
+          echo 'T082_OWNER_FULL_CORRECTION_UNPUBLISH_REPUBLISH=NOT_RUN'
+          echo 'T082_FULL_CROSS_ACCOUNT_API_PENTEST=NOT_RUN'
+          echo 'T082_FINAL_PASS_LOCK=HOLD'
+          echo 'T081_FULL_E8_ROLLBACK=HOLD'
