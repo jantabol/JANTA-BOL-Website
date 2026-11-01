@@ -195,6 +195,25 @@ footer{font-size:12px;color:#b8b8c3;text-align:center;padding:18px}
 <button id="g5LedgerMore" type="button" class="secondary" hidden>अगले पुराने 50 निजी रिकॉर्ड देखें</button>
 <div id="g5LedgerOutput" class="output" aria-live="polite">केवल संस्थापक की दो-चरणीय पुष्टि के बाद। यहाँ कोई सार्वजनिक या सत्यापित सरकारी जवाब नहीं है।</div>
 </fieldset></form>
+<form id="t097Version"><fieldset><legend>T097 — निजी दस्तावेज Original / Revised संस्करण दर्ज करें (सिर्फ संस्थापक)</legend>
+<p class="hint">यह केवल पहले से सुरक्षित, उसी मामले की सर्वर-पुष्ट निजी बाइट रसीद से संस्करण का संबंध बनाता है। यहाँ कोई फ़ाइल Upload नहीं होती। केवल SHA-256 का दावा या ChatGPT में मिली PDF मान्य निजी रसीद नहीं है। Private Upload अभी बंद है; सरकारी दस्तावेज की असलियत इस कदम से प्रमाणित नहीं होती।</p>
+<label for="t097VersionCase">मामले की पहचान (UUID)</label><input id="t097VersionCase" required autocomplete="off">
+<label for="t097VersionKey">दस्तावेज का निजी पहचान-नाम (3–80: a-z, 0-9, _ या -)</label>
+<input id="t097VersionKey" required minlength="3" maxlength="80" pattern="[a-z0-9_-]{3,80}" autocomplete="off" spellcheck="false" placeholder="nh3_project_mis">
+<label for="t097VersionStage">दस्तावेज का संस्करण</label>
+<select id="t097VersionStage" required>
+<option value="" disabled selected>संस्करण चुनें — खुद कुछ दर्ज नहीं होगा</option>
+<option value="ORIGINAL">ORIGINAL — पहला सुरक्षित संस्करण</option>
+<option value="REVISED">REVISED — उसी दस्तावेज का नया प्रमाणित-बाइट संस्करण (सरकारी सत्यापन नहीं)</option>
+</select>
+<label for="t097VersionReceipt">इसी मामले की पहले से मिली असली निजी Upload रसीद (UUID)</label>
+<input id="t097VersionReceipt" required autocomplete="off" spellcheck="false" placeholder="निजी सर्वर रसीद UUID">
+<label for="t097VersionPrevious">REVISED के लिए पिछले संस्करण का Server Record ID (केवल धनात्मक अंक)</label>
+<input id="t097VersionPrevious" inputmode="numeric" autocomplete="off" pattern="[1-9][0-9]{0,18}" placeholder="ORIGINAL में खाली, REVISED में पिछला ID">
+<label class="row" for="t097VersionConfirm"><input id="t097VersionConfirm" type="checkbox" required style="width:auto;min-height:22px"> मैं पुष्टि करता/करती हूँ कि यहाँ कोई नया प्रमाण Upload नहीं होगा और असली उसी-मामले की निजी सर्वर रसीद उपलब्ध है।</label>
+<button type="submit">संस्थापक की पुष्टि — निजी दस्तावेज संस्करण दर्ज करें (अभी कुछ प्रकाशित या भेजा नहीं जाएगा)</button>
+<p class="hint">गलत Case, नकली रसीद, पुराने/दोहराए REVISED संस्करण को Server रोक देगा। पिछले रिकॉर्ड को कभी बदला या हटाया नहीं जाएगा। सफलता पर मिला Record ID सुरक्षित नोट करें; दोबारा Submit न करें।</p>
+</fieldset></form>
 </div>
 <form id="g9Due" class="card"><fieldset>
 <legend>G9 — लंबित मामलों की अगली कार्रवाई</legend>
