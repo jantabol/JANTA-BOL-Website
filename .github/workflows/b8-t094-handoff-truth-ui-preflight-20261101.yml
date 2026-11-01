@@ -1,0 +1,32 @@
+name: B8 T094 Handoff-Only Founder UI Explainer — Source Precheck
+on:
+  push:
+    branches: [codex/b8-t094-owner-handoff-truth-ux-note-20261101]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
+      - 'ci/phase4/b8-t094-founder-handoff-truth-explainer.test.mjs'
+      - '.github/workflows/b8-t094-handoff-truth-ui-preflight-20261101.yml'
+  pull_request:
+    branches: [codex/b13-t085-crossmodule-source-check-20261101]
+permissions:
+  contents: read
+concurrency:
+  group: t094-handoff-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  explanation_source_preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Verify static Owner Handoff-only UI explanation and original security SHA
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b8-t094-founder-handoff-truth-explainer.test.mjs
+          node --test ci/phase4/b8-t094-founder-handoff-truth-explainer.test.mjs
+          echo 'T094_STATIC_UI_GUIDANCE=PASS_SCOPED'
+          echo 'T094_REAL_FOUNDER_E5_AND_GOVERNMENT_E9=NOT_RUN'
+          echo 'T094_FINAL_PASS_LOCK=HOLD'
