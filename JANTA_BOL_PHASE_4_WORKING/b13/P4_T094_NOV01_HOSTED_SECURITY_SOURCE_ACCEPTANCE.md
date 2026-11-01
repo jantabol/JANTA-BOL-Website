@@ -117,3 +117,22 @@ Next actual T094 gate after the verified Reporter R0 private `NOT_SENT` draft is
 - PDF and Rajya Sabha primary source **URLs/text verified publicly** but the audit runtime could not download original PDF **bytes** from external hosts: **`ORIGINAL_FILE_BYTES=NOT_OBTAINED`, `SHA256=NOT_CALCULATED`, `T094_SOURCE_CLAIM=NOT_RUN`, `T094_SAME_CASE_SOURCE_LINK=NOT_RUN`**. No invented 64-character hash, no forged official certificate.
 - **Next unavoidable Android manual input:** open the NHAI original PDF, save it without modifying bytes and attach the actual PDF in this ChatGPT conversation. Then independently calculate exact file SHA-256 from attachment, inspect page 19, and provide 1-shot verified Reporter source-claim metadata and separate draft↔source link procedure, always tagged `CLAIM_UNVERIFIED_NO_BYTES` until independent validation. Do not create another draft or send an official question.
 - **Original T094 full final PASS+LOCK remains HOLD** for physical E5 cross-role and real external E9; authentic document/source capture is the next narrow step. This is append-only documentation; no source/media/DB writes or official SEND.
+
+
+## 2026-11-01 T094 authentic attached NHAI report bytes — exact SHA-256 obtained
+
+Founder provided the real unmodified-looking PDF obtained on Android from the public NHAI-hosted download path `https://nhai.gov.in/nhai/sites/default/files/mis_report/053NHDP-lV.pdf` as conversation attachment `053NHDP-lV.pdf`. **The exact attachment bytes were opened in the sandbox and SHA-256 independently calculated with both `sha256sum` and Python `hashlib.sha256`:**
+- `filename=053NHDP-lV.pdf`
+- `size_bytes=230494`
+- `format=%PDF-1.3`, `pages=25`
+- `sha256=b9a668b4080446ae3dbcc1e3c40421f252fc82913d0e8aa2845b3ac8fb931c04` (64 lowercase hexadecimal, calculated from **actual bytes**, not invented)
+- PDF metadata `creator=Microsoft Reporting Services 12.0.0.0`, creation date `2018-06-18 14:09:35 IST`. The file internally identifies as NHAI 210th MIS Report, report date 18 June 2018, **status as of 31 May 2018**.
+- **Page 19 of 25**, Section A Table 6, rows **87 Biaora–Dewas Four Laning**, **88 Guna–Biaora**, **89 Shivpuri–Guna**, actual report's cost and expenditure-in-crore columns and reported progress. These are **2018 interim administrative MIS reporting**, not final paid 2026 accounts or an independent field observation. Never conflate the 2011 sanctioned whole-project costs, distinct 2015 awards, 2018 interim NHAI tables or 2025 completion certificates.
+- GitHub repo stores only **public documentary metadata and cryptographic hash**, **not** a copy of the PDF itself. Its official hostname path and supplied file contents are consistent; **NHAI digital signature or server-byte hash equivalence NOT established** (direct independent NHAI byte download unavailable). Accordingly the product claim state must remain `CLAIM_UNVERIFIED_NO_BYTES` even though the assistant has locally calculated hash of the supplied file. No Founder-only private upload release and no Supabase Storage bytes written.
+
+For the original existing Reporter / R0 case only:
+- `case_id=0cf14822-6633-4bb5-a60f-6df2cf8cc19f`
+- `question_draft_id=b2873797-9808-4f40-ba56-0644eb19832e` already `NOT_SENT`; **do not duplicate**.
+- Reporter `प्रमाण का विवरण — अभी केवल अप्रमाणित दावा` metadata form: `kind=PUBLIC_DOCUMENT`, document label `NHAI 210th MIS Report, 18 Jun 2018, p19 rows 87-89: Biaora-Dewas, Guna-Biaora, Shivpuri-Guna`, exact hash above.
+- **Next only real Founder device step:** authorized Reporter Android UI submit that truthful metadata-only unverified source **once**, capture server-returned new claim UUID, then later choose `मसौदा सवाल ↔ उसी मामले के प्रमाण का निजी संबंध` and link it to the existing draft; no fake source truth promotion or external SEND. Wait for actual Reporter claim creation proof before describing source as linked.
+- `T094_PUBLIC_REPORT_FILE_BYTES_HASH=PASS_SCOPED_REAL_BYTES`; `T094_REAL_SOURCE_LABEL_PAGE_87_89=PASS_SCOPED`; `T094_SOURCE_CLAIM_SUBMITTED=NOT_RUN`; `T094_QUESTION_SOURCE_LINKED=NOT_RUN`; `T094_OFFICIAL_SEND_REPLY_E9=NOT_RUN`; **`T094_FORMAL_FINAL_PASS_LOCK=HOLD`**. No backend change or production release in this evidence audit.
