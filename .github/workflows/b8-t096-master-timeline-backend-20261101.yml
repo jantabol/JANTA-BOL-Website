@@ -1,0 +1,73 @@
+# Only source/test/read-only report differences. Existing G0-G9 B8 SQL runner is disposable.
+name: B8 T096 One Master Article Timeline Closure Reopen — SOURCE + ISOLATED PG17
+on:
+  push:
+    branches: [codex/b8-t096-master-timeline-outcome-backend-20261101]
+    paths:
+      - '.github/workflows/b8-t096-master-timeline-backend-20261101.yml'
+      - 'ci/phase4/b8-t096-original-master-timeline-backend-source.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T096_MASTER_TIMELINE_OUTCOME_REOPEN_BACKEND_PREFLIGHT_20261101.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: b8-t096-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t096_source_current:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T096 original ACC025-028 Source + Android Owner negatives
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Verify exact base only three source/test/report files and no production secret
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=29aef3053b3e7355145a905d2d62acd07936e43e
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              '.github/workflows/b8-t096-master-timeline-backend-20261101.yml'|'ci/phase4/b8-t096-original-master-timeline-backend-source.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T096_MASTER_TIMELINE_OUTCOME_REOPEN_BACKEND_PREFLIGHT_20261101.md') ;;
+              *) echo "T096_PRODUCT_SOURCE_CHANGED=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T096_PROTECTED_PRODUCT_SOURCE_MAIN_ARTICLE_AND_BACKEND_UNCHANGED'
+      - name: 16 original Topic13 T096 source safety and no fake final proofs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b8-t096-original-master-timeline-backend-source.test.mjs
+          node --test ci/phase4/b8-t096-original-master-timeline-backend-source.test.mjs
+      - name: Original existing G2/G4/G5/G7/T096/T097 Android integration source contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+          node --test ci/phase4/b8-g4-cp04-public-browser-lifecycle.test.mjs
+          echo 'T096_ANDROID_SOURCE_CONTRACT_PASS_SCOPED'
+      - name: Explicitly retain E4 E5 E9, Original Article and external truth
+        run: |
+          echo 'T096_E2_LIVE_CATALOG=PASS_SCOPED_READONLY'
+          echo 'T096_E4_REAL_PRODUCTION_ARTICLE_PURL_REGRESSION=NOT_RUN'
+          echo 'T096_E5_FOUNDER_REAL_OWNER_ACCOUNTS=NOT_RUN'
+          echo 'T096_E9_AUTHENTIC_NEW_MATERIAL_OFFICIAL_EVIDENCE=NOT_RUN'
+          echo 'T096_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  t096_full_original_isolated_pg17:
+    needs: t096_source_current
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+    # Original disposable postgres:17 G0-G9 including T096 isolated original
+    # source, UUID/PURL immutable sentinels, real closure and reopen rollback.
