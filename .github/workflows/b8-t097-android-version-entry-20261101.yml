@@ -1,0 +1,84 @@
+# T097 scoped additive Founder Android candidate. No automatic deploy or backend writes.
+name: B8 T097 Android Original Revised Entry — Guarded Candidate
+on:
+  push:
+    branches: [codex/b8-t097-android-version-entry-fix-20261101]
+    paths:
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'
+      - 'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'
+      - 'ci/phase4/b8-t097-founder-version-form-contract.test.mjs'
+      - 'ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T097_ANDROID_VERSION_ENTRY_SCOPED_PATCH_20261101.md'
+      - '.github/workflows/b8-t097-android-version-entry-20261101.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: t097-version-entry-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t097_android_version_form:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T097 Founder Android form and Owner AAL2 contract; NOT E5 human
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Refuse any unrelated old Product/Backend/News file change or secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=3828e9477e1f5a4c9e8ae48ebdfeb7f387f39d8b
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js'|'JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js'|'JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'|'ci/phase4/b8-t097-founder-version-form-contract.test.mjs'|'ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T097_ANDROID_VERSION_ENTRY_SCOPED_PATCH_20261101.md'|'.github/workflows/b8-t097-android-version-entry-20261101.yml') ;;
+              *) echo "T097_UNRELATED_PROTECTED_CHANGE=$path"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T097_DIFF_ONLY_NARROW_OWNER_UI_TEST_DOCS_WORKFLOW=PASS'
+      - name: Client/frontend syntax without website deployment
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
+          node --check ci/phase4/b8-t097-founder-version-form-contract.test.mjs
+      - name: New exact Founder-only ORIGINAL/REVISED Android source and mock RPC contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-t097-founder-version-form-contract.test.mjs
+      - name: Existing original Topic13 T097 neutrality and protected Android source tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g6-release-ready-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+          echo 'T097_EXISTING_B8_SOURCE_NEGATIVES_PASS_SCOPED'
+      - name: Never assert physical Android or external E9 from CI
+        run: |
+          echo 'T097_ANDROID_VERSIONING_CODE=PASS_SCOPED_ONLY'
+          echo 'T097_BACKEND_AUTHENTIC_SOURCE_OR_BYTES=NOT_ESTABLISHED'
+          echo 'T097_REAL_FOUNDER_ANDROID_E5=NOT_RUN'
+          echo 'T097_REAL_SAME_CASE_BYTE_RECEIPT_E9=NOT_RUN'
+          echo 'T097_NO_BACKEND_SCHEMA_OR_PUBLIC_NEWS_CHANGES=TRUE'
+          echo 'T097_FORMAL_FINAL_PASS_LOCK=HOLD'
+  t097_existing_disposable_pg17:
+    needs: t097_android_version_form
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+    # Original G0-G9 and T097 120 facts+105 history, only isolated PG17 fixture ROLLBACK.
