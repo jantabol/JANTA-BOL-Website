@@ -117,8 +117,8 @@ test('T097-09 no public or Reporter direct private page RPC; Owner AAL2 enforced
 test('T097-10 Android Owner pagination uses 50-item pages, fail closed on forged labels/cursor',()=>{
  all(client,[
   'async ownerG5FactPage(', 'async ownerG7HistoryPage(', 'p_limit:50',
-  'T097_CURSOR_INVALID', 'B8_T097_UNTRUSTED_PRIVATE_FACT_PAGE',
-  'B8_T097_UNTRUSTED_PRIVATE_HISTORY_PAGE',
+  'T097_CURSOR_INVALID', 'T097_UNTRUSTED_PRIVATE_FACT_PAGE',
+  'T097_UNTRUSTED_PRIVATE_HISTORY_PAGE',
   "'NOT_INDEPENDENTLY_VERIFIED'",
   "'FOUNDER_ATTRIBUTED_UNVERIFIED'"
  ]);
@@ -174,7 +174,7 @@ test('T097-15 public safe projection never treats private bytes or raw allegatio
   'B8_G4_RESTRICTED_CASE_PUBLICATION_DENIED',
   'B8_G4_NO_REAL_OFFICIAL_DISPATCH_PROOF'
  ]);
- assert(doc.includes('public G4 fixed safe projection'));
+ assert(doc.includes('Public G4 fixed safe projection'));
 });
 test('T097-16 genuine observed mobile document-versioning gap not misreported as working',()=>{
  for(const s of [client,ui,html]){
