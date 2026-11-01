@@ -131,6 +131,8 @@ function lock(reason){
   clearPageCursors();
   if(ownerCasePick)ownerCasePick.replaceChildren();
   clearOwnerCaseInputs();
+  // Scrub the new private receipt/previous-version input on security lock.
+  $('t097Version').reset();
   app.classList.add('hide');
   for(const section of ['owner','reporter','editor'])$(section).classList.add('hide');
   $('founderPacket').textContent='Locked — निजी प्रमाण सामग्री स्क्रीन से हटा दी गई।';
@@ -188,7 +190,7 @@ const v=id=>$(id).value.trim();
 
 const B8_CASE_FIELDS=[
  'assignCase','linkCase','holdCase','g4Case','g4MilestoneCase',
- 'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','g7Case','g7ReadCase'
+ 'g5FactCase','g5OutcomeCase','g5ReopenCase','g5LedgerCase','t097VersionCase','g7Case','g7ReadCase'
 ];
 const B8_PRIVATE_OUTPUT_IDS=[
  'founderPacket','g3PacketData','g3TruthData','g3ReplyTruthOutput',
@@ -293,7 +295,7 @@ const PHONE_GROUPS={
  ['प्रमाण / समीक्षा',['packetForm','g3Packet','g3R2Authorization']],
  ['सवाल / जवाब',['g3Truth','g3ReplyTruth','g8Delivery','g7History','g7HistoryRead']],
  ['सार्वजनिक जानकारी',['g4PublicRelease','g4Milestone']],
- ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5QuestionDisposition','g5Outcome','g5Reopen','g5Ledger','g9Due']],
+ ['लागत / तथ्य / निष्कर्ष',['g5Fact','g5QuestionDisposition','g5Outcome','g5Reopen','g5Ledger','t097Version','g9Due']],
  ['सुरक्षा',['g6Release']]],
  reporter:[
  ['मेरा केस',['caseLookup']],
@@ -680,6 +682,29 @@ $('g7HistoryMore').addEventListener('click',()=>execute($('g7HistoryRead'),async
   $('g7HistoryMore').hidden=!x.hasMore;
   return 'अगले '+x.items.length+' निजी घटनाक्रम दिखाए गए। स्वतंत्र सरकारी जवाब सिद्ध नहीं।';
 }));
+
+// T097: private document version pointer ONLY; must already have a real same-case
+// private bytes receipt from the existing server. Never upload, publish or SEND.
+$('t097VersionStage').addEventListener('change',()=>{
+  if(v('t097VersionStage')==='ORIGINAL')$('t097VersionPrevious').value='';
+});
+form('t097Version',async()=>{
+  if(!$('t097VersionConfirm').checked)
+    throw Error('B8_T097_GENUINE_PRIVATE_RECEIPT_CONFIRMATION_REQUIRED');
+  const caseId=v('t097VersionCase');
+  const x=await workflow.ownerRecordT097DocumentVersion(
+    caseId,v('t097VersionKey'),v('t097VersionStage'),
+    v('t097VersionReceipt'),v('t097VersionPrevious')
+  );
+  // No blind retry after an acknowledged immutable append. Do not retain
+  // sensitive receipt IDs in page inputs, even when keeping selected Case.
+  $('t097Version').reset();
+  $('t097VersionCase').value=caseId;
+  return 'T097 निजी दस्तावेज संस्करण दर्ज हुआ। स्थायी Record ID #'+x.eventId+
+    '\\n'+x.stage+' — '+x.provenance+
+    '\\nकोई फ़ाइल Upload नहीं हुई; सरकारी स्रोत की असलियत स्वतंत्र रूप से सत्यापित नहीं हुई।' +
+    '\\nसफलता के बाद दोबारा Submit न करें; REVISED के लिए यही Record ID आवश्यक है।';
+});
 
 // G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
 form('g5Fact',async()=>{
