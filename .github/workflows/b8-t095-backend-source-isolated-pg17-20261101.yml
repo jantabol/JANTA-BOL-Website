@@ -1,0 +1,74 @@
+# T095 first-pass backend/source verification; no production deploy or connected Supabase write.
+name: B8 T095 Ground Deadline Responsibility — Current Source + Disposable PG17
+on:
+  push:
+    branches:
+      - codex/b8-t095-backend-ground-deadline-precheck-20261101
+    paths:
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T095_BACKEND_SOURCE_HOSTED_PREFLIGHT_20261101.md'
+      - 'ci/phase4/b8-t095-ground-deadline-responsibility-source.test.mjs'
+      - '.github/workflows/b8-t095-backend-source-isolated-pg17-20261101.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: b8-t095-scoped-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t095_original_contract_source:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T095 original ACC020-024 / source-only fail-closed checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce source-only three-file branch diff and no secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=d3f1b72a671eb6323e3e4f3cc0035ff78b0b1417
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T095_BACKEND_SOURCE_HOSTED_PREFLIGHT_20261101.md'|'ci/phase4/b8-t095-ground-deadline-responsibility-source.test.mjs'|'.github/workflows/b8-t095-backend-source-isolated-pg17-20261101.yml') ;;
+              *) echo "T095_PRODUCT_OR_PROD_DIFF_FORBIDDEN=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T095_NO_PRODUCT_FILE_OR_LIVE_BACKEND_MUTATION=PASS'
+      - name: Current source 16 T095 original ACC020-024 acceptance/negative guards
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b8-t095-ground-deadline-responsibility-source.test.mjs
+          node --test ci/phase4/b8-t095-ground-deadline-responsibility-source.test.mjs
+      - name: Real Node unit tests for Founder Owner G5 and safe private G9 module
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          echo 'T095_G5_G7_G9_MOBILE_SOURCE_PRECHECK=PASS_SCOPED'
+      - name: Stop any falsely upgraded official T095 status
+        shell: bash
+        run: |
+          echo 'T095_E2_HOSTED_CATALOG_AUDITED_READONLY=PASS_SCOPED'
+          echo 'T095_CURRENT_GIT_SOURCE=PASS_SCOPED'
+          echo 'T095_REAL_FOUNDER_E5_FACT_WRITES=NOT_RUN'
+          echo 'T095_REAL_2026_GROUND_E9=NOT_RUN'
+          echo 'T095_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+
+  t095_original_disposable_b8_pg17:
+    needs: t095_original_contract_source
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+    # Full inherited 2026 original G0-G9 B8 suite executes on isolated postgres:17
+    # in GitHub runner, with synthetic fixture and ROLLBACK. No connection to LIVE.
