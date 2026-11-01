@@ -1,0 +1,82 @@
+# Original P4-T098 ACC036-044. Source + disposable PG17 ONLY; no real Founder E3/E4/E5/E9 claim.
+name: B8 T098 Correction Notification Audit Retention — SAFE SOURCES + PG17
+on:
+  push:
+    branches: [codex/b8-t098-correction-notification-audit-backend-20261101]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b8-t098-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t098_current_source:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T098 Native Article / B8 correction / Founder notification / security negative
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Assert precise scope vs T097/T080 known safe candidate; no production mutations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=725df42de228bbe3fb1c263ee7b24455707b743f
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              'ci/phase4/b8-t098-correction-notification-retention-source.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T098_CORRECTION_NOTIF_AUDIT_RETENTION_SECURITY_BACKEND_20261101.md'|'.github/workflows/b8-t098-correction-notification-retention-20261101.yml') ;;
+              *) echo "T098_UNRELATED_CODE_OR_PUBLISH_SCOPE_VIOLATION=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T098_NO_PRODUCT_CODE_DB_CREDENTIALS_OR_PRODUCTION_DEPLOY_CHANGE'
+      - name: New original RUN12 ACC036–044 20 negative/source contract cases
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b8-t098-correction-notification-retention-source.test.mjs
+          node --test ci/phase4/b8-t098-correction-notification-retention-source.test.mjs
+      - name: Existing B8 G2 G3 G4 G5 G6 G7 G8 G9 and Founder Android private contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-g3-cp01-android-workflow.test.mjs
+          node --test ci/phase4/b8-g3-cp02-cp03-android-contract.test.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g6-release-ready-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g8-manual-delivery-android.test.mjs
+          node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+      - name: Original T080 same Article id CAS and T083 public safety real current source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          echo 'T098_ORIGINAL_NEWS_CORRECTION_VERSION_ID_B8_PRIVACY_SOURCE_PASS_SCOPED'
+      - name: Formal real E-class HOLD
+        run: |
+          echo 'T098_LIVE_HOSTED_CATALOG=PASS_SCOPED_READ_ONLY'
+          echo 'T098_SOURCE_AND_SYNTHETIC_PG17=CHECK_AFTER_ALL_JOBS'
+          echo 'T098_REAL_ANDROID_E3_E5=NOT_RUN'
+          echo 'T098_LIVE_SAME_ARTICLE_CORRECTION_E4=NOT_RUN'
+          echo 'T098_GENUINE_EXTERNAL_OR_SAME_CASE_BYTES_E9=NOT_RUN'
+          echo 'T098_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  t098_original_disposable_pg17:
+    needs: t098_current_source
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
