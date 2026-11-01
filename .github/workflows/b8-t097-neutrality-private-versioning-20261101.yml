@@ -1,0 +1,74 @@
+# Topic13 P4-T097 ACC029-035 — source/PG17 ONLY; no production mutation or official final.
+name: B8 T097 Neutrality Conflict Private Versioning — SOURCE + PG17
+on:
+  push:
+    branches: [codex/b8-t097-neutral-evidence-versioning-backend-20261101]
+    paths:
+      - '.github/workflows/b8-t097-neutrality-private-versioning-20261101.yml'
+      - 'ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/review/P4_T097_NEUTRALITY_CONFLICT_PRIVATE_VERSIONING_BACKEND_20261101.md'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: b8-t097-readonly-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t097_original_sources:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T097 Original ACC029–035 source, conflict and private UI negatives
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce source-only exact ancestor, no old product or credential change
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=f5ea9ee662eeca3e1c1e892240e744eba8951f06
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              '.github/workflows/b8-t097-neutrality-private-versioning-20261101.yml'|'ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T097_NEUTRALITY_CONFLICT_PRIVATE_VERSIONING_BACKEND_20261101.md') ;;
+              *) echo "T097_PRODUCT_SCOPE_VIOLATION=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T097_PREEXISTING_ORIGINAL_NEWS_ADS_B8_PRODUCT_SOURCES_IMMUTABLE'
+      - name: T097 new 17 owner/private document version and neutrality negative source tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs
+          node --test ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs
+      - name: Existing T096/097 Android private cursor, G5 conflict, G6 upload OFF, G7 and G4 guards
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g6-release-ready-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+          echo 'T097_EXISTING_REAL_MOBILE_SOURCE_PARITY=PASS_SCOPED_NO_PHYSICAL_DEVICE'
+      - name: Truthful original acceptance status
+        run: |
+          echo 'T097_HOSTED_SUPABASE_CATALOG=PASS_SCOPED_READONLY'
+          echo 'T097_DOCUMENT_VERSION_RPC_IN_HOSTED_BACKEND=PRESENT'
+          echo 'T097_ANDROID_DOCUMENT_VERSION_FORM=ABSENT_E5_DUE'
+          echo 'T097_EXTERNAL_AUTHENTIC_SOURCE_E9=NOT_RUN'
+          echo 'T097_FOUNDER_REAL_NEUTRALITY_E5=NOT_RUN'
+          echo 'T097_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  t097_full_original_disposable_pg17:
+    needs: t097_original_sources
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+    # Executes actual original B8 T097 SQL 120 facts + 105 history + immutability
+    # across ephemeral PG17 only, with synthetic fixture transaction ROLLBACK.
