@@ -10,6 +10,7 @@ on:
       - 'ci/phase4/b13/t084-predecessor-18-truth.test.mjs'
       - 'ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs'
       - 'ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_NOV01_HISTORICAL_LIFECYCLE_REAL_SQL_AND_FINAL_OWNER_GATE.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_VERCEL_ROLLBACK_CANDIDATE_SOURCE_RISK.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md'
@@ -39,7 +40,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs|ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_VERCEL_ROLLBACK_CANDIDATE_SOURCE_RISK.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
+              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs|ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_VERCEL_ROLLBACK_CANDIDATE_SOURCE_RISK.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_NOV01_HISTORICAL_LIFECYCLE_REAL_SQL_AND_FINAL_OWNER_GATE.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
               *) echo "UNAUTHORIZED_T084_FILE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
