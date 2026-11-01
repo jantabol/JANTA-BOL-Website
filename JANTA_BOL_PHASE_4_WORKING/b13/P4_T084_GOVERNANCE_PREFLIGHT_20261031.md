@@ -57,3 +57,10 @@ Before any FINAL T084 decision, require authoritative evidence for (1) all eight
 - **Final verdict:** `T084_SOURCE_AND_GOVERNANCE_PREFLIGHT=PASS_SCOPED`; `T084_FORMAL_FINAL_RUN15=NOT_RUN`; `T084_FINAL_PASS_LOCK=HOLD`; `B12_FINAL_LOCK=HOLD`; `B13_FINAL_LOCK=HOLD`. Do not convert a check of documents or a CI GREEN check into actual application E3/E4/E8 or formal approval.
 
 **Safety boundary:** No rebuild, Main merge, production deploy/promotion, Vercel alias reassignment, Supabase write, paid resource, Backblaze B2 trigger, fake current editorial correction, ISRO news change, or revoked Founder controls. **Manual Founder step for this source precheck: NONE; actual Founder-controlled acceptance will require genuine direct evidence at release time.**
+
+
+## 2026-11-01 T103/T104 official artifact crosscheck complete — 18 predecessor statuses classified
+
+Further substantive evidence reconciliation after the prior 43/43 scoped GREEN run: the two previously unlocated **original** T103 and T104 23-Oct **FINAL PASS+LOCK** reports have now been found on GitHub and their referenced protected CI independently verified. Original files are unchanged: `review/P4_T103_RUN13_FINAL_E1_E2_E3_E5_20261023.md` (blob `cc3a000c17210c987aa83739b3e1146d661a434a`, CI `39928234462` SUCCESS) and `review/P4_T104_RUN13_FINAL_E1_E2_E4_E5_20261023.md` (blob `c68d419eec5bff91215df4755ca761480cda4d4c`, CI `39934685177` SUCCESS). The historical 31-Oct “2 reports missing” was an **audit discovery gap** and is now corrected by append-only supplement in `P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md`.
+
+Corrected **18/18 predecessor evidence classifications**: **9 B9 historical individual PASS+LOCK**, **8 B8 formal HOLD**, **1 B9 T105 DUE/HOLD**. This does **not** mean 18/18 mandatory formal tests pass. Actual original T084 RUN-15 Final PASS/LOCK stays **HOLD / NOT_RUN** until B12 real safety, B8 mandatory E3/E9/Founder authority, authentic T105 and full CI are established. No production modification, fake public news or new Founder manual action.
