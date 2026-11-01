@@ -374,6 +374,32 @@ export function createB8Workflow({client,role,allowPrivateUpload=false,ownerCase
         deny('T096_DISPOSITION_NOT_CONFIRMED');
       return Object.freeze({eventId:String(value),truth:'FOUNDER_REPORTED_UNVERIFIED'});
     },
+    // T097 ACC-033–035: Founder-only version chain, private byte receipt IDs ONLY.
+    // Does not upload files, inspect their contents, or verify official authenticity.
+    // Backend is the sole same-case, latest-version and Owner-AAL2 authority.
+    async ownerRecordT097DocumentVersion(caseId,documentKey,stage,receiptId,previousVersionId=''){
+      requireRole(role,'owner');
+      const key=typeof documentKey==='string'?documentKey.trim():'';
+      if(!/^[a-z0-9_-]{3,80}$/.test(key))deny('T097_DOCUMENT_KEY_INVALID');
+      if(!['ORIGINAL','REVISED'].includes(stage))deny('T097_DOCUMENT_STAGE_INVALID');
+      const previous=previousVersionId===null?'':String(previousVersionId).trim();
+      if(stage==='ORIGINAL'&&previous!=='')deny('T097_ORIGINAL_PREVIOUS_FORBIDDEN');
+      if(stage==='REVISED'&&(!/^[1-9][0-9]{0,18}$/.test(previous)||
+        BigInt(previous)>9223372036854775807n))
+        deny('T097_REVISION_PREVIOUS_ID_REQUIRED');
+      // Perform all client validation before any network mutation; no blind retry.
+      const p_case_id=id(caseId),p_receipt_id=id(receiptId);
+      const value=await rpc('jb_b8_t097_owner_record_document_version',{
+        p_case_id,p_document_key:key,p_stage:stage,p_receipt_id,
+        p_previous_version_id:stage==='ORIGINAL'?null:previous
+      });
+      if((typeof value==='number'&&!Number.isSafeInteger(value))||
+        !/^[1-9][0-9]{0,18}$/.test(String(value))||
+        BigInt(String(value))>9223372036854775807n)
+        deny('T097_DOCUMENT_VERSION_SERVER_ACK_INVALID');
+      return Object.freeze({eventId:String(value),stage,
+        provenance:'PRIVATE_BYTES_ONLY_NOT_OFFICIAL_VERIFIED'});
+    },
     // T097: bounded keyset pages with NO arbitrary total-record limit; old readers retained.
     async ownerG5FactPage(caseId,beforeId=null){
       requireRole(role,'owner');

@@ -28,7 +28,7 @@ test('T097-01 original official topic and evidence classes immutable, final run 
  assert.match(row,/\| B8 \| NOT RUN \|$/);
  all(doc,['ACC029','ACC035','E2 + E5 + E7 + E9','T097_OFFICIAL_FINAL_PASS_LOCK=HOLD']);
 });
-test('T097-02 no original Article, protected UI or G2–G7 migration changed',()=>{
+test('T097-02 unchanged original G2–G7/backend; only exact scoped reviewed mobile blobs changed',()=>{
  const hashes={
   [vPath]:'0371733e65581c301d2ee479bc98a8613af90738',
   [g5Path]:'61b830ad2cfa1f705df22da32eb680a7e42cb450',
@@ -36,9 +36,9 @@ test('T097-02 no original Article, protected UI or G2–G7 migration changed',()
   [g6Path]:'e605e0d7fbe96ef7bc664924dd5bec69c4bbd410',
   [g4Path]:'1decf7e3a9cb9ad15e9c6665eb0e6e114d7ca44c',
   [g7Path]:'bed9504ca4f741d813172d6c64e20b572cf3e92b',
-  [clientPath]:'0bf53ef35efdc21ac985493ccb49734cdd1a0fb1',
-  [htmlPath]:'d9e0b79bacdd3b85fa23fee8310a16ea750f686d',
-  [uiPath]:'505d5ccd27bd62bb111061632b784aae77a56a89'
+  [clientPath]:'bf9295b4a16f2434532ec0fe508fd15c7f531500',
+  [htmlPath]:'903ccbf4f9da273540349dee44484ded76b5744e',
+  [uiPath]:'8620dc304e733a70c9c4ce593b73992e2aa6a4b1'
  };
  for(const [p,sha] of Object.entries(hashes))assert.equal(blob(p),sha,'Protected product source modified: '+p);
 });
@@ -176,13 +176,16 @@ test('T097-15 public safe projection never treats private bytes or raw allegatio
  ]);
  assert(doc.includes('Public G4 fixed safe projection'));
 });
-test('T097-16 genuine observed mobile document-versioning gap not misreported as working',()=>{
- for(const s of [client,ui,html]){
-  assert(!s.includes('ownerRecordDocumentVersion'),'T097 unexpectedly has mobile version owner method');
-  assert(!s.includes('jb_b8_t097_owner_record_document_version'),'T097 unexpectedly routes version RPC');
- }
+test('T097-16 historical missing mobile versioning repaired in source, E5 still not falsely passed',()=>{
+ // Original baseline report remains immutable evidence that this form was absent.
  all(doc,['T097_REAL_MOBILE_VERSIONING_E5=BLOCKED_FRONTEND_MISSING',
  'T097_REAL_2026_INDEPENDENT_ORIGINAL_REVISED_BYTES_E9=NOT_RUN']);
+ all(client,['async ownerRecordT097DocumentVersion(', 'jb_b8_t097_owner_record_document_version']);
+ all(ui,["form('t097Version',async()=>{", "workflow.ownerRecordT097DocumentVersion("]);
+ all(html,['id="t097Version"','id="t097VersionReceipt"','id="t097VersionConfirm"']);
+ const patch=r('JANTA_BOL_PHASE_4_WORKING/review/P4_T097_ANDROID_VERSION_ENTRY_SCOPED_PATCH_20261101.md');
+ all(patch,['T097_REAL_FOUNDER_ANDROID_E5=NOT_RUN',
+ 'T097_REAL_SAME_CASE_BYTE_RECEIPT_E9=NOT_RUN','T097_OFFICIAL_FINAL_PASS_LOCK=HOLD']);
 });
 test('T097-17 no neutral treatment, real agency/Founder cross-subject or real E9 falsely passed',()=>{
  all(doc,[
