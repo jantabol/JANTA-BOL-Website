@@ -32,7 +32,7 @@ jobs:
           git cat-file -e "$ORIGINAL_T080^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              JANTA_BOL_PHASE_3C_WORKING/backend-client.js|JANTA_BOL_PHASE_3C_WORKING/add-news.html|ci/phase4/b12/t080-durable-article-intent.test.mjs|ci/phase4/b12/t080-android-reload-reconciliation.test.mjs|.github/workflows/b12-t080-current-source-integration-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b12/P4_T080_PR84_PLUS_T083_INTEGRATION_CANDIDATE_20261101.md) ;;
+              JANTA_BOL_PHASE_3C_WORKING/backend-client.js|JANTA_BOL_PHASE_3C_WORKING/add-news.html|ci/phase4/b12/t080-durable-article-intent.test.mjs|ci/phase4/b12/t080-android-reload-reconciliation.test.mjs|.github/workflows/b12-t080-current-source-integration-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b12/P4_T080_20261101_PR84_PR94_INTEGRATED_RELEASE_GATE.md) ;;
               *) echo "INTEGRATION_OUT_OF_SCOPE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
