@@ -1,0 +1,84 @@
+name: B12 T080 + T083 Current-Source Integration (NO DEPLOY)
+on:
+  push:
+    branches:
+      - codex/b12-t080-integration-candidate-20261101
+  pull_request:
+    branches:
+      - codex/t083-current-live-public-truth-delta-review-20261031
+permissions:
+  contents: read
+concurrency:
+  group: jb-b12-t080-integration-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  integrated-source-only:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - name: Checkout exact candidate, no credential persistence
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Ensure exact vetted source and Founder/Article/DB/Media no-change boundary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=4678fc504971fc6b9eee0c1ee810c5a2ba2296ba
+          ORIGINAL_T080=2becde178080c493e59cfb99743ee043532aabf9
+          git cat-file -e "$BASE^{commit}"
+          git cat-file -e "$ORIGINAL_T080^{commit}"
+          while IFS= read -r file; do
+            case "$file" in
+              JANTA_BOL_PHASE_3C_WORKING/backend-client.js|JANTA_BOL_PHASE_3C_WORKING/add-news.html|ci/phase4/b12/t080-durable-article-intent.test.mjs|ci/phase4/b12/t080-android-reload-reconciliation.test.mjs|.github/workflows/b12-t080-current-source-integration-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b12/P4_T080_PR84_PLUS_T083_INTEGRATION_CANDIDATE_20261101.md) ;;
+              *) echo "INTEGRATION_OUT_OF_SCOPE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          for file in JANTA_BOL_PHASE_3C_WORKING/backend-client.js JANTA_BOL_PHASE_3C_WORKING/add-news.html ci/phase4/b12/t080-durable-article-intent.test.mjs ci/phase4/b12/t080-android-reload-reconciliation.test.mjs; do
+            test "$(git rev-parse HEAD:"$file")" = "$(git rev-parse "$ORIGINAL_T080":"$file")" || {
+              echo "UNREVIEWED_T080_SOURCE_DRIFT=$file"; exit 1;
+            }
+          done
+          for file in JANTA_BOL_PHASE_3C_WORKING/admin-auth.js JANTA_BOL_PHASE_3C_WORKING/admin-login.html JANTA_BOL_PHASE_3C_WORKING/admin.html JANTA_BOL_PHASE_3C_WORKING/article.html JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js JANTA_BOL_PHASE_3C_WORKING/website-v3.js JANTA_BOL_PHASE_3C_WORKING/index.html JANTA_BOL_PHASE_3C_WORKING/script.js JANTA_BOL_PHASE_3C_WORKING/published.html JANTA_BOL_PHASE_3C_WORKING/public-ads.js vercel.json; do
+            git diff --exit-code "$BASE" HEAD -- "$file"
+          done
+          echo "T080_PLUS_T083_EXACT_SOURCE_PROVENANCE=PASS"
+          echo "FOUNDER_ARTICLE_ADS_MEDIA_DB_ROUTE_INTEGRATION_DIFF=NONE"
+      - name: Source syntax and fixed UUID, lost ACK, Android second-tab recovery
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/backend-client.js
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo "T080_INTEGRATED_REAL_SOURCE_VM_AND_FOUNDER_SECURITY=PASS_SCOPED"
+      - name: Original current real C1 B8-B12 selected 120-case suite (fail hard)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          echo "T083_CURRENT_SOURCE_RECONCILED_120_OF_120=PASS_SCOPED"
+      - name: Original public editorial anti-fake-negative and Published Android fail closed
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+          echo "T080_PLUS_T083_SCOPED_INTEGRATION=PASS"
+      - name: Explicit hard release / full recovery NO-GO
+        shell: bash
+        run: |
+          echo "T080_CANDIDATE_ONLY=PASS_SCOPED"
+          echo "T080_FOUNDER_ANDROID_REAL_NETWORK=NOT_RUN"
+          echo "T081_FULL_CURRENT_POINT_E8=NOT_RUN"
+          echo "T082_CURRENT_FOUNDER_E4=NOT_RUN"
+          echo "T083_FULL_RELEASE_SOURCE_AND_PROTECTED_CI=HOLD"
+          echo "B12_FINAL_PASS_LOCK=HOLD"
+          echo "JANTA_BOL_PRODUCTION_MUTATION=NONE"
