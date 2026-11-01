@@ -99,3 +99,21 @@ test('T084-preflight: corrected 18 original predecessor statuses preserve 9 hist
  assert(current.includes('T084_FINAL_LOCK=HOLD'));
  assert(current.includes('Phase-3 13 transactional scripts still NOT_RUN'));
 });
+
+
+test('T084-preflight: official 109-row register retains exact historical prefix and new 9/8/1 correction is append-only',()=>{
+ const supplement='## 2026-11-01 — T084 HISTORICAL T103/T104 FINAL DOSSIER FOUND (APPEND-ONLY CORRECTION)';
+ assert.equal(reg.split(supplement).length,2,'MISSING_OR_DUPLICATED_T103_T104_LEDGER_CORRECTION');
+ assert(reg.startsWith(original),'ORIGINAL_REGISTER_PREFIX_MUST_REMAIN_IMMUTABLE');
+ assert(reg.indexOf(supplement)>original.length,'HISTORICAL_CORRECTION_MUST_BE_APPEND_ONLY');
+ const latest=reg.split(supplement)[1];
+ for(const phrase of [
+  '9 B9 individually historically PASS+LOCK',
+  '8 B8 T092–T099 formal HOLD',
+  '1 B9 T105 genuine aged-archive E3 DUE/HOLD',
+  'T084_SOURCE_PRECHECK=PASS_SCOPED',
+  '13 original Phase3 transactional scripts NOT_RUN'
+ ])assert(latest.includes(phrase),'MISSING_TRUTH_EVIDENCE:'+phrase);
+ assert(latest.includes('T084 formal final:'));
+ assert(latest.includes('FINAL_LOCK=HOLD'));
+});
