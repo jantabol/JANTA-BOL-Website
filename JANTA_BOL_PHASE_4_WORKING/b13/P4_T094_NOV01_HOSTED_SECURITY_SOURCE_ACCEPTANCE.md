@@ -26,3 +26,21 @@ The source-bound draft, UI fail-closed guard, no fake officially SENT, same-case
 The original single case currently has **no drafts or attributable original official sent/received evidence**. To execute mandatory physical E5/E9, a genuinely authorized case must have a human evidence/recipient relevance decision, real assigned Reporter/Editor and Founder authenticated sessions, and (when appropriate) actual outward SEND or truthful no-reply proof with delivery receipts. Those are **manual/authentic/external** gates and cannot be silently generated using SQL, synthetic draft texts, spoofed actor JWT, public QA publication or speculative agency answers. Reopen manual steps only when the real Founder-controlled Android sequence and vetted actual source/recipient are ready; no current Founder step for the source/backend part.
 
 B8 T092–T099 0/8 original full locks, T093 external E9 DUE, B9 T105 genuine historic article E3 DUE and B12 operational E3/E4/E8/release gates are still unresolved; P4-T084 original final RUN-15 remains HOLD. **NO REBUILD / NO FAKE PASS / old JANTA BOL work must not break.**
+
+
+## 1 November — production deployment Git-source parity and first E3 Founder manual gate
+
+Read-only checked connected Vercel current READY domain's **attributed source commit** `93df12aa8ffdfae38d9a4066b6a4556bb36969e5` against the current PR97 review HEAD. Git blob results are **identical** for all three B8 review UI files (current Vercel-attributed source versus draft branch):
+- `JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html` = `d9e0b79bacdd3b85fa23fee8310a16ea750f686d`
+- `JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js` = `505d5ccd27bd62bb111061632b784aae77a56a89`
+- `JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js` = `0bf53ef35efdc21ac985493ccb49734cdd1a0fb1`
+
+Git-source parity means these particular files did not change between these commits; it does **NOT** prove the deployed HTTPS route was fetched or that Android/real Reporter Editor Owner authorization currently succeeds. A direct independent public browser fetch was unavailable from the audit environment. Preserve SSO/session security and no credential sharing.
+
+**Founder controlled first actual E3 manual checkpoint NOW AVAILABLE (one safe step, NO SEND):**
+- **Device:** Founder Android Phone, Chrome or incognito with existing authorized Founder login.
+- **Action:** Open `https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html` and navigate to the **Founder / निजी मामला** view, then send a screenshot of the loaded page showing the authenticated role and existing case picker/status **without any secrets, authentication tokens, identifiable source documents, government credentials or private person data**. Do not press create case, save fact, SEND, official reply, edit Article, upload evidence, or change publishing/private-upload flags.
+- **Expected:** secure Founder-only view and existing one-case selector are available, no "Question SENT" success, no external dispatch or private content leak, 15-minute inactivity guard remains. If the UI says auth expired/backend unsupported or the page is inaccessible, send only that error screenshot and **STOP**; this is real FAIL/NOT_RUN data, not a reason to reconstruct the website.
+- **Proof boundary:** Founder screenshot validates only the first **UI/role/HTTPS E3 observation**. It does not complete T094 E5 multi-actor Reporter/Editor work, real E9 delivery/response, nor final T094 PASS+LOCK. Any actual case-specific outbound official message requires separate explicit Founder editorial verification and authorization.
+
+`T094_SOURCE_PRECHECK=PASS_SCOPED`; `FOUNDER_ANDROID_E3_MANUAL_STEP=NOW_DUE`; `T094_FINAL_PASS_LOCK=HOLD`. Zero production mutations by the assistant.
