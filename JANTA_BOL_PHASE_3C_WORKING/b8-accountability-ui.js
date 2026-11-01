@@ -701,9 +701,9 @@ form('t097Version',async()=>{
   $('t097Version').reset();
   $('t097VersionCase').value=caseId;
   return 'T097 निजी दस्तावेज संस्करण दर्ज हुआ। स्थायी Record ID #'+x.eventId+
-    '\\n'+x.stage+' — '+x.provenance+
-    '\\nकोई फ़ाइल Upload नहीं हुई; सरकारी स्रोत की असलियत स्वतंत्र रूप से सत्यापित नहीं हुई।' +
-    '\\nसफलता के बाद दोबारा Submit न करें; REVISED के लिए यही Record ID आवश्यक है।';
+    '\n'+x.stage+' — '+x.provenance+
+    '\nकोई फ़ाइल Upload नहीं हुई; सरकारी स्रोत की असलियत स्वतंत्र रूप से सत्यापित नहीं हुई।' +
+    '\nसफलता के बाद दोबारा Submit न करें; REVISED के लिए यही Record ID आवश्यक है।';
 });
 
 // G5: exact Founder-only private factual ledger. Client never upgrades source authenticity.
