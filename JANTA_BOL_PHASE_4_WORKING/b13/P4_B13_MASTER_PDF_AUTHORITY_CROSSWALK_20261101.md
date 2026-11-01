@@ -34,3 +34,17 @@ Complete B12 real missing proof gates and RUN-12/RUN-13 uncovered tests with **n
 **Founder Manual Step:** none for PDF source classification; genuine Android E3 / real Founder authority is needed at the appropriate independently verified release point.
 
 **Verdicts: B12 CODING/PREVIEW=PASS_SCOPED; B12 FINAL=HOLD; B13 PREP=PASS_SCOPED; B13 FORMAL T084–T091=NOT_RUN; B13 FINAL=HOLD.**
+
+
+## 2026-11-01 T084 original T103/T104 historical dossier verification — corrected predecessor evidence index
+
+This **append-only dated correction** supersedes *only* the earlier claim that original B9 T103/T104 final acceptance dossiers could not be located. The original 31-Oct B13 PR95 audit had a discovery gap. Both true original dated reports exist on the same current integrated source ancestry, and their source hashes match between PR95 and PR97.
+
+| Test | Original 23-Oct immutable final artifact | Verified original CI | Status classification |
+|---|---|---|---|
+| **P4-T103** | `JANTA_BOL_PHASE_4_WORKING/review/P4_T103_RUN13_FINAL_E1_E2_E3_E5_20261023.md`, blob `cc3a000c17210c987aa83739b3e1146d661a434a`; original text explicitly declares FINAL PASS+LOCK based on E1/E2/E3/E5 Founder Android + analytics safe-state restore | `39928234462` **COMPLETED SUCCESS**, actual head `ccaab99a46b9ae92418933d8f4e40582a6c34442` | **Historical individual PASS+LOCK preserved**; NOT a fresh Android rerun |
+| **P4-T104** | `JANTA_BOL_PHASE_4_WORKING/review/P4_T104_RUN13_FINAL_E1_E2_E4_E5_20261023.md`, blob `c68d419eec5bff91215df4755ca761480cda4d4c`; explicit PASS+LOCK based on E1/E2/E4/E5 read-only LIVE identity plus synthetic-only PG17 index-failure isolation | `39934685177` **COMPLETED SUCCESS**, head `9d00cafcc13e5f0c4154b63a8638922e3c112157` | **Historical individual PASS+LOCK preserved**; NOT real Production index outage |
+
+**Current corrected original T092–T109 predecessor classification: 9 historical B9 individual PASS+LOCK, 8 B8 T092–T099 official formal HOLD, 1 B9 T105 authentic 1–2yr-old archive/Android scale DUE/HOLD = 18 total.** All 18 IDs are accounted for; this does **not** mean 18/18 original tests Final PASS. The old `TEST-REGISTER.md` official 109 index and old evidence are immutable, and the newer chronological supplement is authoritative for this historical correction.
+
+**Remaining original T084 FINAL RUN-15 gates unchanged:** B12 current E3 real T080 prod, T081 current same-point real E8 and rollback, T082 genuine Founder E4, T083 full protected/production release; B8 T092–T099 actual formal acceptance; B9 T105 genuine aged archive. Phase-3 13 transactional scripts still NOT_RUN. **T084_SOURCE_GOVERNANCE_PRECHECK=PASS_SCOPED**, **T084_FORMAL_FINAL=NOT_RUN**, **T084_FINAL_LOCK=HOLD**, **B13_FINAL_LOCK=HOLD**. No Main merge, paid resources, audit forgery, article change, privileged SQL, Vercel alias switch or restore.
