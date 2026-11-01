@@ -110,7 +110,7 @@ test('T098-10 B3 notification is generic Owner-only IN_APP_READY, not claimed ou
     "'A private accountability record changed. Review after secure staff login.'",
     "'IN_APP_READY'",
     "'privacy','SAFE_CASE_REFERENCE_ONLY'",
-    'No added cron']);
+    'no external email/SMS/WhatsApp.']);
 });
 test('T098-11 follow-up alert unique per event, no duplicate on repeated delivery attempt',()=>{
   all(s.g9,["'b8:followup:'||new.id::text",
