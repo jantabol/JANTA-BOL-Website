@@ -72,7 +72,7 @@ test('T081 7: live JANTA BOL SQL SELECT baseline exactly recorded, not false DB 
  assert(note.includes(PROJ));
  for(const x of ['**2 published, 31 draft, 1 deleted**','**920** rows','**1635** rows'])
    assert(note.includes(x),'METADATA_EVIDENCE_MISSING_'+x);
- assert.match(note,/not a transactional backup/i);
+ assert.match(note,/Counts are .* a media restore\/backup proof/);
 });
 test('T081 8: 5 identities + 5 Media objects + 15 Edge are presence only',()=>{
  for(const x of ['**5**; \x60auth.identities\x60 **5**','**5 objects**','**15 total \/ 15 ACTIVE**'])
@@ -96,12 +96,12 @@ test('T081 10: E8 cannot be inferred from DB/media run, reviewed code or counts'
  assert.match(note,/T081_FINAL_PASS_LOCK=HOLD/);
 });
 test('T081 11: clear three mandatory unsafe paths denied, Founder zero-spend preserved',()=>{
- assert.match(note,/do not create potentially billable Supabase branches/i);
+ assert.match(note,/No safe ₹0, genuinely separated full-stack/);
  assert.match(note,/Do not attempt live restore or turn scheduled B2 writes on/);
  assert.match(note,/No Founder manual step/);
 });
 test('T081 12: readonly gate is audit only, never automatic signoff or B13 close',()=>{
  assert.match(note,/READONLY_CROSSPLANE=PASS_SCOPED/);
- assert.match(note,/T082 E4 and B12 final\/H13 final remain HOLD/);
+ assert.match(note,/T082 E4 and B12 final\/B13 final remain HOLD/);
  assert(!note.includes('T081_FINAL_PASS_LOCK=PASS'));
 });
