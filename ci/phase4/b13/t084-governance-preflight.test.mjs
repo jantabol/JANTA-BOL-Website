@@ -68,3 +68,13 @@ test('10: final verdict cannot be elevated by registry text',()=>{
  assert.match(preflight,/Manual Founder action: NONE/);
  assert(!/B13_FINAL_LOCK=PASS/.test(preflight));
 });
+
+test('T082 real SQL historical lifecycle is not a substitute for CURRENT E4 Owner acceptance',()=>{
+ const doc=read('JANTA_BOL_PHASE_4_WORKING/b12/P4_T082_NOV01_HISTORICAL_LIFECYCLE_REAL_SQL_AND_FINAL_OWNER_GATE.md');
+ for(const x of ['**4 draft → published**','**3 published → draft**','**1 published → deleted**','**1 deleted → published**','**21 events**','**draft v21**']){
+   assert(doc.includes(x), 'MISSING_HISTORICAL_SQL_EVIDENCE: '+x);
+ }
+ assert.match(doc,/CURRENT FULL E4=NOT_RUN/);
+ assert.match(doc,/B12 Final PASS\+LOCK=HOLD/);
+ assert.match(doc,/Do NOT.*publish T006 fake QA draft/);
+});
