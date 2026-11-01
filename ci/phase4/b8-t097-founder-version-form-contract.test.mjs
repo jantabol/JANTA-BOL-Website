@@ -176,7 +176,7 @@ test('T097-M16 preview is code-only; no auto official validation or upload',()=>
   const end=ui.indexOf('// G5: exact Founder-only',begin);
   const scope=ui.slice(begin,end);
   assert(begin>0&&end>begin);
-  all(scope,['T097 निजी दस्तावेज संस्करण दर्ज हुआ','PRIVATE_BYTES_ONLY_NOT_OFFICIAL_VERIFIED','दोबारा Submit न करें']);
+  all(scope,['T097 निजी दस्तावेज संस्करण दर्ज हुआ','x.provenance','दोबारा Submit न करें']);
   assert(!/reporterUploadCaseEvidence|\.functions\.invoke\(|\bPUBLISH\b|\bSEND\b/.test(scope));
   assert(!/localStorage\.setItem\(/.test(scope));
   assert(html.includes('Private Upload अभी बंद है'));
