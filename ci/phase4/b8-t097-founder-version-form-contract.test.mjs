@@ -96,7 +96,7 @@ test('T097-M09 network/RPC permission/receipt failure remains a hard REJECT',asy
   assert.deepEqual(Object.keys(f.client),['rpc'],'no Storage or alternate client');
 });
 test('T097-M10 malformed or empty server acknowledgement cannot be mistaken for success',async()=>{
-  for(const answer of [null,undefined,'0','-1',0,1.5,{},true,
+  for(const answer of [null,'0','-1',0,1.5,{},true,
     '1.5','1e3','9223372036854775808',Number.MAX_SAFE_INTEGER+1]){
     const f=setup('owner',answer);
     await assert.rejects(f.api.ownerRecordT097DocumentVersion(
@@ -104,6 +104,13 @@ test('T097-M10 malformed or empty server acknowledgement cannot be mistaken for 
     /B8_(?:EMPTY_SERVER_RESULT|T097_DOCUMENT_VERSION_SERVER_ACK_INVALID)/);
     assert.equal(f.calls.length,1);
   }
+  // Explicit undefined server response: setup() uses a default argument for
+  // omitted answers, so a custom stub is necessary to test this negative.
+  const empty=createB8Workflow({role:'owner',client:{
+    rpc:async()=>({data:undefined,error:null})
+  }});
+  await assert.rejects(empty.ownerRecordT097DocumentVersion(
+    CASE,'nh3_pdf','ORIGINAL',RECEIPT),/B8_EMPTY_SERVER_RESULT/);
 });
 test('T097-M11 no blind RPC retry, success only attributed to server integer',async()=>{
   const f=setup('owner','37');
