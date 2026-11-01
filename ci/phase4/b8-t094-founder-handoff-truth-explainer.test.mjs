@@ -39,7 +39,8 @@ test('T094 helper adds only explanatory content, not new login, SEND or SQL',()=
  const start=html.indexOf(expected);
  const originalStart=original.indexOf(expected);
  assert(start>=0&&originalStart>=0);
- const added=html.slice(start+expected.length,html.indexOf('<label for="g3TruthQ">',start));
+ const added=html.match(/\n<p class="hint" role="note">[^<]*(?:<strong>[^<]*<\/strong>[^<]*)*<\/p>/)?.[0];
+ assert(added,'Specific explanatory helper missing');
  const without=html.replace(added,'');
  assert.equal(without,original,'Unexpected B8 html change beyond requested helper');
  assert(!/<script|onclick=|onload=|auth.signIn|window.open|fetch(/i.test(added),'helper cannot change behavior');
