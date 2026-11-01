@@ -117,3 +117,45 @@ test('T084-preflight: official 109-row register retains exact historical prefix 
  assert(latest.includes('T084 formal final:'));
  assert(latest.includes('FINAL_LOCK=HOLD'));
 });
+
+
+test('T084 / T093 governance: external E9 is DUE-frozen, not fabricated original PASS',()=>{
+ const heading='## 2026-11-01 — FOUNDER T093 DOCUMENTARY DUE FREEZE / T094 HOSTED READONLY START (DO NOT ALTER ORIGINAL INDEX)';
+ assert.equal(reg.split(heading).length,2,'REQUIRED_DATESTAMP_SUPPLEMENT_MISSING_OR_DUPLICATED');
+ assert(reg.startsWith(original),'OLD_IMMUTABLE_REGISTER_WAS_CHANGED');
+ const latest=reg.split(heading)[1];
+ for(const required of [
+  'P4-T093_PUBLIC_DOCUMENT_E9=PASS_SCOPED+EVIDENCE_FROZEN',
+  'P4-T093_ACTUAL_GROUND_AND_FINAL_PAID_E9=DUE_FROZEN',
+  'P4-T093_ORIGINAL_FINAL_PASS_LOCK=HOLD',
+  'P4-T094_NEXT_TEST=SOURCE_READONLY_STARTED',
+  'P4-T094_ORIGINAL_FINAL_PASS_LOCK=HOLD'
+ ])assert(latest.includes(required),'T093_T094_CORRECT_RELEASE_VERDICT_MISSING:'+required);
+ const t093=official.split('\n').find(x=>x.startsWith('| P4-T093 |'));
+ const t094=official.split('\n').find(x=>x.startsWith('| P4-T094 |'));
+ assert(t093 && /\| B8 \| NOT RUN \|$/.test(t093),'FALSE_T093_ORIGINAL_PASS');
+ assert(t094 && /\| B8 \| NOT RUN \|$/.test(t094),'FALSE_T094_ORIGINAL_PASS');
+});
+test('T094 source-only scope: current audit admits no real question, official SEND or role acceptance',()=>{
+ const doc=readFileSync('JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md','utf8');
+ const heading='## 2026-11-01 — Founder T093 final-lock request: DOCUMENTARY DUE FROZEN, official E2+E9 not falsely passed; T094 started';
+ const current=doc.split(heading)[1];
+ assert(current,'LATEST_FOUNDER_T093_T094_AUDIT_NOT_FOUND');
+ for(const x of [
+  'T093_ORIGINAL_FORMAL_FINAL_PASS_LOCK=HOLD',
+  'T093_MISSING_EXTERNAL_E9=DUE_FROZEN_NOT_WAIVED',
+  'B8_T094_QUESTION_SOURCE_LINK_REQUIRED',
+  'official_send_by_app=false',
+  'source_independently_verified=false',
+  'T094_OFFICIAL_FINAL_PASS_LOCK=HOLD',
+  'b8_question_drafts=0',
+  'b8_question_evidence_links=0',
+  'b8_g3_official_reply_claims=0'
+ ])assert(current.includes(x),'UNSUPPORTED_OR_MISSING_LIVE_EVIDENCE_STATUS:'+x);
+ const t093src='JANTA_BOL_PHASE_4_WORKING/review/B8_T093_FINAL_INDEPENDENT_EVIDENCE_GATE_20261021.md';
+ const t094src='JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP03_FINAL_ISOLATED_R0_R1_R2_REGRESSION_20261021.md';
+ assert.equal(execFileSync('git',['rev-parse','HEAD:'+t093src],{encoding:'utf8'}).trim(),
+  'e90840ef695e1500d0ba9fe941b4f51866be401c','ORIGINAL_T093_REPORT_DRIFT');
+ assert.equal(execFileSync('git',['rev-parse','HEAD:'+t094src],{encoding:'utf8'}).trim(),
+  'fb339beacb5757aeadb39e00af0d5f81f84059bb','ORIGINAL_T094_REGRESSION_REPORT_DRIFT');
+});
