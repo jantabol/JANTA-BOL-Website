@@ -1,0 +1,107 @@
+# B13 coding/read-only source integration only; not formal final-closure authorization.
+name: B13 T085 Cross Module Source Audit — PRECHECK ONLY
+on:
+  push:
+    branches: [codex/b13-t085-crossmodule-source-check-20261101]
+    paths:
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md'
+      - 'ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs'
+      - '.github/workflows/b13-t085-crossmodule-readonly-20261101.yml'
+      - '.github/workflows/b13-phase3-original-static-coverage-20261101.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'
+      - 'ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md'
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T094_NOV01_HOSTED_SECURITY_SOURCE_ACCEPTANCE.md'
+      - 'ci/phase4/b13/t094-hosted-guardian-preflight.test.mjs'
+  pull_request:
+    branches: [codex/b12-t080-integration-candidate-20261101]
+permissions:
+  contents: read
+concurrency:
+  group: b13-t085-precheck-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t085_source_only_no_final_lock:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Exact base-source and NO changes to the 14 product module files
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=51b3f5fa46708bfeb357b0b61076583e19b04383
+          test "$(git rev-parse "$BASE")" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md|ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs|.github/workflows/b13-phase3-original-static-coverage-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T094_NOV01_HOSTED_SECURITY_SOURCE_ACCEPTANCE.md|ci/phase4/b13/t094-hosted-guardian-preflight.test.mjs|JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md|ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs|.github/workflows/b13-t085-crossmodule-readonly-20261101.yml) ;;
+              *) echo "B13_SOURCE_OR_PRODUCTION_SCOPE_VIOLATION=$path"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'B13_T085_ALL_PR96_PRODUCT_FILES=UNCHANGED'
+      - name: Original 109 TEST-REGISTER IDs and append-only documentary status truth
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs
+          node --test ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs
+          echo 'B13_T084_SOURCE_AND_OFFICIAL_REGISTER_APPEND_PRECHECK=PASS_SCOPED'
+          echo 'B13_T084_FORMAL_RUN15=NOT_RUN'
+      - name: T094 original Reporter evidence source and R0 R1 R2 safety — no real SEND
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13/t094-hosted-guardian-preflight.test.mjs
+          node --test ci/phase4/b13/t094-hosted-guardian-preflight.test.mjs
+          echo 'T094_SOURCE_AND_LIVE_CATALOG=PASS_SCOPED'
+          echo 'T094_FORMAL_E5_AND_EXTERNAL_E9=NOT_RUN'
+          echo 'T094_FINAL_PASS_LOCK=HOLD'
+      - name: Fourteen real source-boundary modules and B12/B13 negative gate checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs
+          node --test ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs
+          echo 'B13_T085_14_MODULE_SOURCE_BOUNDARIES=PASS_SCOPED'
+          echo 'B13_T085_FORMAL_FINAL=NOT_RUN'
+      - name: Preserve B12 original 120 case source regression + fixed T080 incident
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          echo 'B13_T085_B12_CURRENT_SOURCE_INHERITED=PASS_SCOPED'
+      - name: Current public search, analytics, Ads and Security negatives (non-live)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          echo 'B13_T085_CROSS_MODULE_NEGATIVE_SOURCE=PASS_SCOPED'
+      - name: True closure status — cannot release without real Founder and E8 proofs
+        shell: bash
+        run: |
+          echo 'B13_SOURCE_PRECHECK=PASS_SCOPED'
+          echo 'B13_T085_FORMAL_CURRENT_PROD_E2_E3_E4_E5_E8=NOT_RUN'
+          echo 'B8_T092_T099_OFFICIAL_FINAL=HOLD'
+          echo 'B9_T105_OLD_ARCHIVE_ANDROID_FINAL=HOLD'
+          echo 'B12_T080_PRODUCTION_ANDROID_E3=NOT_RUN'
+          echo 'B12_T081_COHERENT_CURRENT_AUTH_EDGE_STORAGE_VERCEL_E8=NOT_RUN'
+          echo 'B12_T082_FOUNDER_REAL_CURRENT_E4=NOT_RUN'
+          echo 'B12_FINAL_PASS_LOCK=HOLD'
+          echo 'B13_FINAL_PASS_LOCK=HOLD'
+          echo 'PRODUCTION_AND_DATABASE_CHANGES=NONE'
