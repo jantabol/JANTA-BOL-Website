@@ -43,5 +43,5 @@ test('T094 helper adds only explanatory content, not new login, SEND or SQL',()=
  assert(added,'Specific explanatory helper missing');
  const without=html.replace(added,'');
  assert.equal(without,original,'Unexpected B8 html change beyond requested helper');
- assert(!/<script|onclick=|onload=|auth.signIn|window.open|fetch(/i.test(added),'helper cannot change behavior');
+ assert(!(/<script|onclick=|onload=|auth[.]signIn|window[.]open|fetch[(]/i).test(added),'helper cannot change behavior');
 });
