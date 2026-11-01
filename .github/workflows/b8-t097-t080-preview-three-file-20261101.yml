@@ -1,0 +1,91 @@
+# T097 exact-three-file overlay on latest reviewed T080 candidate.
+# Does NOT deploy to Vercel or touch LIVE JANTA BOL Supabase.
+name: T097 + T080 Three-File Preview SAFE SOURCE + isolated PG17
+on:
+  push:
+    branches: [codex/t097-t080-three-file-preview-20261101]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-t097-t080-preview-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  exact_three_file_source:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Only three B8 product files changed vs T080
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce exact T080 base and three B8 frontend blob overlays
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=51b3f5fa46708bfeb357b0b61076583e19b04383
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js|JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js|JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html|ci/phase4/b8-t097-founder-version-form-contract.test.mjs|JANTA_BOL_PHASE_4_WORKING/review/P4_T097_T080_THREE_FILE_PREVIEW_CANDIDATE_20261101.md|.github/workflows/b8-t097-t080-preview-three-file-20261101.yml) ;;
+              *) echo "T097_T080_UNRELATED_PROTECTED_SOURCE_CHANGE=$file"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test "$(git rev-parse HEAD:JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js)" = bf9295b4a16f2434532ec0fe508fd15c7f531500
+          test "$(git rev-parse HEAD:JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js)" = 8620dc304e733a70c9c4ce593b73992e2aa6a4b1
+          test "$(git rev-parse HEAD:JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html)" = 903ccbf4f9da273540349dee44484ded76b5744e
+          for file in JANTA_BOL_PHASE_3C_WORKING/backend-client.js JANTA_BOL_PHASE_3C_WORKING/add-news.html JANTA_BOL_PHASE_3C_WORKING/admin.html JANTA_BOL_PHASE_3C_WORKING/admin-login.html JANTA_BOL_PHASE_3C_WORKING/index.html JANTA_BOL_PHASE_3C_WORKING/script.js JANTA_BOL_PHASE_3C_WORKING/published.html JANTA_BOL_PHASE_3C_WORKING/website-v3.js JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js vercel.json; do
+            test "$(git rev-parse "HEAD:$file")" = "$(git rev-parse "$BASE:$file")"
+          done
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T097_T080_EXACT_ONLY_THREE_B8_FRONTEND_PRODUCT_FILES=PASS'
+      - name: Syntax checks and 16 new Founder E5-preflight negative mock contracts
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-client.js
+          node --check JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js
+          node --check ci/phase4/b8-t097-founder-version-form-contract.test.mjs
+          node --test ci/phase4/b8-t097-founder-version-form-contract.test.mjs
+      - name: Original B8 G4/G5/G6/G7/T096+097 contracts and mobile safety
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b8-t096-t097-android-live-parity.test.mjs
+          node --test ci/phase4/b8-g5-android-owner-contract.test.mjs
+          node --test ci/phase4/b8-g6-release-ready-android.test.mjs
+          node --test ci/phase4/b8-g7-chronology-android.test.mjs
+          node --test ci/phase4/b8-g4-public-projection-contract.test.mjs
+      - name: T080 original exact-source Article durability & Founder Auth regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+      - name: T083 original 120 case current-source publication privacy regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-source-public-truth-negative.test.mjs
+      - name: Scoped truth
+        run: |
+          echo 'T097_T080_SAFE_PREVIEW_SOURCE_PASS_SCOPED'
+          echo 'T097_G6_PRIVATE_UPLOAD_SWITCH_UNCHANGED_OFF'
+          echo 'T097_NO_PRODUCTION_RELEASE_FROM_THIS_WORKFLOW'
+          echo 'T097_FOUNDER_ANDROID_PHYSICAL_E5=NOT_RUN'
+          echo 'T097_GENUINE_PRIVATE_BYTES_E9=NOT_RUN'
+          echo 'T097_FINAL_PASS_LOCK=HOLD'
+  original_b8_disposable_pg17:
+    needs: exact_three_file_source
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
