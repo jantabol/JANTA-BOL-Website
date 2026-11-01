@@ -27,4 +27,4 @@
 
 **No safe ₹0, genuinely separated full-stack DB+Auth+Edge+Storage+Vercel target has been independently demonstrated, and current default Main is NOT the served release source. Do not attempt live restore or turn scheduled B2 writes on as a shortcut.**
 
-**Final T081:** `READONLY_CROSSPLANE=PASS_SCOPED`; `CURRENT_POINT_E8_FULL_RESTORE=NOT_RUN`; `ROLLBACK_DRILL=NOT_RUN`; `T081_FINAL_PASS_LOCK=HOLD`. **T082 E4 and B12 final/H13 final remain HOLD.** No Founder manual step for this read-only checkpoint.
+**Final T081:** `READONLY_CROSSPLANE=PASS_SCOPED`; `CURRENT_POINT_E8_FULL_RESTORE=NOT_RUN`; `ROLLBACK_DRILL=NOT_RUN`; `T081_FINAL_PASS_LOCK=HOLD`. **T082 E4 and B12 final/B13 final remain HOLD.** No Founder manual step for this read-only checkpoint.
