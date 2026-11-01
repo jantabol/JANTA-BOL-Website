@@ -899,7 +899,12 @@ async function confirmRecoveryPhysicalCheck(outcome='safe'){
     await saveSource(out,prevVerification);
 
     const confirmed=await getArticle(saved.id,{privateData:true});
-    localStorage.removeItem(SHADOW);
+    // In a one-step NEW Article Publish, saveDraft() is only stage one.
+    // Keep the same-source shadow until the final publish ACK is confirmed:
+    // a lost publish response can then reconcile exactly the original ID,
+    // body and internal source after Android reload, never insert again.
+    // A stand-alone confirmed Draft still clears its shadow immediately.
+    if(!retainCreateIntent)localStorage.removeItem(SHADOW);
     if(newCreateId&&!retainCreateIntent)clearCreateIntent(newCreateId);
     return confirmed;
   }
