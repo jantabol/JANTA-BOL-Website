@@ -25,8 +25,8 @@ G5 original disposable PostgreSQL17 authority/field/deadline/immaturity/history 
 
 ## Current check decisions and follow-up
 - `T095_E2_HOSTED_CATALOG_RLS_TYPE_GUARDS=PASS_SCOPED_READ_ONLY`
-- `T095_G5_G9_CURRENT_SOURCE_MOBILE=CHECK_IN_GITHUB_CI`
-- `T095_CURRENT_ISOLATED_PG17=CHECK_IN_GITHUB_CI`
+- `T095_G5_G9_CURRENT_SOURCE_MOBILE=PASS_SCOPED_CI_RUN_41315013610`
+- `T095_CURRENT_ISOLATED_PG17=PASS_SCOPED_CI_RUN_41315013610`
 - `T095_FOUNDER_E5_LIVE_FACT_APPEND_AND_REVISED_HISTORY=NOT_RUN`
 - `T095_REAL_2026_INDEPENDENT_GROUND_VERIFICATION_E9=NOT_RUN`
 - `T095_REAL_DELAY_REASON_EXTERNAL_ANSWER_E9=NOT_RUN`
@@ -34,3 +34,15 @@ G5 original disposable PostgreSQL17 authority/field/deadline/immaturity/history 
 - `T095_MANUAL_STEP_NOW=NONE_FOR_BACKEND_ONLY_AUDIT`
 
 Do not adjust official original register or claim final PASS; no media uploads, staff impersonation, current public Article publication, DB UPDATE/INSERT, real government messages, synthetic external proof or secret handling.
+
+
+## 2026-11-01 — FINAL current-source and independent isolated PG17 run results
+
+**Actual GitHub Actions CI:** `https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41315013610`. Tested exact source commit `df34d56000ccc2d541b19917bf977808aad538ad`. **Workflow COMPLETED SUCCESS**:
+- Targeted source-only G5/G9 original T095 acceptance **16/16 PASS**, original G5 Android Owner **8/8 PASS**, G9 Android due dashboard **4/4 PASS**, G7 Android chronology **5/5 PASS**: **33/33 executed Node tests, 0 FAIL**.
+- Reused original protected B0–B8 Android/source-security job **131/131 additional executed Node test assertions, 0 FAIL**, across 23 suites (some overlap with the 33, not 164 unique tests); protected Phase3 News/Auth/B7 source/security scripts green.
+- Current exact-head **disposable PostgreSQL17** job: **SUCCESS**, original G0–G9 authority/schema/transaction rollback negative suite, specific G5 **cost stage separation + original/revised deadline, authority vs ground, responsibility, Owner AAL2, RLS, immutable, cross-case, original News/Ads invariants and ROLLBACK**; exact-duplicate retry negative PASS, G9 overdue private dashboard + safe B3 in-app follow-up + ROLLBACK PASS, G7 history PASS, no external E9 inferred.
+- Reusable child source master ZIP packaging subjob **SKIPPED** (not a failed test, not a new archive or soft-launch release).
+- Re-checked connected LIVE project `vrffsnkycvjithwtiylt` read-only: `jb_b8_g9_owner_due_followups()` exists, `anon EXECUTE=false`, `authenticated EXECUTE=true` conditional on Owner AAL2, `DUE_FOR_HUMAN_REVIEW_NOT_OFFICIAL_GUILT` marker present, `DEADLINE_FOLLOWUP` check present; `b8_g9_founder_private_followup_alert` **enabled** on private history, never external messages. No data altered.
+
+**Completed scope:** `T095_G5_G9_BACKEND_SCHEMA_SOURCE_PG17=PASS_SCOPED_VERIFIED` and `T095_REAL_LIVE_READONLY_RLS_CATALOG=PASS_SCOPED_VERIFIED`. **Not completed:** actual authenticated human Owner AAL2 recording and reading first `GROUND/DEADLINE/RESPONSIBILITY` values in production (**E5 NOT_RUN**); dated independently corroborated on-the-ground observations, actual delay explanation, appropriate responsible office attribution and E9 provider/official source (**E9 NOT_RUN**). The 2018 NHAI report documents historical status and cannot substitute for 2026 field verification. Thus **`T095_FORMAL_FINAL_PASS_LOCK=HOLD`**. This specific backend/source precheck needs **no additional Founder manual action** and should not be repeated. No publication, SQL writes, secrets, production deploy, old feature edit or test gate bypass.
