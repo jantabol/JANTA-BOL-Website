@@ -30,7 +30,7 @@ Target `vrffsnkycvjithwtiylt` PostgreSQL **17.6**; never the separate cricket pr
 - `T097_LIVE_E2_CATALOG_RLS_OWNER_AAL2=PASS_SCOPED_READ_ONLY`
 - `T097_LIVE_IMMUTABILITY_CONFLICT_G4_G5=PASS_SCOPED_READ_ONLY`
 - `T097_LIVE_PRIVATE_UPLOAD_DEFAULT_OFF=PASS_SCOPED_READ_ONLY`
-- `T097_CURRENT_ORIGINAL_PG17_AND_SOURCE_REGRESSION=CI_PENDING`
+- `T097_CURRENT_ORIGINAL_PG17_AND_SOURCE_REGRESSION=PASS_SCOPED_RUN_41318449473`
 - `T097_REAL_FOUNDER_CROSS_SUBJECT_E5=NOT_RUN`
 - `T097_REAL_MOBILE_VERSIONING_E5=BLOCKED_FRONTEND_MISSING`
 - `T097_REAL_2026_INDEPENDENT_ORIGINAL_REVISED_BYTES_E9=NOT_RUN`
@@ -38,3 +38,25 @@ Target `vrffsnkycvjithwtiylt` PostgreSQL **17.6**; never the separate cricket pr
 - **`T097_OFFICIAL_FINAL_PASS_LOCK=HOLD`**
 
 All existing product files stay byte-identical. No change to Published News/Ads/backup/DNS/role permission, Supabase schema, real Storage or external agencies. Future fix for mobile versioning must be **additive**, review-first, separately tested, feature OFF until genuine byte receipt exists. Soft Launch (public news) takes precedence over synthetic B8 closure.
+
+## 2026-11-01 — Current executable CI results and failure correction
+
+**First try did NOT pass**: GitHub Actions `#41318351632`, original candidate SHA `9aaa7d607ab22fc7fc2b585538da60d7925ca698`, **FAILED at source-only Node tests 15/17**; isolated PostgreSQL17 job correctly **SKIPPED** because needs guard failed. Root causes **in the newly added test code only**: expected source client error names with a non-existent `B8_` prefix instead of actual `T097_UNTRUSTED_PRIVATE_FACT_PAGE` and `T097_UNTRUSTED_PRIVATE_HISTORY_PAGE`, and incorrectly expected lowercase `public` at the start of a capitalized phrase `Public G4 fixed safe projection` in this report. They were **not application privacy/security bugs**, and no original code was changed.
+
+**Targeted minimal test correction**: Commit `68246a16551daf3c5ef50f844a6fa2cc32fd2023`, only changed the new `ci/phase4/b8-t097-neutrality-conflict-versions-source.test.mjs`; product files still byte-identical. **Actual current executable GitHub Actions run**: `https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41318449473`, **COMPLETED SUCCESS**, source/Android and both inherited original jobs green:
+- **17/17** new original T097 source/security/negative contract cases PASS.
+- **39/39** inherited bounded Android/client contract test executions PASS (5 T096/97 private cursor; 8 G5 Owner; 6 G6 private release; 5 G7 private history; 15 G4 public projection). Total targeted current source + guarded existing = **56/56 test executions, 0 FAIL**, not 56 physically completed tests.
+- Original **disposable PG17 G0–G9** and old protected News/Auth/B7 source test jobs **SUCCESS**. Original `ci/phase4/b8-t097-neutral-integrity-paging-regression-v3.sql` executed with **120 synthetic G5 events and 105 G7 events across keyset pages**, immutable ORIGINAL then REVISED document chain, no cross-case receipt, anon access denied, duplicate/past version mutation denied, `ROLLBACK`. This is isolated runner verification, **NOT 225 real uploaded source items, not a production storage claim**.
+- Master source ZIP packaging job `SKIPPED`; this is not a final release or completed archive.
+- Live JANTA BOL Supabase project was **SELECT-only**; private upload switch remained **OFF**; no Article/PURL, Ads, Founder role, prod secrets, Supabase state, Edge, DNS or external agency changed.
+
+**Formal classification**
+`T097_BACKEND_SQL_SOURCE_PG17_E7=PASS_SCOPED`
+`T097_HOSTED_CATALOG_PRIVACY_RLS=PASS_SCOPED_READ_ONLY`
+`T097_DOCUMENT_VERSIONS_BACKEND=AVAILABLE_BUT_ZERO_GENUINE_RECEIPTS`
+`T097_FOUNDER_ANDROID_DOCUMENT_VERSION_ENTRY=BLOCKED_FRONTEND_MISSING`
+`T097_REAL_NEUTRAL_MULTI_SUBJECT_FOUNDER_E5=NOT_RUN`
+`T097_EXTERNAL_SOURCE_AND_AUTHENTICITY_E9=NOT_RUN`
+**`T097_OFFICIAL_FINAL_PASS_LOCK=HOLD`**
+
+**Founder manual step now: NONE**. Before live Android versioning, add the missing bounded Owner-only UI/client wrapper in a separately scoped PR and test negative coverage, then gather authentic same-case PRIVATE upload receipt by an explicitly approved workflow. No screenshot of a fabricated receipt, never enable private storage merely to pass a test. Do not repeat completed T096 private summary/monitoring or unrelated published News articles. Public NEWS Soft Launch remains first priority.
