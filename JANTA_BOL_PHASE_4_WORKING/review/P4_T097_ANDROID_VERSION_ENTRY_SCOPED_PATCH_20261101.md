@@ -26,3 +26,20 @@ No valid real same-case private byte receipt exists in the NH3 `TEST ONLY` case;
 `T097_OFFICIAL_FINAL_PASS_LOCK=HOLD`.
 
 No promise of installation into live `jantabol.in` until release gates verify the precise SHA. Draft PR may be reviewed, but not merged/approved as full T097 acceptance. Founder manual action **none** in this coding-only task.
+
+## Verified executable CI and actual hosted read-back — 2026-11-01
+
+**Initial CI source check #41320157396: FAILED** with 15/16 new tests, because a newly written TEST DOUBLE used JavaScript's default parameter `answer=7` when the negative test tried to pass `undefined`. That resulted in an unintended successful mock response. **No original feature bug, backend change or production incident was found.** Test-only correction commit `7a3bf4e5c01f38c7233af8ca76c6ba2b013a912c` replaced the `undefined` case with a dedicated mock returning `data:undefined`, preserving the negative. Original code and three UI files were untouched by this fix.
+
+**Actual exact source CI #41320255696, HEAD `7a3bf4e5c01f38c7233af8ca76c6ba2b013a912c`: COMPLETED SUCCESS**, consisting of:
+- New targeted Founder mobile versioning unit/source/error tests: **16/16 PASS**, zero failed.
+- Rebaselined original T097 neutral/source guards: **17/17 PASS**, zero failed.
+- Existing T096/T097 private paging 5/5, G5 Founder 8/8, G6 release 6/6, G7 chronology 5/5, G4 public projection 15/15: **39/39 PASS**.
+- Combined **72/72** targeted Node test executions, zero fail; original protected B0–B8 News/Auth/B7 inherited job SUCCESS.
+- Actual original disposable PostgreSQL17 G0–G9 job SUCCESS, including T097 immutable ORIGINAL→REVISED receipts, no cross-case leak, 120 synthetic facts and 105 synthetic chronology entries through bounded paging, with ROLLBACK.
+- Full source ZIP packaging job SKIPPED (not a release success).
+- Code changes scoped to three existing Founder B8 UI/frontend files; original SQL, old Article UUID/PURL, News, DNS, Backblaze, Auth and Ads remain unmodified.
+
+**Independent live hosted Supabase SELECT-only AFTER code CI**: `PRIVATE_EVIDENCE_UPLOAD=false`; all T097 document versions=0; NH3 private byte receipts=0; NH3 document versions=0; NH3 old G5 facts=6 and existing G7 event=1. No production migrations or writes occurred; these totals are not a government or human E9 verification.
+
+**Current scoped result**: `T097_ANDROID_VERSIONING_CODE=PASS_SCOPED_SOURCE_AND_ISOLATED`, `T097_REAL_FOUNDER_ANDROID_E5=NOT_RUN`, `T097_REAL_SAME_CASE_BYTE_RECEIPT_E9=NOT_RUN`, `T097_OFFICIAL_FINAL_PASS_LOCK=HOLD`. Actual mobile UI not yet deployed on `jantabol.in` or physically re-tested; unmerged Draft cannot be called public live release. Maintain private G6 upload OFF until explicitly authorized and independent evidence exists.
