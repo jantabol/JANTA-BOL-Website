@@ -9,6 +9,8 @@ on:
       - 'ci/phase4/b13/t084-governance-preflight.test.mjs'
       - 'ci/phase4/b13/t084-predecessor-18-truth.test.mjs'
       - 'ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs'
+      - 'ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_VERCEL_ROLLBACK_CANDIDATE_SOURCE_RISK.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md'
       - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md'
       - '.github/workflows/b13-t084-governance-preflight-20261031.yml'
@@ -37,7 +39,7 @@ jobs:
           git cat-file -e "$BASE^{commit}"
           while IFS= read -r file; do
             case "$file" in
-              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
+              .github/workflows/b13-t084-governance-preflight-20261031.yml|ci/phase4/b13/t084-governance-preflight.test.mjs|ci/phase4/b13/t084-predecessor-18-truth.test.mjs|ci/phase4/b12/t081-crossplane-live-recovery-no-go.test.mjs|ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_VERCEL_ROLLBACK_CANDIDATE_SOURCE_RISK.md|JANTA_BOL_PHASE_4_WORKING/b12/P4_T081_NOV01_CROSSPLANE_READONLY_RECOVERY_NO_GO.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T084_GOVERNANCE_PREFLIGHT_20261031.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T092_T109_PREDECESSOR_AND_T081_READONLY_RECONCILIATION_20261031.md) ;;
               *) echo "UNAUTHORIZED_T084_FILE=$file"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -58,6 +60,10 @@ jobs:
           echo 'T081_CROSSPLANE_12_IMMUTABLE_SOURCE_GATES=PASS_SCOPED'
           echo 'T081_CURRENT_E8_FULL_RESTORE=NOT_RUN'
           echo 'T081_CURRENT_REAL_ROLLBACK=NOT_RUN'
+          node --check ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs
+          node --test ci/phase4/b12/t081-vercel-rollback-candidate-parity.test.mjs
+          echo 'T081_VERCEL_PREVIOUS_ROLLBACK_SOURCE_PARITY_AND_T080_RISK=PASS_SCOPED'
+          echo 'T081_VERCEL_REAL_ALIAS_ROLLBACK=NOT_RUN'
           echo 'B13_T084_18_PREDECESSORS_DOSSIER_RECONCILED=PASS_SCOPED'
           echo 'B13_T084_SOURCE_GOVERNANCE_PRECHECK=PASS_SCOPED'
           echo 'B12_120_120_SELECTED_SOURCE_CI=PASS_SCOPED'
