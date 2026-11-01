@@ -171,3 +171,44 @@ test('T080 source still denies non-owner writes and does not turn into public by
   assert.match(source,/id:newCreateId/);
   assert.doesNotMatch(source,/service_role/);
 });
+
+test('T080 lost publish ACK after committed UPDATE retains original shadow for exact Android reload reconciliation',async()=>{
+  const h=createHarness(),a=h.tab();
+  h.db.net='lose_publish_ack';
+  await assert.rejects(a.publish(sourceItem()),/HTTP_ACK_LOST/);
+  assert.equal(h.db.articles.size,1);
+  assert.equal(h.db.articles.get(articleId).status,'published');
+  const shadow=a.getShadow();
+  assert.ok(shadow,'new-article shadow must survive the draft stage until final publish ACK');
+  assert.equal(shadow.createIntentId,articleId);
+  assert.equal(shadow.item.id,'');
+  assert.equal(a.getCreateIntent().attempted,true);
+  const afterReload=h.tab();
+  const confirmed=await afterReload.getArticle(articleId,{privateData:true});
+  assert.equal(confirmed.id,shadow.createIntentId);
+  assert.equal(confirmed.headline,shadow.item.headline);
+  assert.equal(confirmed.content,shadow.item.content);
+  assert.equal(confirmed.internalSource.name,shadow.item.internalSource.name);
+  assert.equal(confirmed.status,'published');
+  assert.equal(h.db.attempts,1,'lost ACK cannot cause a new INSERT');
+});
+
+test('T080 confirmed one-step Publish removes create shadow and intent only after final ACK',async()=>{
+  const h=createHarness(),a=h.tab();
+  const out=await a.publish(sourceItem());
+  assert.equal(out.id,articleId);
+  assert.equal(out.status,'published');
+  assert.equal(h.db.attempts,1);
+  assert.equal(h.db.articles.size,1);
+  assert.equal(a.getShadow(),null,'confirmed publish must clear local shadow');
+  assert.equal(a.getCreateIntent(),null,'confirmed publish must clear reserved intent');
+});
+
+test('T080 confirmed standalone Draft still clears pending shadow and fixed create-intent reservation',async()=>{
+  const h=createHarness(),a=h.tab();
+  const out=await a.saveDraft(sourceItem());
+  assert.equal(out.status,'draft');
+  assert.equal(h.db.articles.size,1);
+  assert.equal(a.getShadow(),null);
+  assert.equal(a.getCreateIntent(),null);
+});
