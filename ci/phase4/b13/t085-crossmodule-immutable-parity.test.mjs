@@ -59,5 +59,5 @@ test('T085-18: integration candidate real no-loss source identity, not a prod re
  const diff=git('diff','--name-only',PR94,PR96).split('\n').filter(Boolean);
  for(const p of [root+'backend-client.js',root+'add-news.html'])assert(diff.includes(p),'MISSING_T080_REAL_CHANGE:'+p);
  assert(doc.includes('dpl_D89qkkR5TdjX2GNfB1fsKybXf9ve'));
- assert(doc.includes('NOT real Founder acceptance'));
+ assert.match(doc,/NOT\\*\\* real Founder acceptance/);
 });
