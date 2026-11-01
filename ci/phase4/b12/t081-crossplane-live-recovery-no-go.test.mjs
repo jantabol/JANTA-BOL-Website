@@ -21,7 +21,7 @@ const blob=b=>{
  const value=Buffer.from(b,'utf8');
  return createHash('sha1').update(Buffer.concat([Buffer.from('blob '+value.length+'\0'),value])).digest('hex');
 };
-const refText=(sha,p)=>git('show',sha+':'+p);
+const refText=(sha,p)=>execFileSync('git',['show',sha+':'+p],{encoding:'utf8',maxBuffer:2*1024*1024,timeout:9000});
 const hasPath=(sha,p)=>git('ls-tree','--name-only',sha,p).split('\n').includes(p);
 
 test('T081 1: pinned LIVE and protected main are distinct existing immutable commits',()=>{
