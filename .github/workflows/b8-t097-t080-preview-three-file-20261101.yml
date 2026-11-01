@@ -75,7 +75,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
-          node --test ci/phase4/b12/t083-current-source-public-truth-negative.test.mjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
       - name: Scoped truth
         run: |
           echo 'T097_T080_SAFE_PREVIEW_SOURCE_PASS_SCOPED'
