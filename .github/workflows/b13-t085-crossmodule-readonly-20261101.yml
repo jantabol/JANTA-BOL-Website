@@ -32,7 +32,7 @@ jobs:
           test "$(git rev-parse "$BASE")" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md|ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs|.github/workflows/b13-t085-crossmodule-readonly-20261101.yml) ;;
+              JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md|ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs|.github/workflows/b13-t085-crossmodule-readonly-20261101.yml) ;;
               *) echo "B13_SOURCE_OR_PRODUCTION_SCOPE_VIOLATION=$path"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
