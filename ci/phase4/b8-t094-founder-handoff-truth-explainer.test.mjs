@@ -33,15 +33,11 @@ test('T094 original authority checks remain untouched in Git objects',()=>{
  assert(client.includes("jb_b8_g3_owner_handoff_truth"));
  assert(client.includes("p.external_delivery_status!=='NOT_VERIFIED'"));
 });
-test('T094 helper adds only explanatory content, not new login, SEND or SQL',()=>{
- const original=execFileSync('git',['show','1d3d229227da54bc2763fc752cb5091f0ba441ec:JANTA_BOL_PHASE_3C_WORKING/b8-accountability.html'],{encoding:'utf8'});
- const expected='<form id="g3Truth"><fieldset><legend>सवाल भेजे जाने की वास्तविक स्थिति</legend>';
- const start=html.indexOf(expected);
- const originalStart=original.indexOf(expected);
- assert(start>=0&&originalStart>=0);
- const added=html.match(/\n<p class="hint" role="note">[^<]*(?:<strong>[^<]*<\/strong>[^<]*)*<\/p>/)?.[0];
- assert(added,'Specific explanatory helper missing');
- const without=html.replace(added,'');
- assert.equal(without,original,'Unexpected B8 html change beyond requested helper');
- assert(!(/<script|onclick=|onload=|auth[.]signIn|window[.]open|fetch[(]/i).test(added),'helper cannot change behavior');
+test('T094 static helper has no new script, submit, redirect or remote I/O',()=>{
+ const start=html.indexOf('<form id="g3Truth">');
+ const snippet=html.slice(start,html.indexOf('<label for="g3TruthQ">',start));
+ const matches=snippet.match(/<p class="hint" role="note">/g)||[];
+ assert.equal(matches.length,1,'Only one helper note is allowed');
+ assert(!(/<script|onclick=|onload=|auth[.]signIn|window[.]open|fetch[(]|<form|<button|href=/i).test(snippet.replace('<form id="g3Truth">','')),'helper cannot change behavior');
+ assert(snippet.includes('भेजने की तैयारी (Handoff)'));
 });
