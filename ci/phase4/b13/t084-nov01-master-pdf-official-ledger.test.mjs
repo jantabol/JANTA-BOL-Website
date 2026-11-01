@@ -68,3 +68,34 @@ test('T084-preflight: original source-only status crosswalk does not mislabel E8
  assert(reg.includes('B12 FINAL LOCK=HOLD'));
  assert(reg.includes('T091 is the absolute last evidence-backed release gate'));
 });
+
+
+test('T084-preflight: original T103 and T104 FINAL dossiers are present and Git-blob pinned',()=>{
+ const dossiers=[
+  ['JANTA_BOL_PHASE_4_WORKING/review/P4_T103_RUN13_FINAL_E1_E2_E3_E5_20261023.md','cc3a000c17210c987aa83739b3e1146d661a434a','39928234462','E1 + E2 + E3 + E5'],
+  ['JANTA_BOL_PHASE_4_WORKING/review/P4_T104_RUN13_FINAL_E1_E2_E4_E5_20261023.md','c68d419eec5bff91215df4755ca761480cda4d4c','39934685177','E1 + E2 + E4 + E5'],
+ ];
+ for(const [path,sha,runId,codes] of dossiers){
+  const actual=execFileSync('git',['rev-parse','HEAD:'+path],{encoding:'utf8',timeout:12000}).trim();
+  assert.equal(actual,sha,'ORIGINAL_DOSSIER_SOURCE_DRIFT:'+path);
+  const content=readFileSync(path,'utf8');
+  assert.match(content,/PASS\s*\+\s*LOCK/,'ORIGINAL_FINAL_DOSSIER_MISSING_PASS_LOCK:'+path);
+  assert(content.includes(runId),'ORIGINAL_FINAL_DOSSIER_MISSING_ACTUAL_CI:'+path);
+  assert(content.includes(codes),'ORIGINAL_FINAL_DOSSIER_MISSING_EVIDENCE:'+path);
+ }
+});
+
+test('T084-preflight: corrected 18 original predecessor statuses preserve 9 historical locks, 8 B8 HOLD and 1 T105 DUE',()=>{
+ const crosswalk=readFileSync('JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md','utf8');
+ const current=crosswalk.split('## 2026-11-01 T084 original T103/T104 historical dossier verification — corrected predecessor evidence index')[1];
+ assert(current,'LATEST_23OCT_T103_T104_CORRECTION_MISSING');
+ for(const id of ['P4-T103','P4-T104','39928234462','39934685177']){
+  assert(current.includes(id),'ORIGINAL_CI_DOSSIER_EVIDENCE_MISSING:'+id);
+ }
+ assert(current.includes('9 historical B9 individual PASS+LOCK'));
+ assert(current.includes('8 B8 T092–T099 official formal HOLD'));
+ assert(current.includes('1 B9 T105 authentic 1–2yr-old archive/Android scale DUE/HOLD'));
+ assert(current.includes('T084_FORMAL_FINAL=NOT_RUN'));
+ assert(current.includes('T084_FINAL_LOCK=HOLD'));
+ assert(current.includes('Phase-3 13 transactional scripts still NOT_RUN'));
+});
