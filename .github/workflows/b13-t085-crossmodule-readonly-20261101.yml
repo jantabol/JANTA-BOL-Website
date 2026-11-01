@@ -7,6 +7,10 @@ on:
       - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md'
       - 'ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs'
       - '.github/workflows/b13-t085-crossmodule-readonly-20261101.yml'
+      - '.github/workflows/b13-phase3-original-static-coverage-20261101.yml'
+      - 'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'
+      - 'ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs'
+      - 'JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md'
   pull_request:
     branches: [codex/b12-t080-integration-candidate-20261101]
 permissions:
@@ -32,7 +36,7 @@ jobs:
           test "$(git rev-parse "$BASE")" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              .github/workflows/b13-phase3-original-static-coverage-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md|ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs|.github/workflows/b13-t085-crossmodule-readonly-20261101.yml) ;;
+              JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md|ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs|.github/workflows/b13-phase3-original-static-coverage-20261101.yml|JANTA_BOL_PHASE_4_WORKING/b13/P4_B13_MASTER_PDF_AUTHORITY_CROSSWALK_20261101.md|JANTA_BOL_PHASE_4_WORKING/b13/P4_T085_B12_B13_CROSSMODULE_SOURCE_HANDOFF_20261101.md|ci/phase4/b13/t085-crossmodule-immutable-parity.test.mjs|.github/workflows/b13-t085-crossmodule-readonly-20261101.yml) ;;
               *) echo "B13_SOURCE_OR_PRODUCTION_SCOPE_VIOLATION=$path"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -41,6 +45,14 @@ jobs:
           test -z "${VERCEL_TOKEN:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
           echo 'B13_T085_ALL_PR96_PRODUCT_FILES=UNCHANGED'
+      - name: Original 109 TEST-REGISTER IDs and append-only documentary status truth
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs
+          node --test ci/phase4/b13/t084-nov01-master-pdf-official-ledger.test.mjs
+          echo 'B13_T084_SOURCE_AND_OFFICIAL_REGISTER_APPEND_PRECHECK=PASS_SCOPED'
+          echo 'B13_T084_FORMAL_RUN15=NOT_RUN'
       - name: Fourteen real source-boundary modules and B12/B13 negative gate checks
         shell: bash
         run: |
