@@ -124,7 +124,7 @@ test('T097-M12 Founder Android form has all labeled, required inputs and private
     'pattern="[a-z0-9_-]{3,80}"',
     'Private Upload अभी बंद है',
     'अभी कुछ प्रकाशित या भेजा नहीं जाएगा',
-    'वास्तविक निजी']);
+    'असली उसी-मामले की निजी सर्वर रसीद']);
 });
 test('T097-M13 Phone task menu includes form and safety lock scrubs private IDs',()=>{
   const ui=readFileSync('JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js','utf8');
