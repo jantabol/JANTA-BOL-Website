@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'ci/phase4/b13-t088-local-full-recovery-synthetic.sh'|'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs'|'ci/phase4/b13-t088-vercel-public-source-reconstruction.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'ci/phase4/b13-t088-local-full-recovery-synthetic.sh'|'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs'|'ci/phase4/b13-t088-vercel-public-source-reconstruction.mjs'|'ci/phase4/b13-t088-edge-source-lineage-contract.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_EDGE_SOURCE_LINEAGE_MANIFEST_20261102.json'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
               *) echo "T088_RED_UNAUTHORIZED_PRODUCT_BACKUP_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -42,6 +42,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs
+          node --test ci/phase4/b13-t088-edge-source-lineage-contract.test.mjs
       - name: Re-run unchanged Phase3 security + backup/recovery + incident originals
         shell: bash
         run: |
