@@ -24,6 +24,12 @@ cleanup(){
 trap cleanup EXIT INT TERM
 cd "$tmp"
 supabase init --yes >/dev/null || hold LOCAL_INIT
+mkdir -p "$tmp/supabase/functions/t088-test-runtime"
+cat >"$tmp/supabase/functions/t088-test-runtime/index.ts" <<'TS'
+Deno.serve((req)=>new Response(JSON.stringify({ok:true,synthetic:true,method:req.method}),{
+ status:200,headers:{"content-type":"application/json","cache-control":"no-store"}
+}));
+TS
 docker network create -o 'com.docker.network.bridge.host_binding_ipv4=127.0.0.1' "$net" >/dev/null || hold LOCAL_LOOPBACK_NETWORK
 if ! supabase start --network-id "$net" > "$tmp/start.log" 2>&1; then hold EMPTY_LOCAL_STACK_BOOT; fi
 docker ps --format '{{.Names}}' > "$tmp/containers"
@@ -56,18 +62,13 @@ SQL
 docker exec -i "$db" psql -U postgres -d postgres -X -v ON_ERROR_STOP=1 -q <"$tmp/schema.sql" >/dev/null || hold LOCAL_RLS_SCHEMA
 node "$base/ci/phase4/b13-t088-local-full-recovery-synthetic.mjs" "$tmp/local.json" || hold LOCAL_AUTH_STORAGE_IDENTITY_NEGATIVES
 # Fresh disposable Edge source is never a copy of real JANTA BOL Edge code or secrets.
-mkdir -p "$tmp/supabase/functions/t088-test-runtime"
-cat >"$tmp/supabase/functions/t088-test-runtime/index.ts" <<'TS'
-Deno.serve((req)=>new Response(JSON.stringify({ok:true,synthetic:true,method:req.method}),{
- status:200,headers:{"content-type":"application/json","cache-control":"no-store"}
-}));
-TS
-supabase functions serve --no-verify-jwt t088-test-runtime >"$tmp/edge.log" 2>&1 &
+supabase functions serve t088-test-runtime --no-verify-jwt >"$tmp/edge.log" 2>&1 &
 edge_pid=$!
 ready=0
+last_status=0
 for i in $(seq 1 60); do
-  if curl --silent --show-error --max-time 2 --output "$tmp/edge-response.json" \
-     http://127.0.0.1:54321/functions/v1/t088-test-runtime 2>/dev/null; then
+  if last_status="$(curl --silent --show-error --max-time 2 --output "$tmp/edge-response.json" \
+     --write-out '%{http_code}' http://127.0.0.1:54321/functions/v1/t088-test-runtime 2>/dev/null)"; then
     if node -e 'let a=require(process.argv[1]);if(a.ok===true&&a.synthetic===true)process.exit(0);process.exit(1)' "$tmp/edge-response.json" 2>/dev/null; then
       ready=1;break
     fi
@@ -75,7 +76,11 @@ for i in $(seq 1 60); do
   kill -0 "$edge_pid" 2>/dev/null || hold EDGE_RUNTIME_EXITED
   sleep 1
 done
-[[ "$ready" == 1 ]] || hold EDGE_RUNTIME_HTTP_NOT_READY
+if [[ "$ready" != 1 ]]; then
+  # Safe diagnostics: status only, never echo local credentials/log bodies.
+  echo "T088_EDGE_RUNTIME_LAST_HTTP_STATUS=$last_status"
+  hold EDGE_RUNTIME_HTTP_NOT_READY
+fi
 echo 'T088_LOCAL_ACTUAL_AUTH_TWO_USER_SESSION=PASS_SCOPED_SYNTHETIC'
 echo 'T088_LOCAL_ACTUAL_POSTGREST_TWO_USER_RLS=PASS_SCOPED_SYNTHETIC'
 echo 'T088_LOCAL_ACTUAL_PRIVATE_STORAGE_BYTES_AND_DENIAL=PASS_SCOPED_SYNTHETIC'
