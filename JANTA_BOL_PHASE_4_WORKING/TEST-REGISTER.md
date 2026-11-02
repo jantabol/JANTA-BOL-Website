@@ -108,7 +108,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T085 | Final Closure | Cross-Module Integration Boundary Test | B13 | NOT RUN — FINAL |
 | P4-T086 | Final Closure | Core Article Lifecycle + Live Regression | B13 | PASS |
 | P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | SCOPED PASS+LOCK (E1 CI + E2 SQL role/MFA/Reporter/UI + disposable revoked Owner/Admin RED-GREEN) — signed hosted E2 + complete E5 DUE; original FINAL PASS+LOCK HOLD |
-| P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | NOT RUN — FINAL |
+| P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | IN PROGRESS — original RUN15 E1/E3/E6/E8; source/real HTTPS preflight; real restore/multi-device E3/hosted provider DUE; Final Lock HOLD |
 | P4-T089 | Final Closure | Nothing-Missing / Nothing-Duplicated + Official Records Audit | B13 | NOT RUN — FINAL |
 | P4-T090 | Final Closure | Failure Repair + Unresolved/DUE + Final Build Readiness | B13 | NOT RUN — FINAL |
 | P4-T091 | Final Closure | Production Closure Report + Final Lock + Post-Lock Change Rule | B13 | NOT RUN — FINAL |
@@ -1572,3 +1572,10 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - E5 evidence (Article versions+Audit, 156/160 matching in-app notification/audit rows, incomplete B8 case/event and delivery) is **partial and LOCKED only for verified facts**. No actual external delivery/recovery or complete 13-module E5 asserted.
 - Review-only candidate `review/b13_t087_user_roles_revoked_session_REVIEW_ONLY.sql` **NOT DEPLOYED**, existing production policy remains untouched and outstanding. Repo Draft PR #111 NOT MERGED; no Release. Need explicit production rollout authorization, E2 signed HTTP positive/negative with distinct authorized identities, complete E5 before full acceptance.
 - **`P4_T087_E1_AND_SCOPED_E2_AND_DISPOSABLE_FIX=PASS_LOCK`**; **`P4_T087_FINAL_ORIGINAL_WHOLE_PLATFORM=HOLD`**; T088/B13 full release unaffected. T086 PASS+LOCK untouched.
+
+
+### P4-T088 — STARTED 2026-11-02, Founder moved to next test after T087 scoped evidence lock
+- Original **Topic12 RUN-15 §§784–792, MANUAL/PRODUCTION+RECOVERY, E1+E3+E6+E8**. Prior T087 `PASS+LOCK` is **SCOPED verified evidence**, and its original full whole-platform E2 signed HTTP/E5 remains `HOLD`. Do not assert upstream original full T087 PASS or T088 PASS to advance B13 release.
+- Candidate T088 branch `codex/b13-t088-prod-backup-recovery-preflight-20261102` stacked **on** T087 approved evidence candidate `48260e31e8e69dc12d6905c5765b0341f3538192` (no PR merge/deploy). Dedicated source test and protected CI re-run must establish fresh exact-head E1. Domain HTTPS public read-only checks separate from authenticated E6.
+- Manual/production T088 E3 + real provider E6 + usable verified offsite joint restore E8 **DUE**; existing previous phone/tablet/news and B11 synthetic tests are not new T088 execution or a real restore. Reuse historic evidence if independently matching, rather than repeating Founder actions.
+- **`P4_T088=IN_PROGRESS`; `P4_T088_ORIGINAL_FINAL_PASS_LOCK=HOLD`**. Dossier: `review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md`. T087 and all old source/product/CI/Auth/SQL remains unchanged.
