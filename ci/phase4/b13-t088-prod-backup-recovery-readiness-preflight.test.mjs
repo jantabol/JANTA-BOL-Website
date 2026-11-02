@@ -16,7 +16,7 @@ test('T088-01 original RUN15 scope and all 4 evidence types E1/E3/E6/E8 explicit
   assert.ok(d.includes(x),'T088_ORIGINAL_GATE_OMITTED: '+x);
  }
 });
-test('T088-02 original 109 IDs, only T088 IN PROGRESS; prior T087 scoped lock not false full PASS',()=>{
+test('T088-02 original 109 IDs, T088 evidence scoped locked and original full recovery HOLD',()=>{
  const reg=read(register);
  const ids=[...reg.matchAll(/^\| P4-T(\d{3}) \|/gm)].map(x=>x[1]);
  assert.equal(ids.length,109,'original 109 test rows must remain present');
@@ -24,7 +24,8 @@ test('T088-02 original 109 IDs, only T088 IN PROGRESS; prior T087 scoped lock no
  const get=(n)=>reg.split('\n').find(x=>x.startsWith('| P4-T'+n+' |'));
  assert.ok(get('086')?.includes('| PASS |'),'T086 original locked result missing');
  assert.ok(get('087')?.includes('SCOPED PASS+LOCK') && get('087')?.includes('FINAL PASS+LOCK HOLD'),'T087 original outstanding E2/E5 must be preserved');
- assert.ok(get('088')?.includes('IN PROGRESS') && get('088')?.includes('Final Lock HOLD'),'T088 must not be false PASS');
+ assert.ok(get('088')?.includes('FOUNDER SCOPED PASS+LOCK') && get('088')?.includes('ORIGINAL FINAL PASS+LOCK HOLD'), 'T088 completed limited evidence must be locked without claiming unrun original full E8 PASS');
+ assert.ok(get('088')?.includes('E8') && get('088')?.includes('E6') && get('088')?.includes('DUE'), 'T088 missing E6/E8 hard release gaps must remain');
  assert.ok(get('089')?.includes('NOT RUN'),'T089 must not be started by T088');
 });
 test('T088-03 real DB/Media backup workflow entry points and real manual controls preserved',()=>{
