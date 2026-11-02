@@ -108,7 +108,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T085 | Final Closure | Cross-Module Integration Boundary Test | B13 | NOT RUN — FINAL |
 | P4-T086 | Final Closure | Core Article Lifecycle + Live Regression | B13 | PASS |
 | P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | SCOPED PASS+LOCK (E1 CI + E2 SQL role/MFA/Reporter/UI + disposable revoked Owner/Admin RED-GREEN) — signed hosted E2 + complete E5 DUE; original FINAL PASS+LOCK HOLD |
-| P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | IN PROGRESS — E1 protected CI PASS, E6 public HTTPS/alias PASS scoped, Oct27 genuine joint DB+5-media restore PASS scoped; fresh E8 independent final, E3 dual-device, E6 private/provider DUE; Final Lock HOLD |
+| P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | IN PROGRESS — E1 protected CI PASS, E6 live public HTTPS+anonymous PostgREST API PASS scoped (2 published), Oct27 real DB+5-media restore PASS scoped; fresh independent E8, E3 dual-device, E6 private/provider DUE; Final Lock HOLD |
 | P4-T089 | Final Closure | Nothing-Missing / Nothing-Duplicated + Official Records Audit | B13 | NOT RUN — FINAL |
 | P4-T090 | Final Closure | Failure Repair + Unresolved/DUE + Final Build Readiness | B13 | NOT RUN — FINAL |
 | P4-T091 | Final Closure | Production Closure Report + Final Lock + Post-Lock Change Rule | B13 | NOT RUN — FINAL |
