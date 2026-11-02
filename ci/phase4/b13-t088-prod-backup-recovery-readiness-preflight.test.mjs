@@ -95,6 +95,8 @@ test('T088-08 T087 evidence branch is unchanged; T088 only adds CI/dossier/regis
   'ci/phase4/b13-t088-local-full-recovery-synthetic.sh',
   'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs',
   'ci/phase4/b13-t088-vercel-public-source-reconstruction.mjs',
+  'ci/phase4/b13-t088-edge-source-lineage-contract.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_EDGE_SOURCE_LINEAGE_MANIFEST_20261102.json',
   '.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml'
  ]);
  for(const p of changed) assert.ok(allow.has(p),'T088_UNAUTHORIZED_SOURCE_OR_BACKUP_CHANGE: '+p);
