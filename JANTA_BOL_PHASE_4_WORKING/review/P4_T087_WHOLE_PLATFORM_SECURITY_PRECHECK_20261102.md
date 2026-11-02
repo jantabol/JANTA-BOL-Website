@@ -53,3 +53,31 @@ Any original protected CI failure, unauthorised/private leak, leaked key, weaken
 **Important red-stop history:** First T087 runs correctly FAILED on the previously missing old B0/B7 workflow path and on the T067 prerequisite fixtures. We did **not remove the old guards**: ran B0/T035 on authentic historic sources, restored exact original T041 workflow (old historical branch-only trigger), replayed original B10 T065+T066 signed local HTTP fixture chain before T067/T068, and verified final exact-head SUCCESS. Do not rewrite earlier RED as GREEN.
 
 **Final gate still HOLD**: the original requires E1+E2+E5, and real connected E2 is read-only RLS policy/catalog proof, not current production signed multi-account IDOR and session revocation denial. E5 aggregates do not cover every completed module's complete lifecycle and notification/retention externally. B10 T063/064/065/068 and real B11 restoration, B8 factual correction remain separately held. No Founder manual step at this source-review checkpoint. `T087_ORIGINAL_FULL_PASS_LOCK=HOLD`.
+
+
+## Additional verification after first T087 report — 2026-11-02, read-only, no Founder manual step
+
+### Exact-head E1 CI result, no fictitious tests
+- Draft PR #111 candidate SHA `adcb9c6e9b3f63a89ed00dbfd20632207406cb39`; GitHub Actions run `#41402696831`, event push, **COMPLETED/SUCCESS on that SHA**. Required 4 jobs successful (original T087 source protected regression, B10 disposable PG17/signed localhost HTTP, reusable G0 + G1). The separate optional historical full ZIP/random-selector job **SKIPPED** and must not be counted as completed. This confirms source/isolated security tests only.
+
+### Supplemental production SQL role-isolation *read-only* probes
+All probes ran on connected production project `vrffsnkycvjithwtiylt` inside explicit **`BEGIN TRANSACTION READ ONLY` ... `SET LOCAL ROLE ...` ... `ROLLBACK`**; no app data written, no original role grants or policies altered. This changes only the temporary SQL session role, **not a hosted HTTP/JWT test**.
+
+1. `SET LOCAL ROLE anon`: `public.jb_c1_public_articles(NULL,1)` returned **1 public published item** (only count observed), `public.jb_b8_g4_public_case(all-zero-UUID)` returned **NULL**, and `public.jb_b10_live_update_public_eligible(all-zero-UUID,all-zero-UUID)` returned **FALSE**. These prove valid public output and nonexistent private-case/Live-negative examples, NOT every possible ID or signed-user access path.
+2. `SET LOCAL ROLE authenticated` **without JWT/session claims**: direct `SELECT COUNT(*)` returned **0 visible rows from each of seven private datasets**: `article_versions`, `audit_logs`, `team_accounts`, `live_sessions`, `grievances`, `live_notifications`, `user_roles`. This is evidence of fail-closed anonymous-context RLS **for these SQL role tests only**. It cannot substitute for actual authenticated Owner-vs-Reporter, revoked session or cross-account signed HTTP denials.
+3. Catalog `has_table_privilege('anon', OID,'SELECT')` returned **FALSE** for each of those seven private relations, with RLS enabled; public content uses deliberate screened SECURITY DEFINER RPC access. This grant check and SQL isolation don't verify HTTP gateway behavior.
+
+### Supplemental E5 presence/absence summary (SELECT-only)
+- `article_versions`: **920 snapshots, 26 distinct articles** — historical/version presence, not a complete correction notification lifecycle.
+- `live_notifications`: **160 rows, all `delivery_state=IN_APP_READY`**, across live (149), grievance (4), compliance (4), social (2), system (1). Do **not** claim external delivery.
+- `b8_case_review_events`: **0 rows**; no real B8 case-review lifecycle demonstrated by this table.
+- `live_sessions`: **16 rows all `public_status=OFF`**; no real live provider on-air evidence.
+
+### Supabase Security Advisor triage — evidence only, not automatically exploitable
+Security Advisor returned **43 INFO** `rls_enabled_no_policy` tables (may deliberately fail closed; check intended access), **23 WARN** anonymous-executable public SECURITY DEFINER RPCs, **118 WARN** authenticated-executable SECURITY DEFINER RPCs, and **1 WARN** leaked-password protection setting. The single known public view `article_stats` has `security_invoker=true`. These require targeted RPC function-by-function role/session/body review and signed real HTTP response checks; **do not revoke or modify production functions blindly**.
+
+Official linter detail:
+- https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable
+- https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable
+
+**GATE: `T087_E2_ROLE_ISOLATION_SQL=PASS_SCOPED_7_OF_7_PRIVATE_ZERO_PLUS_3_ANON_RPC_PROBES`; `T087_REAL_HOSTED_SIGNED_CROSS_ACCOUNT_HTTPS_NEGATIVES=DUE`; `T087_E5_END_TO_END_LIFECYCLE_PROOF=PARTIAL`; `T087_FINAL_PASS_LOCK=HOLD`.** T086 untouched. No production release, no paid API/services, no repetition of Android/Share/Incognito.
