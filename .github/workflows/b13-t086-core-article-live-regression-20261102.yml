@@ -59,7 +59,6 @@ jobs:
           set -Eeuo pipefail
           node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
           node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
-          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
           node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
           node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
           node --test ci/phase4/b9-client-and-ui.test.mjs
@@ -79,6 +78,19 @@ jobs:
           echo 'T086_ACTUAL_LIVE_PROVIDER_ENCODER_APPROVE_START_STOP_VIEWER_E5=NOT_RUN'
           echo 'T086_DISTRICT_NAVIGATION_REAL_MULTI_CATEGORY_E5=NOT_RUN'
           echo 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  t086_unchanged_old_v3_regression_hard_gate:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Original V3 C1 old-locked-source checker; any failure RED STOP
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Original immutable V3/C1 test executes, do NOT skip or rebaseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
   t086_inherited_full_disposable_pg17:
     needs: t086_source_core_regression
     uses: ./.github/workflows/b12-b8-reconciled-protected.yml
