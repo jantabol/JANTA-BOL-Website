@@ -90,7 +90,7 @@ jobs:
           home="$RUNNER_TEMP/t088_public_home.html"
           read -r code url tlsverify < <(curl --silent --show-error --location --retry 2 --retry-delay 1 \
             --connect-timeout 12 --max-time 35 --proto '=https' --tlsv1.2 \
-            --output "$home" --write-out '%{http_code} %{url_effective} %{ssl_verify_result}' \
+            --output "$home" --write-out '%{http_code} %{url_effective} %{ssl_verify_result}\\n' \
             'https://jantabol.in/')
           test "$code" = 200 || { echo "T088_PRODUCTION_HTTPS_UNEXPECTED_STATUS=$code"; exit 1; }
           test "$tlsverify" = 0 || { echo "T088_PRODUCTION_TLS_VERIFY_FAILED"; exit 1; }
