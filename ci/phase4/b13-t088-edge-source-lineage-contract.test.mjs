@@ -40,7 +40,7 @@ test('T088-EDGE-02 all ten recovered source files have immutable LIVE-matched bl
  }
 });
 
-test('T088-EDGE-03 five deployed functions absent across entire 1039-file repo, no fake recovered source',()=>{
+test('T088-EDGE-03 five deployed functions absent across the full repository tree, no fake recovered source',()=>{
  assert.equal(absent.length,5);
  const missing=new Set([
   'jb-recovery-delete-mfa','jb-grievance-assets','jb-b11-t069-media-backup',
@@ -53,7 +53,7 @@ test('T088-EDGE-03 five deployed functions absent across entire 1039-file repo, 
   assert.equal(f.liveMatchesGitIndexByteForByte,null);
   assert.equal(f.offsiteEncryptedSourceRestored,false);
   assert.equal(f.source_restore_proof,'ABSENT_FROM_REPO_HOLD');
-  assert.equal(tree.some(p=>p.startsWith(prefix+f.slug+'/')),false,
+  assert.equal(tree.some(p=>p.split('/').includes(f.slug)),false,
    'a missing source appeared: review actual code before claiming recovery');
  }
 });
@@ -80,6 +80,6 @@ test('T088-EDGE-05 original full-system E8 remains explicit HOLD, not a reconstr
  assert.equal(data.limits.final_e8,'HOLD');
 });
 
-console.log('T088_EDGE_PRODUCTION_SOURCE_PROVENANCE_10_EXACT=PASS_SCOPED');
+console.log('T088_EDGE_SOURCE_BLOB_VALIDATIONS=SEE_NODE_TEST_EXIT_STATUS');
 console.log('T088_EDGE_FIVE_LIVE_SOURCES_UNBACKED_IN_GIT=HOLD_5');
 console.log('T088_EDGE_FULL_INDEPENDENT_OFFSITE_RUNTIME_RESTORE=NOT_RUN');
