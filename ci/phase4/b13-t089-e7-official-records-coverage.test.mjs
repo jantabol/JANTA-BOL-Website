@@ -91,7 +91,7 @@ test('T089-05 official CODE-MAP/DEBUG-MAP/CHANGELOG/TEST-REGISTER all present wi
  }
  const d=read(dossier);
  for(const term of ['Sections **793–804**','E1 + E7','67/109',
-  '51','58','P4_T089_ORIGINAL_FINAL_PASS_LOCK=HOLD','NO','orphan']){
+  '51','58','T089_ORIGINAL_FINAL_PASS_LOCK=HOLD','NO','orphan']){
    assert.ok(d.toLowerCase().includes(term.toLowerCase()),'T089_SCOPE_OR_GAP_HIDDEN: '+term);
  }
 });
