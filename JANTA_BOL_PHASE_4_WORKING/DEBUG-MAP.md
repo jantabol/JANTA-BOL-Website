@@ -538,3 +538,10 @@ Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CR
 Original Founder Master Appendix B source: exact 14 original topic ranges are contiguous Sections **1–1034**, test ranges **P4-T001–T109**, and topic checkpoint *counts* sum **682**. Appendix B explicitly names 433 coded checkpoint IDs across nine families. Remaining 249 checkpoints are topic-count totals in five non-coded families (**44/50/55/50/50**); individual checkpoint identifiers are **not** supplied by that Appendix and are not fabricated. Appendix B numeric Sections 340–1034 (695) and 433 explicitly coded checkpoint IDs map once to original tests, while Section 1–339 code/section equivalence and implementation-level semantic duplicate/orphan test remains DUE. **Not full E7 PASS.**
 
 Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json` and fail-hard `T089-S06/S07`. No protected source changes; old history retained.
+
+
+### T089 E7 — 58 missing-standalone-filename candidates checked against official register (2026-11-02)
+
+The 58 *filename-only* gaps split as **16 original exact PASS records with 3–6 substantive Evidence bullets directly in the canonical TEST-REGISTER**, **39 original NOT RUN** (including the later-started T089) and **3 original IN PROGRESS**. **Absence of a separate file never invalidates already recorded official evidence.** Sixteen located historical source narratives are preserved, not re-executed; 42 remaining no-filename entries retain their original non-PASS status. Scoped protected evidence contract `T089-08` verifies every row; original full E7/source semantic duplication/source conflict remains HOLD.
+
+Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json`. No new backend authority, user record or production change.
