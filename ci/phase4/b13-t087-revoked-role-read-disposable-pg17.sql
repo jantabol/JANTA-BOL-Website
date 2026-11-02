@@ -42,7 +42,7 @@ BEGIN
     RAISE EXCEPTION 'T087_RED_OWNER_SESSION_SHOULD_BE_REVOKED';
   END IF;
   IF (SELECT count(*) FROM public.user_roles)<>1 THEN
-    RAISE EXCEPTION 'T087_RED_STALE_SELF_ROLE_GAP_NOT_REPRODUCED';
+    RAISE EXCEPTION 'T087_RED_STALE_SELF_ROLE_GAP_NOT_REPRODUCED count=% uid=% session=% aal2=% dbrole=%', (SELECT count(*) FROM public.user_roles), auth.uid(), private.current_session_active(), private.current_owner_aal2(), current_user;
   END IF;
 END $red_owner$;
 RESET ROLE;
