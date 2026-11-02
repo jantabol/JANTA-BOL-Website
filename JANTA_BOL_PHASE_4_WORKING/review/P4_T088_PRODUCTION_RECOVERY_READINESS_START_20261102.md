@@ -95,3 +95,37 @@ Connected Vercel linked **JANTA-BOL-Website** project `shubham-pichhore-2028`, *
 `T088_E8_NEW_20261102_PRODUCTION_CURRENT_OFFSITE_ENCRYPTED_JOINT_DB_PLUS_5_ORIGINAL_MEDIA_RESTORE=PASS_SCOPED_REAL`; `T088_E8_OLD_ARTICLE_COUNT_FRESHNESS_DELTA=CLOSED_AT_NEW_CHECKPOINT`. **Still** `T088_E8_INDEPENDENT_FULL_GO_TRUE_EDGE_VERCEL_RESTORE=NOT_RUN`; `T088_E8_RECURRING_RPO_RTO_PROOF=DUE`, `T088_E3_CURRENT_TWO_DEVICE_FULL_LIFECYCLE=DUE`, `T088_E6_SIGNED_AUTH_AND_PROVIDER=DUE`, `T088_ORIGINAL_FINAL_PASS_LOCK=HOLD`. T087 old full signed-hosted E2/lifecycle E5 remain tracked separately.
 
 **No second manual backup required in the current turn. No new data written to live news/auth/ads/DB by this assistant**; the Founder explicitly executed the reviewed `main` manual backup job. It did write its intended encrypted offsite snapshot to original B2. No paid upgrade, new domain deployment, policy migration, destructive restore or new editor content. Preserve the previous genuine restore results and all previously locked tests.
+
+
+## T088 additional E6 — actual hosted Edge JWT negative HTTP and E8 recoverability manifest, 2026-11-02 (read-only)
+
+### Hosted Edge positive inventory / actual JWT-gateway denial (NOT a signed-user positive test)
+
+Connected live Supabase project `vrffsnkycvjithwtiylt` lists **15/15 Edge Functions ACTIVE**, 10 configured with `verify_jwt=true`. Five are explicitly `verify_jwt=false`: `jb-live-worker`, `jb-youtube-oauth-callback`, `jb-encoder-handoff`, `jb-encoder-launch`, `jb-encoder-connector-lols`. This flag alone is NOT a vulnerability: some internal workers/webhooks depend on independent signed/secret validation; verify individual guard before ever invoking a no-JWT endpoint. No unguarded worker was called.
+
+**Exact new CI [#41449878447](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41449878447), candidate SHA `16c0fb575b708d4d255da51acef86125640a832d`: COMPLETED / SUCCESS, 6/6 required jobs SUCCESS**, including new **real production anonymous GET (no key, no bearer, no body)** to the existing `verify_jwt=true` Edge endpoints:
+- `jb-live-api`: HTTP 401/403 → **DENIED**
+- `jb-team-api`: HTTP 401/403 → **DENIED**
+- `jb-records-api`: HTTP 401/403 → **DENIED**
+- `jb-b11-t069-media-backup`: HTTP 401/403 → **DENIED**
+
+Runner logs: `T088_LIVE_EDGE_JWT_GATEWAY_NEGATIVES=4/4`; **`T088_SIGNED_OWNER_REPORTER_POSITIVE_API=NOT_RUN`**, **`T088_EXTERNAL_ENCODER_STREAM_OR_YOUTUBE_DELIVERY=NOT_RUN`**, **`T088_EDGE_RESTORE_GO_TRUE_AND_VERCEL_RECOVERY=NOT_RUN`**. The earlier public published-only C1 PostgREST **2** items, **7/7 private table anonymous-denials**, unknown UUID empty and actual published Article permalink/UUID+slug same also remain green. Optional historical master ZIP job SKIPPED and not counted.
+
+**Interpretation:** `E6_PUBLIC_PROD_HTTPS_POSTGREST_AND_EDGE_ANON_NEGATIVES=PASS_SCOPED`. Mere Edge function ACTIVE/JWT policy proves configuration/online gateway, NOT actual Live signal, YouTube delivery, valid Reporter/Owner signed request, external encoder or independent Edge code recovery.
+
+### Current Vercel service identity, rollback candidates and configuration metadata (no secrets)
+
+Connected Vercel account `shubham-pichhore-2028` Hobby / linked JANTA-BOL-Website: `jantabol.in` currently maps to production READY deployment **`dpl_6XpfdMa7gCF5SDXd7EKHZfbpLfeF`**, exact source SHA `93df12aa8ffdfae38d9a4066b6a4556bb36969e5`, branch `codex/t080-admin-ack-failclosed-review-20261031`. Read-only deployment history contains earlier `READY` production source SHA candidates `14a929180d99088e950475eeee609cae8e3f01c8`, `1ada480c51aea9fd10b0abdf0c705f990f9b1694`, `5285cacfe409a8f730b4ed1a38d6ce8186036ae3`. Historical READY does **not** prove safe rollback to these bytes, restored configuration, or authorized promotion.
+
+Connected Vercel **non-decrypted** environment-key inventory: `JB_PUBLIC_SUPABASE_KEY` (production), `JB_PUBLIC_SUPABASE_URL` (preview+production), both encrypted metadata; **no secret values fetched**. This is an inventory observation only. No live Git alias, domain, environment variable, code, source, OAuth token, cron or protected secrets were edited.
+
+### Strict E8 E3 release matrix after new Founder backup
+
+- **E8 fresh real point-in-time offsite** 2026-11-02 T070 manual run `#41444146576`: PostgreSQL17 restored from AGE/B2, **34 articles** / **5 original storage bytes** + 26/16 deep security matches, all PASS. No second backup/recovery triggered.
+- **E8 complete independent full-platform disaster reconstruction**: `NOT_RUN` for verified Auth GoTrue sessions/provider secrets, Edge runtime and network guards, Vercel environment/domain/SSL production identity, tenant separation, external providers, rollback cutover and Founder-independent lost-device restore. Original T070 asserts `T070_FINAL_INDEPENDENT_E8=NOT_RUN`, `T070_FINAL_LOCK=HOLD`.
+- **E8 cadence/RPO/RTO**: isolated prior timings and backup point exist, but no approved measurable continuous schedule/retention/alert and demonstrated Founder-accepted complete-environment objectives; `DUE`.
+- **E3 actual Phone+Tablet end-to-end authenticated cross-device publishing/Owner-Reporter handoff**: earlier Oct26 matched Draft v2 sync on two devices; Nov2 T086 article public/share/incognito and T087 Reporter account UI recheck. They are accepted as their exact historic *sub-evidence only*. **Current combined full T088 E3 = DUE**; never repeat these screenshots.
+- **E6 private authenticated signed Owner-v-Reporter and actual external video/Live/YouTube**: **DUE**; public negative HTTP cannot assert valid authenticated positive or live provider playback.
+- **Upstream T087**: scoped PASS+LOCK evidence preserved, original hosted signed cross-account/revoked bearer E2 + complete E5 still release-blocking.
+
+**Official T088 final status: `IN_PROGRESS / FULL PASS+LOCK HOLD`.** No policy/News/Auth/Live/Ads/backup/production change or paid service. No Founder manual step for this read-only CI/manifest checkpoint; all unavailable real-world proofs must remain unclaimed until executed.
