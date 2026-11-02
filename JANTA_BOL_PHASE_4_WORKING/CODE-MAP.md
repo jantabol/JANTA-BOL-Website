@@ -545,3 +545,10 @@ For every block:
 Official code ownership remains canonical where listed; T089 audit checks mapping integrity without new implementation, shadow module creation, migration or public deployment. All 14 blocks are represented by 109 distinct canonical test IDs. The 109-entry register-to-candidate index maps test identity to available candidate proof only; it does NOT prove orphan requirements, duplicate code absence, implementation closure or current production source. T087 signed-hosted E2/E5, T088 full GoTrue/Edge/Vercel E8 and cross-identity/provider E6 remain HOLD. The actual deployed site is at commit 93df12aa..., not default main; 5 live Edge function sources absent from the checked Git repository. Preserve rather than replace old B7/Phase3 code homes.
 
 **Candidate index:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json`. **Dossier:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. **T089 original Final Lock = HOLD** pending full E1+E7. Previous contents are historical and unchanged.
+
+
+### T089 E7 original Master Appendix B source crosswalk — 2026-11-02
+
+Master Appendix B checkpoint-to-test authority: all 109 tests have explicit `Maps / Sections` fields in the user-provided 321-page Master. Source crosswalk expands 695 numbered Sections 340–1034 and 433 coded checkpoints across nine requirement families; each checkpoint belongs to exactly one original test ID. This is the *design-map authority*, not module semantic uniqueness or a deployment. Historic CODE-MAP implementer homes remain protected. Current production-served source SHA differs from main and 5 live Edge functions lack independent Git source: hold any source-only full-restore claim.
+
+Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
