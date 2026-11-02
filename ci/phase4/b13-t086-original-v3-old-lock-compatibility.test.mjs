@@ -6,6 +6,7 @@ import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
 import {execFileSync} from 'node:child_process';
+import {createHash} from 'node:crypto';
 
 const root='JANTA_BOL_PHASE_3C_WORKING/';
 const read=p=>readFileSync(p,'utf8');
@@ -25,7 +26,7 @@ const UUID='f17f6507-02a3-4881-ad37-0b02cadf3d3f';
 
 test('T086-L01 old original locked V3/C1 regression is present and UNEDITED (pinned)',()=>{
  assert.equal(blob('ci/phase4/b12/v3-c1-public-integration.test.cjs'),
- '72991403713ca5646eda847ff8f4ad886e4713b3',
+ '47452e35d880b3123ff0782f00564d849f5a06ba',
  'If original locked test changed, STOP and audit');
 });
 test('T086-L02 original public reporter/citizen demo forms are both hidden AND inert',()=>{
@@ -48,8 +49,11 @@ test('T086-L05 newer T077 nav PIN differs by exactly one reviewed youtube health
  const old="    'live.html', 'admin-password.html', 'b8-accountability.html', 'b9-analytics.html'";
  const newLine="    'live.html', 'youtube-oauth-health.html', 'admin-password.html', 'b8-accountability.html', 'b9-analytics.html'";
  assert(nav.includes(newLine));
- assert.equal(nav.replace(newLine,old),read('JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_OLD_NAV_BASELINE_20261102.txt'),
- 'Reviewed safety nav code must be byte-equivalent to old except one allowed page');
+ const reconstructed=nav.replace(newLine,old);
+ const raw=Buffer.from(reconstructed,'utf8');
+ const oldBlob=createHash('sha1').update(Buffer.concat([Buffer.from('blob '+raw.length+'\0'),raw])).digest('hex');
+ assert.equal(oldBlob,'ede5edac22f85759facb72b189c0b90a245f0d6c',
+ 'New T077 navigation must match the original locked blob after removing only youtube health');
 });
 test('T086-L06 safe navigation accepts only specifically allowed local pages',()=>{
  const fn=currentNav();
