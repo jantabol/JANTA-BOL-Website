@@ -40,3 +40,28 @@ This is documentary approval of a **new controlled security baseline**, NOT Foun
 **`T086_OFFICIAL_FINAL_PASS_LOCK=HOLD`**.
 
 Soft Launch priority and no rebuild: zero old product changes. No changes in live JANTA BOL database, public ISRO stories, Vercel production alias, Founder roles, login session, secrets or paid resources.
+
+## 2026-11-02 — actual historical + current executable security gate result
+
+**First new workflow run `#41390069431` FAILED**, even though historical original 10/10 PASS and current revised 10/10 + 8/8 PASS, because **one newly added diagnostic** still hard-pinned the *now intentionally revised* original test filename to its obsolete historical blob `47452e35...`. This was not a runtime application bug or license to weaken the original protections. Minimum correction: `ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs` **T086-L01** now pins the original historical archive blob `47452e35...` and separately pins approved revised current test blob `474ff764...`; every other old 11 negative test remains, original 12 total retained. Scope guard updated to permit this one diagnostic test-file change, resulting in **6** scoped audit/CI/test files changed; **zero** product/Admin/Article/Live/SQL changes.
+
+**Actual complete GitHub Actions `#41390215327`, exact source SHA `ac33bb8f70e7bf43332b8e31603d6f9f2e317e72`: COMPLETED SUCCESS.** Checked actual job conclusion (not just PR status):
+
+- `scope_and_historical_original`: **SUCCESS**. Git worktree at original commit `5d5fa9bd703607f890851b7a6d5aad3e80e3285e`, historical original ten tests **10/10 PASS, 0 FAIL**, exact archived original test Git blob unchanged. Original old Nav/Article/Vercel blob SHAs match original source. No historical green assertion based on current files.
+- `current_v3_controlled_and_security`: **SUCCESS**. Updated original V3 test **10/10 PASS** under the exact original file path; **8/8** Founder-approved strict-diff SHA + ten-case proof; **12/12** Owner/strict redirect/negative contract tests; **16/16** original T086 lifecycle/Share/Phase3 Live source tests. Current T080 Article lost-ACK/Founder Auth/PURL and original T083 **120/120** source checks, B9/B11/C1 public and old Phase3A/3B Live functional/source tests also SUCCESS. No real Founder E3 or provider E5 implied.
+- `original_disposable_pg17`: **G0 and G1 both SUCCESS**, actual original PostgreSQL17 B0–B8 privacy/immutability/case/Owner+Reporter scoped tests with rollback, protected older Phase3 News/Auth and B7 unchanged. Full B0–B8 master ZIP packaging step **SKIPPED** (not release PASS).
+- Source scope CI confirmed **exactly six declared audit/test/workflow files** modified vs pinned parent and **no** original Article/Auth/Admin/Live/UI/SQL/DNS/Backblaze file changed. **No production database mutation, no actual Live provider start, no public story modification, no paid services.**
+- Parent PR #106 historical `#41389090262` remains an **accurate RED** for stale old test *against later source* before explicit Founder-A authorization; the fresh security baseline was **controlled and versioned on separate Draft PR #107**, not retroactively altering recorded CI history or redefining earlier results.
+
+**Controlled baseline result**:
+`T086_FOUNDER_A_HISTORICAL_V3_ORIGINAL_10=PASS_SCOPED_HISTORIC_SOURCE`.
+`T086_FOUNDER_A_CURRENT_V3_ORIGINAL_10=PASS_SCOPED_CURRENT_SOURCE`.
+`T086_FOUNDER_A_DELTA_AND_REDIRECT_NEGATIVES_20=PASS_SCOPED`.
+`T086_T080_T083_NEWS_SHARE_PHASE3_LIVE_SOURCE=PASS_SCOPED`.
+`T086_DISPOSABLE_PG17_OLD_NEWS_AUTH_B7=PASS_SCOPED`.
+`T086_CONTROLLED_BASELINE_CI=PASS_SCOPED`.
+`T086_REAL_ANDROID_ARTICLE_E3=NOT_RUN`.
+`T086_REAL_SAME_ARTICLE_PURL_CORRECT_UNPUBLISH_REPUBLISH_E4=NOT_RUN`.
+`T086_REAL_PROVIDER_LIVE_E5=NOT_RUN`.
+`T086_CURRENT_MFA_CORRECTION_DEEP_LINK=KNOWN_LIMITATION_NOT_FIXED`.
+**`T086_OFFICIAL_FINAL_PASS_LOCK=HOLD`**.
