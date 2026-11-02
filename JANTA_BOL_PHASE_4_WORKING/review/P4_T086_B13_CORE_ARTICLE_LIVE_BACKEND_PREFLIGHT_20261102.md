@@ -39,3 +39,28 @@ Connected JANTA BOL project `vrffsnkycvjithwtiylt`, never cricket Supabase. Actu
 
 ### Acceptance boundaries
 Back-end/source/static/PG17 regression may be **PASS_SCOPED** when actual exact-head CI proves it; cannot claim T086 Formal PASS/LOCK without real E3/E4/E5. No fake provider PASS, no payment, no production write, no Article ID/PURL change, no B8 receipt, no email. If a protected test fails, stop; fix only the actual issue, rerun same original tests. No duplicate T085 work or unnecessary Founder manual steps. Soft Launch stays priority.
+
+## 2026-11-02 actual executable CI — mandatory old locked test RED STOP
+
+**Source candidate HEAD before this documentation append** `78349821ac6a487193ab0690b3372cc16d9baa7e`, GitHub Actions `#41387894753`, **COMPLETED FAILURE overall**, with all jobs independently reported:
+- **NEW original T086 source 16/16 PASS**, correct current same-UUID Article, public C1, B9 district/category search, canonical Share and Phase3 Live boundary checks. First candidate run `#41387547158` was **14/16 FAIL** solely from wrong newly added source-test expectations for multiline unpublish CAS and district filtering's actual B9 file; corrected these assertions to verify the **existing actual code** without weakening the required CAS or district filter. Second candidate `#41387661465` 16/16 PASS.
+- **Existing current T080 Founder Article/Android restore/lost-ACK backend VM + current T083 original 120/120 + public C1, B9, B11 public truth + Phase3A/3B protected static/functional Live E1 source regression: SUCCESS** in source job. This does not demonstrate real provider Live.
+- **Inherited actual disposable PostgreSQL17 B0–B8 including original News/Auth/B7:** Both independent G0 and G1 jobs **SUCCESS**, original case proofs/rollbacks intact. Old Source Master ZIP packaging **SKIPPED**, NOT a release pass.
+- **MANDATORY older original locked V3/C1 test `ci/phase4/b12/v3-c1-public-integration.test.cjs` was executed UNMODIFIED as a separate fail-hard job** and **FAILED 8/10 PASS, 2/10 FAIL**. We did **not** delete, skip, edit, rebaseline or mark it green. As required by original Master: **ANY locked old CI FAIL = RED STOP**. Whole workflow `#41387894753` is correctly **FAILURE** even though current-source and PostgreSQL jobs passed. This is a **release/baseline mismatch under investigation**, not evidence that the real website was changed or damaged by this PR.
+
+### Actual original V3 test failure evidence — not hidden
+1. The old test asserts the **exact literal** CSS `#citizen-news-form,#official-reporter-form{display:none!important}`. Current live-source code instead uses the **stricter** selector `#citizen-news-form,#official-reporter-form,#top-story[hidden]{display:none!important}`. Both unsupported submission forms remain explicitly hidden/inert and top breaking is also hidden; the old exact-string checker does not match the extra selector.
+2. The same locked V3 test pins `b12-safe-nav.js` **Git blob `ede5edac22f85759facb72b189c0b90a245f0d6c`**, but latest B12 reviewed candidate has blob **`a2107140321c2e099e785c678213ad278cbcfd5f`**. Direct old-vs-current blob comparison: current includes the `youtube-oauth-health.html` allowed after-login navigation path in addition to old allowlist. The test also pins older `backend-client.js` blob `0789934809c91a39d73a6d2570d0938fb6fbb47a`, while current is reviewed T080 blob `fb2c60d241ef772d4990536b577acc3c7d70fad7`, with lost-ACK and UUID/CAS enhancements. Updating pinned SHA to make test green **without separately validating a governed compatibility baseline** would violate Founder old-lock discipline. No revert of newer safe nav/Article is authorized either.
+3. A **separate actual UI routing limitation** requiring follow-up: `b12-safe-nav.js` allows `add-news.html?id=<UUID>` after MFA but **does not currently allow** `add-news.html?edit=<UUID>&from=published` through this post-login helper (while native `published.html` links to that two-query editing URL). This can explain why a fresh-login deep link falls back to Admin Dashboard; it is **not** yet independently proven for every auth session, and must not be silently patched without a negative path traversal/open-redirect test. Native in-session `Published News → Edit / Correction` route is still available. Real Android correction E3 remains DUE.
+
+### Honest verdict at this exact checkpoint
+`T086_NEW_CURRENT_SOURCE_AND_T080_T083_PHASE3_LIVE_E1=PASS_SCOPED`
+`T086_REAL_ISOLATED_PG17_AND_OLD_G0_B7=PASS_SCOPED`
+`T086_ORIGINAL_LOCKED_V3_C1_GATE=FAIL_RED_STOP`
+`T086_BACKEND_FULL_CLOSURE=BLOCKED_OLD_LOCK_GATE`
+`T086_REAL_ANDROID_E3=NOT_RUN`
+`T086_REAL_ARTICLE_ID_PURL_LIFECYCLE_E4=NOT_RUN`
+`T086_REAL_PROVIDER_LIVE_E5=NOT_RUN`
+**`T086_OFFICIAL_FINAL_PASS_LOCK=HOLD`**.
+
+**Permitted path:** reconcile original locked V3 check against separately reviewed T080/T079 source history **with independent security evidence and Founder-approved governance if the lock must change**, then rerun the unchanged original required protections (not merely alternate newer tests). The correction/deep-link query path needs separately scoped negative review. Do NOT deploy, revert, edit old tests or simulate genuine Article/Live provider events to get green. Founder currently has **no required manual step in backend preflight**. Do not start T087 Final as if T086 is locked.
