@@ -1,0 +1,457 @@
+{
+  "title": "P4-T089 immutable original Master Test Blueprint Section and Checkpoint Crosswalk",
+  "master_source": "JANTA_BOL_PHASE_4_MASTER_EXECUTION_PACK(20261101-074327).pdf Appendix B 109 Final Tests, 321 pages, Topic12 RUN15",
+  "master_sections_numeric": "340-1034",
+  "coded_groups": [
+    "GOV",
+    "GRV",
+    "CMP",
+    "TEAM",
+    "SOC",
+    "ADS",
+    "RECOV",
+    "ACC",
+    "SRCH"
+  ],
+  "source_type": "Exact appendix B 'Maps / Sections:' fields hand-collated from user supplied PDF; page breaks/footers normalized; TEST STATUS NOT inferred from mapping",
+  "full_master_requirements_1_to_1034_semantically_proven": false,
+  "full_code_duplicates_implementation_proven": false,
+  "records": [
+    {
+      "id": "P4-T001",
+      "master_map": "GOV-001, GOV-002, GOV-003, GOV-005, GOV-007, GOV-008, GOV-021, GOV-022"
+    },
+    {
+      "id": "P4-T002",
+      "master_map": "GOV-004, GOV-020, GOV-023"
+    },
+    {
+      "id": "P4-T003",
+      "master_map": "GOV-006, GOV-015, GOV-016, GOV-017, GOV-018, GOV-019"
+    },
+    {
+      "id": "P4-T004",
+      "master_map": "GOV-009 to GOV-014"
+    },
+    {
+      "id": "P4-T005",
+      "master_map": "GRV-002 to GRV-005"
+    },
+    {
+      "id": "P4-T006",
+      "master_map": "GRV-006 to GRV-009, GRV-036 to GRV-040, GRV-046"
+    },
+    {
+      "id": "P4-T007",
+      "master_map": "GRV-010 to GRV-016"
+    },
+    {
+      "id": "P4-T008",
+      "master_map": "GRV-017 to GRV-023"
+    },
+    {
+      "id": "P4-T009",
+      "master_map": "GRV-024 to GRV-030"
+    },
+    {
+      "id": "P4-T010",
+      "master_map": "GRV-031 to GRV-035"
+    },
+    {
+      "id": "P4-T011",
+      "master_map": "GRV-041 to GRV-045, GRV-047"
+    },
+    {
+      "id": "P4-T012",
+      "master_map": "GRV-048 to GRV-051"
+    },
+    {
+      "id": "P4-T013",
+      "master_map": "GRV-001, GRV-052, GRV-053"
+    },
+    {
+      "id": "P4-T014",
+      "master_map": "GRV-054 to GRV-058"
+    },
+    {
+      "id": "P4-T015",
+      "master_map": "CMP-001, CMP-002, CMP-024, CMP-032"
+    },
+    {
+      "id": "P4-T016",
+      "master_map": "CMP-003 to CMP-009, CMP-027"
+    },
+    {
+      "id": "P4-T017",
+      "master_map": "CMP-010 to CMP-013"
+    },
+    {
+      "id": "P4-T018",
+      "master_map": "CMP-014 to CMP-022"
+    },
+    {
+      "id": "P4-T019",
+      "master_map": "CMP-023, CMP-025, CMP-026, CMP-028 to CMP-031"
+    },
+    {
+      "id": "P4-T020",
+      "master_map": "CMP-033 to CMP-037"
+    },
+    {
+      "id": "P4-T021",
+      "master_map": "TEAM-001, TEAM-003 to TEAM-007"
+    },
+    {
+      "id": "P4-T022",
+      "master_map": "TEAM-002, TEAM-008 to TEAM-013, TEAM-028, TEAM-029"
+    },
+    {
+      "id": "P4-T023",
+      "master_map": "TEAM-014 to TEAM-019, TEAM-040"
+    },
+    {
+      "id": "P4-T024",
+      "master_map": "TEAM-020 to TEAM-027"
+    },
+    {
+      "id": "P4-T025",
+      "master_map": "TEAM-030 to TEAM-035"
+    },
+    {
+      "id": "P4-T026",
+      "master_map": "TEAM-036 to TEAM-039"
+    },
+    {
+      "id": "P4-T027",
+      "master_map": "TEAM-041 to TEAM-046"
+    },
+    {
+      "id": "P4-T028",
+      "master_map": "SOC-001 to SOC-008"
+    },
+    {
+      "id": "P4-T029",
+      "master_map": "SOC-009 to SOC-013"
+    },
+    {
+      "id": "P4-T030",
+      "master_map": "SOC-014 to SOC-019"
+    },
+    {
+      "id": "P4-T031",
+      "master_map": "SOC-020 to SOC-028"
+    },
+    {
+      "id": "P4-T032",
+      "master_map": "SOC-029 to SOC-031"
+    },
+    {
+      "id": "P4-T033",
+      "master_map": "SOC-032 to SOC-037"
+    },
+    {
+      "id": "P4-T034",
+      "master_map": "ADS-001 to ADS-009"
+    },
+    {
+      "id": "P4-T035",
+      "master_map": "ADS-010 to ADS-015"
+    },
+    {
+      "id": "P4-T036",
+      "master_map": "ADS-016 to ADS-023"
+    },
+    {
+      "id": "P4-T037",
+      "master_map": "ADS-024 to ADS-034"
+    },
+    {
+      "id": "P4-T038",
+      "master_map": "ADS-035 to ADS-040"
+    },
+    {
+      "id": "P4-T039",
+      "master_map": "ADS-041 to ADS-047"
+    },
+    {
+      "id": "P4-T040",
+      "master_map": "ADS-048 to ADS-050"
+    },
+    {
+      "id": "P4-T041",
+      "master_map": "ADS-051 to ADS-056"
+    },
+    {
+      "id": "P4-T042",
+      "master_map": "ADS-057 to ADS-060"
+    },
+    {
+      "id": "P4-T043",
+      "master_map": "Sections 340-345 and 352"
+    },
+    {
+      "id": "P4-T044",
+      "master_map": "Sections 346-351"
+    },
+    {
+      "id": "P4-T045",
+      "master_map": "Sections 353-360"
+    },
+    {
+      "id": "P4-T046",
+      "master_map": "Sections 361-370"
+    },
+    {
+      "id": "P4-T047",
+      "master_map": "Sections 371-374"
+    },
+    {
+      "id": "P4-T048",
+      "master_map": "Sections 375-381"
+    },
+    {
+      "id": "P4-T049",
+      "master_map": "Sections 382-387"
+    },
+    {
+      "id": "P4-T050",
+      "master_map": "Sections 388-394"
+    },
+    {
+      "id": "P4-T051",
+      "master_map": "Sections 395-405"
+    },
+    {
+      "id": "P4-T052",
+      "master_map": "Sections 406-411"
+    },
+    {
+      "id": "P4-T053",
+      "master_map": "Sections 412-422"
+    },
+    {
+      "id": "P4-T054",
+      "master_map": "Sections 423-426"
+    },
+    {
+      "id": "P4-T055",
+      "master_map": "Sections 427-433"
+    },
+    {
+      "id": "P4-T056",
+      "master_map": "Sections 434-450"
+    },
+    {
+      "id": "P4-T057",
+      "master_map": "Sections 451-466"
+    },
+    {
+      "id": "P4-T058",
+      "master_map": "Sections 467-469"
+    },
+    {
+      "id": "P4-T059",
+      "master_map": "Sections 470-480"
+    },
+    {
+      "id": "P4-T060",
+      "master_map": "Sections 481-487"
+    },
+    {
+      "id": "P4-T061",
+      "master_map": "Sections 488-497"
+    },
+    {
+      "id": "P4-T062",
+      "master_map": "Sections 498-516"
+    },
+    {
+      "id": "P4-T063",
+      "master_map": "Sections 517-533"
+    },
+    {
+      "id": "P4-T064",
+      "master_map": "Sections 534-543"
+    },
+    {
+      "id": "P4-T065",
+      "master_map": "Sections 544-550"
+    },
+    {
+      "id": "P4-T066",
+      "master_map": "Sections 551-556"
+    },
+    {
+      "id": "P4-T067",
+      "master_map": "Sections 557-561"
+    },
+    {
+      "id": "P4-T068",
+      "master_map": "Sections 562-566"
+    },
+    {
+      "id": "P4-T069",
+      "master_map": "RECOV-002 to RECOV-011; Sections 570-585"
+    },
+    {
+      "id": "P4-T070",
+      "master_map": "RECOV-012 to RECOV-018; Sections 586-599"
+    },
+    {
+      "id": "P4-T071",
+      "master_map": "RECOV-019 to RECOV-026; Sections 600-616"
+    },
+    {
+      "id": "P4-T072",
+      "master_map": "RECOV-027 to RECOV-032; Sections 617-622"
+    },
+    {
+      "id": "P4-T073",
+      "master_map": "RECOV-033 to RECOV-040; Sections 623-630"
+    },
+    {
+      "id": "P4-T074",
+      "master_map": "RECOV-041 to RECOV-043; Sections 631-637"
+    },
+    {
+      "id": "P4-T075",
+      "master_map": "RECOV-001, RECOV-044 to RECOV-052; Sections 567-569 and 638-656"
+    },
+    {
+      "id": "P4-T076",
+      "master_map": "Sections 657-666"
+    },
+    {
+      "id": "P4-T077",
+      "master_map": "Sections 667-676"
+    },
+    {
+      "id": "P4-T078",
+      "master_map": "Sections 677-685"
+    },
+    {
+      "id": "P4-T079",
+      "master_map": "Sections 686-691"
+    },
+    {
+      "id": "P4-T080",
+      "master_map": "Sections 692-700"
+    },
+    {
+      "id": "P4-T081",
+      "master_map": "Sections 701-709"
+    },
+    {
+      "id": "P4-T082",
+      "master_map": "Sections 710-721"
+    },
+    {
+      "id": "P4-T083",
+      "master_map": "Sections 722-734"
+    },
+    {
+      "id": "P4-T084",
+      "master_map": "Sections 735-751"
+    },
+    {
+      "id": "P4-T085",
+      "master_map": "Sections 752-764"
+    },
+    {
+      "id": "P4-T086",
+      "master_map": "Sections 765-772"
+    },
+    {
+      "id": "P4-T087",
+      "master_map": "Sections 773-783"
+    },
+    {
+      "id": "P4-T088",
+      "master_map": "Sections 784-792"
+    },
+    {
+      "id": "P4-T089",
+      "master_map": "Sections 793-804"
+    },
+    {
+      "id": "P4-T090",
+      "master_map": "Sections 805-818"
+    },
+    {
+      "id": "P4-T091",
+      "master_map": "Sections 819-824"
+    },
+    {
+      "id": "P4-T092",
+      "master_map": "ACC-001 to ACC-008; Sections 825-834"
+    },
+    {
+      "id": "P4-T093",
+      "master_map": "ACC-009 to ACC-012; Sections 835-844"
+    },
+    {
+      "id": "P4-T094",
+      "master_map": "ACC-013 to ACC-019; Sections 845-863"
+    },
+    {
+      "id": "P4-T095",
+      "master_map": "ACC-020 to ACC-024; Sections 864-874"
+    },
+    {
+      "id": "P4-T096",
+      "master_map": "ACC-025 to ACC-028; Sections 875-890"
+    },
+    {
+      "id": "P4-T097",
+      "master_map": "ACC-029 to ACC-035; Sections 891-902"
+    },
+    {
+      "id": "P4-T098",
+      "master_map": "ACC-036 to ACC-044; Sections 903-916"
+    },
+    {
+      "id": "P4-T099",
+      "master_map": "ACC-045 to ACC-051; Sections 917-923"
+    },
+    {
+      "id": "P4-T100",
+      "master_map": "SRCH-001 to SRCH-009; Sections 924-935"
+    },
+    {
+      "id": "P4-T101",
+      "master_map": "SRCH-010 to SRCH-021; Sections 936-964"
+    },
+    {
+      "id": "P4-T102",
+      "master_map": "SRCH-022 to SRCH-024; Sections 965-976"
+    },
+    {
+      "id": "P4-T103",
+      "master_map": "SRCH-025 to SRCH-036; Sections 977-999"
+    },
+    {
+      "id": "P4-T104",
+      "master_map": "SRCH-037 to SRCH-045; Sections 1000-1009"
+    },
+    {
+      "id": "P4-T105",
+      "master_map": "SRCH-046 to SRCH-050; Sections 1010-1014"
+    },
+    {
+      "id": "P4-T106",
+      "master_map": "SRCH-051 to SRCH-052; Sections 1015-1017"
+    },
+    {
+      "id": "P4-T107",
+      "master_map": "SRCH-053 to SRCH-058; Sections 1018-1023"
+    },
+    {
+      "id": "P4-T108",
+      "master_map": "SRCH-059 to SRCH-063; Sections 1024-1028"
+    },
+    {
+      "id": "P4-T109",
+      "master_map": "SRCH-064 to SRCH-069; Sections 1029-1034"
+    }
+  ]
+}
