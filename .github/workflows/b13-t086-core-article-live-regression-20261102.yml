@@ -29,7 +29,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r p; do
             case "$p" in
-              'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'|'.github/workflows/b13-t086-core-article-live-regression-20261102.yml') ;;
+              'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs'|'ci/phase4/b13-t086-v3-current-pin-review-proposal.test.cjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'|'.github/workflows/b13-t086-core-article-live-regression-20261102.yml') ;;
               *) echo "T086_OLD_PRODUCT_OR_PROTECTED_CI_SOURCE_CHANGED=$p"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -51,6 +51,13 @@ jobs:
           node --check ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
           node --test ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
           echo 'T086_NEW_V3_DIAGNOSTICS_NEVER_OVERRIDE_OLD_ORIGINAL_V3_FAILURE'
+      - name: Candidate same 10 original V3 checks with reviewed current SHA — PROPOSAL ONLY
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t086-v3-current-pin-review-proposal.test.cjs
+          echo 'T086_CURRENT_PIN_V3_PROPOSAL_ONLY_NOT_AN_OFFICIAL_REBASELINE'
+          echo 'ORIGINAL_V3_C1_OLD_GATE_STILL_FAIL_HARD_AND_MANDATORY'
       - name: Existing real backend VM synthetic Create-Draft-Publish CAS lost ACK Android reload
         shell: bash
         run: |
