@@ -1,0 +1,112 @@
+# B13 P4-T086 Topic12 / RUN15 original Core Article Lifecycle + Phase3 Live.
+# No production write, source-only regression plus original isolated PG17 inherited.
+name: B13 T086 Core Article / Share / Phase3 Live — READONLY + PG17
+on:
+  push:
+    branches: [codex/b13-t086-core-article-live-backend-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t086-core-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t086_source_core_regression:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T086 actual current source lifecycle + Phase3A/3B Live/Share security
+    runs-on: ubuntu-latest
+    timeout-minutes: 14
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Guard exact previous HEAD and no old Article/Auth/Live/News/SQL changes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=286decc4be4f3504043f2b139eb4d45f72d3d708
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r p; do
+            case "$p" in
+              'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs'|'ci/phase4/b13-t086-v3-current-pin-review-proposal.test.cjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'|'.github/workflows/b13-t086-core-article-live-regression-20261102.yml') ;;
+              *) echo "T086_OLD_PRODUCT_OR_PROTECTED_CI_SOURCE_CHANGED=$p"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T086_NO_PRODUCTION_OR_OLD_AUTH_ARTICLE_LIVE_CHANGE=PASS_SCOPED'
+      - name: 16 new Original RUN15 current-source guards including same UUID/PURL and Live state
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13-t086-article-share-live-source.test.mjs
+          node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+      - name: Frozen original V3 security source COMPATIBILITY diagnostics, not old-test substitution
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
+          node --test ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
+          echo 'T086_NEW_V3_DIAGNOSTICS_NEVER_OVERRIDE_OLD_ORIGINAL_V3_FAILURE'
+      - name: Candidate same 10 original V3 checks with reviewed current SHA — PROPOSAL ONLY
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t086-v3-current-pin-review-proposal.test.cjs
+          echo 'T086_CURRENT_PIN_V3_PROPOSAL_ONLY_NOT_AN_OFFICIAL_REBASELINE'
+          echo 'ORIGINAL_V3_C1_OLD_GATE_STILL_FAIL_HARD_AND_MANDATORY'
+      - name: Existing real backend VM synthetic Create-Draft-Publish CAS lost ACK Android reload
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+      - name: Existing original public Home Article C1, Share Search and outage regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+      - name: Original protected Phase3A/3B Live provider/status/failure STATIC evidence
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/functional-live-evidence.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          echo 'T086_PHASE3A_3B_LIVE_SERVER_ARCH_SOURCE_ONLY_PASS_SCOPED'
+      - name: Formal E3-E4-E5 and genuine Live provider acceptance are NOT established
+        run: |
+          echo 'T086_SOURCE_E1_SCOPED_ONLY'
+          echo 'T086_HOSTED_PUBLIC_ARTICLE_RLS_READ_SCOPED_ONLY'
+          echo 'T086_ACTUAL_FOUNDER_ARTICLE_CREATE_CORRECT_UNPUBLISH_REPUBLISH_E3_E4=NOT_RUN'
+          echo 'T086_ACTUAL_LIVE_PROVIDER_ENCODER_APPROVE_START_STOP_VIEWER_E5=NOT_RUN'
+          echo 'T086_DISTRICT_NAVIGATION_REAL_MULTI_CATEGORY_E5=NOT_RUN'
+          echo 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  t086_unchanged_old_v3_regression_hard_gate:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Original V3 C1 old-locked-source checker; any failure RED STOP
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Original immutable V3/C1 test executes, do NOT skip or rebaseline
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+  t086_inherited_full_disposable_pg17:
+    needs: t086_source_core_regression
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
