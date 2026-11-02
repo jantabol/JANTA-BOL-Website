@@ -22,7 +22,7 @@ jobs:
         with:
           persist-credentials: false
           fetch-depth: 0
-      - name: Enforce Founder exact five-file update scope; block old source or secret edits
+      - name: Enforce Founder exact six-file update scope; block old source or secret edits
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -30,7 +30,7 @@ jobs:
           test "$(git merge-base "$PARENT" HEAD)" = "$PARENT"
           while IFS= read -r path; do
             case "$path" in
-              'ci/phase4/b12/v3-c1-public-integration.test.cjs'|'ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs'|'ci/phase4/b13-t086-founder-a-v3-controlled-diff.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_FOUNDER_A_V3_CONTROLLED_BASELINE_20261102.md'|'.github/workflows/b13-t086-founder-a-controlled-v3-dual-gate-20261102.yml') ;;
+              'ci/phase4/b12/v3-c1-public-integration.test.cjs'|'ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs'|'ci/phase4/b13-t086-founder-a-v3-controlled-diff.test.mjs'|'ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_FOUNDER_A_V3_CONTROLLED_BASELINE_20261102.md'|'.github/workflows/b13-t086-founder-a-controlled-v3-dual-gate-20261102.yml') ;;
               *) echo "FOUNDER_A_UNAUTHORIZED_PRODUCT_OR_SECURITY_CHANGE=$path"; exit 1;;
             esac
           done < <(git diff --name-only "$PARENT" HEAD)
@@ -38,7 +38,7 @@ jobs:
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${VERCEL_TOKEN:-}"
           test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
-          echo 'FOUNDER_A_CONTROLLED_FIVE_FILE_SCOPE_PASS'
+          echo 'FOUNDER_A_CONTROLLED_SIX_FILE_SCOPE_PASS'
       - name: Pin unmodified historic 2026-10-29 original 10-case file and 3 old source SHAs
         shell: bash
         run: |
