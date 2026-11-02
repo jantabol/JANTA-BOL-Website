@@ -1,0 +1,181 @@
+# Original P4-T087 Topic12 RUN15 E1/E2/E5; CI/PG17 source checks are scoped ONLY.
+# No hosted credentials, real provider, live payment, release, or news mutations.
+name: B13 T087 Whole Phase4 Security Negatives — 13 Families + PG17 Preflight
+on:
+  push:
+    branches: [codex/b13-t087-whole-platform-security-preflight-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t087-whole-platform-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  original_phase4_security_and_functional:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T087 all 13 source modules + Founder/Article/Ads/Live/Recovery old negatives
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Explicit no product code or protected test modifications, no production secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=e5cb88f98ec6f5a7f9e71c6e4b1fa1291a74ee71
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              'ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs'|'.github/workflows/b13-t087-whole-platform-security-preflight-20261102.yml'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md') ;;
+              *) echo "T087_UNAUTHORIZED_PRODUCT_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T087_CURRENT_SOURCE_NO_OLD_LOCKED_WORK_MODIFIED=PASS'
+      - name: Original 109 selectors and 13 cross-module families remain intact
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs
+          node ci/phase4/governance-b0.cjs
+      - name: Existing B10 whole-platform source and original Auth/MFA/revoke/secret gates
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b10-whole-platform-security-source.test.mjs
+          node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
+          node --test ci/phase4/b10-t064-source-secrets-gate.test.mjs
+          node --test ci/phase4/b10-t067-incident-source-and-rca.test.mjs
+          node --test ci/phase4/b10-t068-evidence-reconciliation.test.mjs
+      - name: Original protected Phase3 Core/Auth/Incident/Recovery/Live suites
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+          node ci/phase3-regression/functional-live-evidence.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+      - name: Original B7 Ads/payment/revocation and B8 privacy/immutability/notifications/source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs
+          node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
+          node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
+          node --test ci/phase4/b8-t098-correction-notification-retention-source.test.mjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+          node --test ci/phase4/b8-g9-due-dashboard-android.test.mjs
+      - name: Original B9 Search/Analytics, B11 thirteen fault families and recovery safety
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
+          node --test ci/phase4/b11/t070-final-e8-gate.test.mjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+      - name: Original B12 Founder Auth, C1 original V3, Article PURL/CAS and T083 120/120
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node --test ci/phase4/b12/b0-b12-safe-source-integration.test.mjs
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+          node --test ci/phase4/b12/t077-purl-safety-readonly.test.cjs
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+          node --test ci/phase4/b13-t086-run15-lifecycle-full.test.mjs
+      - name: Scope truth — E1 source GREEN cannot fake real hosted full E2/E5
+        run: |
+          echo 'T087_13_MODULE_SOURCE_PROTECTED_SECURITY=PASS_SCOPED_IF_ALL_OLD_TESTS_GREEN'
+          echo 'T087_CURRENT_PRODUCTION_HOSTED_CROSS_ACCOUNT_HTTP=NOT_TESTED'
+          echo 'T087_ORIGINAL_COMPLETE_E1_E2_E5=HOLD'
+          echo 'T087_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  actual_b10_pg17_security_negatives:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: B10 original PG17 role/RLS/MFA/incident negatives (disposable only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: t087_synthetic_only
+          POSTGRES_DB: jb_t087_b10
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d jb_t087_b10"
+          --health-interval 2s --health-timeout 3s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGPORT: '5432'
+      PGUSER: postgres
+      PGPASSWORD: t087_synthetic_only
+      PGDATABASE: jb_t087_b10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Strict disconnected database/secret checks
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${DATABASE_URL:-}"
+          test -z "${VERCEL_TOKEN:-}"
+      - name: B9 original fixture + RLS/analytics migrations in isolated PG17
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261022_b9_search_analytics_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-pg17-regression.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b9-t105-large-archive-pg17.sql
+      - name: Original B10 cross-module anonymous/private/role negative matrix
+        run: psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-whole-platform-security-pg17.sql
+      - name: Original T061 Live session-Article binding and visibility negative
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t061_public_live_updates_privilege_SAFE_FIX.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t061-public-live-update-regression.sql
+      - name: Original T062 published/draft/role protection and revoked cross-reporter negative
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-article-version-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_article_version_owner_aal2_SAFE.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-cross-module-role-negative-regression.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-draft-exposure-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t062_reporter_cross_draft_read_SAFE.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t062-reporter-scope-regression.sql
+      - name: Original T063 revoked Recovery JWT negative and valid AAL1 recovery
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-fixture.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t063_recovery_revoked_session_guard_SAFE.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t063-recovery-revocation-regression.sql
+      - name: Original T065 stale Editor direct SQL write denial and valid session guard
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-repro-pg17.sql
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t065_stale_article_write_session_guard_REVIEW_ONLY.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-guard-regression-pg17.sql
+      - name: Original T067 immutable incident audit + T068 rollback source safety
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t068-rollback-safety-final-pg17.sql
+  protected_original_g0_g1_news_auth_ads:
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
