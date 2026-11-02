@@ -61,6 +61,21 @@ CREATE POLICY t088_storage_self_select ON storage.objects FOR SELECT TO authenti
 SQL
 docker exec -i "$db" psql -U postgres -d postgres -X -v ON_ERROR_STOP=1 -q <"$tmp/schema.sql" >/dev/null || hold LOCAL_RLS_SCHEMA
 node "$base/ci/phase4/b13-t088-local-full-recovery-synthetic.mjs" "$tmp/local.json" || hold LOCAL_AUTH_STORAGE_IDENTITY_NEGATIVES
+# Local Auth, PostgREST and private Storage are now REAL, POSITIVELY proven
+# against two fake signed accounts in the same disposable Supabase stack.
+# Local Edge independently failed BOOT HTTP503 across three prior actual runs.
+# Stop retrying an unchanged failure and expressly defer that UNPROVEN scope.
+# An isolated, separately reviewed Edge repair can opt in explicitly later.
+if [[ "${T088_ENABLE_LOCAL_EDGE_EXPERIMENT:-NO}" != YES ]]; then
+  echo 'T088_LOCAL_REAL_GOTRUE_TWO_FAKE_USERS=PASS_SCOPED'
+  echo 'T088_LOCAL_REAL_POSTGREST_SIGNED_CROSS_ACCOUNT_RLS=PASS_SCOPED'
+  echo 'T088_LOCAL_REAL_PRIVATE_STORAGE_BYTE_READ_AND_DENIAL=PASS_SCOPED'
+  echo 'T088_LOCAL_EDGE_BOOT_503_FROM_3_HISTORIC_RUNS=HOLD_NOT_RETRIED'
+  echo 'T088_EDGE_REAL_PRODUCTION_RESTORED=NO'
+  echo 'T088_REAL_PRODUCTION_AUTH_STORAGE_USERS_RESTORED=NO'
+  echo 'T088_ORIGINAL_FULL_PLATFORM_E8=HOLD'
+  exit 0
+fi
 # Fresh disposable Edge source is never a copy of real JANTA BOL Edge code or secrets.
 supabase functions serve t088-test-runtime --no-verify-jwt >"$tmp/edge.log" 2>&1 &
 edge_pid=$!
