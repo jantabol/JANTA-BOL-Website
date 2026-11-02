@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'ci/phase4/b13-t088-local-full-recovery-synthetic.sh'|'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'ci/phase4/b13-t088-local-full-recovery-synthetic.sh'|'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs'|'ci/phase4/b13-t088-vercel-public-source-reconstruction.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
               *) echo "T088_RED_UNAUTHORIZED_PRODUCT_BACKUP_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -175,3 +175,24 @@ jobs:
           echo 'T088_SYNTHETIC_GO_TRUE_POSTGREST_STORAGE=PASS_SCOPED'
           echo 'T088_SYNTHETIC_EDGE_LOCAL_BOOT_503=HOLD_NOT_RETRIED'
           echo 'T088_ORIGINAL_FULL_PLATFORM_E8=HOLD'
+
+  t088_offline_deployed_static_site_restore:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Exact deployed SHA static site restore vs live HTTPS bytes (no Vercel deploy)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Reconstruct local site from deployed SHA; compare bytes and security headers
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          node ci/phase4/b13-t088-vercel-public-source-reconstruction.mjs
+          echo 'T088_REAL_VERCEL_DEPLOYMENT_PROMOTED=NO'
+          echo 'T088_PROD_AUTH_EDGE_VERCEL_FULL_RESTORE=NOT_RUN'
