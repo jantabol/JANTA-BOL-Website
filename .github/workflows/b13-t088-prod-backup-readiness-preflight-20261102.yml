@@ -1,0 +1,105 @@
+# P4-T088 RUN15 (sections 784-792). Source E1, real public HTTPS E6-slice.
+# E3 real Android + E6 auth/provider + E8 real backup restore are NOT supplied by CI.
+name: B13 T088 Production Backup Recovery Android Readiness — Protected Preflight
+on:
+  push:
+    branches: [codex/b13-t088-prod-backup-recovery-preflight-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t088-production-readiness-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  original_t088_source_and_locked_baseline:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Original T088 RUN15 E1, B11 E8, Phase3/B12 and T087 preserved
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: No changes to product / originals / DB / backup workflows, no production secrets
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=48260e31e8e69dc12d6905c5765b0341f3538192
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
+              *) echo "T088_RED_UNAUTHORIZED_PRODUCT_BACKUP_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T088_ORIGINAL_PRODUCTION_AND_BACKUP_CODE_IMMUTABLE=PASS'
+      - name: Original T088 784-792 four evidence classes contract and integrity
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs
+      - name: Re-run unchanged Phase3 security + backup/recovery + incident originals
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+      - name: B11 T070 real restore gate (isolated source only) and T071 failure matrix
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t070-final-e8-gate.test.mjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+      - name: B12 original Android news + Admin Auth + published Truth + B13 old Core/Security source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b13-t086-run15-lifecycle-full.test.mjs
+          node --test ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs
+      - name: Honest E1-only conclusion
+        run: |
+          echo 'T088_SOURCE_AND_OLD_CI_E1=PASS_SCOPED_IF_ALL_GREEN'
+          echo 'T088_REAL_PHONE_TABLET_E3=NOT_TESTED_BY_THIS_JOB'
+          echo 'T088_REAL_PROVIDER_API_E6=NOT_TESTED_BY_THIS_JOB'
+          echo 'T088_REAL_JOINT_DB_MEDIA_RESTORE_E8=NOT_TESTED_BY_THIS_JOB'
+          echo 'T087_ORIGINAL_SIGNED_HOSTED_E2_AND_COMPLETE_E5=DUE'
+          echo 'T088_FINAL_PASS_LOCK=HOLD'
+  current_public_https_readonly_smoke:
+    name: Current public jantabol.in real HTTPS GET, no login/API/DB writes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: GET current real public HTTPS domain with verified TLS, no secrets or writes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${DATABASE_URL:-}"
+          home="$RUNNER_TEMP/t088_public_home.html"
+          read -r code url tlsverify < <(curl --silent --show-error --location --retry 2 --retry-delay 1 \
+            --connect-timeout 12 --max-time 35 --proto '=https' --tlsv1.2 \
+            --output "$home" --write-out '%{http_code} %{url_effective} %{ssl_verify_result}' \
+            'https://jantabol.in/')
+          test "$code" = 200 || { echo "T088_PRODUCTION_HTTPS_UNEXPECTED_STATUS=$code"; exit 1; }
+          test "$tlsverify" = 0 || { echo "T088_PRODUCTION_TLS_VERIFY_FAILED"; exit 1; }
+          case "$url" in https://jantabol.in/*) ;; *) echo "T088_UNEXPECTED_FINAL_ORIGIN=$url"; exit 1;; esac
+          grep -Eiq 'JANTA.BOL|जनता बोल|JANTA-BOL' "$home" || { echo 'T088_PUBLIC_BRAND_NOT_FOUND'; exit 1; }
+          test "$(wc -c < "$home")" -gt 500 || { echo 'T088_PUBLIC_HOME_TOO_SMALL'; exit 1; }
+          echo "T088_REAL_PUBLIC_DOMAIN_HTTPS_TLS_GET=PASS_SCOPED"
+          echo "T088_REAL_AUTH_API_DB_PROVIDER_OR_RESTORE=NOT_PROVEN_BY_PUBLIC_GET"
+  protected_phase3_news_auth_existing:
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
