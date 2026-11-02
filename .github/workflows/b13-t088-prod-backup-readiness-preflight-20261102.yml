@@ -172,5 +172,6 @@ jobs:
         run: |
           set -Eeuo pipefail
           bash ci/phase4/b13-t088-local-full-recovery-synthetic.sh
-          echo 'T088_SYNTHETIC_GO_TRUE_POSTGREST_STORAGE=PASS_SCOPED'\n          echo 'T088_SYNTHETIC_EDGE_LOCAL_BOOT_503=HOLD_NOT_RETRIED'
+          echo 'T088_SYNTHETIC_GO_TRUE_POSTGREST_STORAGE=PASS_SCOPED'
+          echo 'T088_SYNTHETIC_EDGE_LOCAL_BOOT_503=HOLD_NOT_RETRIED'
           echo 'T088_ORIGINAL_FULL_PLATFORM_E8=HOLD'
