@@ -82,3 +82,41 @@ assert.ok(unknownResult && Array.isArray(unknownResult.items),'Unknown UUID must
 assert.equal(unknownResult.items.length,0,'T088_UNKNOWN_UUID_MUST_NOT_FALLBACK_TO_FEED');
 console.log('T088_REAL_HOSTED_NONEXISTENT_ARTICLE_UUID_EMPTY=PASS_SCOPED');
 console.log('T088_SIGNED_TWO_ACCOUNT_AUTH_PRIVATE_API_E2=NOT_RUN');
+
+
+// E6: a REAL published article permalink must resolve to the same UUID/slug
+// via public PostgREST, and the canonical HTML article client must load over TLS.
+// This checks public network identity and route, not JavaScript rendering on
+// Android or a complete Founder/Reporter publication action.
+const selected=data.items[0];
+const byId=new URL('/rest/v1/rpc/jb_c1_public_articles',config.url);
+byId.searchParams.set('p_article_id',selected.id);
+byId.searchParams.set('p_limit','1');
+const details=await fetch(byId,{
+ method:'GET',redirect:'error',
+ headers:{apikey:config.publishableKey,accept:'application/json'},
+ signal:AbortSignal.timeout(20000)
+});
+assert.equal(details.status,200,'T088_PUBLIC_ARTICLE_BY_UUID_HTTP='+details.status);
+const projection=await details.json();
+assert.ok(projection && Array.isArray(projection.items) && projection.items.length===1,
+ 'T088_PUBLISHED_ARTICLE_ID_MUST_MATCH_UNIQUE');
+assert.equal(projection.items[0].id,selected.id,'T088_PURL_ID_DRIFT');
+assert.equal(projection.items[0].slug,selected.slug,'T088_PURL_SLUG_DRIFT');
+assert.equal(projection.items[0].status,'published');
+
+const page=new URL('/JANTA_BOL_PHASE_3C_WORKING/article.html','https://jantabol.in');
+page.searchParams.set('id',selected.id);
+const html=await fetch(page,{
+ method:'GET',redirect:'error',
+ headers:{accept:'text/html'},
+ signal:AbortSignal.timeout(20000)
+});
+assert.equal(html.status,200,'T088_PUBLIC_PERMALINK_HTTP_STATUS='+html.status);
+const markup=await html.text();
+assert.ok(markup.includes('JANTA') && markup.includes('JBPublicC1.get(id)') &&
+ markup.includes("params.get('id')"),
+ 'T088_PUBLIC_PERMALINK_ID_RENDER_PATH_MISSING');
+console.log('T088_LIVE_PUBLIC_ARTICLE_PURL_UUID_SLUG_IDENTICAL=PASS_SCOPED');
+console.log('T088_LIVE_PUBLIC_ARTICLE_HTML_GET=PASS_SCOPED');
+console.log('T088_ANDROID_TWO_DEVICE_JS_RENDERING=NOT_TESTED_BY_CI');
