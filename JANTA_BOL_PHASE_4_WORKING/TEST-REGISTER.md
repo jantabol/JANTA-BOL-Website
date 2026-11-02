@@ -107,7 +107,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T084 | Final Closure | Final Test Governance + Status Integrity | B13 | NOT RUN — FINAL |
 | P4-T085 | Final Closure | Cross-Module Integration Boundary Test | B13 | NOT RUN — FINAL |
 | P4-T086 | Final Closure | Core Article Lifecycle + Live Regression | B13 | PASS |
-| P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | EVIDENCE LOCKED (E1 + scoped E2 SQL) — hosted signed E2/complete E5 DUE; official full PASS+LOCK HOLD |
+| P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | SCOPED PASS+LOCK (E1 CI + E2 SQL role/MFA/Reporter/UI + disposable revoked Owner/Admin RED-GREEN) — signed hosted E2 + complete E5 DUE; original FINAL PASS+LOCK HOLD |
 | P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | NOT RUN — FINAL |
 | P4-T089 | Final Closure | Nothing-Missing / Nothing-Duplicated + Official Records Audit | B13 | NOT RUN — FINAL |
 | P4-T090 | Final Closure | Failure Repair + Unresolved/DUE + Final Build Readiness | B13 | NOT RUN — FINAL |
@@ -1563,3 +1563,12 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 - **Known DUE unchanged:** hosted real signed multi-account + revoked-session HTTP E2; lifecycle audit/notification/retention complete E5; SECURITY DEFINER RPC linter warning review; upstream B10, B8 and B11 real-world proof. `T087_LOCK_KIND=SCOPED_EVIDENCE_ONLY`, `T087_ORIGINAL_FINAL_PASS_LOCK=HOLD`.
 - **Safety:** T086 authentic individual PASS+LOCK untouched; no old source/DB/production/deployment modified, no Android repeat, no payment, no privileged credentials, no fabricated response or final closure.
 - Review: `review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md`; PR #111. T088 preparation may be planned, but cannot claim full B13 acceptance or bypass T087 outstanding release gate.
+
+
+### P4-T087 — Founder scoped evidence LOCK of completed security regression — 2026-11-02
+- **Founder requested lock** after new original-role stale-session risk was found and the candidate fix was proven. Final acceptance cannot be upgraded based on missing E2/E5; lock only the **executed E1 + scoped E2** evidence. This preserves original whole-platform RUN15 E1+E2+E5 mandatory rules.
+- Exact candidate **`3c1e1aaa067370d36421e363339603d894286708`**, GitHub Actions run **`41438967100` COMPLETED/SUCCESS** with all 4 required jobs SUCCESS, optional full historical ZIP SKIPPED. New **real disposable PG17 RED→GREEN** reproduces revoked Owner own-role and revoked Admin role-enumeration source-policy issues; proposed hardened policies deny the invalid sessions **without breaking active Owner AAL1/active Admin**; all work is synthetic and `ROLLBACK`. Job log: `T087_DISPOSABLE_PG17_REVOKED_OWNER_AND_ADMIN_RED_GREEN=PASS_SCOPED`, `T087_PRODUCTION_RLS_NOT_MODIFIED=PASS`. Earlier fixture failures were fixed, not converted into successful historical results.
+- Actual connected production read-only RLS SQL role-context checks (Reporter/Owner, AAL1/AAL2, nonexistent session) and user's Reporter UI login/recheck screenshots are **scoped evidence LOCKED**; these are NOT **cryptographically signed live hosted Owner-v-Reporter/bearer negative responses**.
+- E5 evidence (Article versions+Audit, 156/160 matching in-app notification/audit rows, incomplete B8 case/event and delivery) is **partial and LOCKED only for verified facts**. No actual external delivery/recovery or complete 13-module E5 asserted.
+- Review-only candidate `review/b13_t087_user_roles_revoked_session_REVIEW_ONLY.sql` **NOT DEPLOYED**, existing production policy remains untouched and outstanding. Repo Draft PR #111 NOT MERGED; no Release. Need explicit production rollout authorization, E2 signed HTTP positive/negative with distinct authorized identities, complete E5 before full acceptance.
+- **`P4_T087_E1_AND_SCOPED_E2_AND_DISPOSABLE_FIX=PASS_LOCK`**; **`P4_T087_FINAL_ORIGINAL_WHOLE_PLATFORM=HOLD`**; T088/B13 full release unaffected. T086 PASS+LOCK untouched.
