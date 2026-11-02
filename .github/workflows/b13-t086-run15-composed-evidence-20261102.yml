@@ -28,7 +28,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r file; do
             case "$file" in
-              'ci/phase4/b13-t086-run15-lifecycle-full.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md'|'.github/workflows/b13-t086-run15-composed-evidence-20261102.yml') ;;
+              'ci/phase4/b13-t086-run15-lifecycle-full.test.mjs'|'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'ci/phase4/b13/history/b13-t086-article-share-live-source-20261102-pre-lock.mjs'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md'|'.github/workflows/b13-t086-run15-composed-evidence-20261102.yml') ;;
               *) echo "T086_NEW_UNAUTHORIZED_DIFF=$file"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -36,6 +36,17 @@ jobs:
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${VERCEL_TOKEN:-}"
           echo 'T086_ORIGINAL_PRODUCT_AUTH_NEWS_LIVE_HASHES_UNCHANGED=PASS'
+      - name: Original 16 pre-lock T086 checks unchanged on their EXACT original Green source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BEFORE=0c60a8d80baca0c8d0ddb512b816bbd17333fe14
+          test "$(git rev-parse HEAD:ci/phase4/b13/history/b13-t086-article-share-live-source-20261102-pre-lock.mjs)" = 6b4eb60c09f507a5f475129c2cb30198b8537f82
+          test "$(git rev-parse "$BEFORE:ci/phase4/b13-t086-article-share-live-source.test.mjs")" = 6b4eb60c09f507a5f475129c2cb30198b8537f82
+          PRELOCK="$RUNNER_TEMP/t086-pre-lock-historical-source"
+          git worktree add --detach "$PRELOCK" "$BEFORE"
+          (cd "$PRELOCK" && node --test ci/phase4/b13-t086-article-share-live-source.test.mjs)
+          echo 'T086_ORIGINAL_PRE_LOCK_T086_16_UNCHANGED=PASS_SCOPED'
       - name: Execute real current backend in isolated VM complete 5-state cycle
         shell: bash
         run: |
@@ -67,7 +78,9 @@ jobs:
           echo 'E5=REAL AUDIT/HISTORY/LIFECYCLE RECORD'
           echo 'E6=REAL PROVIDER EXTERNAL PROOF (NOT A T086 REQUIRED EVIDENCE)'
           echo 'T086_EXTERNAL_LIVE_PROVIDER_RUNTIME=DUE_NOT_FAKED'
-          echo 'T086_RUNNING_NEW_CANDIDATE_NOT_YET_FINAL_LOCK'
+          echo 'T086_ORIGINAL_RUN15_E1_E3_E4_E5=PASS_LOCK_SCOPED'
+                    echo 'T086_LIVE_REAL_EXTERNAL_PROVIDER=DUE_AS_BLUEPRINT_EXPLICITLY_ALLOWS'
+                    echo 'T086_B13_GLOBAL_T091_FINAL=HOLD'
   protected_actual_disposable_pg17:
     needs: run15_original_lifecycle_e1
     uses: ./.github/workflows/b12-b8-reconciled-protected.yml
