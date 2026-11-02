@@ -17,9 +17,9 @@ T086 PASS wording: **"Article ID/PURL stays unchanged; share/navigation/home/cat
 **Existing 2026-11-02 actual GitHub Actions (all GREEN at exact heads):**
 - `#41391242714` SHA `edecc6290a0c87e36b7510dafffa11f4ad74e9f3`: original frozen V3 O ten/ten against authentic old source, approved A1 ten/ten + 8 exact-delta + 12 strict redirect, current A2 canonical V3 ten/ten + 20 strict security negative, original T077 and Founder AAL2, T080 Android lost-ACK/Owner CAS, T083 **120/120**, Phase-3A/3B original Live architecture functional/static, old News/Auth/B7 and actual disposable PostgreSQL17 G0/G1 SUCCESS. ZIP generation was SKIPPED, never release PASS.
 - `#41391884335` SHA `af584fdd6cd83d254a62719c35921921bee435d9`: release-scope **9 product files different vs currently deployed jantabol.in**; **one** guarded nav-only change vs latest isolated T097 preview, old Auth/News/Live unchanged. **Do not deploy stacked Draft branch as if one-file Production hotfix.**
-- New `ci/phase4/b13-t086-run15-lifecycle-full.test.mjs` **actual current Backend JS executed in isolated Node VM**, fake only: explicit Create → Draft → Publish → Correction (synthetic headline) → Unpublish → Republish, original UUID + same slug + version CAS, no duplicate row, history snapshots, reject stale correction and unpublish, reject non-Owner, keep published editor from auto-saving to Draft, canonical Share URL unchanged. **New exact-head CI pending**; no sandbox/synthetic News goes into real JANTA BOL DB.
+- New `ci/phase4/b13-t086-run15-lifecycle-full.test.mjs` **actual current Backend JS executed in isolated Node VM**, fake only: explicit Create → Draft → Publish → Correction (synthetic headline) → Unpublish → Republish, original UUID + same slug + version CAS, no duplicate row, history snapshots, reject stale correction and unpublish, reject non-Owner, keep published editor from auto-saving to Draft, canonical Share URL unchanged. **Actual CI #41395283225 COMPLETED SUCCESS** at reviewed E1 source SHA `0c60a8d80baca0c8d0ddb512b816bbd17333fe14`: all **6/6** new real-current-backend-in-VM lifecycle cases PASS; inherited 16/16 T086 source, strict Founder/MFA A2, T080 CAS/retry, T083 original **120/120** and Phase3 Live source PASS; genuine PostgreSQL17 G0/G1 and older Phase3 News/Auth/B7 SUCCESS (ZIP packaging SKIPPED). This is synthetic E1 only; no sandbox/synthetic News entered real JANTA BOL DB.
 
-**E1 status:** `T086_RUN15_E1_EXISTING_PROTECTED_CI=PASS_SCOPED`; `T086_RUN15_E1_NEW_CURRENT_FULL_LIFECYCLE_VM=CI_PENDING`.
+**E1 status:** `T086_RUN15_E1_EXISTING_PROTECTED_CI=PASS_SCOPED`; `T086_RUN15_E1_NEW_CURRENT_FULL_LIFECYCLE_VM=PASS_SCOPED_6_OF_6_CI_41395283225`.
 
 ## E3 — four genuine Android Chrome device proofs, no repeats
 **Founder-provided screenshots Nov 2, 2026 IST**:
@@ -49,15 +49,21 @@ Original Phase3A/3B Live source and protected old regressions were executed at r
 `T086_ACTUAL_FACTUAL_CONTENT_CORRECTION=NOT_CLAIMED`.
 `T086_POST_MFA_EXPIRED_SESSION_CORRECTION_DEEPLINK_REAL_DEVICE=DUE`: separate reviewed strict navigation patch in **Draft PR #108** is **NOT MERGED OR DEPLOYED**, so the 10:41 in-session Android Correction Editor screenshot is not evidence that an expired-session deep link has passed live. The in-session editor itself was tested.
 `T086_PRODUCTION_DEPLOY_MERGE_AUTHORITY=NOT_GRANTED`, `T086_B13_WHOLE_PLATFORM_FINAL_CLOSURE=HOLD`, original test execution order P4-T092–T109 final dependencies not auto-closed.
-**Controlled T086 RUN-15 auto/core regression can be individually PASS+LOCK only when new mandatory exact-head CI is SUCCESS and all four original evidence classes above are present.** This does not close live Production launch, B8 T098 real factual correction, B13 T088 backup/real-device full commissioning or later T091 final all-tests gate.
+**Controlled T086 RUN-15 auto/core regression original required E1/E3/E4/E5 are now independently present and new mandatory CI is SUCCESS. Founder-authorized T086 AUTO/CORE REGRESSION is eligible for individual PASS + LOCK, without declaring actual Provider Live, actual factual correction or B13 global final release tested.** This does not close live Production launch, B8 T098 real factual correction, B13 T088 backup/real-device full commissioning or later T091 final all-tests gate.
 
-## Candidate final verdict (requires actual CI)
-`T086_E1=PASS_SCOPED_EXISTING_CI + PENDING_NEW_FULL_LIFECYCLE_CI`
+## Official individual RUN-15 original evidence verdict — Founder requested PASS + LOCK
+`T086_E1=PASS_SCOPED_EXISTING_CI + PASS_SCOPED_NEW_FULL_LIFECYCLE_6_6`
 `T086_E3=PASS_SCOPED_REAL_ANDROID`
 `T086_E4=PASS_SCOPED_REAL_ARTICLE_ID_PURL`
 `T086_E5=PASS_SCOPED_REAL_AUDIT_HISTORY`
 `T086_LIVE_EXTERNAL_PROVIDER_RUNTIME=DUE`
-`T086_CORE_RUN15_INDIVIDUAL_FINAL_LOCK=CI_PENDING`
+`T086_CORE_RUN15_INDIVIDUAL_FINAL_LOCK=PASS+LOCK`
 `T086_B13_GLOBAL_FINAL_CLOSURE=HOLD`
 
 **No Founder manual step. No production writes or deployment by this work.**
+
+### Auditable prior failure and correction
+Initial new VM CI `#41395197337` was RED **5/6** because its newly written test expected `publishedAt=null` from the normalized UI object after Unpublish; the actual source deliberately normalizes a missing publish timestamp to an empty string. It was corrected without loosening the persisted DB check: `db.articles[UUID].published_at === null` must hold, and UI may show empty publishedAt. The exact next run `#41395283225` verified **6/6 PASS and all legacy/PG17 green**. Do not reclassify the old failed run as green.
+
+**Exact scope of lock:** T086 original class **AUTO / CORE REGRESSION** (source + real mobile read + immutable ID/PURL + actual audit transitions). This is an **individual test** LOCK, not B13 Global Final Closure PASS. Actual Live provider/encoder outside T086 E1/E3/E4/E5 remains explicitly **DUE** per original PASS condition; no claim that a Live went on air. Actual public factual article correction NOT_CLAIMED; synthetic correction E1 + real published/draft/republished audit E5 preserve identity. Draft PR source is not deployed; Owner permissions, original Article IDs, Production domain and News unchanged.
+
