@@ -129,3 +129,24 @@ Connected Vercel **non-decrypted** environment-key inventory: `JB_PUBLIC_SUPABAS
 - **Upstream T087**: scoped PASS+LOCK evidence preserved, original hosted signed cross-account/revoked bearer E2 + complete E5 still release-blocking.
 
 **Official T088 final status: `IN_PROGRESS / FULL PASS+LOCK HOLD`.** No policy/News/Auth/Live/Ads/backup/production change or paid service. No Founder manual step for this read-only CI/manifest checkpoint; all unavailable real-world proofs must remain unclaimed until executed.
+
+
+## T088 E6 current GoTrue + YouTube integration **configuration**, E3 historical real-device proof reconciliation
+
+### Public GoTrue Auth actual HTTP health (not a signed-user test)
+Protected GitHub Action run **[#41450647564](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41450647564)** at source SHA `0a36cc3030efb9b96083eaa0b27493193b33d7a0`; *real* `https://vrffsnkycvjithwtiylt.supabase.co/auth/v1/health` authenticated only by public publishable key (no login, password, refresh, session or private data). Runner received **HTTP 200 JSON**, marker `T088_REAL_GOTRUE_PUBLIC_HEALTH_GET=PASS_SCOPED`. This verifies currently reachable GoTrue public health, **NOT a valid Owner/Reporter JWT, AAL2, revoked-bearer behavior or independent GoTrue recovery**. No user was logged in, sessions not modified.
+
+### Real production YouTube connection metadata only — no credential extraction or stream
+Connected Supabase SQL SELECT-only `public.youtube_integration` row, Nov 2: `provider=youtube`, `connection_state=CONNECTED`, `control_auth_state=OK`, `credential_incident_state=CLEAR`, `last_refresh_status=OK`; `last_verified_at=2026-10-29 15:26:57 UTC`, `connected_at=2026-10-29 14:05:41 UTC`. **Connected historical state as of last stored verification**, not present Google token validity or video playback proof. No OAuth refresh attempted, no provider secrets selected.
+- `public.live_sessions`: 14 `ENDED/OFF`, one `READY/OFF`, one `WAITING_SIGNAL/OFF` — **16/16 public_status OFF**, and no successful real public Live broadcast evidenced by this check.
+- `public.live_operations` history: 63 `SUCCEEDED`, 10 `CANCELLED_STALE`, 2 `FAILED_NEEDS_ATTENTION`; counts are historical queue operations only, not proof of real public stream.
+- **`T088_E6_AUTH_HEALTH_AND_YOUTUBE_CONNECTION_METADATA=PASS_SCOPED_CONFIG_ONLY`**, `T088_E6_REAL_GOOGLE_ENCODER_STREAM_VIEWER_PLAYBACK=NOT_RUN`, `T088_E6_SIGNED_PRIVATE_OWNER_REPORTER_REQUESTS=NOT_RUN`.
+
+### E3 prior actual Android checks — reuse without pointless repeated Founder actions
+- `review/P4_T070_G17_ANDROID_PHONE_TABLET_SAMPLED_DRAFT_SYNC_20261026.md`: Founder Android Phone + Android Tablet independently displayed **same existing draft SYNCED Version 2**, visually no conflict or queued error. This is a **sample** and those screenshots used Preview-style UI; no second capture requested.
+- `review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md`: Nov2 Founder real Android Owner published article editor, public original PURL read, native Share sheet, and Incognito original read. Live DB versions/audit were separately matched, no new fake News publish performed.
+- T087 PR #111: Nov2 Android Tablet Reporter workspace authenticated and rechecked ("सत्यापित उपयोगकर्ता: संवाददाता"). This is real Reporter **role UI positive control**, not two distinct signed HTTP/IDOR denial tests.
+- **`T088_E3_PHONE_TABLET_HISTORY_SAMPLED=PASS_SCOPED_REUSED`**; **`T088_E3_NEW_CURRENT_COMPLETE_TWO_DEVICE_PUBLISHING_OWNER_REPORTER_AUDIT=NOT_RUN`**. A genuine planned/current real editorial article handoff is required to validate the full operational workflow, but should not be invented, or performed on public News without Founder editorial choice.
+
+### No false finish / precise next safe action
+At this checkpoint, there is **no missing Backend source preflight** that can legitimately replace a full independent GoTrue/Edge/Vercel environment recovery or a real Phone+Tablet publishing operation. No private JWT/session or OAuth credential will be pasted in a chat. Full T088 Final PASS+LOCK remains `HOLD` until original E3+E6+E8, with upstream T087 signed E2/complete E5 separately unresolved. Work remains safe and read-only to production; latest reported test evidence is linked to actual Actions run, no original locked product/testing source edits.
