@@ -79,6 +79,26 @@ done
 if [[ "$ready" != 1 ]]; then
   # Safe diagnostics: status only, never echo local credentials/log bodies.
   echo "T088_EDGE_RUNTIME_LAST_HTTP_STATUS=$last_status"
+  # Emit only a classified failure reason; NEVER print local project credentials
+  # or raw Edge log/HTTP response content in public CI.
+  node -e '
+    const fs=require("node:fs");
+    let raw="";
+    for(const p of process.argv.slice(1)){
+      try{raw+="\n"+fs.readFileSync(p,"utf8").toLowerCase()}catch{}
+    }
+    const flags={
+      BOOT_ERROR:raw.includes("boot_error"),
+      MODULE_NOT_FOUND:raw.includes("module not found")||raw.includes("no such file"),
+      PATH_NOT_FOUND:raw.includes("not found")||raw.includes("not_found"),
+      INVALID_JWT:raw.includes("invalid jwt"),
+      PORT_ALREADY_IN_USE:raw.includes("address already in use")||raw.includes("port already in use"),
+      WORKER_ERROR:raw.includes("worker_error"),
+      RUNTIME_UNAVAILABLE:raw.includes("runtime unavailable")||raw.includes("unavailable"),
+      WASM_ERROR:raw.includes("wasm")&&raw.includes("error")
+    };
+    console.log("T088_EDGE_FAILURE_CLASS="+(Object.entries(flags).filter(([,v])=>v).map(([k])=>k).join("_")||"UNCLASSIFIED"));
+  ' "$tmp/edge.log" "$tmp/edge-response.json"
   hold EDGE_RUNTIME_HTTP_NOT_READY
 fi
 echo 'T088_LOCAL_ACTUAL_AUTH_TWO_USER_SESSION=PASS_SCOPED_SYNTHETIC'
