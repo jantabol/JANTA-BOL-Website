@@ -29,7 +29,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r p; do
             case "$p" in
-              'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'|'.github/workflows/b13-t086-core-article-live-regression-20261102.yml') ;;
+              'ci/phase4/b13-t086-article-share-live-source.test.mjs'|'ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'|'.github/workflows/b13-t086-core-article-live-regression-20261102.yml') ;;
               *) echo "T086_OLD_PRODUCT_OR_PROTECTED_CI_SOURCE_CHANGED=$p"; exit 1;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -44,6 +44,13 @@ jobs:
           set -Eeuo pipefail
           node --check ci/phase4/b13-t086-article-share-live-source.test.mjs
           node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+      - name: Frozen original V3 security source COMPATIBILITY diagnostics, not old-test substitution
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
+          node --test ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
+          echo 'T086_NEW_V3_DIAGNOSTICS_NEVER_OVERRIDE_OLD_ORIGINAL_V3_FAILURE'
       - name: Existing real backend VM synthetic Create-Draft-Publish CAS lost ACK Android reload
         shell: bash
         run: |
