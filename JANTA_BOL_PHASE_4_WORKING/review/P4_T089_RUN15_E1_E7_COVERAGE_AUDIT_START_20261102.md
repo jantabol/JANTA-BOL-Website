@@ -25,3 +25,17 @@
 ## Controls / restrictions
 
 No source implementation/Live production/site Auth/Ads/Public News/SQL/Storage/Edge/DNS secrets/cron changes; no merge to main, no paid services. Only an append-only audit dossier, candidate Evidence Index, narrow record appendix and protected source CI changes in a **stacked Draft PR**. No founder Android manual step. Never print credentials, publicize private source, or equate current candidate index with official PASS.
+
+
+## E7 original 321-page Master PDF Appendix B — exact requirement-address crosswalk check (added 2026-11-02)
+
+Authorized Library document `JANTA_BOL_PHASE_4_MASTER_EXECUTION_PACK(20261101-074327).pdf`, Appendix B 109 Final Tests, was **actually parsed**, not extrapolated from filenames. The exact `Maps / Sections:` mapping for all **109** original T001–T109 tests was normalized for PDF page-break noise and recorded, without code or personal secrets, in `review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`.
+
+**Real source mapping findings** (requirement address, not implementation/pass proof):
+- Numeric **Sections 340–1034 (695 distinct section IDs)** are each linked to **exactly one** original P4 test: **zero gaps, zero duplicate target assignments**. Critical split ranges `T043` section 352 and `T075` sections 638–656 are counted, not accidentally orphaned.
+- **433 distinct coded checkpoint IDs** mapped exactly once, with no within-prefix gap, in **9** families: `GOV 23`, `GRV 58`, `CMP 37`, `TEAM 46`, `SOC 37`, `ADS 60`, `RECOV 52`, `ACC 51`, `SRCH 69`. This does **not** establish all original numeric blueprint Sections 1–339 correspond one-to-one to those coded IDs: that separate source-level equivalence is not established.
+- Full **109/109 original tests** have a nonempty Appendix B source map. T089 maps Sections **793–804**, T090 maps **805–818**, T091 maps **819–824**. This strengthens original E7 checkpoint traceability beyond the earlier 109-row *filename candidate* index.
+
+**Machine-verified gate:** `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs` independently expands every written range, checks all 695 numbered/433 coded IDs, asserts no duplicate ownership and validates the 109 index linkage. It does **not** run Android/Production or prove module implementation correctness.
+
+**Precise scoped audit:** `T089_E7_BLUEPRINT_695_NUMERIC_AND_433_CODED_NO_ORPHAN=PASS_SCOPED_AFTER_EXACT_CI`. **Still outstanding:** Section 1–339 numeric-to-coded semantic equivalence, source/module implementation orphan/duplicate machinery audit, 58 no-standalone-filename E7 authority records, 66 other `NOT RUN` official rows after T089 start, and reconciliation of historic source conflicts/old actual status. **`T089_ORIGINAL_FINAL_PASS_LOCK=HOLD`** until original full E1+E7 approved. Nothing changed in old implementation or production.
