@@ -1,0 +1,61 @@
+# T086 read-only release scope review; does NOT deploy, promote, or alter Supabase.
+name: B13 T086 Soft Launch Release Scope — RED STOP on widened product diff
+on:
+  push:
+    branches: [codex/b13-t086-release-scope-review-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t086-release-scope-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t086_release_boundary:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Compare actual prod, last READY preview and reviewed A2 code without deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 9
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Block undeclared old content / Founder security / SQL / Ad mutations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=edecc6290a0c87e36b7510dafffa11f4ad74e9f3
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RELEASE_SCOPE_AND_SOFT_LAUNCH_GATE_20261102.md'|'ci/phase4/b13-t086-release-source-boundary.test.mjs'|'.github/workflows/b13-t086-release-scope-20261102.yml') ;;
+              *) echo "T086_UNRELATED_PRODUCT_OR_LOCKED_SECURITY_CHANGE=$path"; exit 1;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T086_RELEASE_REVIEW_EXACT_NO_PRODUCTION_PATCH=PASS'
+      - name: Nine real prod vs one existing preview product delta, frozen old Auth and original V3
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13-t086-release-source-boundary.test.mjs
+          node --test ci/phase4/b13-t086-release-source-boundary.test.mjs
+      - name: Previously tested A2 canonical and negative post-MFA contracts still run unchanged
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+          node --test ci/phase4/b13-t086-owner-correction-post-mfa-safe-nav.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+      - name: Release safety truth; NEVER automatic promotion
+        run: |
+          echo 'T086_SAFE_RELEASE_SCOPE_SOURCE_REVIEW=PASS_SCOPED'
+          echo 'T086_DIRECT_PRODUCTION_PROMOTION_OF_STACKED_BRANCH=BLOCKED'
+          echo 'T086_PREVIEW_SSO_OWNER_LOGIN_NOT_PROVEN'
+          echo 'T086_REAL_ANDROID_E3=NOT_RUN'
+          echo 'T086_REAL_SAME_ARTICLE_LIFECYCLE_E4=NOT_RUN'
+          echo 'T086_REAL_LIVE_PROVIDER_E5=NOT_RUN'
+          echo 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD'
