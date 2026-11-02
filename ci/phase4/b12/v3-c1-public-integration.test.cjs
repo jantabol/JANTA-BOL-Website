@@ -1,4 +1,9 @@
 'use strict';
+// FOUNDER DECISION A, 2026-11-02 — authorized controlled V3 security baseline.
+// The original 2026-10-29 test remains unchanged and permanently archived at
+// ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs
+// Historical original 10/10 must execute on its authentic original source commit;
+// current 10/10 is NEVER a substitute for Phase3/Auth/T080 and negative guard tests.
 // Read-only V3 public publishing integration regression; no Supabase credentials or network.
 const test = require('node:test');
 const assert = require('node:assert/strict');
@@ -95,8 +100,12 @@ test('V3 public pages use C1 on existing homepage/article routes; admin preview 
 test('Fake ticker and demo submission forms cannot mislead public',()=>{
   assert.doesNotMatch(homepage,/शिवपुरी में भारी बारिश • करैरा में सड़क हादसा/);
   assert.doesNotMatch(homepage,/🔴 LIVE\s*<\/div>/);
-  assert.match(homepage,/#citizen-news-form,#official-reporter-form\{display:none!important\}/);
-  assert.match(homepage,/जमा नहीं होगी/);
+  assert.match(homepage,/#citizen-news-form,#official-reporter-form,#top-story\[hidden\]\{display:none!important\}/);
+  assert.match(homepage,/<form class="citizen-news-form" id="citizen-news-form" hidden inert style="display:none" aria-hidden="true">/);
+  assert.match(homepage,/<form id="official-reporter-form" class="official-reporter-form" hidden inert style="display:none" aria-hidden="true">/);
+  assert.match(homepage,/<section class="breaking-news" id="top-story" hidden aria-live="polite">/);
+  assert.match(homepage,/यहाँ कोई जानकारी जमा नहीं होती।/);
+  assert.match(homepage,/ऑनलाइन आवेदन अभी स्वीकार नहीं किया जा रहा है।/);
   assert.match(homepage,/अभी स्वीकार नहीं किया जा रहा/);
 });
 test('V3 article distinguishes actual publish timestamp from news date; IST is unambiguous',()=>{
@@ -132,9 +141,9 @@ test('Dashboard does not falsely state Founder binding is pending',()=>{
 const locks={
   'admin-auth.js':'e0c751cbaa6582aa00ffd82d23f03c01956142f7',
   'admin-login.html':'2254f94ce40d49cda0ed0076311d511685036fc3',
-  'b12-safe-nav.js':'ede5edac22f85759facb72b189c0b90a245f0d6c',
+  'b12-safe-nav.js':'a2107140321c2e099e785c678213ad278cbcfd5f',
   'admin-security.html':'b4dcaf30fb4a64a4848e772928a3bb8d15415534',
-  'backend-client.js':'0789934809c91a39d73a6d2570d0938fb6fbb47a'
+  'backend-client.js':'fb2c60d241ef772d4990536b577acc3c7d70fad7'
 };
 test('Protected Founder/Auth source files remain byte-identical to reviewed baseline blobs',()=>{
   for(const [file,sha] of Object.entries(locks)){
@@ -145,5 +154,5 @@ test('Protected Founder/Auth source files remain byte-identical to reviewed base
   const vercel=fs.readFileSync(path.join(ROOT,'vercel.json'));
   const blob=Buffer.concat([Buffer.from('blob '+vercel.length+'\0'),vercel]);
   assert.equal(crypto.createHash('sha1').update(blob).digest('hex'),
-    'c4b515325b5766489e4af90a143887d98f8aaa8a','vercel route baseline');
+    'ae086ea344cc704d279973740defe4d9374c6b6b','vercel route baseline');
 });
