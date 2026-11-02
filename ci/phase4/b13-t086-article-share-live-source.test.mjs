@@ -67,8 +67,9 @@ test('T086-05 original Article correction opens same UUID and cannot silently Sa
 test('T086-06 Unpublish to Draft and later Republish target SAME Article UUID',()=>{
  const t=v.backend.slice(v.backend.indexOf('async function unpublish('),v.backend.indexOf('async function softDelete('));
  all(t,['await requireOwner()',".from('articles')","status:'draft'",
- 'published_at:null',".eq('id',id)",".eq('version',expectedVersion)",
+ 'published_at:null',".eq('id',id)",
  'VERSION_CONFLICT']);
+ assert(/q=q\.eq\(\s*'version',\s*expectedVersion\s*\)/.test(t),'stale unpublish must enforce source version CAS');
  const p=v.backend.slice(v.backend.indexOf('async function publish('),v.backend.indexOf('async function unpublish('));
  assert(p.includes(".eq('id',working.id)"));
 });
@@ -99,10 +100,14 @@ test('T086-10 Homepage published-only latest list and RPC-outage truth',()=>{
  'id="top-story" hidden']);
 });
 test('T086-11 Home category/district/navigation and B9 search not bypassed',()=>{
- all(v.feed,['categoryMap','district','Technology']);
+ all(v.feed,['categoryMap','Technology']);
+ all(v.c1,['district: String(row.district || \'\')']);
  all(v.index,['href="b9-search.html"','समाचार खोज',
  'data-jb-ad-placement="homepage"']);
- assert(existsSync(root+'b9-search.html'));
+ const page=readFileSync(root+'b9-search.html','utf8');
+ const search=readFileSync(root+'b9-search-ui.js','utf8');
+ all(page,['id="b9District"','id="b9Category"','id="b9Location"']);
+ all(search,['item.district','item.category','JBB9.search(']);
 });
 test('T086-12 Public Live only verified LIVE/INTERRUPTED feed states; no fabricated badge',()=>{
  all(v.feed,[".from('public_live_feed')",
