@@ -83,7 +83,6 @@ jobs:
           git worktree add --detach "$WORK" "$B7_OLD"
           (cd "$WORK" && node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs)
           echo 'T087_B7_ORIGINAL_FIVE_GATES_HISTORIC_SOURCE_ONLY=PASS_SCOPED'
-          node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
           node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
           node --test ci/phase4/b8-t098-correction-notification-retention-source.test.mjs
           node --test ci/phase4/b8-live-parity-static.test.mjs
@@ -112,6 +111,12 @@ jobs:
           node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
           node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
           node --test ci/phase4/b13-t086-run15-lifecycle-full.test.mjs
+      - name: Original B7 T041 no-paid gate — explicit RED STOP if removed legacy workflow, not silently waived
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
+          echo 'T087_B7_T041_PROTECTED_WORKFLOW_PRESERVED=PASS'
       - name: Scope truth — E1 source GREEN cannot fake real hosted full E2/E5
         run: |
           echo 'T087_13_MODULE_SOURCE_PROTECTED_SECURITY=PASS_SCOPED_IF_ALL_OLD_TESTS_GREEN'
