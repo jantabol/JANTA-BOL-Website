@@ -107,7 +107,7 @@ P4-T001–P4-T083 -> P4-T092–P4-T109 -> P4-T084–P4-T091 FINAL CLOSURE.
 | P4-T084 | Final Closure | Final Test Governance + Status Integrity | B13 | NOT RUN — FINAL |
 | P4-T085 | Final Closure | Cross-Module Integration Boundary Test | B13 | NOT RUN — FINAL |
 | P4-T086 | Final Closure | Core Article Lifecycle + Live Regression | B13 | PASS |
-| P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | NOT RUN — FINAL |
+| P4-T087 | Final Closure | Whole Phase-4 Module Regression + Security Negatives | B13 | IN PROGRESS — E1 scoped CI GREEN, hosted E2/complete E5 DUE, Final Lock HOLD |
 | P4-T088 | Final Closure | Backup/Recovery + Production + Multi-Device + Operational Readiness | B13 | NOT RUN — FINAL |
 | P4-T089 | Final Closure | Nothing-Missing / Nothing-Duplicated + Official Records Audit | B13 | NOT RUN — FINAL |
 | P4-T090 | Final Closure | Failure Repair + Unresolved/DUE + Final Build Readiness | B13 | NOT RUN — FINAL |
@@ -1549,3 +1549,8 @@ Founder approved PR #6 merge. GitHub independently confirmed `main` commit `5e1e
 
 **Definitive evidence:** `review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md`. The previous preflight files accurately reflected their earlier dates/status but are superseded for *individual* T086 evidence verdict. All source/historical security tests remain present; old T086 16-case pre-lock checker archived byte-for-byte before controlled evidence-status update. **No fake PASS**; only original documented scope is locked.
 
+### P4-T087 — IN PROGRESS (2026-11-02) — NO FAKE FINAL PASS
+- Original RUN-15 Topic12 Whole Phase-4 security negative regression; E1+E2+E5 mandatory. Genuine protected E1 source/current + isolated PG17 **COMPLETE SUCCESS** GitHub CI **#41402446261** at exact SHA **2281c505ba6c6d82601a2c7315f7e0b01679aeb7**. Module map 13/13 original, **18/18 new source checks PASS**, old Phase3 Auth/Recovery/Incident/Live, B10 T060–T068 source and original T065/T066 signed PostgREST on isolated PG17, B9, B8, B7, B11, B12, T086 suites included. Reusable old B0–B8/News/Auth/B7 G0+G1 both SUCCESS. Full master ZIP step SKIPPED, not PASS.
+- B7 T035 original 5 safety tests rerun **5/5 PASS** at authentic historical B7 commit; original T041 no-paid workflow restored **byte-identical** from original B7 branch SHA `e9d6fe428ba0a014ea24e4362299b0771a200b8c` (its auto-push trigger remains old historical branch ONLY), original unchanged source T041 test now PASS. No app/frontend/Auth/SQL code modified.
+- Actual connected Supabase READ-ONLY E2: 61/61 relevant public tables RLS ON, 0 OFF, private Owner AAL2/session policies and immutable triggers visible; this is configuration proof, **NOT complete real signed cross-account hosted HTTP denial**. Aggregate live E5 canonical actions recorded in dossier; **NOT full per-module lifecycle/notification proof**. Found outstanding hosted T063/T064/T065/T068 and B11/B8 E2/E5 that cannot be auto-closed by disposable tests.
+- **`P4-T087 OFFICIAL FINAL PASS+LOCK=HOLD`**, user Android manual step NONE, original T086 PASS+LOCK untouched. Source dossier `review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md`. Draft PR #111 UNMERGED/UNDEPLOYED; no paid services or production writes.
