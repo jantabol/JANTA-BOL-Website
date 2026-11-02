@@ -24,10 +24,13 @@ function currentNav(){
 }
 const UUID='f17f6507-02a3-4881-ad37-0b02cadf3d3f';
 
-test('T086-L01 old original locked V3/C1 regression is present and UNEDITED (pinned)',()=>{
- assert.equal(blob('ci/phase4/b12/v3-c1-public-integration.test.cjs'),
+test('T086-L01 Founder A preserves original frozen test SHA and pins revised current gate',()=>{
+ assert.equal(blob('ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs'),
  '47452e35d880b3123ff0782f00564d849f5a06ba',
- 'If original locked test changed, STOP and audit');
+ 'If historical locked test changed, STOP and audit');
+ assert.equal(blob('ci/phase4/b12/v3-c1-public-integration.test.cjs'),
+ '474ff764ae65850863b8142318083964086d4e4e',
+ 'If Founder-approved current test changed, STOP and audit');
 });
 test('T086-L02 original public reporter/citizen demo forms are both hidden AND inert',()=>{
  assert.match(index,/<form class="citizen-news-form" id="citizen-news-form" hidden inert style="display:none" aria-hidden="true">/);
