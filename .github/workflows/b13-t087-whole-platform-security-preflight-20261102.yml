@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              'ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs'|'.github/workflows/b13-t087-whole-platform-security-preflight-20261102.yml'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md') ;;
+              'ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs'|'.github/workflows/b13-t087-whole-platform-security-preflight-20261102.yml'|'.github/workflows/b7-t041-no-paid-disposable-contracts.yml'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md') ;;
               *) echo "T087_UNAUTHORIZED_PRODUCT_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -115,6 +115,7 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
+          test "$(git rev-parse HEAD:.github/workflows/b7-t041-no-paid-disposable-contracts.yml)" = e9d6fe428ba0a014ea24e4362299b0771a200b8c
           node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
           echo 'T087_B7_T041_PROTECTED_WORKFLOW_PRESERVED=PASS'
       - name: Scope truth — E1 source GREEN cannot fake real hosted full E2/E5
