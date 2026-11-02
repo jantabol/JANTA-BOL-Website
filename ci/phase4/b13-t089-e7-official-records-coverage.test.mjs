@@ -25,6 +25,8 @@ const expectedBlockCounts={B0:4,B1:7,B2:9,B3:8,B4:6,B5:10,B6:6,B7:9,B8:8,B9:10,B
 const expectedPaths=new Set([
  registerFile,codeFile,debugFile,logFile,dossier,indexFile,
  'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs',
+ 'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs',
+ root+'review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json',
  '.github/workflows/b13-t089-records-audit-20261102.yml'
 ]);
 const row=id=>records.find(r=>r.id===id);
