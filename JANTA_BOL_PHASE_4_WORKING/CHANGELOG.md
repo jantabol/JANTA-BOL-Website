@@ -545,3 +545,10 @@ Protected workflow run #246 completed:
 Begin T089 RUN15 Sections 793–804 with E1+E7 only. Verified source register 109/109 unique IDs across 14 blocks; 0 duplicate IDs, 0 omitted IDs. Added non-authoritative 109-row cross-reference of candidate evidence: 51 files correlated, 58 without filename-linked proof (not necessarily missing actual tests). Official B13 084/085 remain NOT RUN; 087/088 full original acceptance HOLD, and T090/T091 NOT RUN. Register T089 now IN PROGRESS; rest unchanged. No production, SQL, source/editor, backup or deployment changes. Refuse complete T089 FULL PASS until orphan/duplicate requirement and correct official evidence authority verified.
 
 **Candidate index:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json`. **Dossier:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. **T089 original Final Lock = HOLD** pending full E1+E7. Previous contents are historical and unchanged.
+
+
+### T089 E7 original Master Appendix B source crosswalk — 2026-11-02
+
+Added source-of-truth original Appendix B test-to-requirement crosswalk: 109 original IDs; 695 numbered Sections 340–1034 plus 433 GOV/GRV/CMP/TEAM/SOC/ADS/RECOV/ACC/SRCH coded checkpoints; zero checkpoint-address orphan or duplicate. The original 1–339 numeric semantic mapping and implementation-source duplicate/orphan proof remain unverified, and T089 final HOLD. CI exact-head required. No Product/Auth/SQL/Deployment changes.
+
+Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
