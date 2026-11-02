@@ -102,7 +102,8 @@ test('Fake ticker and demo submission forms cannot mislead public',()=>{
   assert.match(homepage,/<form class="citizen-news-form" id="citizen-news-form" hidden inert style="display:none" aria-hidden="true">/);
   assert.match(homepage,/<form id="official-reporter-form" class="official-reporter-form" hidden inert style="display:none" aria-hidden="true">/);
   assert.match(homepage,/<section class="breaking-news" id="top-story" hidden aria-live="polite">/);
-  assert.match(homepage,/जमा नहीं होगी/);
+  assert.match(homepage,/यहाँ कोई जानकारी जमा नहीं होती।/);
+  assert.match(homepage,/ऑनलाइन आवेदन अभी स्वीकार नहीं किया जा रहा है।/);
   assert.match(homepage,/अभी स्वीकार नहीं किया जा रहा/);
 });
 test('V3 article distinguishes actual publish timestamp from news date; IST is unambiguous',()=>{
