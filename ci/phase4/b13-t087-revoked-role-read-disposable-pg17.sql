@@ -77,7 +77,7 @@ BEGIN
 END $green_admin_revoked$;
 RESET ROLE;
 -- Proposed candidate GREEN: stale Owner cannot see own role.
-SELECT set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',true);
+SELECT set_config('request.jwt.claims','{"sub":"11111111-1111-1111-1111-111111111111","session_id":"90000000-0000-4000-8000-000000000087","aal":"aal1"}',true);
 SET LOCAL ROLE authenticated;
 DO $green_owner_revoked$
 BEGIN
