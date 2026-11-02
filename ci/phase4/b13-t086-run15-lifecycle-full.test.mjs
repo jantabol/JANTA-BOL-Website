@@ -118,7 +118,8 @@ test('T086-CORE01 full Create→Draft→Publish→Correction→Unpublish→Repub
  assert.equal(unpublished.id,UUID);
  assert.equal(unpublished.status,'draft');
  assert.equal(unpublished.version,4);
- assert.equal(unpublished.publishedAt,null);
+ assert.equal(db.articles.get(UUID).published_at,null,'Unpublish must clear persisted published_at');
+ assert.equal(unpublished.publishedAt||'', '', 'Normalized public publishedAt may be empty after Unpublish');
  const republished=await b.publish(unpublished,{expectedVersion:unpublished.version});
  assert.equal(republished.status,'published');
  assert.equal(republished.id,UUID);
