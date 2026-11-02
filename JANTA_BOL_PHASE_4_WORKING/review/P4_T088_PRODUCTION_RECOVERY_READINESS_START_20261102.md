@@ -33,3 +33,31 @@ Founder has asked to **LOCK completed T087 work and START next test immediately*
 4. Report exact-head successful/failed CI + actual remaining manual E3/E8+external E6. Do not PASS+LOCK until required evidence is present.
 
 **Original T088 Final PASS+LOCK = HOLD until E1 + E3 + E6 + E8 are genuinely supported.**
+
+
+## Actual T088 E8 + E6 production evidence reconciliation — 2026-11-02 read-only
+
+### Historical real MANUAL backup and restore history — **actual job logs**, not just workflow syntax
+
+1. **T034** GitHub Actions manual run [`40223103797`](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40223103797), **2026-10-25**, completed SUCCESS. Read its original `dual-recipient-restore` job log (job `121258741884`): AGE encrypted B2 upload=true, real offline PostgreSQL17 restore=true, 26 source→clone metrics exact match, 16 security metrics exact match. At that checkpoint **Article rows=32**, Auth users=5, Storage metadata=5. Explicit log `STORAGE_FILE_BYTES_RESTORED=false; PLATFORM_SETTINGS_RESTORED=false`: **DB-only T034 did not restore original private media or all platform settings.**
+2. **T069** manual run [`40274621191`](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40274621191), **2026-10-26**, SUCCESS. Real `original_media_only` job `121414622988` log: B2 encrypted original-media ciphertext readback PASS; **5 original private/public media bytes independently offline restored**. DB/Platform restore explicitly FALSE. This demonstrates media bytes in a standalone recovery, not synchronized DB+media.
+3. **T070** manual run [`40452402698`](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/40452402698), **2026-10-27**, **GitHub job `founder_only_joint_restore` truly SUCCESS** (job `122017925138`, not SKIPPED). Its logs explicitly show `T070_REAL_JOINT_OFFLINE_PG17_DB_AND_FIVE_ORIGINAL_STORAGE_BYTES=PASS`, source DB shared MVCC snapshot + five original Storage UUIDs and metadata `EXACT_MATCH`; `T034_SOURCE_TO_CLONE_26_METRICS=EXACT_MATCH`; `T034_SOURCE_TO_CLONE_16_DEEP_SECURITY_METRICS=EXACT_MATCH`; real PG17 restore=true. Representative Article PURL, grievance, Live, Ads and Auth identity matching PASS. Logs also explicitly state `T070_DB_STORAGE_UNIVERSAL_ATOMIC_FREEZE_PROVEN=false`, `T070_AUTH_EDGE_VERCEL_RUNTIME_REBUILT=false`, `T070_FINAL_INDEPENDENT_E8=NOT_RUN`, `T070_FINAL_LOCK=HOLD`. A **real joint representative offline restore did happen**, but **the independently signed-off full recoverability / E8 gate was NOT completed**. Do not describe T070 as "not run" wholesale; that would discard real successful evidence, and do not mislabel final E8 PASS.
+4. The latest actual Founder/manual T070 main run found by GitHub main/run-history search is **2026-10-27**. No newer original T070/T069/T034 Founder/manual main-run in the queried 21 workflow-dispatch histories through 2026-11-02. Fresh current backup + independent final E8 and documented RPO/RTO remain DUE; **successful older runs cannot establish current restore freshness**.
+
+### Read-only Production DB now differs from October restore
+
+Connected JANTA BOL Supabase production `vrffsnkycvjithwtiylt` queried on **2026-11-02 12:00:54 UTC** (**SELECT only, no DDL/DML**):
+- Current `public.articles=34` (of which published=2), `article_versions=920`, `audit_logs=1635`, `grievances=6`, `live_sessions=16`, `auth.users=5`, `storage.objects=5`, `ad_campaigns=7`. Last Article change and snapshot: **2026-10-31**.
+- October 27 T070 job log showed Article rows=32, Auth users=5, Storage metadata=5 at its snapshot. Comparing the two **confirms the old T070 backup is point-in-time and does NOT include at least the two subsequently created article records**. This does **not** mean the historic backup is corrupt or unusable; it means T088 **current recoverability/RPO freshness is not established** without a newer verified backup/restore. Do not infer any Article bytes were lost in production.
+- No private Article text, keys, secrets or PII were extracted for this check.
+
+### Authenticated Vercel production identity — **actual live domain alias lookup**
+
+Connected Vercel linked **JANTA-BOL-Website** project `shubham-pichhore-2028`, **Hobby plan** (no paid upgrades). The current verified `jantabol.in` alias resolves to Vercel deployment **`dpl_6XpfdMa7gCF5SDXd7EKHZfbpLfeF`**, `READY` and `target=production` with GitHub SHA **`93df12aa8ffdfae38d9a4066b6a4556bb36969e5`**, from branch `codex/t080-admin-ack-failclosed-review-20261031` (created Oct 31). `www.jantabol.in` is verified with 308 redirect to apex. Latest T088 GitHub candidate (PR #112) and T087 Draft (#111) are **not this deployed SHA**. No unintended claim that their security fix is live, or that production has been rebuilt from latest GitHub branch.
+- Actual external no-auth public `https://jantabol.in/` GET/TLS/brand smoke passed in T088 GitHub Action **#41440663696** (all 4 required E1/source+PG17/public HTTPS jobs SUCCESS at SHA `5807f1f8bdd0a5f65064882dab723855e39051c4`). The optional ZIP-selector skipped. This proves only **public site domain/HTTPS E6 subset**, **NOT private API/provider/Auth E6**.
+
+### Genuine T088 gate (no fake pass)
+
+`T088_E1_CI=PASS_SCOPED`; `T088_E6_PUBLIC_DOMAIN_TLS_AND_PROD_ALIAS=PASS_SCOPED`; `T088_E8_HISTORICAL_PG17_AND_FIVE_ORIGINAL_MEDIA_OFFLINE_JOINT_RESTORE=PASS_SCOPED_AT_2026_10_27`; `T088_E8_CURRENT_FRESHNESS_AND_INDEPENDENT_FINAL=HOLD`; `T088_E3_REAL_CURRENT_DUAL_DEVICE_LIFECYCLE=DUE`; `T088_E6_AUTHENTICATED_API_AND_EXTERNAL_PROVIDER=DUE`; `T088_ORIGINAL_FINAL_PASS_LOCK=HOLD`.
+
+**No fresh backup automatically triggered, no production policy/source/DNS/deployment changed, no session/token accessed, no CRM/Ads/news content mutation.** This is a factual read-only reconciliation; Founder manual step NONE at this backend checkpoint.
