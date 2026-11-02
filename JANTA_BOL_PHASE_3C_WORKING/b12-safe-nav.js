@@ -2,7 +2,7 @@
 (function (root) {
   'use strict';
   const PAGES = new Set([
-    'admin.html', 'add-news.html', 'admin-security.html',
+    'admin.html', 'add-news.html', 'published.html', 'admin-security.html',
     'admin-recovery.html', 'admin-recovery-setup.html',
     'reporters.html', 'social.html', 'ads.html', 'grievances.html',
     'compliance.html', 'settings.html', 'analytics.html',
@@ -20,6 +20,19 @@
     if (index === -1) return part;
     if (input.indexOf('?', index + 1) !== -1) return DEFAULT;
     const params = new URLSearchParams(input.substring(index + 1));
+    // T086 / Founder-only published correction post-MFA return.
+    // This is a destination parser, NOT authority to edit or publish; admin-auth.js
+    // still requires Owner session + verified AAL2 and a valid server session.
+    // Permit exactly two query fields for this one reviewed editor deep link.
+    if (part === 'add-news.html' && params.size === 2) {
+      if (params.getAll('edit').length !== 1 ||
+          params.getAll('from').length !== 1 ||
+          [...params.keys()].some(k => k !== 'edit' && k !== 'from')) return DEFAULT;
+      const edit = params.get('edit'), from = params.get('from');
+      return UUID.test(edit || '') && from === 'published'
+        ? part + '?edit=' + encodeURIComponent(edit) + '&from=published'
+        : DEFAULT;
+    }
     if (params.size !== 1) return DEFAULT;
     const key=[...params.keys()][0];
     if (params.getAll(key).length !== 1) return DEFAULT;
