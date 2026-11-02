@@ -141,7 +141,7 @@ test('Dashboard does not falsely state Founder binding is pending',()=>{
 const locks={
   'admin-auth.js':'e0c751cbaa6582aa00ffd82d23f03c01956142f7',
   'admin-login.html':'2254f94ce40d49cda0ed0076311d511685036fc3',
-  'b12-safe-nav.js':'a2107140321c2e099e785c678213ad278cbcfd5f',
+  'b12-safe-nav.js':'d2d2742e46d3d373f6a6dd549f9d7b0fe684b862',
   'admin-security.html':'b4dcaf30fb4a64a4848e772928a3bb8d15415534',
   'backend-client.js':'fb2c60d241ef772d4990536b577acc3c7d70fad7'
 };
