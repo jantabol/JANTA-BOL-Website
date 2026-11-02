@@ -73,7 +73,7 @@ test('T086-L08 observed MFA post-login deep-link limitation is recorded, NOT mis
  assert.equal(fn('published.html'),'admin.html');
  assert.equal(fn('add-news.html?edit='+UUID+'&from=published'),'admin.html');
  const report=read('JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md');
- assert(report.includes('does **not currently allow**'));
+ assert(report.includes('**does not currently allow**'));
 });
 test('T086-L09 Founder Login returns to an allowlisted destination only after MFA check',()=>{
  assert(login.includes('window.JBProdSafeNav.target(target)'));
@@ -95,14 +95,19 @@ test('T086-L11 Vercel header route new published page is only route expansion',(
  assert.equal(hdr.source,newPath);
  assert.equal(hdr.source.replace('|published|','|'),oldPath);
  assert.equal(blob('vercel.json'),'ae086ea344cc704d279973740defe4d9374c6b6b');
- const names=hdr.headers.map(x=>x.key);
- assert(names.includes('X-Content-Type-Options'));
- assert(names.includes('Referrer-Policy') || names.includes('Cache-Control'));
+ const privateNames=hdr.headers.map(x=>x.key);
+ const global=vc.headers.find(h=>h.source==='/JANTA_BOL_PHASE_3C_WORKING/(.*)');
+ assert(global);
+ const globalNames=global.headers.map(x=>x.key);
+ assert(globalNames.includes('X-Content-Type-Options'));
+ assert(globalNames.includes('Referrer-Policy'));
+ assert(privateNames.includes('Cache-Control'));
+ assert(hdr.headers.some(x=>x.key==='Cache-Control'&&x.value==='private, no-store, max-age=0'));
 });
 test('T086-L12 newer compatibility probes never override old mandatory FAIL/RED STOP',()=>{
  const report=read('JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md');
  for(const marker of [
- 'T086_OLD_PROTECTED_V3_REGRESSION=FAIL_RED_STOP',
+ 'T086_ORIGINAL_LOCKED_V3_C1_GATE=FAIL_RED_STOP',
  'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD',
  'T086_E3_REAL_ANDROID_FULL_CREATE_TO_REPUBLISH=NOT_RUN'
  ])assert(report.includes(marker),marker);
