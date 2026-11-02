@@ -33,8 +33,8 @@ One dedicated new read-only Node test for 13 families: (1) Core News/Article, (2
 Never report code existence as an exercised hosted denied cross-account attack.
 
 ## Exact scope/due matrix
-`T087_OLD_PROTECTED_CI=CI_PENDING`
-`T087_13_MODULE_SOURCE_AND_SECURITY_NEGATIVES=CI_PENDING`
+`T087_OLD_PROTECTED_CI=PASS_SCOPED_CI_41402446261`
+`T087_13_MODULE_SOURCE_AND_SECURITY_NEGATIVES=PASS_SCOPED_18_18`
 `T087_REAL_CONNECTED_E2_RLS_61_OF_61=PASS_SCOPED_CONFIG_ONLY`
 `T087_REAL_HOSTED_CROSS_ACCOUNT_HTTPS_NEGATIVES=DUE`
 `T087_REAL_E5_AUDIT_FAMILY_CONTINUITY=PASS_SCOPED_AGGREGATES_ONLY`
@@ -45,3 +45,11 @@ Never report code existence as an exercised hosted denied cross-account attack.
 
 ## Stop conditions
 Any original protected CI failure, unauthorised/private leak, leaked key, weakening MFA/Owner, stale/revoked JWT data access, different Article ID/PURL, fake Live, unreliable backup, or skipped original full security family => RED_STOP and exact minimum fix. No synthetic private leak is accepted as actual hosted E2. **Do not start T088 Final as if T087 is PASS**. Report scoped evidence and genuine DUE at test end.
+
+
+## Actual completed E1 execution and historic B7 workflow reconciliation — 2026-11-02
+**GitHub Actions #41402446261 at exact source SHA `2281c505ba6c6d82601a2c7315f7e0b01679aeb7` COMPLETED SUCCESS, all four required jobs succeeded**: 13-family source/negative suites, real isolated B10 PG17 role/anon/RLS/revoked JWT, original signed PostgREST T065 cross-account and T066 red/green (NOT hosted), old G0 and G1 protected B0–B8/News/Auth/B7. Original T083 120/120 preserved. Original B7 T035 5/5 historical tests reused at authentic source, and missing T041 workflow restored byte-identical from an existing trusted repo branch with branch-specific trigger. No Production change, no paid services, no new media/provider actions. Full ZIP step SKIPPED.
+
+**Important red-stop history:** First T087 runs correctly FAILED on the previously missing old B0/B7 workflow path and on the T067 prerequisite fixtures. We did **not remove the old guards**: ran B0/T035 on authentic historic sources, restored exact original T041 workflow (old historical branch-only trigger), replayed original B10 T065+T066 signed local HTTP fixture chain before T067/T068, and verified final exact-head SUCCESS. Do not rewrite earlier RED as GREEN.
+
+**Final gate still HOLD**: the original requires E1+E2+E5, and real connected E2 is read-only RLS policy/catalog proof, not current production signed multi-account IDOR and session revocation denial. E5 aggregates do not cover every completed module's complete lifecycle and notification/retention externally. B10 T063/064/065/068 and real B11 restoration, B8 factual correction remain separately held. No Founder manual step at this source-review checkpoint. `T087_ORIGINAL_FULL_PASS_LOCK=HOLD`.
