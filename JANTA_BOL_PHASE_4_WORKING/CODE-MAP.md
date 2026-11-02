@@ -552,3 +552,10 @@ Official code ownership remains canonical where listed; T089 audit checks mappin
 Master Appendix B checkpoint-to-test authority: all 109 tests have explicit `Maps / Sections` fields in the user-provided 321-page Master. Source crosswalk expands 695 numbered Sections 340–1034 and 433 coded checkpoints across nine requirement families; each checkpoint belongs to exactly one original test ID. This is the *design-map authority*, not module semantic uniqueness or a deployment. Historic CODE-MAP implementer homes remain protected. Current production-served source SHA differs from main and 5 live Edge functions lack independent Git source: hold any source-only full-restore claim.
 
 Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
+
+
+### T089 E7 — ORIGINAL 14-topic/682 checkpoint aggregate crosscheck (2026-11-02)
+
+Original Founder Master Appendix B source: exact 14 original topic ranges are contiguous Sections **1–1034**, test ranges **P4-T001–T109**, and topic checkpoint *counts* sum **682**. Appendix B explicitly names 433 coded checkpoint IDs across nine families. Remaining 249 checkpoints are topic-count totals in five non-coded families (**44/50/55/50/50**); individual checkpoint identifiers are **not** supplied by that Appendix and are not fabricated. Appendix B numeric Sections 340–1034 (695) and 433 explicitly coded checkpoint IDs map once to original tests, while Section 1–339 code/section equivalence and implementation-level semantic duplicate/orphan test remains DUE. **Not full E7 PASS.**
+
+Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json` and fail-hard `T089-S06/S07`. No protected source changes; old history retained.

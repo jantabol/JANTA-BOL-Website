@@ -552,3 +552,10 @@ Begin T089 RUN15 Sections 793–804 with E1+E7 only. Verified source register 10
 Added source-of-truth original Appendix B test-to-requirement crosswalk: 109 original IDs; 695 numbered Sections 340–1034 plus 433 GOV/GRV/CMP/TEAM/SOC/ADS/RECOV/ACC/SRCH coded checkpoints; zero checkpoint-address orphan or duplicate. The original 1–339 numeric semantic mapping and implementation-source duplicate/orphan proof remain unverified, and T089 final HOLD. CI exact-head required. No Product/Auth/SQL/Deployment changes.
 
 Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
+
+
+### T089 E7 — ORIGINAL 14-topic/682 checkpoint aggregate crosscheck (2026-11-02)
+
+Original Founder Master Appendix B source: exact 14 original topic ranges are contiguous Sections **1–1034**, test ranges **P4-T001–T109**, and topic checkpoint *counts* sum **682**. Appendix B explicitly names 433 coded checkpoint IDs across nine families. Remaining 249 checkpoints are topic-count totals in five non-coded families (**44/50/55/50/50**); individual checkpoint identifiers are **not** supplied by that Appendix and are not fabricated. Appendix B numeric Sections 340–1034 (695) and 433 explicitly coded checkpoint IDs map once to original tests, while Section 1–339 code/section equivalence and implementation-level semantic duplicate/orphan test remains DUE. **Not full E7 PASS.**
+
+Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json` and fail-hard `T089-S06/S07`. No protected source changes; old history retained.

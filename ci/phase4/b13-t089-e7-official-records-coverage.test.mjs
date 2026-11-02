@@ -27,6 +27,7 @@ const expectedPaths=new Set([
  'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs',
  'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs',
  root+'review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json',
+ root+'review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json',
  '.github/workflows/b13-t089-records-audit-20261102.yml'
 ]);
 const row=id=>records.find(r=>r.id===id);

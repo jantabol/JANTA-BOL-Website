@@ -531,3 +531,10 @@ T089 first divergence from original full E7 PASS: the official TEST-REGISTER has
 E7 orphan-address recheck: PDF Appendix B source was parsed and normalized across page breaks (T043 section 352; T075 638–656). Exactly 695/695 numeric Sections 340–1034 and 433/433 coded domain checkpoints map once without collisions. Unknown: separate numeric Sections 1–339 semantic equivalence, module duplicate implementations, 58 original IDs without standalone filename-correlated evidence and stale historic status narratives; original E7 Final HOLD. No old bug fixes changed.
 
 Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
+
+
+### T089 E7 — ORIGINAL 14-topic/682 checkpoint aggregate crosscheck (2026-11-02)
+
+Original Founder Master Appendix B source: exact 14 original topic ranges are contiguous Sections **1–1034**, test ranges **P4-T001–T109**, and topic checkpoint *counts* sum **682**. Appendix B explicitly names 433 coded checkpoint IDs across nine families. Remaining 249 checkpoints are topic-count totals in five non-coded families (**44/50/55/50/50**); individual checkpoint identifiers are **not** supplied by that Appendix and are not fabricated. Appendix B numeric Sections 340–1034 (695) and 433 explicitly coded checkpoint IDs map once to original tests, while Section 1–339 code/section equivalence and implementation-level semantic duplicate/orphan test remains DUE. **Not full E7 PASS.**
+
+Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json` and fail-hard `T089-S06/S07`. No protected source changes; old history retained.
