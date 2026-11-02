@@ -150,3 +150,47 @@ Connected Supabase SQL SELECT-only `public.youtube_integration` row, Nov 2: `pro
 
 ### No false finish / precise next safe action
 At this checkpoint, there is **no missing Backend source preflight** that can legitimately replace a full independent GoTrue/Edge/Vercel environment recovery or a real Phone+Tablet publishing operation. No private JWT/session or OAuth credential will be pasted in a chat. Full T088 Final PASS+LOCK remains `HOLD` until original E3+E6+E8, with upstream T087 signed E2/complete E5 separately unresolved. Work remains safe and read-only to production; latest reported test evidence is linked to actual Actions run, no original locked product/testing source edits.
+
+
+## E8 isolated actual Auth+Storage recovery investigation + Production source-of-truth blockers — 2026-11-02
+
+### A. No-cost actual local GoTrue + signed RLS + Storage two-account recovery subtest
+
+A new T088 branch-only guarded GitHub Actions step uses pinned official Supabase CLI **2.120.0** and loopback-bound disposable Docker network on a GitHub-hosted runner. It uses **ZERO connected production secrets, zero real private media, zero Founder credentials, zero paid hosted project** and cleans temporary local containers/keys.
+
+**Exact candidate commit `311984ca229db1d061a20740fc8a632a0e5741aa`**, GitHub Actions **[#41454733260](https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41454733260) COMPLETED/SUCCESS**, **7/7 required jobs SUCCESS** including this new synthetic local Auth/Storage step, existing exact-head T088/B11/B12/B13 E1 security regression, G0, G1, real hosted public HTTPS/API, four JWT denial probes; optional old full B0–B8 ZIP selector **SKIPPED** and not counted.
+
+Actual independent local log proof:
+- `T088_LOCAL_REAL_FAKE_GOTRUE_SIGNIN=PASS_2_USERS`: **two newly created fake identities signed in via real local GoTrue**, returned signed local JWTs, never real account tokens.
+- `T088_LOCAL_REAL_SIGNED_POSTGREST_RLS=PASS_OWNER_1_CROSS_0_ANON_0`: in actual local PostgREST one fake owner's record visible to itself, zero rows to other signed actor and anon. Not a simulated SQL `SET ROLE` substitute.
+- `T088_LOCAL_REAL_STORAGE_ORIGINAL_BYTES=PASS_FAKE`, `T088_LOCAL_REAL_PRIVATE_MEDIA_USER_CROSS_DENIAL=PASS`: local private Storage uploaded FAKE bytes, owner read back exact original string; other logged-in actor and anon denied.
+- `T088_LOCAL_ONLY_NO_PROD_KEYS_OR_B2=PASS`, `T088_ORIGINAL_FULL_PLATFORM_E8=HOLD`.
+
+**Honest exclusion:** This reconstructs **an empty/fake Auth+PostgREST+Storage stack**, NOT the real November 2 production Auth users, active/revoked sessions, Founder AAL2, production encrypted media or restored GoTrue JWT secret. The earlier protected **manual main** T070 run #41444146576 **did** separately restore the genuine B2 AGE DB 34 articles and five original source media bytes; never conflate two distinct restore targets into one magically integrated production E8.
+
+### B. The isolated fake Edge service was attempted and failed; no fake pass or endless loop
+
+Original T088 experimental Edge boot test produced **HTTP 503** in actual CI runs **#41452614514**, **#41453356360**, and **#41453963665**, despite isolated source ordering correction. Third run's no-secret diagnostic `T088_EDGE_FAILURE_CLASS=UNCLASSIFIED`; **`T088_LOCAL_EDGE_BOOT=HOLD_503`**, not an Edge PASS. These real historical CI RED results remain visible, preserved. A **separately scoped Auth/Storage-only** gate ran GREEN at #41454733260 and explicitly prints `T088_LOCAL_EDGE_BOOT_503_FROM_3_HISTORIC_RUNS=HOLD_NOT_RETRIED`, `T088_EDGE_REAL_PRODUCTION_RESTORED=NO`. This is **not** a waiver of the original E8 requirement. No real Edge runtime or YouTube/Live function was redeployed or modified in production.
+
+### C. Real source-of-truth disaster recovery drift found, SOURCE P1 HOLD
+
+Connected Vercel actual `jantabol.in` READY deployment `dpl_6XpfdMa7gCF5SDXd7EKHZfbpLfeF` serves exact GitHub commit **`93df12aa8ffdfae38d9a4066b6a4556bb36969e5`** (`codex/t080-admin-ack-failclosed-review-20261031`). GitHub default `main` SHA **`f447231c0677644ca5a44cc19f12cf0314ff38ea`** lacks both `JANTA_BOL_PHASE_3C_WORKING/` and `vercel.json` (GET/tree verification); deployed commit **contains** both. Both have same root placeholder `index.html` blob; **main alone is not a complete reproducible source of the actual current production website**. Existing production is working; **do not auto-merge/promote/overwrite** to "fix" this. A protected, independently reviewed current-deployment source baseline/commit manifest and rollback proof is required before a full disaster-reconstruction pass.
+
+Connected Supabase project currently has **15/15 deployed ACTIVE Edge functions**. Authorized read-only `list_edge_functions` + `get_edge_function` fetched all **15/15 deployed code packages, 18 nonempty source files**; code contents/secret values were **not copied to the public repo**. Canonical `CODEX_CURRENT_SUPABASE/functions` path on T088 branch includes directories for **10/15** of these live slugs, with **5/15 absent from that canonical directory** (`jb-recovery-delete-mfa`, `jb-grievance-assets`, `jb-b11-t069-media-backup`, `jb-youtube-oauth-health`, `jb-youtube-video-preflight`). This does not exclude files elsewhere, but the checked canonical folder by itself is **insufficient to restore the live set**. Live function source fetched from an existing account is **not an independently stored encrypted offsite source archive**. Need a secure versioned restore copy and private env/role mapping, never dump sensitive code/keys to public Actions log.
+
+### D. Scope-accurate current Full Recovery (E8) verdict
+
+| Component | Actual check | Evidence status |
+| --- | --- | --- |
+| Current real database, auth schema rows, original five Storage bytes | New 2026-11-02 Founder-approved real AGE+B2 offsite capture, decrypt, PG17+five-byte restore; 34 articles, 26+16 metrics | **PASS_SCOPED_REAL** |
+| Founder primary AGE key separate from runner | Oct26 Founder Android owner-held key decrypted real archived B2 media ciphertext, SHA verified | **PASS_SCOPED_HISTORIC** |
+| Standalone fake local GoTrue signed two-user login, owned/foreign/anon RLS, private media byte roundtrip | Current real container/HTTP in #41454733260 | **PASS_SCOPED_SYNTHETIC** |
+| All 15 live deployed Edge source packages currently retrievable via connected account | 15 packages, 18 source files, versions and bundle digests | **PASS_SOURCE_INVENTORY_ONLY** |
+| Isolated local fake Edge worker boot | HTTP 503 in three actual guarded tests | **HOLD_BOOT_503**, no false PASS |
+| Complete production GoTrue/Edge/private env restore + verified signed real Owner AAL2/stale-role denial | Not independently reconstructed | **NOT_RUN** |
+| Current served Vercel public site build from protected main and rollback/domains/secret env | main lacks deployed site subtree+vercel.json | **HOLD_SOURCE_BASELINE_P1** |
+| Approved recurring full-service backup cadence, tested full-environment incident RPO/RTO | No real full cutover or independent recovery observed | **DUE** |
+
+**Founder confirmed Multi-Device test already executed** — previous Phone+Tablet, T086 Founder publish/share/incognito and T087 Tablet Reporter screenshots are **reused**; do not repeat them.
+
+**`P4_T088_E8_REAL_DB_MEDIA=PASS_SCOPED`; `P4_T088_E8_SYNTHETIC_AUTH_STORAGE_JWT=PASS_SCOPED`; `P4_T088_E8_PLATFORM_SOURCES=PARTIAL_WITH_P1_DRIFT`; `P4_T088_E8_LOCAL_EDGE=HOLD_503`; `P4_T088_ORIGINAL_FULL_PASS_LOCK=HOLD`.** No real private live data rehydrated into an extra hosted environment, no paid project, no News/Auth/Media/Live/Ads/DNS changes, no merge or production deployment. Next independent real full proof needs an **approved confidential isolated restoration** that includes current deployed site SHA/Edge code versioned recoverability and safe private env, not another repetitive Founder manual backup.
