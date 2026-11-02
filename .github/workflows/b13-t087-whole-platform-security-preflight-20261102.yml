@@ -76,7 +76,14 @@ jobs:
         shell: bash
         run: |
           set -Eeuo pipefail
-          node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs
+          # The original protected B7 test explicitly reads its historic .github/workflows/p4-t035-candidate-static.yml,
+          # which was not carried to current main. Run it byte-unmodified on its authentic B7 baseline;
+          # run modern active B7 source guards separately on current source, never treat old file absence as PASS.
+          B7_OLD=bd03084b0e42f8d1a65c53a4a047f6c8686a51a8
+          WORK="$RUNNER_TEMP/t087-old-b7"
+          git worktree add --detach "$WORK" "$B7_OLD"
+          (cd "$WORK" && node --test ci/phase4/b7-cp02-five-safety-gates.test.mjs)
+          echo 'T087_B7_ORIGINAL_FIVE_GATES_HISTORIC_SOURCE_ONLY=PASS_SCOPED'
           node --test ci/phase4/b7-t041-no-paid-source-gate.test.cjs
           node --test ci/phase4/b8-t094-cp02-right-to-reply-security.test.mjs
           node --test ci/phase4/b8-t098-correction-notification-retention-source.test.mjs
@@ -180,6 +187,60 @@ jobs:
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-repro-pg17.sql
           psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261023_b10_t065_stale_article_write_session_guard_REVIEW_ONLY.sql
           psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-stale-editor-guard-regression-pg17.sql
+      - name: Original T065 isolated signed Reporter/JWT cross-account HTTP (localhost PostgREST only)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t065-disposable-signed-http-fixture.sql
+          export JB_T065_DISPOSABLE_JWT_SECRET="$(openssl rand -hex 40)"
+          docker run --rm -d --name jb-t087-t065-postgrest --network host \
+            -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_JWT_SECRET="$JB_T065_DISPOSABLE_JWT_SECRET" \
+            postgrest/postgrest:v12.2.3 >/dev/null
+          trap 'docker stop jb-t087-t065-postgrest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ | grep -Eq '^(200|401|403)
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t068-rollback-safety-final-pg17.sql
+  protected_original_g0_g1_news_auth_ads:
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+; then break; fi
+            sleep 1
+          done
+          node ci/phase4/b10-t065-disposable-signed-http.test.mjs
+      - name: Original T066 disposable JWT revocation red/green via real PostgREST with scoped advertiser role
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t066-disposable-revocation-fixture.sql
+          export JB_T066_DISPOSABLE_JWT_SECRET="$(openssl rand -hex 40)"
+          docker run --rm -d --name jb-t087-t066-postgrest --network host \
+            -e PGRST_DB_URI='postgres://jb_t065_wire_authenticator:JB_T065_ISOLATED_WIRE_ONLY_NO_REAL_ACCOUNT@localhost:5432/jb_b10_disposable' \
+            -e PGRST_DB_SCHEMAS=public -e PGRST_DB_ANON_ROLE=anon \
+            -e PGRST_JWT_SECRET="$JB_T066_DISPOSABLE_JWT_SECRET" \
+            postgrest/postgrest:v12.2.3 >/dev/null
+          trap 'docker stop jb-t087-t066-postgrest >/dev/null 2>&1 || true' EXIT
+          for i in $(seq 1 40); do
+            if curl -s -o /dev/null -w '%{http_code}' http://127.0.0.1:3000/ | grep -Eq '^(200|401|403)
+        run: |
+          set -Eeuo pipefail
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t067-incident-contained-audit-notify-pg17.sql
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b10-t068-rollback-safety-final-pg17.sql
+  protected_original_g0_g1_news_auth_ads:
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
+; then break; fi
+            sleep 1
+          done
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs red
+          psql -X -v ON_ERROR_STOP=1 -f JANTA_BOL_PHASE_4_WORKING/db/20261024_b10_t066_advertiser_active_session_PRODUCTION_APPROVED.sql
+          node ci/phase4/b10-t066-disposable-signed-revocation.test.mjs green
       - name: Original T067 immutable incident audit + T068 rollback source safety
         run: |
           set -Eeuo pipefail
