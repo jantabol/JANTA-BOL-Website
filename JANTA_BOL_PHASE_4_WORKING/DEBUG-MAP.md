@@ -524,3 +524,10 @@ FIXED / EXACT OLD TEST GREEN
 T089 first divergence from original full E7 PASS: the official TEST-REGISTER has 109 unique IDs and 14 blocks, but **67 source rows were NOT RUN before formal T089 start**; B13 T084/T085 remain NOT RUN, and T087/T088 are scoped-only with original FULL HOLD. A canonical evidence-index file was missing; created a 109-row candidate index, with 51 filename candidates and 58 without standalone filename evidence. Historical narrative 'T088 IN PROGRESS' refers to the earlier checkpoint; authoritative current register row is FOUNDER SCOPED PASS+LOCK (ORIGINAL FINAL HOLD). Old CODE/DEBUG/CHANGELOG maps predominantly hold earlier B7 checkpoints, so full semantic orphan/duplicate/source-conflict E7 remains DUE. No unilateral status upgrades.
 
 **Candidate index:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json`. **Dossier:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. **T089 original Final Lock = HOLD** pending full E1+E7. Previous contents are historical and unchanged.
+
+
+### T089 E7 original Master Appendix B source crosswalk — 2026-11-02
+
+E7 orphan-address recheck: PDF Appendix B source was parsed and normalized across page breaks (T043 section 352; T075 638–656). Exactly 695/695 numeric Sections 340–1034 and 433/433 coded domain checkpoints map once without collisions. Unknown: separate numeric Sections 1–339 semantic equivalence, module duplicate implementations, 58 original IDs without standalone filename-correlated evidence and stale historic status narratives; original E7 Final HOLD. No old bug fixes changed.
+
+Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
