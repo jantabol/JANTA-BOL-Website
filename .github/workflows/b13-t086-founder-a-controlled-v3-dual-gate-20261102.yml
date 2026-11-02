@@ -1,0 +1,124 @@
+# Founder A approved 2026-11-02. Both unchanged HISTORIC and revised CURRENT
+# original 10-case V3 security gates must run independently + negative hard gates.
+# No deploy, no production database writes, no old Article/Auth/Live/News changes.
+name: B13 T086 Founder A — Historical + Current V3 Dual Security Gates
+on:
+  push:
+    branches: [codex/b13-t086-founder-a-v3-controlled-baseline-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t086-founder-a-dual-v3-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  scope_and_historical_original:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T086 Historical 2026-10-29 V3 original 10/10 on actual old source
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Enforce Founder exact five-file update scope; block old source or secret edits
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          PARENT=74556715e64da06347efdabfc3114559d727e680
+          test "$(git merge-base "$PARENT" HEAD)" = "$PARENT"
+          while IFS= read -r path; do
+            case "$path" in
+              'ci/phase4/b12/v3-c1-public-integration.test.cjs'|'ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs'|'ci/phase4/b13-t086-founder-a-v3-controlled-diff.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_FOUNDER_A_V3_CONTROLLED_BASELINE_20261102.md'|'.github/workflows/b13-t086-founder-a-controlled-v3-dual-gate-20261102.yml') ;;
+              *) echo "FOUNDER_A_UNAUTHORIZED_PRODUCT_OR_SECURITY_CHANGE=$path"; exit 1;;
+            esac
+          done < <(git diff --name-only "$PARENT" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'FOUNDER_A_CONTROLLED_FIVE_FILE_SCOPE_PASS'
+      - name: Pin unmodified historic 2026-10-29 original 10-case file and 3 old source SHAs
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          HIST=5d5fa9bd703607f890851b7a6d5aad3e80e3285e
+          ORIGINAL=47452e35d880b3123ff0782f00564d849f5a06ba
+          test "$(git rev-parse HEAD:ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs)" = "$ORIGINAL"
+          test "$(git rev-parse "$HIST:ci/phase4/b12/v3-c1-public-integration.test.cjs")" = "$ORIGINAL"
+          test "$(git rev-parse "$HIST:JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js")" = ede5edac22f85759facb72b189c0b90a245f0d6c
+          test "$(git rev-parse "$HIST:JANTA_BOL_PHASE_3C_WORKING/backend-client.js")" = 0789934809c91a39d73a6d2570d0938fb6fbb47a
+          test "$(git rev-parse "$HIST:vercel.json")" = c4b515325b5766489e4af90a143887d98f8aaa8a
+          echo 'T086_ORIGINAL_20261029_FROZEN_HISTORICAL_IDENTITY=PASS'
+      - name: Execute all 10 UNMODIFIED original V3 tests on their real historical source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          HIST=5d5fa9bd703607f890851b7a6d5aad3e80e3285e
+          OLD_WORKTREE="$RUNNER_TEMP/t086-historical-source"
+          git worktree add --detach "$OLD_WORKTREE" "$HIST"
+          (cd "$OLD_WORKTREE" && node --test ci/phase4/b12/v3-c1-public-integration.test.cjs)
+          echo 'T086_FROZEN_ORIGINAL_V3_HISTORIC_TEN_EXECUTED_NOT_BYPASSED'
+  current_v3_controlled_and_security:
+    needs: scope_and_historical_original
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T086 Current V3 10 original cases + exact Founder A delta and hard security negatives
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Updated ORIGINAL 10 cases, same file path — mandatory hard gate
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+      - name: 8 exact historical SHA/no unauthorized delta and 12 redirect/Owner/privacy cases
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t086-founder-a-v3-controlled-diff.test.mjs
+          node --test ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs
+      - name: 16 T086 Core Article UUID/Share/Navigation and Phase3 Live source cases
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+      - name: Original T080 Founder CAS lost ACK, safe publish correction and T083 public source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node ci/phase4/p4-t019-publishing-fault-injection.cjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b11/t071-softlaunch-public-truth.test.mjs
+          node --test ci/phase4/b11/t071-c1-published-android-no-stuck-loading.test.mjs
+          node --test ci/phase4/b9-client-and-ui.test.mjs
+          node --test ci/phase4/b8-live-parity-static.test.mjs
+      - name: Original Phase3A/3B Live architecture and provider safety static functional
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/functional-live-evidence.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+      - name: CI is NOT real Founder Android Article or actual LIVE provider PASS
+        run: |
+          echo 'T086_HISTORIC_ORIGINAL_V3=PASS_SCOPED'
+          echo 'T086_REVISED_ORIGINAL_CURRENT_V3=PASS_SCOPED'
+          echo 'T086_PROTECTED_SOURCE_PLUS_NEGATIVES=PASS_SCOPED'
+          echo 'T086_REAL_ANDROID_ARTICLE_E3=NOT_RUN'
+          echo 'T086_REAL_SINGLE_ARTICLE_PURL_E4=NOT_RUN'
+          echo 'T086_REAL_LIVE_PROVIDER_E5=NOT_RUN'
+          echo 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD'
+  original_disposable_pg17:
+    needs: current_v3_controlled_and_security
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
