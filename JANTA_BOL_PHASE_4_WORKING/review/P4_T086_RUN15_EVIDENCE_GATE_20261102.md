@@ -3,7 +3,7 @@
 **Date:** 2026-11-02 IST. **Founder instruction:** Finish and lock **T086**, avoid repeating already completed Android Article/Share/Incognito, preserve old product/security, soft-launch priority. **Scope:** one original `AUTO / CORE REGRESSION` test; NOT Phase-4 all-modules Final Closure/Production Release, NOT real provider Live rollout, NOT an editorial factual correction.
 
 ## Original authority — precise Evidence definitions (corrects earlier E-code misreading)
-**Official JANTA BOL Phase-4 Final Test Blueprint, 321 pages, pages 12 & 280 (Evidence Codes), page 309 (P4-T086).** T086 maps Topic12 RUN-15 §§765–772. Required **E1 + E3 + E4 + E5**, **NOT E6**.
+**Official JANTA BOL Phase-4 Final Test Blueprint, 321 pages, pages 12 & 280 (Evidence Codes), page 309 (P4-T086).** T086 maps Topic 12 RUN-15 §§765–772. Required **E1 + E3 + E4 + E5**, **NOT E6**.
 - **E1 = CI / automated test result / logs.**
 - **E3 = real phone/tablet screenshot or screen recording.**
 - **E4 = Article ID / Permanent Master URL / identity proof.**
