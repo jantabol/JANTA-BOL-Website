@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
+              'JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md'|'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs'|'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs'|'ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs'|'ci/phase4/b13-t088-local-full-recovery-synthetic.sh'|'ci/phase4/b13-t088-local-full-recovery-synthetic.mjs'|'.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml') ;;
               *) echo "T088_RED_UNAUTHORIZED_PRODUCT_BACKUP_OR_OLD_TEST_CHANGE=$path"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -140,3 +140,37 @@ jobs:
           test -z "${SUPABASE_DB_PASSWORD:-}"
           test -z "${SUPABASE_ACCESS_TOKEN:-}"
           node ci/phase4/b13-t088-prod-edge-jwt-negative-readonly.mjs
+
+  t088_local_synthetic_go_true_storage_edge:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: No-cost isolated local Auth+RLS+Storage+Edge runtime (SYNTHETIC only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Static safety checks and failure-closed scope, no protected credential
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REF" = 'refs/heads/codex/b13-t088-prod-backup-recovery-preflight-20261102'
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          bash -n ci/phase4/b13-t088-local-full-recovery-synthetic.sh
+          node --check ci/phase4/b13-t088-local-full-recovery-synthetic.mjs
+          echo 'T088_LOCAL_ONLY_NO_PROD_KEYS_OR_B2=PASS'
+      - name: Install pinned local Supabase CLI, never deploy
+        uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
+        with:
+          version: 2.120.0
+      - name: Boot temporary local GoTrue/Storage/PostgREST and run two-user fake JWT+Edge checks
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          bash ci/phase4/b13-t088-local-full-recovery-synthetic.sh
+          echo 'T088_SYNTHETIC_AUTH_STORAGE_EDGE_ONLY=PASS'
+          echo 'T088_ORIGINAL_FULL_PLATFORM_E8=HOLD'
