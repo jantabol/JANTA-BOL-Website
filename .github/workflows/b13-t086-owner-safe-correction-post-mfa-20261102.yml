@@ -1,0 +1,133 @@
+# B13 T086 — only genuine published correction deep-link back after Founder MFA.
+# Three authentic source eras: O (original 20261029), A1 Founder-controlled,
+# A2 exact-readonly correction safe-nav. No deploy or production database writes.
+name: B13 T086 Owner Correction Post-MFA — THREE BASELINE GATES + PG17
+on:
+  push:
+    branches: [codex/b13-t086-founder-safe-correction-deeplink-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-t086-owner-correction-post-mfa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t086_historical_three_source_eras:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: Original O 10/10 and Founder-approved A1 10+8+12 at exact original refs
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Fail closed if unrelated Article/Founder Auth/Live/SQL source altered
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=1a60b7ac9b141e7027ce071ab5e60c0343ca2424
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r p; do
+            case "$p" in
+              'JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js'|'ci/phase4/b12/v3-c1-public-integration.test.cjs'|'ci/phase4/b12/history/v3-c1-public-integration-20261102-founder-a-v1.cjs'|'ci/phase4/b13-t086-owner-correction-post-mfa-safe-nav.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_OWNER_CORRECTION_POST_MFA_SAFE_NAV_CANDIDATE_20261102.md'|'.github/workflows/b13-t086-owner-safe-correction-post-mfa-20261102.yml') ;;
+              *) echo "T086_A2_UNAUTHORIZED_OLD_NEWS_AUTH_OR_LIVE_CHANGE=$p"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${JB_BACKUP_B2_APPLICATION_KEY:-}"
+          echo 'T086_A2_EXACT_SIX_FILES_ONLY_NO_OLD_PRODUCT_REWRITE'
+      - name: Validate byte-identical archives and original three source identities
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          HIST=5d5fa9bd703607f890851b7a6d5aad3e80e3285e
+          A1=1a60b7ac9b141e7027ce071ab5e60c0343ca2424
+          test "$(git rev-parse HEAD:ci/phase4/b12/history/v3-c1-public-integration-20261029-frozen.cjs)" = 47452e35d880b3123ff0782f00564d849f5a06ba
+          test "$(git rev-parse HEAD:ci/phase4/b12/history/v3-c1-public-integration-20261102-founder-a-v1.cjs)" = 474ff764ae65850863b8142318083964086d4e4e
+          test "$(git rev-parse "$HIST:ci/phase4/b12/v3-c1-public-integration.test.cjs")" = 47452e35d880b3123ff0782f00564d849f5a06ba
+          test "$(git rev-parse "$A1:ci/phase4/b12/v3-c1-public-integration.test.cjs")" = 474ff764ae65850863b8142318083964086d4e4e
+          test "$(git rev-parse "$A1:JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js")" = a2107140321c2e099e785c678213ad278cbcfd5f
+          test "$(git rev-parse HEAD:JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js)" = d2d2742e46d3d373f6a6dd549f9d7b0fe684b862
+          test "$(git rev-parse HEAD:ci/phase4/b12/v3-c1-public-integration.test.cjs)" = ba03508b617ec6388bed458d986758383ba60943
+          echo 'T086_O_A1_A2_FROZEN_ARCHIVES_AND_EXACT_TEST_SHAS=PASS'
+      - name: Run unmodified historic O 10/10 on October 29 ORIGINAL source, not new source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          OLD_WORKTREE="$RUNNER_TEMP/t086-original-20261029"
+          git worktree add --detach "$OLD_WORKTREE" 5d5fa9bd703607f890851b7a6d5aad3e80e3285e
+          (cd "$OLD_WORKTREE" && node --test ci/phase4/b12/v3-c1-public-integration.test.cjs)
+          echo 'T086_ORIGINAL_O_HISTORICAL_TEN_REAL_EXECUTION_PASS_SCOPED'
+      - name: Run A1 current V3 10 and exact Father-A 8+12 protected security cases on A1 source
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          OLD_WORKTREE="$RUNNER_TEMP/t086-founder-a1"
+          git worktree add --detach "$OLD_WORKTREE" 1a60b7ac9b141e7027ce071ab5e60c0343ca2424
+          (cd "$OLD_WORKTREE" && node --test ci/phase4/b12/v3-c1-public-integration.test.cjs)
+          (cd "$OLD_WORKTREE" && node --test ci/phase4/b13-t086-founder-a-v3-controlled-diff.test.mjs)
+          (cd "$OLD_WORKTREE" && node --test ci/phase4/b13-t086-original-v3-old-lock-compatibility.test.mjs)
+          echo 'T086_FOUNDER_A1_HISTORICAL_TEN_EIGHT_TWELVE_REAL_EXECUTION_PASS_SCOPED'
+  t086_new_a2_current_source:
+    needs: t086_historical_three_source_eras
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: A2 10 canonical + 20 redirect negatives + old Founder/T077/T080/T083/Phase3
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - name: Current A2 original V3 canonical 10 cases stay a hard gate, all names retained
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+      - name: 20 strict Founder AAL2 post-login published correction / malicious URL / old-pins regression
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/b12-safe-nav.js
+          node --check ci/phase4/b13-t086-owner-correction-post-mfa-safe-nav.test.mjs
+          node --test ci/phase4/b13-t086-owner-correction-post-mfa-safe-nav.test.mjs
+      - name: Original B12 T077  and Founder AAL2 old fail-closed tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/b0-b12-safe-source-integration.test.mjs
+          node --test ci/phase4/b12/t077-purl-safety-readonly.test.cjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node --test ci/phase4/b10-t063-auth-manual-preflight.test.mjs
+      - name: Old T080 Article single UUID/CAS no fake publish and T083 120 legacy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+      - name: Phase3A/3B reporter/Owner Live safety, no real provider claim
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/functional-live-evidence.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+          echo 'T086_A2_POST_MFA_DESTINATION_PARSER_NOT_AN_AUTHORITY'
+      - name: Formal real Founder E3 / same-Article E4 / provider E5 not yet established
+        run: |
+          echo 'T086_A2_CORE_ONLY_CI_SCOPED'
+          echo 'T086_REAL_POST_MFA_ANDROID_E3=NOT_RUN'
+          echo 'T086_REAL_SINGLE_NEWS_PURL_LIFECYCLE_E4=NOT_RUN'
+          echo 'T086_REAL_PROVIDER_LIVE_E5=NOT_RUN'
+          echo 'T086_FINAL_PASS_LOCK=HOLD'
+  original_disposable_pg17:
+    needs: t086_new_a2_current_source
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
