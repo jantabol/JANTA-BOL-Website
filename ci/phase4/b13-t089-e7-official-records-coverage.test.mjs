@@ -28,6 +28,7 @@ const expectedPaths=new Set([
  'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs',
  root+'review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json',
  root+'review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json',
+ root+'review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json',
  '.github/workflows/b13-t089-records-audit-20261102.yml'
 ]);
 const row=id=>records.find(r=>r.id===id);
@@ -116,7 +117,44 @@ test('T089-07 previous Owner/Security/Backup test sources remain untouched; no r
  assert.ok(changed.every(path=>!path.startsWith(root+'db/')));
  assert.ok(changed.every(path=>!path.startsWith('CODEX_CURRENT_SUPABASE/')));
 });
+
+test('T089-08 58 no-filename candidates are honestly split 16 registered PASS evidence, 39 old NOT RUN and 3 IN PROGRESS',()=>{
+ const path=root+'review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json';
+ const data=JSON.parse(read(path));
+ assert.equal(data.records.length,58);
+ assert.equal(new Set(data.records.map(x=>x.id)).size,58);
+ assert.deepEqual(data.classification_summary,{
+  EXACT_PASS_IN_REGISTER:16,NOT_RUN_IN_SOURCE_SNAPSHOT:39,IN_PROGRESS_IN_SOURCE_SNAPSHOT:3});
+ const historicalIndex=new Map(idx.records.map(x=>[x.id,x]));
+ for(const x of data.records){
+  assert.equal(x.no_standalone_filename_match,true);
+  assert.equal(historicalIndex.get(x.id)?.candidate_review_files.length,0);
+  assert.equal(x.original_status,historicalIndex.get(x.id).official_register_status);
+  assert.equal(x.actual_historic_runtime_reverified_now,false);
+  const current=row(x.id);
+  if(x.id==='P4-T089'){
+    assert.equal(x.type,'NOT_RUN_IN_SOURCE_SNAPSHOT');
+    assert.match(current.status,/^IN PROGRESS/);
+  }else assert.equal(current.status,x.original_status,'Unapproved status drift: '+x.id);
+  if(x.type==='EXACT_PASS_IN_REGISTER'){
+    assert.equal(x.original_status,'PASS');
+    assert.equal(x.register_internal_evidence_present,true);
+    assert.ok(x.register_evidence_bullet_count>=2);
+    const lines=reg.split('\n');
+    assert.equal(lines[x.register_heading_line-1],'### '+x.id+' — PASS');
+    assert.match(lines.slice(x.register_heading_line,x.register_heading_line+12).join('\n'),/Evidence:/);
+  }else{
+    assert.equal(x.register_internal_evidence_present,false);
+    assert.equal(x.register_heading_line,null);
+    assert.ok(x.type==='NOT_RUN_IN_SOURCE_SNAPSHOT'||x.type==='IN_PROGRESS_IN_SOURCE_SNAPSHOT');
+  }
+ }
+ assert.match(data.strict_scope,/not new independent reexecution/);
+});
+
 console.log('T089_CANONICAL_109_UNIQUE_AND_14_BLOCKS=PASS_SCOPED');
+console.log('T089_E7_REGISTER_PASS_WITHOUT_FILENAME_16_HAVE_ORIGINAL_EVIDENCE_NARRATIVES=PASS_SCOPED');
+console.log('T089_E7_39_HISTORIC_NOT_RUN_AND_3_IN_PROGRESS_STILL_NOT_UPGRADED=PASS_SCOPED');
 console.log('T089_REGISTER_SOURCE_NOT_RUN_67_CURRENT_AFTER_START_66=DUE');
 console.log('T089_OFFICIAL_E7_INDEX_LINKED_RECORDS_109=PASS_SCOPED');
 console.log('T089_FULL_ORPHAN_REQUIREMENTS_DUPLICATE_IMPLEMENTATION=HOLD');
