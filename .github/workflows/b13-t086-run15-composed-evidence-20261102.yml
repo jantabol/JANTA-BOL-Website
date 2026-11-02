@@ -1,0 +1,75 @@
+# B13 T086 original AUTO/CORE regression — E1 source + isolated lifecycle VM.
+# E3 real Founder Android, E4 original Article/PURL, E5 actual hosted history proven
+# separately via source-labelled GitHub PR ledger; no production credentials/writes.
+name: B13 T086 RUN15 Full Lifecycle Regression + Genuine E1-E5 Evidence Gate
+on:
+  push:
+    branches: [codex/b13-t086-run15-evidence-final-gate-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: jb-b13-t086-run15-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  run15_original_lifecycle_e1:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T086 actual current Backend complete lifecycle VM plus old protected V3 and Live
+    runs-on: ubuntu-latest
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: No changes to original Product, Auth, News, Live, Ads or migrations
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=af584fdd6cd83d254a62719c35921921bee435d9
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r file; do
+            case "$file" in
+              'ci/phase4/b13-t086-run15-lifecycle-full.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md'|'.github/workflows/b13-t086-run15-composed-evidence-20261102.yml') ;;
+              *) echo "T086_NEW_UNAUTHORIZED_DIFF=$file"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'T086_ORIGINAL_PRODUCT_AUTH_NEWS_LIVE_HASHES_UNCHANGED=PASS'
+      - name: Execute real current backend in isolated VM complete 5-state cycle
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check ci/phase4/b13-t086-run15-lifecycle-full.test.mjs
+          node --test ci/phase4/b13-t086-run15-lifecycle-full.test.mjs
+      - name: Older T086 16 read-only source guards and Owner/Auth security negative tests
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t086-article-share-live-source.test.mjs
+          node --test ci/phase4/b13-t086-owner-correction-post-mfa-safe-nav.test.mjs
+          node --test ci/phase4/b12/v3-c1-public-integration.test.cjs
+          node --test ci/phase4/b12/founder-auth-readonly-regression.test.cjs
+          node --test ci/phase4/b12/b0-b12-safe-source-integration.test.mjs
+          node --test ci/phase4/b12/t077-purl-safety-readonly.test.cjs
+          node --test ci/phase4/b12/t080-durable-article-intent.test.mjs
+          node --test ci/phase4/b12/t080-android-reload-reconciliation.test.mjs
+          node --test ci/phase4/b12/t080-admin-ack-failclosed.test.mjs
+          node ci/phase4/b12/t083-original-legacy-regression-recheck.cjs
+          node --test ci/phase4/b12/t083-current-live-public-truth-safety.test.mjs
+          node ci/phase3-regression/functional-live-evidence.cjs
+          node ci/phase3-regression/static-p3-final-p4-regression.cjs
+      - name: Correct original E-code interpretation and genuine external Live dependencies stay DUE
+        run: |
+          echo 'E1=CI + AUTOMATED LOGS'
+          echo 'E3=REAL FOUNDER PHONE SCREENSHOT'
+          echo 'E4=SAME ARTICLE ID/PURL'
+          echo 'E5=REAL AUDIT/HISTORY/LIFECYCLE RECORD'
+          echo 'E6=REAL PROVIDER EXTERNAL PROOF (NOT A T086 REQUIRED EVIDENCE)'
+          echo 'T086_EXTERNAL_LIVE_PROVIDER_RUNTIME=DUE_NOT_FAKED'
+          echo 'T086_RUNNING_NEW_CANDIDATE_NOT_YET_FINAL_LOCK'
+  protected_actual_disposable_pg17:
+    needs: run15_original_lifecycle_e1
+    uses: ./.github/workflows/b12-b8-reconciled-protected.yml
+    permissions:
+      contents: read
