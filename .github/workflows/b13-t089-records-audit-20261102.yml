@@ -1,0 +1,77 @@
+# P4-T089 RUN15 sections 793–804 — JANTA BOL official records E1+E7
+# Strict source-only: does NOT prove full semantic orphan cleanup / final lock.
+name: B13 T089 109 Official Records E1 E7 Audit - Protected
+on:
+  push:
+    branches: [codex/b13-t089-official-records-coverage-audit-20261102]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: b13-t089-official-e1-e7-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t089_e1_e7_canonical_109_traceability:
+    if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
+    name: T089 Original RUN15 109 unique/14 blocks/E7 official map and orphan gap
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Fail-closed source boundary; old product, backup, Auth, SQL unchanged
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          BASE=985f0071091760752aa00b72cde4bc14d53bc412
+          test "$(git merge-base "$BASE" HEAD)" = "$BASE"
+          while IFS= read -r path; do
+            case "$path" in
+              'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'JANTA_BOL_PHASE_4_WORKING/CODE-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/DEBUG-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/CHANGELOG.md'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md'|'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs'|'.github/workflows/b13-t089-records-audit-20261102.yml') ;;
+              *) echo "T089_UNAUTHORIZED_SOURCE_OR_SAFETY_CHANGE=$path"; exit 1 ;;
+            esac
+          done < <(git diff --name-only "$BASE" HEAD)
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_ACCESS_TOKEN:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          echo 'T089_OLD_PRODUCT_AUTH_BACKUP_SQL_PRESERVED=PASS_SCOPED'
+      - name: Actual 109-ID E1/E7 missing/duplicate/orphan/official map contract
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t089-e7-official-records-coverage.test.mjs
+          echo 'T089_E1_E7_CANONICAL_INDEX_AND_RECORD_TRACE=PASS_SCOPED'
+          echo 'T089_SEMANTIC_ORPHAN_REQUIREMENTS_AND_FULL_FINAL=HOLD'
+      - name: Preserve original Phase3 705 test-ID classification (not historical automated PASS)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/coverage-audit.cjs
+          echo 'T089_PHASE3_705_TEST_REGISTER_CLASSIFICATION=PASS_SCOPED'
+          echo 'T089_705_HISTORICAL_TESTS_EXECUTED_THIS_JOB=NO'
+  t089_protected_old_regression_no_fake_success:
+    name: Original protected News Auth Recovery + T070 manual safety regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Original Phase3 News/Auth/Recovery/Incident source regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+      - name: Original manual backup guard + failure-matrix source no bypass
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
+          echo 'T089_OLD_LOCKED_REGRESSIONS=PASS_SCOPED'
+          echo 'T089_ORIGINAL_FINAL_PASS_LOCK=HOLD'
