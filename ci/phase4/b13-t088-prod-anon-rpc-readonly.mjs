@@ -48,7 +48,7 @@ const privateTables=[
 ];
 for(const table of privateTables){
  const restricted=new URL('/rest/v1/'+table,config.url);
- restricted.searchParams.set('select','id');
+ restricted.searchParams.set('select',table==='user_roles'?'user_id':'id');
  restricted.searchParams.set('limit','1');
  const check=await fetch(restricted,{
    method:'GET',redirect:'error',
