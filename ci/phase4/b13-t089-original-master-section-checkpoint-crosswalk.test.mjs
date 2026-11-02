@@ -77,7 +77,62 @@ test('T089-S05 Appendix B crosswalk is requirement-address proof ONLY; no fake f
  assert.ok(m.source_type.includes('TEST STATUS NOT inferred'));
  assert.equal(e.policy.includes('not signed authoritative proof'),true);
 });
+
+const topicSource=JSON.parse(fs.readFileSync(root+'P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json','utf8'));
+const registerRows=fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md','utf8').split('\n').filter(x=>/^\| P4-T\d{3} \|/.test(x)).map(x=>{const t=x.split('|').map(z=>z.trim());return {id:t[1],block:t[4],status:t[5]};});
+test('T089-S06 Appendix B 14-topic range ownership covers original 1–1034 sections without gap/duplicate',()=>{
+ const topics=topicSource.topics;
+ assert.equal(topics.length,14);
+ let expectFirst=1, expectTest=1, totalCheckpoints=0, topicCoded=0;
+ const seenTestIds=[];
+ for(const t of topics){
+  assert.equal(t.topic,topics.indexOf(t)+1);
+  assert.equal(t.section_start,expectFirst,'Gap/overlap in topic sections before '+t.name);
+  assert.ok(t.section_end>=t.section_start,'Empty topic section range');
+  expectFirst=t.section_end+1;
+  const a=+t.test_start.slice(-3),b=+t.test_end.slice(-3);
+  assert.equal(a,expectTest,'Gap/overlap in topic tests');
+  assert.equal(b-a+1,t.test_count);
+  expectTest=b+1;
+  totalCheckpoints+=t.checkpoints;
+  if(t.code_prefix)topicCoded+=t.checkpoints;
+  const items=m.records.slice(a-1,b);
+  assert.equal(items.length,t.test_count);
+  for(const item of items){
+    seenTestIds.push(item.id);
+    assert.equal(registerRows[+item.id.slice(-3)-1]?.block,t.block,
+      'Register block/source topic mismatch '+item.id);
+    const ids=Array.from(item.master_map.matchAll(/([A-Z]{2,7})-\d{3}/g)).map(x=>x[1]);
+    if(t.code_prefix)assert.ok(ids.every(code=>code===t.code_prefix),
+      'Mixed requirement family '+item.id);
+    else assert.equal(ids.length,0,'Unexpected coded family in numeric-only topic '+item.id);
+  }
+  if(t.code_prefix){
+   const group=grouped[t.code_prefix]||[];
+   assert.equal(group.length,t.checkpoints,'Topic coded checkpoint count differs from explicit Appendix B IDs '+t.name);
+  }
+ }
+ assert.equal(expectFirst,1035);
+ assert.equal(expectTest,110);
+ assert.deepEqual(seenTestIds,expected);
+ assert.equal(totalCheckpoints,682);
+ assert.equal(topicCoded,433);
+ assert.equal(totalCheckpoints-topicCoded,249);
+ assert.equal(topicSource.expected_total_original_checkpoints,682);
+ assert.equal(topicSource.numeric_only_checkpoint_count_that_is_not_individually_named_in_appendix_b,249);
+ assert.equal(topicSource.proof_policy.includes('NOT one-to-one code or runtime proof'),true);
+});
+test('T089-S07 source numeric 1–339 topic-assigned BUT code-to-section semantic equivalence explicitly unproved',()=>{
+ assert.deepEqual(topicSource.topics.slice(0,6).map(x=>[x.section_start,x.section_end]),
+ [[1,38],[39,101],[102,144],[145,204],[205,241],[242,339]]);
+ assert.ok(topicSource.topics.slice(0,6).every(t=>t.code_prefix));
+ assert.equal(m.full_master_requirements_1_to_1034_semantically_proven,false);
+ assert.equal(topicSource.proof_policy.includes('not independently semantically mapped'),true);
+});
+
 console.log('T089_BLUEPRINT_695_NUMBERED_SECTIONS_340_TO_1034_UNIQUE=PASS_SCOPED');
+console.log('T089_TOPIC_14_TESTS_109_CHECKPOINTS_682_SECTIONS_1034=PASS_SCOPED_ADDRESSES');
+console.log('T089_TOPIC_249_NUMERIC_ONLY_CHECKPOINTS_NOT_INDIVIDUALLY_NAMED=HOLD_SEMANTICS');
 console.log('T089_BLUEPRINT_433_CODED_CHECKPOINTS_9_DOMAINS_UNIQUE=PASS_SCOPED');
 console.log('T089_REQUIREMENT_ADDRESS_ORPHANS_AND_DUPLICATES=ZERO_IN_APP_B_MAP');
 console.log('T089_FULL_1_TO_339_MASTER_SEMANTIC_IMPLEMENTATION_AND_FINAL_E7=HOLD');
