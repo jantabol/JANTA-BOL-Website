@@ -34,7 +34,7 @@ CREATE POLICY owner_admin_can_read_roles ON public.user_roles FOR SELECT TO auth
 SELECT set_config('b9.test_uid','11111111-1111-1111-1111-111111111111',true),
        set_config('b9.test_aal','aal1',true),
        set_config('b10.session_active','off',true),
-       set_config('request.jwt.claims','{"session_id":"90000000-0000-4000-8000-000000000087","aal":"aal1"}',true);
+       set_config('request.jwt.claims','{"sub":"11111111-1111-1111-1111-111111111111","session_id":"90000000-0000-4000-8000-000000000087","aal":"aal1"}',true);
 SET LOCAL ROLE authenticated;
 DO $red_owner$
 BEGIN
@@ -47,7 +47,7 @@ BEGIN
 END $red_owner$;
 RESET ROLE;
 -- Old policy RED: a revoked Admin still enumerates all user roles.
-SELECT set_config('b9.test_uid','44444444-4444-4444-8444-444444444487',true);
+SELECT set_config('request.jwt.claims','{"sub":"44444444-4444-4444-8444-444444444487","session_id":"90000000-0000-4000-8000-000000000087","aal":"aal1"}',true);
 SET LOCAL ROLE authenticated;
 DO $red_admin$
 BEGIN
@@ -88,7 +88,7 @@ END $green_owner_revoked$;
 RESET ROLE;
 -- Positive control: active Owner AAL1 can still read their own role to
 -- bootstrap Login/MFA, but cannot enumerate other users.
-SELECT set_config('request.jwt.claims','{"session_id":"10000000-0000-4000-8000-000000000063","aal":"aal1"}',true);
+SELECT set_config('request.jwt.claims','{"sub":"11111111-1111-1111-1111-111111111111","session_id":"10000000-0000-4000-8000-000000000063","aal":"aal1"}',true);
 SET LOCAL ROLE authenticated;
 DO $green_owner_active$
 BEGIN
@@ -99,7 +99,7 @@ END $green_owner_active$;
 RESET ROLE;
 -- Positive control: active Admin may list role accounts as originally intended.
 SELECT set_config('b9.test_uid','44444444-4444-4444-8444-444444444487',true),
-       set_config('request.jwt.claims','{"session_id":"44444444-4444-4444-8444-444444444488","aal":"aal1"}',true);
+       set_config('request.jwt.claims','{"sub":"44444444-4444-4444-8444-444444444487","session_id":"44444444-4444-4444-8444-444444444488","aal":"aal1"}',true);
 SET LOCAL ROLE authenticated;
 DO $green_admin_active$
 BEGIN
