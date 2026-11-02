@@ -143,7 +143,7 @@ jobs:
 
   t088_local_synthetic_go_true_storage_edge:
     if: ${{ github.repository == 'jantabol/JANTA-BOL-Website' }}
-    name: No-cost isolated local Auth+RLS+Storage+Edge runtime (SYNTHETIC only)
+    name: No-cost isolated GoTrue+signed RLS+private Storage (Edge 503 explicitly HOLD)
     runs-on: ubuntu-latest
     timeout-minutes: 25
     permissions:
@@ -167,10 +167,10 @@ jobs:
         uses: supabase/setup-cli@45a513f8c64c0bc8e0e3dfe572b5c95be85f6359
         with:
           version: 2.120.0
-      - name: Boot temporary local GoTrue/Storage/PostgREST and run two-user fake JWT+Edge checks
+      - name: Boot local GoTrue+Storage+PostgREST with 2 FAKE signed users; keep Edge 503 HOLD
         shell: bash
         run: |
           set -Eeuo pipefail
           bash ci/phase4/b13-t088-local-full-recovery-synthetic.sh
-          echo 'T088_SYNTHETIC_AUTH_STORAGE_EDGE_ONLY=PASS'
+          echo 'T088_SYNTHETIC_GO_TRUE_POSTGREST_STORAGE=PASS_SCOPED'\n          echo 'T088_SYNTHETIC_EDGE_LOCAL_BOOT_503=HOLD_NOT_RETRIED'
           echo 'T088_ORIGINAL_FULL_PLATFORM_E8=HOLD'
