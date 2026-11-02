@@ -27,7 +27,7 @@ jobs:
           test "$(git merge-base "$BASE" HEAD)" = "$BASE"
           while IFS= read -r path; do
             case "$path" in
-              'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'JANTA_BOL_PHASE_4_WORKING/CODE-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/DEBUG-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/CHANGELOG.md'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md'|'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs'|'.github/workflows/b13-t089-records-audit-20261102.yml') ;;
+              'JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md'|'JANTA_BOL_PHASE_4_WORKING/CODE-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/DEBUG-MAP.md'|'JANTA_BOL_PHASE_4_WORKING/CHANGELOG.md'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md'|'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs'|'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs'|'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json'|'.github/workflows/b13-t089-records-audit-20261102.yml') ;;
               *) echo "T089_UNAUTHORIZED_SOURCE_OR_SAFETY_CHANGE=$path"; exit 1 ;;
             esac
           done < <(git diff --name-only "$BASE" HEAD)
@@ -41,6 +41,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b13-t089-e7-official-records-coverage.test.mjs
+          node --test ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs
           echo 'T089_E1_E7_CANONICAL_INDEX_AND_RECORD_TRACE=PASS_SCOPED'
           echo 'T089_SEMANTIC_ORPHAN_REQUIREMENTS_AND_FULL_FINAL=HOLD'
       - name: Preserve original Phase3 705 test-ID classification (not historical automated PASS)
