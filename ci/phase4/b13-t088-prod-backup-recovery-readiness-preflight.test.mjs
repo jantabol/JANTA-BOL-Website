@@ -90,6 +90,7 @@ test('T088-08 T087 evidence branch is unchanged; T088 only adds CI/dossier/regis
  const allow=new Set([
   dossier,register,
   'ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs',
+  'ci/phase4/b13-t088-prod-anon-rpc-readonly.mjs',
   '.github/workflows/b13-t088-prod-backup-readiness-preflight-20261102.yml'
  ]);
  for(const p of changed) assert.ok(allow.has(p),'T088_UNAUTHORIZED_SOURCE_OR_BACKUP_CHANGE: '+p);
