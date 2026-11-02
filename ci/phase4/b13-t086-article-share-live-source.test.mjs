@@ -1,5 +1,6 @@
 // P4-T086 RUN-15 original Core Article / Share / Phase3 Live SOURCE gates.
-// Never substitutes for real Founder E3/E4 or provider E5.
+// The original E5 is REAL AUDIT/HISTORY/LIFECYCLE, NOT external Live provider E6.
+// The historical pre-lock source test is preserved byte-identically in ci/phase4/b13/history.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync,existsSync} from 'node:fs';
@@ -16,17 +17,21 @@ const paths={
  live:root+'phase3a-live-client.js',
  delivery:root+'phase3c-live-delivery.js',
  liveApi:'CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts',
- report:'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md'
+ report:'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md',
+ finalReport:'JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md'
 };
 const v=Object.fromEntries(Object.entries(paths).map(([k,p])=>[k,readFileSync(p,'utf8')]));
 const all=(source,needles)=>needles.forEach(t=>assert(source.includes(t),'T086_MISSING_GUARD: '+t));
 const blob=p=>execFileSync('git',['rev-parse','HEAD:'+p],{encoding:'utf8'}).trim();
-test('T086-01 original B13 RUN15 is NOT RUN, E3/E4/E5 still DUE',()=>{
+test('T086-01 original B13 RUN15 final individual core PASS is E1+E3+E4+E5, not external provider E6',()=>{
  const row=readFileSync('JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md','utf8').split('\n').find(x=>x.startsWith('| P4-T086 |'));
  assert(row?.includes('Core Article Lifecycle + Live Regression'));
- assert(row?.includes('| B13 | NOT RUN — FINAL |'));
- all(v.report,['RUN-15','Topic 12','765–772','E1 + E3 + E4 + E5',
- 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD']);
+ assert(row?.includes('| B13 | PASS |'));
+ const evidence=readFileSync(paths.finalReport,'utf8');
+ all(evidence,['RUN-15','Topic 12','765–772','E1 + E3 + E4 + E5',
+ 'E5 = audit / history / notification / lifecycle record.',
+ 'T086_CORE_RUN15_INDIVIDUAL_FINAL_LOCK=PASS+LOCK',
+ 'T086_LIVE_EXTERNAL_PROVIDER_RUNTIME=DUE']);
 });
 test('T086-02 old Article/Public/Live frontend source byte hashes unchanged',()=>{
  const pins={
@@ -138,11 +143,13 @@ test('T086-15 original Phase3 Live/News/Auth and T080/T083 suites still exist',(
  'ci/phase4/b12/v3-c1-public-integration.test.cjs'
  ])assert(existsSync(p),'MISSING_OLD_TEST: '+p);
 });
-test('T086-16 never imply live Android full lifecycle or provider E5 passed from CI',()=>{
- all(v.report,['T086_E3_REAL_ANDROID_FULL_CREATE_TO_REPUBLISH=NOT_RUN',
- 'T086_E4_REAL_SINGLE_ARTICLE_PURL_CORRECTION_UNPUBLISH_REPUBLISH=NOT_RUN',
- 'T086_E5_REAL_PROVIDER_LIVE_APPROVE_START_STOP_VIEWER=NOT_RUN',
- 'T086_E3_E5_REAL_CATEGORY_DISTRICT_SHARE_BROWSER=NOT_RUN',
- 'T086_OFFICIAL_FINAL_PASS_LOCK=HOLD']);
- assert(!v.report.includes('T086_OFFICIAL_FINAL_PASS_LOCK=PASS'));
+test('T086-16 no fake factual correction, external Live E6 or B13 whole-platform final PASS',()=>{
+ const e=readFileSync(paths.finalReport,'utf8');
+ all(e,['T086_LIVE_EXTERNAL_PROVIDER_RUNTIME=DUE',
+ 'T086_SYNTHETIC_FIXTURE_NOT_PUBLIC=YES',
+ 'T086_ACTUAL_FACTUAL_CONTENT_CORRECTION=NOT_CLAIMED',
+ 'T086_B13_GLOBAL_FINAL_CLOSURE=HOLD',
+ 'T086_POST_MFA_EXPIRED_SESSION_CORRECTION_DEEPLINK_REAL_DEVICE=DUE',
+ 'T086_CORE_RUN15_INDIVIDUAL_FINAL_LOCK=PASS+LOCK']);
+ assert(!e.includes('T086_B13_GLOBAL_FINAL_CLOSURE=PASS'));
 });
