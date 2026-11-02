@@ -120,3 +120,19 @@ assert.ok(markup.includes('JANTA') && markup.includes('JBPublicC1.get(id)') &&
 console.log('T088_LIVE_PUBLIC_ARTICLE_PURL_UUID_SLUG_IDENTICAL=PASS_SCOPED');
 console.log('T088_LIVE_PUBLIC_ARTICLE_HTML_GET=PASS_SCOPED');
 console.log('T088_ANDROID_TWO_DEVICE_JS_RENDERING=NOT_TESTED_BY_CI');
+
+
+// E6: GoTrue Auth *public health* endpoint response over canonical project
+// HTTPS, no sign-in, no sessions, no JWT, no contact/account payloads.
+const healthUrl=new URL('/auth/v1/health',config.url);
+const health=await fetch(healthUrl,{
+ method:'GET',redirect:'error',
+ headers:{apikey:config.publishableKey,accept:'application/json'},
+ signal:AbortSignal.timeout(20000)
+});
+assert.equal(health.status,200,'T088_GOTRUE_REAL_PUBLIC_HEALTH_HTTP='+health.status);
+const healthData=await health.json();
+assert.ok(healthData && typeof healthData==='object' && !Array.isArray(healthData),
+ 'T088_GOTRUE_REAL_PUBLIC_HEALTH_JSON_SHAPE');
+console.log('T088_REAL_GOTRUE_PUBLIC_HEALTH_GET=PASS_SCOPED');
+console.log('T088_AUTH_USER_SESSION_SIGNED_POSITIVE_AND_RECOVERY=NOT_TESTED_BY_HEALTH');
