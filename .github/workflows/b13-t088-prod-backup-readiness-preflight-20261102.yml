@@ -43,6 +43,8 @@ jobs:
           set -Eeuo pipefail
           node --test ci/phase4/b13-t088-prod-backup-recovery-readiness-preflight.test.mjs
           node --test ci/phase4/b13-t088-edge-source-lineage-contract.test.mjs
+          echo 'T088_EDGE_PRODUCTION_SOURCE_PROVENANCE_10_EXACT=PASS_SCOPED'
+          echo 'T088_EDGE_MISSING_SOURCE_GAP_5=HOLD'
       - name: Re-run unchanged Phase3 security + backup/recovery + incident originals
         shell: bash
         run: |
