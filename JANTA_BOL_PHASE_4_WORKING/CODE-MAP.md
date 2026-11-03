@@ -538,3 +538,86 @@ For every block:
 - **ENV05**: `loadedmetadata` shows local video dimensions/duration only (including representative 15s MP4); image source tests cover 3264×1840, 2448×2448, 1600×2000 and 4000×1000 without crop (contain). All local metadata and magic-byte preflight are NOT FFmpeg/AV, server-side poster, clean release, remote storage or original-file proof. **SOURCE/CI VERIFIED, REAL PHOTOS/VIDEO AND BACKEND E2/E3/E5/E7 DUE**.
 - New independent `ci/phase4/b7-cp06-android-environment.test.cjs` executes 7 focused environment/security/media cases through existing source; older `ci/phase4/b7-media-preview-regression.cjs`, CP04, CP05, E1, PostgreSQL and Phase3 protections remain wired to CI. Changed only `JANTA_BOL_PHASE_3C_WORKING/ad-media-preview.js`, new regression, and existing Candidate workflow test step. All Source and CI candidates untouched otherwise.
 - All 6 × 5 CP groups now have an engineering source/checkpoint record; **30/30 findings accounted for, NOT 30/30 production resolved**. Original test manifest `P4-T034..P4-T042` **0/9 FINAL PASS+LOCK**, ZIP release **BLOCKED**. Founder's next stage = bounded Android E3 on exact SHA SPCK test copy, original SPCK project and database kept intact. Required E2/E5/E6/E7 remain separately DUE; no hidden positive approval and no real money test.
+
+
+## T089 OFFICIAL E7 AUDIT CHECKPOINT — 2026-11-02
+
+Official code ownership remains canonical where listed; T089 audit checks mapping integrity without new implementation, shadow module creation, migration or public deployment. All 14 blocks are represented by 109 distinct canonical test IDs. The 109-entry register-to-candidate index maps test identity to available candidate proof only; it does NOT prove orphan requirements, duplicate code absence, implementation closure or current production source. T087 signed-hosted E2/E5, T088 full GoTrue/Edge/Vercel E8 and cross-identity/provider E6 remain HOLD. The actual deployed site is at commit 93df12aa..., not default main; 5 live Edge function sources absent from the checked Git repository. Preserve rather than replace old B7/Phase3 code homes.
+
+**Candidate index:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json`. **Dossier:** `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. **T089 original Final Lock = HOLD** pending full E1+E7. Previous contents are historical and unchanged.
+
+
+### T089 E7 original Master Appendix B source crosswalk — 2026-11-02
+
+Master Appendix B checkpoint-to-test authority: all 109 tests have explicit `Maps / Sections` fields in the user-provided 321-page Master. Source crosswalk expands 695 numbered Sections 340–1034 and 433 coded checkpoints across nine requirement families; each checkpoint belongs to exactly one original test ID. This is the *design-map authority*, not module semantic uniqueness or a deployment. Historic CODE-MAP implementer homes remain protected. Current production-served source SHA differs from main and 5 live Edge functions lack independent Git source: hold any source-only full-restore claim.
+
+Source: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json`; contract: `ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs`. **Proof is requirement-address only. T089 original full FINAL PASS+LOCK HOLD.**
+
+
+### T089 E7 — ORIGINAL 14-topic/682 checkpoint aggregate crosscheck (2026-11-02)
+
+Original Founder Master Appendix B source: exact 14 original topic ranges are contiguous Sections **1–1034**, test ranges **P4-T001–T109**, and topic checkpoint *counts* sum **682**. Appendix B explicitly names 433 coded checkpoint IDs across nine families. Remaining 249 checkpoints are topic-count totals in five non-coded families (**44/50/55/50/50**); individual checkpoint identifiers are **not** supplied by that Appendix and are not fabricated. Appendix B numeric Sections 340–1034 (695) and 433 explicitly coded checkpoint IDs map once to original tests, while Section 1–339 code/section equivalence and implementation-level semantic duplicate/orphan test remains DUE. **Not full E7 PASS.**
+
+Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json` and fail-hard `T089-S06/S07`. No protected source changes; old history retained.
+
+
+### T089 E7 — 58 missing-standalone-filename candidates checked against official register (2026-11-02)
+
+The 58 *filename-only* gaps split as **16 original exact PASS records with 3–6 substantive Evidence bullets directly in the canonical TEST-REGISTER**, **39 original NOT RUN** (including the later-started T089) and **3 original IN PROGRESS**. **Absence of a separate file never invalidates already recorded official evidence.** Sixteen located historical source narratives are preserved, not re-executed; 42 remaining no-filename entries retain their original non-PASS status. Scoped protected evidence contract `T089-08` verifies every row; original full E7/source semantic duplication/source conflict remains HOLD.
+
+Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json`. No new backend authority, user record or production change.
+
+
+### T089 2026-11-03 independently retrieved live Edge source parity
+
+15 live Supabase functions were independently inventoried via authenticated read-only control plane. Exactly 10 actively deployed `index.ts` sources equal their same-name GitHub candidate bytes (per-file exact comparison). Five deployed functions lack source directories in the *public* Git repository: `jb-recovery-delete-mfa`, `jb-grievance-assets`, `jb-b11-t069-media-backup` (4 deployment files), `jb-youtube-oauth-health`, `jb-youtube-video-preflight`. Their deployed source bodies **are retrievable**, but source parity to a vetted tracked recovery home is unavailable; nothing was copied to a public repository or deployed. See `review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. Original E7 module/source uniqueness and final T089 lock remain HOLD.
+
+
+### T089 2026-11-03 protected regression negative / exact revert + recovery trace
+
+Exact live deployed source review found all **5/5** previously untracked Edge functions and **8/8** authentic file contents, with **10/10** already-tracked active Edge sources byte-equal. A trial to copy those eight source files directly into the protected `CODEX_CURRENT_SUPABASE/` tree was **correctly blocked by original T087-M16** in Actions **#41581040652 RED**. It was immediately reverted by forward commit `619460b8`; no original security test was weakened. Exact recovered source copies are only in the unmerged historical Git revision `7556a44f`, **not current HEAD**; production was never changed. Actions **#41581212587 2/2 GREEN**. Further source recovery must use an authorized non-product archive/review gate before any protected-main change. **T089 E1/source reconciliation PASS SCOPED; full E7 semantic/source conflict and original FINAL PASS+LOCK HOLD.** Dossier: `review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`.
+
+
+### T089 E7 2026-11-03 final read-only review archive safe path — GREEN
+
+**PASS (SCOPED):** 5 active deployed-only Edge function sources, 8 exact original files now preserved in review-only audit archive `JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/`, manifest `review/P4_T089_REVIEW_ONLY_EDGE_5_FUNCTION_8_FILE_MANIFEST_20261103.json`, fail-hard source-byte CI. No product/SQL/Owner/Auth/backup or deployed Edge changes. Previously protected T087-M16 correctly failed unauthorized product-tree copy; fixed by review-only archive, **old test unchanged**. Exact-head GitHub Actions #41581449180 **2/2 SUCCESS**. T089 original **FINAL PASS+LOCK still HOLD** for semantic module orphan/duplicate and production SHA/source-ownership E7 unresolved; 66 other register NOT RUN not retroactively upgraded. See dated T089 dossier. Founder manual: NONE; no production deploy or payment.
+
+
+### T089 Nov03 Git ancestry verification: no competing production branch, main lag explicitly preserved
+
+Git compare independently confirms `main` `f447231c` → actual Vercel prod source `93df12aa` (**ahead 434 / behind 0**) → current T089 audit review commit `54fb1a88` (**ahead 192 / behind 0**, merge-base = prod): **linear ancestry, not diverged competing branch histories**. Protected main is still older than live; avoid blind merge/deploy. This is **production source ancestry PASS_SCOPED**, not successful deployment parity or full same-purpose semantic duplicate/orphan audit. Review-only exact 5-function/8-file Edge archive remains unmerged; T089 original FINAL PASS+LOCK HOLD. See dated T089 dossier.
+
+
+
+### T089-D STATIC CROSS-ENGINE / SOURCE OF TRUTH — 2026-11-03
+
+Started independent original E7 duplicate/orphan semantic source review beyond existing HTML/JS graph: actual 32 HTML/32 JS source files, canonical article DB write ownership, C1 read adapter, Team/Records/Live Edge command gateways, B8 staff/public separation, B9 RPC and Ads public-feed source. New fail-hard file `ci/phase4/b13-t089-cross-engine-static-owners-20261103.test.mjs` and 8-family / 3-review-finding matrix `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_CROSS_ENGINE_STATIC_SOURCE_AUTHORITY_MATRIX_20261103.json` on unmerged Draft PR #113. Source-only, old T087 protected no-source-change regression kept intact. **Static-only PASS if exact-head CI green, NOT full E7.**
+
+**Explicit review findings:** legacy `phase2-client.js` and `phase4-domain-client.js` both contain Grievance and Compliance *read* wrappers; the hosted direct `/index.html` legacy static route is not independently checked, even though `/` redirects to canonical product; `script.js` includes historical hardcoded weather preview strings but the `.top-story-open` control is absent in canonical HTML. These are legitimate classification items, **not proof that users currently see false news or that two backend write authorities exist**. Preserve original code pending exact behavior check and a minimal safe follow-up. Sections 1–339 semantic and production-source full authority remain DUE. **T089_ORIGINAL_FINAL_PASS_LOCK=HOLD**, no Founder Android/manual step, production and old source unchanged.
+
+
+### T089 2026-11-03 independent source-owner audit CI — D01–D09 GREEN
+
+New read-only 9-case T089-D01..D09 static owner audit **PASS 9/9** on SHA `53c9e2fa`; GitHub Actions **#41587871089 2/2 jobs SUCCESS**, original T087-M16 old product/Supabase immutability remained GREEN. Covers canonical Article DB author, single C1 public RPC, Team/Records/Live API callers, B8 staff/public separation, B9 and Ads public source ownership. Three review-only P2 findings remain: duplicate Grievance/Compliance **read** wrappers, legacy static root route, obsolete weather preview handlers (canonical button absent, not live-proven). None is silently treated as production breach or resolved duplicate. `T089_E7_SOURCE_OWNER=PASS_SCOPED`; full semantic E7 & original T089 FINAL PASS+LOCK **HOLD**. No product/DB/Production/News/Auth change or Founder step. Full details: T089 dossier and source authority matrix.
+
+
+
+### T089 LIVE E7 2026-11-03 targeted P1 production source and actual route verification
+
+Two **real P1 gaps independently confirmed via live read-only Vercel + Supabase metadata**: (1) `https://jantabol.in/index.html` serves 200 legacy static demo news while `/` serves canonical C1; isolated redirect **DRAFT PR #115** old-security source CI GREEN, not deployed. (2) old Owner `JBPhase2.setGrievanceStatus` directly UPDATEs RLS-protected grievance status, bypassing required server transition FSM / case history event / notification; isolated guarded-RPC **DRAFT PR #116**, source CI GREEN, not deployed. P2 duplicate Grievance/Compliance read wrappers remain only that, two façades over the same data; the separate *write* bypass is the actual integrity concern. Exact source/evidence new checks T089-D10/11; no DB, real News, Security or production changes. **T089 E1/E7 scoped source and P1 classification PASS; original FINAL PASS+LOCK HOLD pending approved release and hosted negative verification.** No Founder manual step, paid service or old phone repeat.
+
+
+
+### T089 verified production P1 fixes — 2026-11-03 narrow release + SCOPED LOCK
+
+**Actual merged production fix** PR #117 / SHA `60970abd` deployed on Vercel `dpl_7YhVGAh758YvZq6HmteERdyCKtMb` READY; jantabol.in and www both alias the same exact deployment. Tested preview and merged prod commit have identical tree `424c9aa4`; combined protected CI #41608275138 SUCCESS. Production HTTP: `/`, `/index.html`, canonical home all 200 same published-C1 markup, no old fake rain static; `phase2-client.js` served with RPC-backed grievance transition and no legacy direct UPDATE; Article/Login/B9/Grievances pages 200, one published article ID present through C1 RPC and public article path HTTP 200. **T089 P1 legacy public-root fix PASS+LOCK SCOPED; T089 P1 legacy Grievance UI direct-update fix PASS+LOCK SCOPED.** Original protected Auth/News/SQL/backup unchanged. No authenticated staff actual workflow performed and Owner RLS direct UPDATE policy remains; full platform source/E7 and original **T089 FINAL PASS+LOCK HOLD**. Historic P1 findings in source matrix refer to before PR #117; current release overlay is authoritative for those two paths.
+
+
+
+### T089 E1/E7 scoped close and original full HOLD — 2026-11-03
+
+**Formal scoped-only closure** authorized by Founder to complete T089 without inventing E7. Original T089 RUN15 §§793–804 requires BOTH E1+E7 and independently zero orphan/duplicate implementations. Exact original appendix test IDs **109/109 unique**, **14/14 blocks**, **1–1034 topic address cover**, **682 aggregate checkpoints** and **433 coded ones** proven. **249 source checkpoints are aggregate-only; Sections 1–339 do not have verified semantic 1:1 code equivalence.** Original evidence candidate index: 51 filenames, 58 without filenames; 16 original historical PASS with substantive register evidence, 39 historical NOT RUN, 3 IN PROGRESS; NONE is silently promoted to PASS. Dated CODE-MAP/DEBUG-MAP/CHANGELOG/REGISTER/Evidence Index now cross-reference authoritative evidence.
+
+**Real production** narrow PR #117 MERGED (commit `60970abdacf560815b9db3bd819eb467ef984616`), Vercel deployment `dpl_7YhVGAh758YvZq6HmteERdyCKtMb` READY and aliases `jantabol.in`/`www.jantabol.in` point there. Production HTTP verified canonical published C1 for `/` and `/index.html` (no obsolete demo news); live legacy grievance JS uses server state-machine RPC instead of direct status table update. Preview Git SHA `430003db...` and production merged SHA share exact tree `424c9aa4...`; both protected CI #41608275138 and final audit CI #41609452691 GREEN. Article HTML and read-only C1 published-record presence verified; **full rendered browser and authenticated Owner-negative E5 not completed**. Current source archiving 5 deployed-only functions is review-only, not a live backup restore, and Vercel prod source ancestry does NOT prove currently outdated `main` parity.
+
+**SCOPED PASS+LOCK:** Original E1 register/count/address audit + partial E7 source owner/trace (without pretending 249 unnamed checks have executable proofs) and two production P1 fixes only. **ORIGINAL T089 FULL PASS+LOCK HOLD** pending complete semantic orphan/duplicate validation, 1–339 checkpoint semantic equivalence, full exact signed restore, E5 and T087/T088 upstream closure. Original 66 NOT RUN tests remain 66 (T090/T091 still NOT RUN at this point); T090 may start as independent evidence gather with explicit dependency HOLD, not final PASS. Old protected source/DB/News/Auth/Backups were not edited by this T089 review-only commit.

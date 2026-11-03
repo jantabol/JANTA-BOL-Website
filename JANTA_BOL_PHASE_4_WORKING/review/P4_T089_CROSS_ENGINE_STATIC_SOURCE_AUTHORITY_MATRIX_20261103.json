@@ -1,0 +1,222 @@
+{
+  "date": "2026-11-03",
+  "pr": 113,
+  "head_before_audit": "db396ec97d1f40b42a11b863c00790b384840cf5",
+  "scope": "STATIC_SOURCE_E7_ONLY",
+  "method": "independent public Git tree enumeration and exact source-string analysis; on-branch Node tests are required for proof",
+  "canonical_html_pages": 32,
+  "canonical_js_sources": 32,
+  "scoped_single_source_boundaries": [
+    {
+      "id": "ARTICLE_EDITORIAL_DB",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/backend-client.js",
+      "contract": "only canonical .from('articles') client and owner write path"
+    },
+    {
+      "id": "PUBLIC_ARTICLES_C1",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js",
+      "contract": "only named jb_c1_public_articles RPC; script.js and website-v3.js may read but not own source"
+    },
+    {
+      "id": "TEAM_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase4-team-client.js",
+      "contract": "single direct jb-team-api invocation"
+    },
+    {
+      "id": "RECORDS_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase4-records-client.js",
+      "contract": "single direct jb-records-api invocation"
+    },
+    {
+      "id": "LIVE_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase3a-live-client.js",
+      "contract": "single direct jb-live-api invocation"
+    },
+    {
+      "id": "B8_STAFF_PUBLIC",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js",
+      "contract": "imports staff, owner retry connector; public uses distinct public-case client"
+    },
+    {
+      "id": "B9_SEARCH",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/b9-client.js",
+      "contract": "search UI adapter uses RPC not direct private article table"
+    },
+    {
+      "id": "PUBLIC_AD_FEED",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/public-ads.js",
+      "contract": "jb_ad_public_feed via public adapter"
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "DUPLICATE_READ_WRAPPERS",
+      "status": "REVIEW_NOT_AUTO_FAIL",
+      "severity": "P2",
+      "finding": "phase2-client.js and phase4-domain-client.js both expose grievances/compliance_tasks read wrappers and both load on compliance.html; separate intended read roles vs actual duplicate-engine behavior requires detailed runtime review",
+      "safe_next": "do not delete client; inspect function/consumer call graph first"
+    },
+    {
+      "id": "LEGACY_STATIC_PREVIEW_ROOT",
+      "status": "CONFIRMED_P1_HOSTED_LEGACY_ROUTE",
+      "severity": "P1_PUBLIC_EDITORIAL_TRUST",
+      "finding": "Authenticated read-only Vercel production HTTP proved GET / and GET /JANTA_BOL_PHASE_3C_WORKING/index.html return canonical 200 + C1 published-only client; GET /index.html returns separate 200 obsolete static demo HTML with multiple hardcoded fictional rain headlines, without Supabase/C1 client. This is a genuinely reachable public alternate homepage, not an article database publication.",
+      "safe_next": "PR #115 routes /index.html to canonical existing homepage (CI GREEN). Draft, unmerged, not deployed: reverify exact prod after approved release."
+    },
+    {
+      "id": "OLD_PREVIEW_HANDLERS",
+      "status": "REVIEW_NOT_AUTO_FAIL",
+      "severity": "P2",
+      "finding": "script.js still contains hardcoded weather headlines in old V2.4 preview handlers; associated .top-story-open button absent in canonical homepage, so cannot assert active false news from source alone",
+      "safe_next": "read-only public UI click coverage test before any source removal"
+    },
+    {
+      "id": "LEGACY_GRIEVANCE_DIRECT_STATUS_MUTATION",
+      "status": "CONFIRMED_P1_SOURCE_RLS_FSM_DIVERGENCE",
+      "severity": "P1_DATA_INTEGRITY",
+      "finding": "Read-only production JS shows live JBPhase2.setGrievanceStatus directly updates public.grievances after owner client guard; old grievances.html calls it. Supabase metadata shows RLS ON owner AAL2 all policy + authenticated UPDATE privilege, no noninternal table triggers; canonical jb_grievance_transition_internal instead validates state machine, calls private.p4_case_event, retention and notification. Direct owner update skips those mandatory FSM and evidence actions. No misuse or unauthorized access asserted.",
+      "safe_next": "PR #116 wraps the existing legacy API with jb_grievance_transition_internal RPC; CI GREEN, still draft and unmerged. Review legal transition UI/fail-closed rejections then independently verify real hosted flow before lock."
+    }
+  ],
+  "blueprint_requirements_remaining": "individual semantic mapping Sections 1–339 beyond original 14-topic / 433 coded checkpoint maps",
+  "source_conflict_remaining": "main older than live production commit and preview audit branch; current deployed Git ancestry is linear, not proof of binary/Edge deployment restore",
+  "all_module_semantic_uniqueness_proven": false,
+  "production_binary_parity_proven": false,
+  "requirement_sections_1_to_339_fully_semantic_proven": false,
+  "source_only_no_published_news_auth_db_prod_changes": true,
+  "original_t089_final": "HOLD; staged scoped source audit only, not a final release lock",
+  "live_http_readonly_proof": {
+    "observed_date": "2026-11-03",
+    "endpoints": [
+      {
+        "url": "https://jantabol.in/",
+        "status": 200,
+        "canonical_c1": true
+      },
+      {
+        "url": "https://jantabol.in/index.html",
+        "status": 200,
+        "canonical_c1": false,
+        "legacy_demo_static": true
+      },
+      {
+        "url": "https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/index.html",
+        "status": 200,
+        "canonical_c1": true
+      },
+      {
+        "url": "https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/phase2-client.js",
+        "status": 200,
+        "legacy_direct_status_update": true
+      },
+      {
+        "url": "https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/grievances.html",
+        "status": 200,
+        "calls_legacy_status_update": true
+      }
+    ],
+    "verified_via": "Authenticated Vercel connected owner read-only HTTP access; not an executable hosted CI E2E test"
+  },
+  "database_readonly_authority_proof": {
+    "observed_date": "2026-11-03",
+    "project": "vrffsnkycvjithwtiylt",
+    "grievances_rls_on": true,
+    "owner_all_condition": "private.current_owner_aal2()",
+    "authenticated_update_grant": true,
+    "anon_update_grant": false,
+    "noninternal_grievance_table_triggers": 0,
+    "approved_rpc": "public.jb_grievance_transition_internal",
+    "approved_rpc_validates_fsm": true,
+    "approved_rpc_emits_case_event": true,
+    "approved_rpc_emits_notification": true,
+    "old_status_update_skips_backend_fsm": true,
+    "scope": "READ_ONLY_SCHEMA_AND_FUNCTION_METADATA_NO_USER_ROWS"
+  },
+  "isolated_fix_candidates": [
+    {
+      "pr": 115,
+      "url": "https://github.com/jantabol/JANTA-BOL-Website/pull/115",
+      "source_sha": "975d1136470f60096878d9eff9ae3b71fde930ef",
+      "ci_url": "https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41589214403",
+      "ci": "SUCCESS",
+      "status": "DRAFT_UNMERGED_NOT_DEPLOYED",
+      "risk": "PUBLIC_LEGACY_INDEX"
+    },
+    {
+      "pr": 116,
+      "url": "https://github.com/jantabol/JANTA-BOL-Website/pull/116",
+      "source_sha": "63e6c3ba49484269da5883137407b884b47bc86b",
+      "ci_url": "https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41589955972",
+      "ci": "SUCCESS",
+      "status": "DRAFT_UNMERGED_NOT_DEPLOYED",
+      "risk": "LEGACY_GRIEVANCE_FSM"
+    }
+  ],
+  "production_release_assessment": "P1_PUBLIC_LEGACY_ROUTE_AND_P1_OWNER_GRIEVANCE_DIRECT_UPDATE_OPEN_CONFIRMED; scoped CI is not launch approval",
+  "post_release_current_status": {
+    "date": "2026-11-03",
+    "original_production_sha": "93df12aa8ffdfae38d9a4066b6a4556bb36969e5",
+    "merged_sha": "60970abdacf560815b9db3bd819eb467ef984616",
+    "tested_preview_sha": "430003db5bedcfe72da392b167011baa2974bc4b",
+    "identical_source_tree_sha": "424c9aa4c3c3db9529e972fe9c4b278a92e4359f",
+    "narrow_pr_merged": 117,
+    "live_deployment_id": "dpl_7YhVGAh758YvZq6HmteERdyCKtMb",
+    "live_deployment_ready": true,
+    "aliases": [
+      "jantabol.in",
+      "www.jantabol.in"
+    ],
+    "alias_deployment_verified_both": true,
+    "live_http": [
+      {
+        "path": "/",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/index.html",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/phase2-client.js",
+        "status": 200,
+        "guarded_fsm_rpc": true,
+        "direct_grievance_status_update": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/grievances.html",
+        "status": 200
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/article.html",
+        "status": 200,
+        "public_c1": true
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/admin-login.html",
+        "status": 200
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/b9-search.html",
+        "status": 200
+      }
+    ],
+    "published_article_public_rpc_check": "published ID available through jb_c1_public_articles and permanent article HTML URL returned HTTP 200; browser-side rendered article and authenticated grievance workflows were NOT interactively run",
+    "source_protection": "only vercel.json and phase2-client.js product source modifications, no SQL, existing news, auth, backup or Edge source changes",
+    "P1_legacy_root_route": "RESOLVED_PRODUCTION_HTTP_VERIFIED",
+    "P1_legacy_grievance_UI": "RESOLVED_PRODUCTION_SOURCE_VERIFIED",
+    "live_grievance_database_authenticated_update_grant": "REMAINS_FOR_EXISTING_POLICY; DO_NOT_CLAIM_BACKEND_ENFORCEMENT_FOR_ALL_POSSIBLE_DB_CLIENTS",
+    "full_auth_and_role_negative_hosted": "NOT_EXECUTED_THIS_RELEASE",
+    "historical_findings_pre_fix": "unresolved[] statuses below describe confirmed prior source history before released PR117, NOT current live route/UI",
+    "original_full_T089_final": "HOLD — semantic Sections1-339, complete duplicate/orphan, T087/T088 original closure, and hosted negative/restore remain outside this scoped release"
+  }
+}

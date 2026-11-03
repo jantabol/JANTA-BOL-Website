@@ -1,0 +1,671 @@
+{
+  "title": "T089 E7 reconciliation of 58 rows without dedicated filename-matched file",
+  "source_register": "JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md",
+  "register_observed_branch": "codex/b13-t089-official-records-coverage-audit-20261102",
+  "source_register_blob_sha": "c4f2575d63ed099a5199cb28ac2989a7215d89bf",
+  "source_evidence_index_blob_sha": "91b52db3188b9d65d93a8dee872eefe57aa43551",
+  "date": "2026-11-02",
+  "status": "E7_SOURCE_RECONCILED_SCOPED_ONLY",
+  "classification_summary": {
+    "EXACT_PASS_IN_REGISTER": 16,
+    "NOT_RUN_IN_SOURCE_SNAPSHOT": 39,
+    "IN_PROGRESS_IN_SOURCE_SNAPSHOT": 3
+  },
+  "strict_scope": "Standalone filename absence ≠ absence of official register evidence. Registered PASS source narratives and links are historical claims already in official register, not new independent reexecution. Original E7 full semantic/orphan source conflict and production gates still HOLD.",
+  "records": [
+    {
+      "id": "P4-T001",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 136,
+      "register_evidence_bullet_count": 5,
+      "declared_historic_workflow_runs": [
+        "212"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T002",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 144,
+      "register_evidence_bullet_count": 4,
+      "declared_historic_workflow_runs": [
+        "212"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T003",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 151,
+      "register_evidence_bullet_count": 3,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T004",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 157,
+      "register_evidence_bullet_count": 5,
+      "declared_historic_workflow_runs": [
+        "214"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T005",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T006",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T007",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T008",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T009",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T010",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T011",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T012",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T013",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T014",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T016",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T021",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 169,
+      "register_evidence_bullet_count": 5,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T022",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 177,
+      "register_evidence_bullet_count": 5,
+      "declared_historic_workflow_runs": [
+        "246"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T023",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 185,
+      "register_evidence_bullet_count": 4,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T024",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 192,
+      "register_evidence_bullet_count": 4,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T025",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 199,
+      "register_evidence_bullet_count": 5,
+      "declared_historic_workflow_runs": [
+        "246"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T026",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 207,
+      "register_evidence_bullet_count": 6,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T027",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 216,
+      "register_evidence_bullet_count": 6,
+      "declared_historic_workflow_runs": [
+        "269"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T028",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T029",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T030",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T031",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T032",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T033",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T043",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T044",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T045",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T046",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T047",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T048",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T049",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T050",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T051",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 230,
+      "register_evidence_bullet_count": 4,
+      "declared_historic_workflow_runs": [
+        "296"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T052",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 237,
+      "register_evidence_bullet_count": 4,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T053",
+      "original_status": "IN PROGRESS",
+      "type": "IN_PROGRESS_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T054",
+      "original_status": "NOT RUN — MANUAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T055",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 264,
+      "register_evidence_bullet_count": 3,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T056",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 270,
+      "register_evidence_bullet_count": 3,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T057",
+      "original_status": "NOT RUN — MANUAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T058",
+      "original_status": "PASS",
+      "type": "EXACT_PASS_IN_REGISTER",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": true,
+      "register_heading_line": 281,
+      "register_evidence_bullet_count": 6,
+      "declared_historic_workflow_runs": [
+        "296"
+      ],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T059",
+      "original_status": "IN PROGRESS",
+      "type": "IN_PROGRESS_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T076",
+      "original_status": "IN PROGRESS",
+      "type": "IN_PROGRESS_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T077",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T078",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T079",
+      "original_status": "NOT RUN — EXTERNAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T081",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T082",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T083",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T084",
+      "original_status": "NOT RUN — FINAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T085",
+      "original_status": "NOT RUN — FINAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T089",
+      "original_status": "NOT RUN — FINAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T090",
+      "original_status": "NOT RUN — FINAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T091",
+      "original_status": "NOT RUN — FINAL",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    },
+    {
+      "id": "P4-T095",
+      "original_status": "NOT RUN",
+      "type": "NOT_RUN_IN_SOURCE_SNAPSHOT",
+      "no_standalone_filename_match": true,
+      "register_internal_evidence_present": false,
+      "register_heading_line": null,
+      "register_evidence_bullet_count": 0,
+      "declared_historic_workflow_runs": [],
+      "actual_historic_runtime_reverified_now": false
+    }
+  ]
+}

@@ -1,0 +1,1340 @@
+{
+  "title": "T089 E7 canonical official register-to-evidence candidate cross-reference (not a PASS assertion)",
+  "created": "2026-11-02",
+  "scope": "JANTA BOL Phase4 Topic12 RUN15 Sections793-804",
+  "repository": "jantabol/JANTA-BOL-Website",
+  "source_sha": "985f0071091760752aa00b72cde4bc14d53bc412",
+  "source_register": "JANTA_BOL_PHASE_4_WORKING/TEST-REGISTER.md",
+  "source_register_git_blob": "b3b1f2c03d006104d861bf7a071c66664bdbfea3",
+  "scan_scope": "JANTA_BOL_PHASE_4_WORKING/review and /evidence path filenames only",
+  "policy": "Candidate filename correlation is not signed authoritative proof. NOT RUN and DUE remain; history might contain evidence even without a dedicated filename. Never use this index to infer Final PASS or to authorize production.",
+  "counts": {
+    "total": 109,
+    "distinct": 109,
+    "test_ids_gap": [],
+    "with_filename_candidate": 51,
+    "without_filename_candidate": 58,
+    "not_run": 67,
+    "exact_pass": 17,
+    "in_progress": 14,
+    "scoped_in_status": 2,
+    "b13_not_run": [
+      "P4-T084",
+      "P4-T085",
+      "P4-T089",
+      "P4-T090",
+      "P4-T091"
+    ]
+  },
+  "records": [
+    {
+      "id": "P4-T001",
+      "topic": "Governance",
+      "name": "Phase 3 Baseline + Source Authority Protection",
+      "block": "B0",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T002",
+      "topic": "Governance",
+      "name": "Evidence-Based Status / No Fake PASS",
+      "block": "B0",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T003",
+      "topic": "Governance",
+      "name": "Single-Home + Duplicate Architecture Audit",
+      "block": "B0",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T004",
+      "topic": "Governance",
+      "name": "Founder Authority + Mobile + Fail-Closed",
+      "block": "B0",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T005",
+      "topic": "Grievance",
+      "name": "Grievance Creation + Unique Identity + Article Linking",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T006",
+      "topic": "Grievance",
+      "name": "Identity + Govt ID + Private Evidence Security",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T007",
+      "topic": "Grievance",
+      "name": "Multi-Issue Lifecycle + Urgency + Deadline",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T008",
+      "topic": "Grievance",
+      "name": "Duplicate + Evidence + Reopen + Withdrawal",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T009",
+      "topic": "Grievance",
+      "name": "Clarification -> Final Decision -> Reply -> Resolve -> Archive",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T010",
+      "topic": "Grievance",
+      "name": "Retention + Extension + Hold + Permanent Delete",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T011",
+      "topic": "Grievance",
+      "name": "Public Article / Correction / Shared Engines / Failure Isolation",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T012",
+      "topic": "Grievance",
+      "name": "Mobile Queue + Founder-Time + Single Authoritative Record",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T013",
+      "topic": "Grievance",
+      "name": "Grievance Implementation + Data Model Audit",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T014",
+      "topic": "Grievance",
+      "name": "Grievance Coverage + Failure Repair + Regression + Lock",
+      "block": "B5",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T015",
+      "topic": "Compliance",
+      "name": "Compliance Architecture + Shared Grievance Source",
+      "block": "B6",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T015-T017-backend-2026-10-08.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T016",
+      "topic": "Compliance",
+      "name": "Monthly Compliance + Zero-Grievance + Public-Safe Approval",
+      "block": "B6",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T017",
+      "topic": "Compliance",
+      "name": "Compliance Calendar + Deadline + Notification",
+      "block": "B6",
+      "official_register_status": "IN PROGRESS — CI #494/#493 PASS: deterministic 4-state boundary + rollback-isolated actual deadline transitions, history, complete-task exclusion and anonymous denial; notification hook present, but delivery/dedup, scheduled execution and mobile evidence DUE. Evidence: evidence/P4-T015-T017-backend-2026-10-08.md",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T015-T017-backend-2026-10-08.md",
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T017-notification-delivery-audit-2026-10-08.md",
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T017-notification-inapp-2026-10-08.md",
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T017-scheduler-live-2026-10-08.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T018",
+      "topic": "Compliance",
+      "name": "Government Submission Full Lifecycle",
+      "block": "B6",
+      "official_register_status": "PASS + LOCK (SYNTHETIC LIFECYCLE ONLY; REAL GOVERNMENT SUBMISSION DEFERRED)",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T018-2026-10-08.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T019",
+      "topic": "Compliance",
+      "name": "Compliance Security + Audit + Failure + Mobile + Founder-Time",
+      "block": "B6",
+      "official_register_status": "IN PROGRESS — isolated real backend-client.js publishing fault-injection mock PASS (CI #456 static SUCCESS), LIVE read-only article RLS/trigger isolation inspected; official MIB/MeitY source trace PARTIAL. Real authenticated publishing API during compliance failure + complete legal applicability still DUE. Evidence: evidence/P4-T019-2026-10-08.md",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T019-2026-10-08.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T020",
+      "topic": "Compliance",
+      "name": "Compliance Implementation + Coverage + Regression + Lock",
+      "block": "B6",
+      "official_register_status": "IN PROGRESS — CMP-035 FAIL/RCA/RETEST verified (#428 FAIL → 84ac19b CI-only fix → #430 PASS); CMP-033 LIVE backend exists but tracked compliance.html read-only UI source gap; CMP-036 #456 CI PASS; CMP-034 full coverage and T015–T017 evidence discrepancy DUE; CMP-037 NOT LOCK. Evidence: evidence/P4-T020-2026-10-08.md",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/P4-T020-2026-10-08.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T021",
+      "topic": "Team",
+      "name": "Team Invite -> Identity -> Role -> Activation",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T022",
+      "topic": "Team",
+      "name": "Permission Matrix + Super Admin Reserved Authority + Live Separation",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T023",
+      "topic": "Team",
+      "name": "Suspend -> Revoke -> Reactivate -> Permission Change",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T024",
+      "topic": "Team",
+      "name": "Internal Reporter Identity + Public Name + Departure + Live History",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T025",
+      "topic": "Team",
+      "name": "Lost Device + Common Audit/Notification/Retention + Failure Isolation",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T026",
+      "topic": "Team",
+      "name": "Android Team Management + Founder-Time + Role Simplicity",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T027",
+      "topic": "Team",
+      "name": "Team Implementation/Migration + Coverage + Regression + Lock",
+      "block": "B1",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T028",
+      "topic": "Social",
+      "name": "Social Master Article + Distribution Controls",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T029",
+      "topic": "Social",
+      "name": "Social Caption + Preview + Independent Platform Status",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T030",
+      "topic": "Social",
+      "name": "Social Failure + Retry + Manual Fallback",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T031",
+      "topic": "Social",
+      "name": "Social Credentials + Authority + Common Audit/Notification",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T032",
+      "topic": "Social",
+      "name": "Social Android + Low-Noise + Founder-Time",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T033",
+      "topic": "Social",
+      "name": "Social Implementation + Coverage + Security + Regression Lock",
+      "block": "B4",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T034",
+      "topic": "Ads",
+      "name": "Ad Architecture + Public Request + Verification",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — code + isolated E2 fixtures only; E3/E5 and production compatibility pending",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/evidence/T034_E7_OWNER_REVIEW_AND_ADS009_READONLY_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B7_T034_ADS008_SAFE_FIX_EVIDENCE_20261013.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B7_T034_PRODUCTION_BACKUP_ROLLBACK_HARD_GATE_20261013.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T035",
+      "topic": "Ads",
+      "name": "Creative + Label + Placement + Targeting Privacy",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T035_CP02_MEDIA_SAFE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T035_CP03_ARTICLE_GEO_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T035_CP04_VERIFIED_PREVIEW_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T035_CP05_REAL_ANDROID_LIVE_BACKEND_READONLY_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T036",
+      "topic": "Ads",
+      "name": "Campaign Schedule + Start/Expiry/Pause/Hide/Delete Lifecycle",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T036_CP01_SCHEDULE_LIFECYCLE_LIVE_AUDIT_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T036_CP02_EMERGENCY_HIDE_REPLAY_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T036_CP03_EXPIRY_RETRY_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T036_CP04_CONSOLIDATED_REMAINING_AND_RELEASE_GATE_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T037",
+      "topic": "Ads",
+      "name": "Packages + Price Versioning + Rotation + Inventory",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — G3 private geo 25-case matrix; G4 weighted 3,200 draws + inventory quota synthetic E2 only. Official LGD/E3/E5/Production gates DUE",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T037_CP01_PRICE_ROTATION_AUDIT_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T037_CP02_CUSTOM_QUOTE_FREEZE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T037_CP03_CONSOLIDATED_REMAINING_RELEASE_GATE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/b7_t037_weighted_feed_REVIEW_ONLY.sql"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T038",
+      "topic": "Ads",
+      "name": "Approval -> Payment -> LIVE + Non-Refund Disclosure",
+      "block": "B7",
+      "official_register_status": "NOT RUN — EXTERNAL",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T038_CP01_MANUAL_PAYMENT_LIVE_AUTHORITY_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T038_CP02_INDEPENDENT_RED_RCA_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T038_CP02_LEGACY_PAIRED_PAYMENT_PROOF_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T038_CP03_CONSOLIDATED_MANUAL_PAYMENT_HOLD_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T039",
+      "topic": "Ads",
+      "name": "Advertiser Panel + Isolation + Creative Change + Renewal",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — staging text-only portal + A/B isolated E2; Owner/Android E3, renewal and production integration DUE",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T039_CP01_REAL_LIVE_PORTAL_AUTHORITY_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T039_CP02_SERVER_LOGOUT_RCA_REAL_PG17_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T039_CP03_OWNER_REVERIFY_SESSION_MONOTONIC_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T039_CP04_CONSOLIDATED_FIRST_PAID_PORTAL_RELEASE_GATE_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T040",
+      "topic": "Ads",
+      "name": "CTA + Analytics + Privacy + Analytics Failure",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — staged 50%/1s + one-time view tickets E1/disposable E2 only; click/homepage, bot resistance, real E3/E5/analytics parity DUE",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B7_P4_T040_QUALIFIED_VIEW_ROLLOUT_20261010.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP01_HIDDEN_CTA_RCA_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP02_IST_ANALYTICS_FAILURE_ISOLATION_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP03_CANONICAL_REMAINING_FIRST_PAID_RELEASE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP04_HOSTED_E2_READ_ONLY_GAP_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP05_ANDROID_CONTACT_ONLY_E3_REAL_DEVICE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T040_CP06_FIRST_PAID_RELEASE_READINESS_HIDDEN_VIEW_RCA_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T041",
+      "topic": "Ads",
+      "name": "Ad Notifications + Audit + Retention + Security + Provider Failure",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — B3 in-app adapter + immutable ad history/7yr retention, historical backfill, audited Owner retry E1/disposable E2 only; real E5/production/security incident DUE",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B7_T041_CONCURRENCY_RETENTION_RELEASE_GATES_20261010.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B7_T041_ORIGINAL_B3_COMPATIBILITY_AND_STALE_RETRY_GATES_20261010.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T041_CP01_NO_PAID_NOTIFICATIONS_RETENTION_SECURITY_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T042",
+      "topic": "Ads",
+      "name": "Ads Mobile + Founder-Time + Implementation/Coverage/Regression Lock",
+      "block": "B7",
+      "official_register_status": "IN PROGRESS — E1 source 60-ADS/9-test audit and fail-closed Final ZIP gate only; real Android E3, full E7 source proof and Founder final sign-off DUE",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/T042_CP01_NO_PAID_ANDROID_COVERAGE_REGRESSION_GATE_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T042_CP03_NO_PAID_B6_GITHUB_SUPABASE_PRODUCTION_AUTHORITY_RCA_20261016.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T042_CP04_USER_B6_T17_ARCHIVE_PROVENANCE_READONLY_20261016.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T043",
+      "topic": "Notifications",
+      "name": "Unified Notification Engine + Existing Live Preservation",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T044",
+      "topic": "Notifications",
+      "name": "Cross-Domain Notification Event Matrix",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T045",
+      "topic": "Notifications",
+      "name": "Priority + Low-Noise + Recipient Routing + Privacy",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T046",
+      "topic": "Notifications",
+      "name": "Notification Center Lifecycle + Direct Action + Reminder",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T047",
+      "topic": "Notifications",
+      "name": "External Delivery Failure + Retry + In-App Authority",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T048",
+      "topic": "Notifications",
+      "name": "Notification History + Audit/Retention/Security Boundary",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T049",
+      "topic": "Notifications",
+      "name": "Mobile Filtering + Grouping + Founder-Time + Critical Safety",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T050",
+      "topic": "Notifications",
+      "name": "Notification Implementation + Functional/Privacy/Failure/Regression Lock",
+      "block": "B3",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T051",
+      "topic": "Audit/Retention",
+      "name": "Common Audit Engine + Immutable Core Audit",
+      "block": "B2",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T052",
+      "topic": "Audit/Retention",
+      "name": "Article Lifecycle + Delete + Public View Audit",
+      "block": "B2",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T053",
+      "topic": "Audit/Retention",
+      "name": "Cross-Module Critical Action Audit",
+      "block": "B2",
+      "official_register_status": "IN PROGRESS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T054",
+      "topic": "Audit/Retention",
+      "name": "Audit Lookup + Access + Export + Secret-Free Records",
+      "block": "B2",
+      "official_register_status": "NOT RUN — MANUAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T055",
+      "topic": "Audit/Retention",
+      "name": "Domain-Specific Retention Rules + Identity Preservation",
+      "block": "B2",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T056",
+      "topic": "Audit/Retention",
+      "name": "Due -> Extension -> Hold -> Permanent Delete Lifecycle",
+      "block": "B2",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T057",
+      "topic": "Audit/Retention",
+      "name": "Retention Across Domains + Archive/Backup + Evidence/Version Privacy",
+      "block": "B2",
+      "official_register_status": "NOT RUN — MANUAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T058",
+      "topic": "Audit/Retention",
+      "name": "Records Implementation + Migration Integrity",
+      "block": "B2",
+      "official_register_status": "PASS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T059",
+      "topic": "Audit/Retention",
+      "name": "Retention/Security/Cross-Module/Failure Regression + Topic Lock",
+      "block": "B2",
+      "official_register_status": "IN PROGRESS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T060",
+      "topic": "Security",
+      "name": "Existing Security Baseline + Backend Authority + Fail-Closed",
+      "block": "B10",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B10_ONE_SHOT_CODING_CANDIDATE_T060_T068_SCOPE_AND_TEST_HANDOFF_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T061",
+      "topic": "Security",
+      "name": "Public/Private/Sensitive Data Boundary Matrix",
+      "block": "B10",
+      "official_register_status": "PASS + LOCK — E1+E2+E5; LIVE public_live_updates SQLSTATE 42501 repaired with scoped boolean RLS helper; 12/12 anon public updates, private ACL unchanged",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T061_RUN09_FINAL_E1_E2_E5_SAFE_LIVE_UPDATES_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T061_RUN09_REAL_PRIVATE_BOUNDARY_E2_E5_HOLD_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T062",
+      "topic": "Security",
+      "name": "Cross-Module Authority + Privilege Boundary",
+      "block": "B10",
+      "official_register_status": "PASS + LOCK — E1+E2+E5; Reporter cross-author nonpublic read FIX, Founder AAL2 Article history FIX, multi-role PG17 + real LIVE role checks + audit provenance",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T062_RUN09_CROSS_MODULE_AUTHORITY_E2_PRELOCK_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T062_RUN09_FINAL_ROLE_MATRIX_E1_E2_E5_PASS_LOCK_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T063",
+      "topic": "Security",
+      "name": "Authentication + MFA + Session + Lost Device + Recovery Lifecycle",
+      "block": "B10",
+      "official_register_status": "BACKEND E1+E2 VERIFIED PASS; E3 ANDROID LOGIN/MFA/LOGOUT/RELOGIN PARTIAL; E5 HISTORY PARTIAL; LOST-DEVICE/RECOVERY DEVICE PROOF DUE — FINAL HOLD",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T063_RUN09_AUTH_MFA_RECOVERY_E1_E2_STARTED_E3_E5_HOLD_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T063_RUN09_BACKEND_SECURITY_FINAL_E1_E2_E3_PARTIAL_HOLD_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T064",
+      "topic": "Security",
+      "name": "Secrets + Environment + RLS + Data Minimization + File Controls",
+      "block": "B10",
+      "official_register_status": "E1 secrets/log 12-line Vercel Founder proof PASS, E2 LIVE RLS/storage/export PASS; ZERO-COST independent GitHub-hosted disposable PostgreSQL17+PostgREST signed HTTP test 19/19 PASS (CI 40063192405). BUT Vercel Preview STILL points to LIVE production Supabase; no separate hosted backend, E7 FAIL. OFFICIAL FINAL HOLD, NOT LOCK",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T064_RUN09_SECRETS_ENV_RLS_FILE_CONTROLS_E1_E2_E7_HOLD_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T064_T065_TARGETED_FINAL_RECHECK_HOLD_20261024.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T064_T065_ZERO_COST_SIGNED_WIRE_19_OF_19_20261024.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T065",
+      "topic": "Security",
+      "name": "Direct Attack / IDOR / Tampering / Cross-Account Test Family",
+      "block": "B10",
+      "official_register_status": "Existing LIVE 16/16 hidden-ID negatives, 5 tamper attacks, signed simulation from two real backend sessions READ ONLY, minimal session-bound Articles RLS LIVE FIX with unchanged 32/16/4/7/6 counts PASS. Real public HTTPS anon 12/12 PASS + newly ZERO-COST genuine signed disposable Reporter A/B PostgREST HTTP IDOR/sessions/PATCH 19/19 PASS. CI 40063192405 SUCCESS, old B0–B8 intact. LIVE hosted two-QA-actor JWT wire proof NOT RUN (no safe isolated Supabase staging); OFFICIAL FINAL HOLD, NOT LOCK",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T064_T065_TARGETED_FINAL_RECHECK_HOLD_20261024.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T064_T065_ZERO_COST_SIGNED_WIRE_19_OF_19_20261024.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T065_RUN09_VERCEL_REAL_BACKEND_IDOR_PARTIAL_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T066",
+      "topic": "Security",
+      "name": "Revocation + Suspension + Super-Admin-Only + Advertiser/Search Isolation",
+      "block": "B10",
+      "official_register_status": "Scoped LIVE advertiser RPC session-guard fix APPLIED 2026-10-24 as Supabase migration 20261024065659 (Founder explicitly authorized). GREEN original RED repro then 12/12 signed disposable HTTP tests; T065 25/25 preserved; CI 40072121020 SUCCESS. Post-LIVE original PostgreSQL owner, signature, EXECUTE ACL, search_path, RLS preserved; 32 Articles/7 Ads/6 Grievances/1560 audit/72 auth.sessions counts unchanged. LIVE historical E5: 9/9 revoked session IDs absent from auth.sessions; 2 suspension events. Real hosted distinct QA JWT session-revocation / advertiser and suspended-team E2/E5 wire test NOT executed; no actual LIVE advert-user mapping available. OFFICIAL TEST FINAL HOLD, not full LOCK; production fix scope VERIFIED PASS.",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T066_RUN09_ONE_SHOT_SECURITY_FINDINGS_HOLD_20261024.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T067",
+      "topic": "Security",
+      "name": "Security Audit + Notification + Failure Isolation + Incident RCA",
+      "block": "B10",
+      "official_register_status": "PASS + LOCK — E1+E2+E5+E7: LIVE JANTA BOL read-only 1/1 team suspension Owner actor + audit + matching CRITICAL notification + team history; 9/9 signed-off session revocations paired with evidence and now absent from auth.sessions; real Postgres rollback negative UPDATE/DELETE audit both AUDIT_HISTORY_IMMUTABLE, anon+fake Owner cannot read private audit/notification; verified live jb-team-api v9 bytes identical to protected GitHub source and jwt/backend session/Owner AAL2/fresh MFA guards; independent CI 40073486568 SUCCESS, 4/4 new Source tests, disposable scoped containment+old-session replay+unrelated roles+audit+notification+RCA scenario PASS, prior T061/T062 and B0–B9 protected. INCIDENT simulated only, no new LIVE hostile breach asserted; NO Founder Android steps, NO production data mutation. Full report review/P4_T067_FINAL_INCIDENT_AUDIT_CONTAINMENT_RCA_PASS_LOCK_20261024.md.",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T067_FINAL_INCIDENT_AUDIT_CONTAINMENT_RCA_PASS_LOCK_20261024.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T068",
+      "topic": "Security",
+      "name": "Security Implementation Audit + Regression + Evidence + Lock",
+      "block": "B10",
+      "official_register_status": "FINAL AUDIT EXECUTED; E1 protected B0–B10 CI, evidence gate and immutable ZIP PASS; E2 LIVE RLS/AAL2/Owner/Source/Audit aggregates READ-ONLY PASS; E5 Founder approval to execute audit, but outstanding hosted identity and T063 Android proof; E7 B10 Vercel Preview READY matched prior audited HEAD, PROD/Preview backend isolation still unproved. Official FINAL PASS+LOCK = HOLD (B10 T060 NOT RUN; T063 HOLD; T064 DUE/HOLD; T065 HOSTED HOLD; T066 HOSTED HOLD; B8/B9 predecessor outstanding). No false T068/B10 lock, no unrelated production DDL/DML or Cricket touches. See review/P4_T068_FINAL_EVIDENCE_RECONCILIATION_HOLD_20261024.md.",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B10_ONE_SHOT_CODING_CANDIDATE_T060_T068_SCOPE_AND_TEST_HANDOFF_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T068_FINAL_EVIDENCE_RECONCILIATION_HOLD_20261024.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T069",
+      "topic": "Backup/Recovery",
+      "name": "Backup Layers + Security + Health",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G9_T069_RUN2_FAILURE_RCA_SELF_RECHECK_20261026.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T070",
+      "topic": "Backup/Recovery",
+      "name": "Real Restore Drill + Identity Preservation",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T070_REAL_JOINT_RESTORE_RECONCILIATION_AND_T075_E3_ACTUAL_BACKUP_HISTORY_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G0_REAL_RESTORE_IDENTITY_PREFLIGHT_20261025.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G10_REAL_5_MEDIA_OFFSITE_RESTORE_PASS_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G11_REALITY_GAP_FULL_SYSTEM_RECOVERY_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G12_OWNER_OFFRUNNER_AGE_RECOVERY_REAL_EVIDENCE_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G13_ZERO_COST_ISOLATION_FEASIBILITY_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G14_EPHEMERAL_LOCAL_SUPABASE_RUNTIME_PASS_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G15_SYNTHETIC_JOINT_RESTORE_REAL_CI_PASS_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G16_11_FAMILY_SOURCE_HASH_AND_WRITE_FENCE_GATE_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G16_G19_REAL_READINESS_AND_LOCK_HOLD_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G17_ANDROID_PHONE_TABLET_SAMPLED_DRAFT_SYNC_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G17_CONDITIONAL_A_MAINTENANCE_NO_GO_REAL_RISK_AUDIT_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G17_G19_FOUNDER_HANDOFF_5SEC_CRON_AND_REAL_RESTORE_BLOCKERS_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G17_REAL_DISPOSABLE_PG_LOCK_AND_CRASH_ROLLBACK_PASS_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G18_OLD_REAL_BACKUPS_TIMESTAMP_REUSE_RECONCILIATION_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G1_LIVE_SOURCE_EVIDENCE_VERDICT_20261025.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G2_STORAGE_MEDIA_EVIDENCE_GATES_20261025.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G3_OFFSITE_READBACK_AND_DB_SNAPSHOT_DRIFT_20261025.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G4_NEW_DATABASE_RESTORE_PREFLIGHT_20261025.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G5_CURRENT_PG17_OFFSITE_RESTORE_LOG_VERIFICATION_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G6_PLATFORM_AUTH_SECURITY_RECOVERY_READONLY_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G7_REAL_E8_FINAL_GATE_AND_CI_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G8_RECOVERY_PREFLIGHT_CONSENT_GATE_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_G9_T069_RUN2_FAILURE_RCA_SELF_RECHECK_20261026.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T070_TRUE_REPRESENTATIVE_JOINT_RECOVERY_MANUAL_CANDIDATE_20261026.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T071",
+      "topic": "Backup/Recovery",
+      "name": "RPO/RTO + Cross-Module Failure-Isolation Matrix",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_SINGLE_SHOT_T071_T075_REAL_BACKEND_COMPLETION_AND_GATE_HOLD_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_B7_11_RPC_SOURCE_PRODUCTION_RECONCILIATION_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C1_E1_REAL_FOUNDER_NEWS_LIVE_BASELINE_LOCK_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C1_FULL_COMPLETION_ATTEMPT_AND_MINIMAL_BLOCKER_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C1_FULL_FOUNDER_APPROVAL_EXECUTION_REPORT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C1_ONE_SHOT_RELEASE_IDENTITY_AND_CORE_BASELINE_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_13_OF_13_EXACT_C1_CANDIDATE_SOURCE_FAULTS_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_C3_C4_C5_ONE_RUNNER_INDEPENDENT_REVIEW_AND_B11_ROUTE_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_EXECUTION_START_N03_ACTUAL_PG17_NOTIFICATION_FAILURE_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C2_SINGLE_BATCH_RECONCILIATED_REAL_EXECUTION_VERDICT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C3_SINGLE_SHOT_FOUR_MASTER_BEHAVIORS_AND_PRACTICAL_RPO_RTO_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_C4_E5_SINGLE_SHOT_13_FAILURE_LOGS_AND_SAME_PR47_CORE_REGRESSION_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_DOMAIN_DUE_NONDOMAIN_EVIDENCE_REPORT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_G2_13_DOMAIN_ACTUAL_SOURCE_FAULT_EXECUTION_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_G3_RPO_RTO_ACTUAL_ISOLATED_PG17_MEASUREMENT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_G4_E8_INDEPENDENT_SCOPED_AUDIT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_G4_STEP4_INTEGRATED_E8_EXECUTION_FINAL_SCOPE_REPORT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_REMAINING_12_MODULES_SINGLE_SHOT_ACTUAL_SCOPE_AUDIT_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_SOFT_LAUNCH_PRECODE_FAILURE_MATRIX_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_TO_T072_NO_NEW_GATE_CLOSURE_ROUTE_V1_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/T071_PUBLIC_ANDROID_EVIDENCE_20261027.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T072",
+      "topic": "Backup/Recovery",
+      "name": "DB Partial Write + Fail-Closed + Retry/Idempotency",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T071_TO_T072_NO_NEW_GATE_CLOSURE_ROUTE_V1_20261027.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_B8_OWNER_UI_INTEGRATION_ACTUAL_23_53_CI_EVIDENCE_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_DURABLE_ANDROID_KEY_SOURCE_CANDIDATE_16_PLUS_18_CI_AND_T075_GATE_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_REAL_PG17_RETRY_DUPLICATE_P2_AND_MINIMUM_FIX_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_T073_REAL_PG17_FIX_AND_BACKUP_RESTORE_PROGRESS_20261028.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T073",
+      "topic": "Backup/Recovery",
+      "name": "Corruption + Deletion + Security Incident + Credential/Config/Deployment Recovery",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_T073_REAL_PG17_FIX_AND_BACKUP_RESTORE_PROGRESS_20261028.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T074",
+      "topic": "Backup/Recovery",
+      "name": "Post-Restore Verification + Independent Backup + Founder Device Loss",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T074_ACTUAL_RESTORED_B8_SECURITY_AND_T075_LIVE_READONLY_PREFLIGHT_20261028.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T075",
+      "topic": "Backup/Recovery",
+      "name": "Automatic Recovery Operations + Implementation/Test Coverage + Final Lock",
+      "block": "B11",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_SINGLE_SHOT_T071_T075_REAL_BACKEND_COMPLETION_AND_GATE_HOLD_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T070_REAL_JOINT_RESTORE_RECONCILIATION_AND_T075_E3_ACTUAL_BACKUP_HISTORY_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T075_E3_NO_PAID_SYSTEM_FOUNDER_POLICY_AND_53_PASS_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T075_E3_PR58_INDEPENDENT_RELEASE_STOP_AUDIT_57OF57_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B11_T075_E3_SCHEDULED_CONDITIONAL_BACKUP_WATCH_REAL_OPERATION_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T072_DURABLE_ANDROID_KEY_SOURCE_CANDIDATE_16_PLUS_18_CI_AND_T075_GATE_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T074_ACTUAL_RESTORED_B8_SECURITY_AND_T075_LIVE_READONLY_PREFLIGHT_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T075_E3_FOUNDER_B2_BILLING_ESTIMATE_ZERO_SANITIZED_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T075_E3_FOUNDER_B2_CAP_SCREENSHOT_SANITIZED_CHECK_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T075_E3_WEEKLY_ENCRYPTED_AUTO_JOINT_BACKUP_44_OF_44_REVIEW_ONLY_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T075_RUN10_REAL_CI_45_PLUS_4_AND_FINAL_GATE_TRUTH_20261028.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T075_RUN10_RECOVERY_OPERATIONS_RUNBOOK_REVIEW_ONLY_20261028.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T076",
+      "topic": "Production",
+      "name": "Production Baseline + Hosting + Domain + HTTPS",
+      "block": "B12",
+      "official_register_status": "IN PROGRESS",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T077",
+      "topic": "Production",
+      "name": "Permanent URL + Auth/API + Environment Separation",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T078",
+      "topic": "Production",
+      "name": "Production DB Migration + Secret Protection",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T079",
+      "topic": "Production",
+      "name": "External Provider Production Integration + Adapter Safety",
+      "block": "B12",
+      "official_register_status": "NOT RUN — EXTERNAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T080",
+      "topic": "Production",
+      "name": "Public/Admin Production + Android + Network/Retry/Error Safety",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T097_T080_THREE_FILE_PREVIEW_CANDIDATE_20261101.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T081",
+      "topic": "Production",
+      "name": "Production Backup + Deployment + Rollback + Cutover",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T082",
+      "topic": "Production",
+      "name": "Production Smoke + Real Article/Multi-Device Integration",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T083",
+      "topic": "Production",
+      "name": "Production Operations + Audit + Due + Topic-11 Lock",
+      "block": "B12",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T084",
+      "topic": "Final Closure",
+      "name": "Final Test Governance + Status Integrity",
+      "block": "B13",
+      "official_register_status": "NOT RUN — FINAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T085",
+      "topic": "Final Closure",
+      "name": "Cross-Module Integration Boundary Test",
+      "block": "B13",
+      "official_register_status": "NOT RUN — FINAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T086",
+      "topic": "Final Closure",
+      "name": "Core Article Lifecycle + Live Regression",
+      "block": "B13",
+      "official_register_status": "PASS",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T086_B13_CORE_ARTICLE_LIVE_BACKEND_PREFLIGHT_20261102.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T086_FOUNDER_A_V3_CONTROLLED_BASELINE_20261102.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T086_OWNER_CORRECTION_POST_MFA_SAFE_NAV_CANDIDATE_20261102.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RELEASE_SCOPE_AND_SOFT_LAUNCH_GATE_20261102.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T086_RUN15_EVIDENCE_GATE_20261102.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T087",
+      "topic": "Final Closure",
+      "name": "Whole Phase-4 Module Regression + Security Negatives",
+      "block": "B13",
+      "official_register_status": "SCOPED PASS+LOCK (E1 CI + E2 SQL role/MFA/Reporter/UI + disposable revoked Owner/Admin RED-GREEN) — signed hosted E2 + complete E5 DUE; original FINAL PASS+LOCK HOLD",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T087_WHOLE_PLATFORM_SECURITY_PRECHECK_20261102.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/b13_t087_user_roles_revoked_session_REVIEW_ONLY.sql"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T088",
+      "topic": "Final Closure",
+      "name": "Backup/Recovery + Production + Multi-Device + Operational Readiness",
+      "block": "B13",
+      "official_register_status": "FOUNDER SCOPED PASS+LOCK — E1 8/8 required CI, E3 prior phone/tablet evidence reused, E6 public HTTPS/anon PostgREST+7 private deny+4 Edge JWT deny+Auth health PASS, E8 Nov02 real AGE/B2 PG17 34 Articles+5 original media and synthetic GoTrue signed 2-user/RLS/Storage + deployed Vercel static 5-file byte restore + Edge 10/10 source-match PASS scoped; E6 signed private/provider DUE, full independent real GoTrue/Edge/Vercel E8+RPO/RTO HOLD (5 live Edge sources absent Git, local Edge HTTP503, main not deployed source); upstream T087 E2/E5 DUE; ORIGINAL FINAL PASS+LOCK HOLD",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T088_EDGE_SOURCE_LINEAGE_MANIFEST_20261102.json",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T088_PRODUCTION_RECOVERY_READINESS_START_20261102.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T089",
+      "topic": "Final Closure",
+      "name": "Nothing-Missing / Nothing-Duplicated + Official Records Audit",
+      "block": "B13",
+      "official_register_status": "NOT RUN — FINAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T090",
+      "topic": "Final Closure",
+      "name": "Failure Repair + Unresolved/DUE + Final Build Readiness",
+      "block": "B13",
+      "official_register_status": "NOT RUN — FINAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T091",
+      "topic": "Final Closure",
+      "name": "Production Closure Report + Final Lock + Post-Lock Change Rule",
+      "block": "B13",
+      "official_register_status": "NOT RUN — FINAL",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T092",
+      "topic": "Accountability",
+      "name": "Accountability Architecture + Applicability + Evidence-First",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_G5_CP01_E7_SOURCE_PARITY_ORIGINAL_T092_T099_MATRIX_20261017.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T092_LIVE_PREDEPLOY_READINESS_AUDIT_20261017.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T092_SPCK_MIME_FIRST_DIVERGENCE_20261017.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T092_T099_ALL_51_ACC_INDEPENDENT_BACKEND_AUDIT_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T092_UI02_ESTIMATED_PROPOSED_COST_RCA_20261017.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T093",
+      "topic": "Accountability",
+      "name": "Reason + Cost + Public Impact + Alternatives",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T093_DOCUMENTED_PROJECTED_IMPACT_RCA_LIVE_20261017.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T093_FINAL_INDEPENDENT_EVIDENCE_GATE_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T093_LIVE_EXACT_DUPLICATE_GUARD_VERIFIED_20261021.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T094",
+      "topic": "Accountability",
+      "name": "Questions + Right to Reply + No-Reply + Later Response",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP01_LIVE_BACKEND_SECURITY_PREFLIGHT_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP02_RIGHT_TO_REPLY_NEGATIVE_TEST_VERIFIED_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP03_FINAL_ISOLATED_R0_R1_R2_REGRESSION_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP03_FIRST_DIVERGENCE_RCA_HOLD_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T094_CP03_SOURCE_BINDING_IMPLEMENTATION_CI_20261021.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T095",
+      "topic": "Accountability",
+      "name": "Ground Verification + Deadline + Responsibility Map",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "NO_DEDICATED_FILE_FOUND_REGISTER_HISTORY_MAY_EXIST"
+    },
+    {
+      "id": "P4-T096",
+      "topic": "Accountability",
+      "name": "Timeline + Master Accountability Record + Outcome + Reopen",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T096_T097_BACKEND_INDEPENDENT_FIX_FINAL_REPORT_20261021.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T097",
+      "topic": "Accountability",
+      "name": "Neutral Evidence Standard + Conflict + Evidence Integrity + Versioning",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T096_T097_BACKEND_INDEPENDENT_FIX_FINAL_REPORT_20261021.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T097_T080_THREE_FILE_PREVIEW_CANDIDATE_20261101.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T098",
+      "topic": "Accountability",
+      "name": "Correction + Notification + Audit + Retention + Security + Failure + Android",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T098_CORRECTION_NOTIF_AUDIT_RETENTION_SECURITY_BACKEND_20261101.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T099",
+      "topic": "Accountability",
+      "name": "Accountability Full Functional + Neutrality + Privacy + Failure + Lock",
+      "block": "B8",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_G5_CP01_E7_SOURCE_PARITY_ORIGINAL_T092_T099_MATRIX_20261017.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/B8_T092_T099_ALL_51_ACC_INDEPENDENT_BACKEND_AUDIT_20261021.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T100",
+      "topic": "Search/Analytics",
+      "name": "Search Architecture + Long-Term Archive + Public-State Boundary",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T100_RUN13_FINAL_E1_E2_E4_E7_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T101",
+      "topic": "Search/Analytics",
+      "name": "Public Search UX + Filters + Ordering + Pagination + Failure",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T101_RUN13_ANDROID_E1_E2_E3_TAG_LOCK_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T102",
+      "topic": "Search/Analytics",
+      "name": "Topic/Tag + Related News + Reporter Discovery",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T102_RUN13_E2_E3_E4_RELATED_REPORTER_FINAL_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T103",
+      "topic": "Search/Analytics",
+      "name": "Analytics Baseline + Time Ranges + Public Controls + Raw Integrity",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B9_BACKEND_T103_T109_E2_E7_PRELOCK_AUDIT_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T103_RUN13_FINAL_E1_E2_E3_E5_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T104",
+      "topic": "Search/Analytics",
+      "name": "Search Index Privacy + Correction + Live Identity + Admin Boundary",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T104_RUN13_FINAL_E1_E2_E4_E5_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T105",
+      "topic": "Search/Analytics",
+      "name": "Search Performance + Android + Founder-Time",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T105_RUN13_ANDROID_AND_5K_SCALE_E1_E2_E3_HOLD_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T106",
+      "topic": "Search/Analytics",
+      "name": "Current Implementation Audit + Historical Topic Adoption",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T106_RUN13_FINAL_E2_E7_HISTORICAL_UNTAGGED_AUDIT_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T107",
+      "topic": "Search/Analytics",
+      "name": "Complete Search Functional + Privacy Test Family",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T107_RUN13_FINAL_E1_E2_E3_E4_SEARCH_PRIVACY_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T108",
+      "topic": "Search/Analytics",
+      "name": "Complete Analytics Functional + Public Display + Privacy Test Family",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T108_RUN13_FINAL_E1_E2_E5_ANALYTICS_PRIVACY_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    },
+    {
+      "id": "P4-T109",
+      "topic": "Search/Analytics",
+      "name": "Failure Isolation + Security + Regression + RCA + Topic Lock",
+      "block": "B9",
+      "official_register_status": "NOT RUN",
+      "candidate_review_files": [
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_B9_BACKEND_T103_T109_E2_E7_PRELOCK_AUDIT_20261023.md",
+        "JANTA_BOL_PHASE_4_WORKING/review/P4_T109_RUN13_FAIL_RCA_REGRESSION_E1_E2_E4_E5_E7_20261023.md"
+      ],
+      "can_count_candidates_as_actual_pass": false,
+      "verified_evidence_index_state": "CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION"
+    }
+  ]
+}
