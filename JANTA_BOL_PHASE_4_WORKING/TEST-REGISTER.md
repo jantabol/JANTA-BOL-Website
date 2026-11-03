@@ -1611,3 +1611,8 @@ Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682
 The 58 *filename-only* gaps split as **16 original exact PASS records with 3–6 substantive Evidence bullets directly in the canonical TEST-REGISTER**, **39 original NOT RUN** (including the later-started T089) and **3 original IN PROGRESS**. **Absence of a separate file never invalidates already recorded official evidence.** Sixteen located historical source narratives are preserved, not re-executed; 42 remaining no-filename entries retain their original non-PASS status. Scoped protected evidence contract `T089-08` verifies every row; original full E7/source semantic duplication/source conflict remains HOLD.
 
 Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json`. No new backend authority, user record or production change.
+
+
+### T089 2026-11-03 independently retrieved live Edge source parity
+
+Official `P4-T089` remains **IN PROGRESS — original FINAL HOLD**. On Nov03 exact live control-plane comparison established 15 ACTIVE Edge function slugs, 10/10 existing review-branch tracked live `index.ts` sources equal deployed files, 5 other function body sets retrieved but lack approved Git recovery source homes. This is live *source parity scoped evidence*, not complete deployed functional testing, safe public code publication, production source-authority resolution, or an overwrite of other original NOT RUN statuses. No old tests run/reclassified and no Founder steps. See the T089 dossier; E1/E7 complete semantic orphan/duplicate/source-conflict and original FINAL PASS+LOCK remain **HOLD**.
