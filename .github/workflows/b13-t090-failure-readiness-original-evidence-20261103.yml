@@ -28,6 +28,7 @@ jobs:
           node --test ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs
           node --test ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs
           node --test ci/phase4/b13-t090-live-edge10-jwt-required-no-auth-denials-20261103.test.mjs
+          node --test ci/phase4/b13-t090-live-edge10-forged-bearer-negatives-20261103.test.mjs
           node --test ci/phase4/b13-t089-e7-official-records-coverage.test.mjs
           node --test ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs
           node --test ci/phase4/b13-t089-live-module-entrypoints-authority.test.mjs
