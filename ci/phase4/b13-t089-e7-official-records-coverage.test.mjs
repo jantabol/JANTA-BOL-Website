@@ -22,7 +22,10 @@ const lines=reg.split('\n').filter(x=>/^\| P4-T\d{3} \|/.test(x));
 const records=lines.map(row=>{const p=row.split('|').map(y=>y.trim());return {id:p[1],topic:p[2],name:p[3],block:p[4],status:p[5]};});
 const requiredIds=Array.from({length:109},(_,i)=>'P4-T'+String(i+1).padStart(3,'0'));
 const expectedBlockCounts={B0:4,B1:7,B2:9,B3:8,B4:6,B5:10,B6:6,B7:9,B8:8,B9:10,B10:9,B11:7,B12:8,B13:8};
-const expectedPaths=new Set([
+const approvedReviewOnlyArchivedEdgeSources=new Set(["JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-recovery-delete-mfa/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-grievance-assets/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-b2-s3-transport.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-media-age-b2-roundtrip.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-owner-supabase-media-source.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-oauth-health/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-video-preflight/index.ts"]);
+const expectedPaths=new Set([...approvedReviewOnlyArchivedEdgeSources,
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_REVIEW_ONLY_EDGE_5_FUNCTION_8_FILE_MANIFEST_20261103.json',
+ 'ci/phase4/b13-t089-recovery-archive-integrity.test.mjs',
  registerFile,codeFile,debugFile,logFile,dossier,indexFile,
  'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs',
  'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs',
