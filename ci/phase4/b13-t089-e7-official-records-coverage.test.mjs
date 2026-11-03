@@ -26,6 +26,7 @@ const expectedPaths=new Set([
  registerFile,codeFile,debugFile,logFile,dossier,indexFile,
  'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs',
  'ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs',
+ 'ci/phase4/b13-t089-live-module-entrypoints-authority.test.mjs',
  root+'review/P4_T089_ORIGINAL_MASTER_109_SECTION_CROSSWALK_20261102.json',
  root+'review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682_CHECKPOINT_1034_SECTION_INVENTORY_20261102.json',
  root+'review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json',
