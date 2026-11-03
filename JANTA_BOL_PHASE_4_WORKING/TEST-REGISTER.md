@@ -1626,3 +1626,8 @@ Exact live deployed source review found all **5/5** previously untracked Edge fu
 ### T089 E7 2026-11-03 final read-only review archive safe path — GREEN
 
 **PASS (SCOPED):** 5 active deployed-only Edge function sources, 8 exact original files now preserved in review-only audit archive `JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/`, manifest `review/P4_T089_REVIEW_ONLY_EDGE_5_FUNCTION_8_FILE_MANIFEST_20261103.json`, fail-hard source-byte CI. No product/SQL/Owner/Auth/backup or deployed Edge changes. Previously protected T087-M16 correctly failed unauthorized product-tree copy; fixed by review-only archive, **old test unchanged**. Exact-head GitHub Actions #41581449180 **2/2 SUCCESS**. T089 original **FINAL PASS+LOCK still HOLD** for semantic module orphan/duplicate and production SHA/source-ownership E7 unresolved; 66 other register NOT RUN not retroactively upgraded. See dated T089 dossier. Founder manual: NONE; no production deploy or payment.
+
+
+### T089 Nov03 Git ancestry verification: no competing production branch, main lag explicitly preserved
+
+Git compare independently confirms `main` `f447231c` → actual Vercel prod source `93df12aa` (**ahead 434 / behind 0**) → current T089 audit review commit `54fb1a88` (**ahead 192 / behind 0**, merge-base = prod): **linear ancestry, not diverged competing branch histories**. Protected main is still older than live; avoid blind merge/deploy. This is **production source ancestry PASS_SCOPED**, not successful deployment parity or full same-purpose semantic duplicate/orphan audit. Review-only exact 5-function/8-file Edge archive remains unmerged; T089 original FINAL PASS+LOCK HOLD. See dated T089 dossier.
