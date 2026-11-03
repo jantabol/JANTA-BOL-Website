@@ -74,3 +74,48 @@ jobs:
           echo 'T090_REAL_SIGNED_E5=HOLD'
           echo 'T090_REAL_INDEPENDENT_E8=HOLD'
           echo 'T090_ORIGINAL_FINAL_PASS_LOCK=HOLD'
+
+  t090_stale_session_pg17_disposable:
+    name: T090 security P2 negative reproducer and safe minimal policy repair (synthetic PG17 only)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_PASSWORD: ephemeral-fixture-only-not-production
+          POSTGRES_USER: postgres
+          POSTGRES_DB: t090_ephemeral_fixture
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d t090_ephemeral_fixture"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false}
+      - name: Real isolated PostgreSQL 17 old-policy failure, exact minimum repair, Owner/Admin/Reporter positive + revoked negatives
+        shell: bash
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGDATABASE: t090_ephemeral_fixture
+          PGPASSWORD: ephemeral-fixture-only-not-production
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq postgresql-client >/dev/null
+          fi
+          psql -X -A -t -c "SHOW server_version_num" | grep -E '^17[0-9]{4}$'
+          psql -X -v ON_ERROR_STOP=1 -f ci/phase4/b13-t090-stale-session-rls-pg17-disposable-20261103.sql
+          echo "T090_PROD_DB_AUTH_SESSIONS_MIGRATION=NOT_APPLIED"
+          echo "T090_REAL_SIGNED_E5_FULL_E8=HOLD"
