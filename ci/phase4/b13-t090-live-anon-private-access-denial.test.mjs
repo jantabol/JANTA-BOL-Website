@@ -9,7 +9,9 @@ const project='https://vrffsnkycvjithwtiylt.supabase.co';
 const names=proof.sensitive_table_role_snapshot.map(x=>x.table_name);
 let publicKey;
 async function get(url,opts={}){
- return await fetch(url,{redirect:'error',signal:AbortSignal.timeout(16000),...opts});
+ const res=await fetch(url,{redirect:'follow',signal:AbortSignal.timeout(16000),...opts});
+ if(new URL(res.url).origin!==new URL(url).origin)throw Error('PROBE_CROSS_ORIGIN_REDIRECT_DENIED');
+ return res;
 }
 test('T090-HTTP01 exact 11 private tables have read-only catalog proof of RLS/anon no grants',()=>{
  assert.equal(names.length,11);
