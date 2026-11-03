@@ -1022,8 +1022,10 @@
     "source_git_sha": "60970abdacf560815b9db3bd819eb467ef984616",
     "live_deployment_id": "dpl_7YhVGAh758YvZq6HmteERdyCKtMb",
     "source_file_count": 18,
-    "real_live_network_ci": "PENDING",
+    "real_live_network_ci": "PASS_SCOPED_18_OF_18_GITHUB_RUN_41620026501",
     "manifest_path": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json",
-    "scope": "Source-only exact byte parity, not browser login, actual Auth/Edge runtime, all 64 files or final ZIP"
+    "scope": "Source-only exact byte parity, not browser login, actual Auth/Edge runtime, all 64 files or final ZIP",
+    "checked_actual_bytes_on_github_ci": true,
+    "new_E7_risk": "Two inactive-in-canonical-JS but ANON executable duplicate legacy ad_events insert RPCs, must review BEFORE claiming paid ad click metrics integrity"
   }
 }

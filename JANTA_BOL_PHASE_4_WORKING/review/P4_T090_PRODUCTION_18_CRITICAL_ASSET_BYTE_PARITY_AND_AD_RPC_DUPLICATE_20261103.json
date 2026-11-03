@@ -26,7 +26,15 @@
     "b9-search.html"
   ],
   "already_manual_verified_count": 18,
-  "github_CI_live_reverification": "PENDING",
+  "github_CI_live_reverification": {
+    "run_id": 41620026501,
+    "conclusion": "SUCCESS",
+    "head_sha": "2cae5b8b147e35b39e5d3df663314395dd10ed03",
+    "source_assets_checked": 18,
+    "exact_18_out_of_18": true,
+    "old_news_auth_recovery_regressions_preserved": true,
+    "original_full_final": "HOLD"
+  },
   "all_32_js_and_32_html_proven": false,
   "unverified_due_to_tool_policy": [
     "index.html",
