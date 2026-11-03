@@ -26,6 +26,8 @@ const approvedReviewOnlyArchivedEdgeSources=new Set(["JANTA_BOL_PHASE_4_WORKING/
 const expectedPaths=new Set([
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json',
  'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
+ 'ci/phase4/b13-t090-live-edge10-jwt-required-no-auth-denials-20261103.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E5_REAL_RLS_ROLE_GRANTS_AND_AD_RISK_READONLY_20261103.md',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json',
  'ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json',
