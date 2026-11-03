@@ -185,6 +185,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
   'ci/phase4/b13-t090-live-edge10-jwt-required-no-auth-denials-20261103.test.mjs',
   'ci/phase4/b13-t090-live-edge10-forged-bearer-negatives-20261103.test.mjs',
+  'ci/phase4/b13-t090-synthetic-role-rls-no-publish-leak-20261103.test.mjs',
+  root+'review/P4_T090_E5_SYNTHETIC_AUTHENTICATED_RLS_REAL_DB_READONLY_20261103.json',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));
