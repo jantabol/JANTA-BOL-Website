@@ -1,0 +1,81 @@
+{
+  "date": "2026-11-03",
+  "pr": 113,
+  "head_before_audit": "db396ec97d1f40b42a11b863c00790b384840cf5",
+  "scope": "STATIC_SOURCE_E7_ONLY",
+  "method": "independent public Git tree enumeration and exact source-string analysis; on-branch Node tests are required for proof",
+  "canonical_html_pages": 32,
+  "canonical_js_sources": 32,
+  "scoped_single_source_boundaries": [
+    {
+      "id": "ARTICLE_EDITORIAL_DB",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/backend-client.js",
+      "contract": "only canonical .from('articles') client and owner write path"
+    },
+    {
+      "id": "PUBLIC_ARTICLES_C1",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/public-c1-projection.js",
+      "contract": "only named jb_c1_public_articles RPC; script.js and website-v3.js may read but not own source"
+    },
+    {
+      "id": "TEAM_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase4-team-client.js",
+      "contract": "single direct jb-team-api invocation"
+    },
+    {
+      "id": "RECORDS_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase4-records-client.js",
+      "contract": "single direct jb-records-api invocation"
+    },
+    {
+      "id": "LIVE_COMMAND",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/phase3a-live-client.js",
+      "contract": "single direct jb-live-api invocation"
+    },
+    {
+      "id": "B8_STAFF_PUBLIC",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/b8-accountability-ui.js",
+      "contract": "imports staff, owner retry connector; public uses distinct public-case client"
+    },
+    {
+      "id": "B9_SEARCH",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/b9-client.js",
+      "contract": "search UI adapter uses RPC not direct private article table"
+    },
+    {
+      "id": "PUBLIC_AD_FEED",
+      "owner": "JANTA_BOL_PHASE_3C_WORKING/public-ads.js",
+      "contract": "jb_ad_public_feed via public adapter"
+    }
+  ],
+  "unresolved": [
+    {
+      "id": "DUPLICATE_READ_WRAPPERS",
+      "status": "REVIEW_NOT_AUTO_FAIL",
+      "severity": "P2",
+      "finding": "phase2-client.js and phase4-domain-client.js both expose grievances/compliance_tasks read wrappers and both load on compliance.html; separate intended read roles vs actual duplicate-engine behavior requires detailed runtime review",
+      "safe_next": "do not delete client; inspect function/consumer call graph first"
+    },
+    {
+      "id": "LEGACY_STATIC_PREVIEW_ROOT",
+      "status": "REVIEW_NOT_AUTO_FAIL",
+      "severity": "P2",
+      "finding": "repository root index.html/script.js exist separately from canonical deployed product directory; vercel redirects / but direct /index.html may still expose obsolete static route, not live verified",
+      "safe_next": "verify hosted direct path; no deploy/redirect during read-only T089"
+    },
+    {
+      "id": "OLD_PREVIEW_HANDLERS",
+      "status": "REVIEW_NOT_AUTO_FAIL",
+      "severity": "P2",
+      "finding": "script.js still contains hardcoded weather headlines in old V2.4 preview handlers; associated .top-story-open button absent in canonical homepage, so cannot assert active false news from source alone",
+      "safe_next": "read-only public UI click coverage test before any source removal"
+    }
+  ],
+  "blueprint_requirements_remaining": "individual semantic mapping Sections 1–339 beyond original 14-topic / 433 coded checkpoint maps",
+  "source_conflict_remaining": "main older than live production commit and preview audit branch; current deployed Git ancestry is linear, not proof of binary/Edge deployment restore",
+  "all_module_semantic_uniqueness_proven": false,
+  "production_binary_parity_proven": false,
+  "requirement_sections_1_to_339_fully_semantic_proven": false,
+  "source_only_no_published_news_auth_db_prod_changes": true,
+  "original_t089_final": "HOLD; staged scoped source audit only, not a final release lock"
+}

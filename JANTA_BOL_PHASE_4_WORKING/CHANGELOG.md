@@ -586,3 +586,11 @@ Exact live deployed source review found all **5/5** previously untracked Edge fu
 ### T089 Nov03 Git ancestry verification: no competing production branch, main lag explicitly preserved
 
 Git compare independently confirms `main` `f447231c` → actual Vercel prod source `93df12aa` (**ahead 434 / behind 0**) → current T089 audit review commit `54fb1a88` (**ahead 192 / behind 0**, merge-base = prod): **linear ancestry, not diverged competing branch histories**. Protected main is still older than live; avoid blind merge/deploy. This is **production source ancestry PASS_SCOPED**, not successful deployment parity or full same-purpose semantic duplicate/orphan audit. Review-only exact 5-function/8-file Edge archive remains unmerged; T089 original FINAL PASS+LOCK HOLD. See dated T089 dossier.
+
+
+
+### T089-D STATIC CROSS-ENGINE / SOURCE OF TRUTH — 2026-11-03
+
+Started independent original E7 duplicate/orphan semantic source review beyond existing HTML/JS graph: actual 32 HTML/32 JS source files, canonical article DB write ownership, C1 read adapter, Team/Records/Live Edge command gateways, B8 staff/public separation, B9 RPC and Ads public-feed source. New fail-hard file `ci/phase4/b13-t089-cross-engine-static-owners-20261103.test.mjs` and 8-family / 3-review-finding matrix `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_CROSS_ENGINE_STATIC_SOURCE_AUTHORITY_MATRIX_20261103.json` on unmerged Draft PR #113. Source-only, old T087 protected no-source-change regression kept intact. **Static-only PASS if exact-head CI green, NOT full E7.**
+
+**Explicit review findings:** legacy `phase2-client.js` and `phase4-domain-client.js` both contain Grievance and Compliance *read* wrappers; the hosted direct `/index.html` legacy static route is not independently checked, even though `/` redirects to canonical product; `script.js` includes historical hardcoded weather preview strings but the `.top-story-open` control is absent in canonical HTML. These are legitimate classification items, **not proof that users currently see false news or that two backend write authorities exist**. Preserve original code pending exact behavior check and a minimal safe follow-up. Sections 1–339 semantic and production-source full authority remain DUE. **T089_ORIGINAL_FINAL_PASS_LOCK=HOLD**, no Founder Android/manual step, production and old source unchanged.
