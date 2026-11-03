@@ -187,6 +187,7 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-live-edge10-forged-bearer-negatives-20261103.test.mjs',
   'ci/phase4/b13-t090-synthetic-role-rls-no-publish-leak-20261103.test.mjs',
   'ci/phase4/b13-t090-existing-identity-session-rls-sql-scoped-20261103.test.mjs',
+  'ci/phase4/b13-t090-live-http-forged-owner-reporter-postgrest-gotrue-negative-20261103.test.mjs',
   root+'review/P4_T090_E5_EXISTING_OWNER_REPORTER_SESSION_RLS_SQL_20261103.json',
   'ci/phase4/b13-t090-build-verified-prod64-static-archive-20261103.py',
   root+'review/P4_T090_E5_SYNTHETIC_AUTHENTICATED_RLS_REAL_DB_READONLY_20261103.json',
