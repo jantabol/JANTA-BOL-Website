@@ -111,6 +111,23 @@ test('T089-D11 live root P1 and two narrow production-source PRs are documented 
  assert.match(mat.original_t089_final,/HOLD/);
 });
 
+test('T089-D12 post-release production evidence has fixed P1 route and UI without upgrading full T089',()=>{
+ const x=mat.post_release_current_status;
+ assert.ok(x&&x.live_deployment_ready);
+ assert.equal(x.merged_sha,'60970abdacf560815b9db3bd819eb467ef984616');
+ assert.equal(x.live_deployment_id,'dpl_7YhVGAh758YvZq6HmteERdyCKtMb');
+ assert.equal(x.identical_source_tree_sha,'424c9aa4c3c3db9529e972fe9c4b278a92e4359f');
+ assert.equal(x.alias_deployment_verified_both,true);
+ assert.equal(x.P1_legacy_root_route,'RESOLVED_PRODUCTION_HTTP_VERIFIED');
+ assert.equal(x.P1_legacy_grievance_UI,'RESOLVED_PRODUCTION_SOURCE_VERIFIED');
+ assert.equal(x.live_http[1].canonical_c1,true);
+ assert.equal(x.live_http[1].obsolete_demo,false);
+ assert.equal(x.live_http[3].guarded_fsm_rpc,true);
+ assert.equal(x.live_http[3].direct_grievance_status_update,false);
+ assert.equal(x.full_auth_and_role_negative_hosted,'NOT_EXECUTED_THIS_RELEASE');
+ assert.match(x.original_full_T089_final,/HOLD/);
+});
+
 test('T089-D09 scoped audit cannot be misreported as complete semantic source authority or original T089 PASS',()=>{
  assert.equal(mat.scope,'STATIC_SOURCE_E7_ONLY');
  assert.equal(mat.all_module_semantic_uniqueness_proven,false);

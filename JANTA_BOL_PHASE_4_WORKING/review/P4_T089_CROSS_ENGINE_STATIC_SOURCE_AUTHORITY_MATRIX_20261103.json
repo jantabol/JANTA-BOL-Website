@@ -152,5 +152,71 @@
       "risk": "LEGACY_GRIEVANCE_FSM"
     }
   ],
-  "production_release_assessment": "P1_PUBLIC_LEGACY_ROUTE_AND_P1_OWNER_GRIEVANCE_DIRECT_UPDATE_OPEN_CONFIRMED; scoped CI is not launch approval"
+  "production_release_assessment": "P1_PUBLIC_LEGACY_ROUTE_AND_P1_OWNER_GRIEVANCE_DIRECT_UPDATE_OPEN_CONFIRMED; scoped CI is not launch approval",
+  "post_release_current_status": {
+    "date": "2026-11-03",
+    "original_production_sha": "93df12aa8ffdfae38d9a4066b6a4556bb36969e5",
+    "merged_sha": "60970abdacf560815b9db3bd819eb467ef984616",
+    "tested_preview_sha": "430003db5bedcfe72da392b167011baa2974bc4b",
+    "identical_source_tree_sha": "424c9aa4c3c3db9529e972fe9c4b278a92e4359f",
+    "narrow_pr_merged": 117,
+    "live_deployment_id": "dpl_7YhVGAh758YvZq6HmteERdyCKtMb",
+    "live_deployment_ready": true,
+    "aliases": [
+      "jantabol.in",
+      "www.jantabol.in"
+    ],
+    "alias_deployment_verified_both": true,
+    "live_http": [
+      {
+        "path": "/",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/index.html",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
+        "status": 200,
+        "canonical_c1": true,
+        "obsolete_demo": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/phase2-client.js",
+        "status": 200,
+        "guarded_fsm_rpc": true,
+        "direct_grievance_status_update": false
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/grievances.html",
+        "status": 200
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/article.html",
+        "status": 200,
+        "public_c1": true
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/admin-login.html",
+        "status": 200
+      },
+      {
+        "path": "/JANTA_BOL_PHASE_3C_WORKING/b9-search.html",
+        "status": 200
+      }
+    ],
+    "published_article_public_rpc_check": "published ID available through jb_c1_public_articles and permanent article HTML URL returned HTTP 200; browser-side rendered article and authenticated grievance workflows were NOT interactively run",
+    "source_protection": "only vercel.json and phase2-client.js product source modifications, no SQL, existing news, auth, backup or Edge source changes",
+    "P1_legacy_root_route": "RESOLVED_PRODUCTION_HTTP_VERIFIED",
+    "P1_legacy_grievance_UI": "RESOLVED_PRODUCTION_SOURCE_VERIFIED",
+    "live_grievance_database_authenticated_update_grant": "REMAINS_FOR_EXISTING_POLICY; DO_NOT_CLAIM_BACKEND_ENFORCEMENT_FOR_ALL_POSSIBLE_DB_CLIENTS",
+    "full_auth_and_role_negative_hosted": "NOT_EXECUTED_THIS_RELEASE",
+    "historical_findings_pre_fix": "unresolved[] statuses below describe confirmed prior source history before released PR117, NOT current live route/UI",
+    "original_full_T089_final": "HOLD — semantic Sections1-339, complete duplicate/orphan, T087/T088 original closure, and hosted negative/restore remain outside this scoped release"
+  }
 }
