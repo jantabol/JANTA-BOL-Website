@@ -46,6 +46,23 @@ jobs:
           node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
           node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
           echo 'T090_PROTECTED_PREVIOUS_LOCKED_GATES=PASS_SCOPED'
+      - name: Build verified immutable production 64-file static QA ZIP (not full recovery)
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          python3 ci/phase4/b13-t090-build-verified-prod64-static-archive-20261103.py
+          python3 -m zipfile -t t090-janta-bol-prod-static64-NOT-FULL-RESTORE.zip
+          sha256sum -c t090-janta-bol-prod-static64-NOT-FULL-RESTORE.zip.sha256
+      - name: Publish scoped static QA ZIP to run artifacts (not final ZIP)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: t090-prod64-static-qa-NOT-FULL-RESTORE
+          path: |
+            t090-janta-bol-prod-static64-NOT-FULL-RESTORE.zip
+            t090-janta-bol-prod-static64-NOT-FULL-RESTORE.zip.sha256
+          retention-days: 7
+          if-no-files-found: error
+          compression-level: 0
       - name: Explicit E5/E8 and full final authority HOLD, no service account/payment/deploy
         shell: bash
         run: |
