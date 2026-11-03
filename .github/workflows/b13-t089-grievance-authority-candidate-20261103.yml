@@ -1,0 +1,35 @@
+# T089 P1 one-path grievance status transition candidate; isolated, no deployment.
+name: T089 Grievance Single Backend Transition Authority - SAFE CANDIDATE
+on:
+  push:
+    branches: [codex/t089-grievance-single-transition-authority-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: t089-grievance-source-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  owner_fsm_and_protected_regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Exact single-function rewrite and original public grievance unchanged
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/phase2-client.js
+          node --test ci/phase4/b13-t089-legacy-grievance-fsm-authority-candidate.test.mjs
+      - name: Original locked News/Auth/Recovery regressions
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          echo 'T089_OLD_NEWS_AUTH_SECURITY=PASS_SCOPED'
+      - name: No deployment or credentials in source-only gate
+        run: |
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T089_DEPLOYMENT=NOT_PERFORMED'
