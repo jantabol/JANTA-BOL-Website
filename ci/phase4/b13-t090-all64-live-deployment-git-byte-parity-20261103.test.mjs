@@ -18,7 +18,9 @@ test('T090-ALL64-01 exactly 32 HTML + 32 JS canonical product targets, no extras
  assert.equal(files.filter(n=>n.endsWith('.html')).length,32);
  assert.equal(files.filter(n=>n.endsWith('.js')).length,32);
  assert.equal(new Set(files).size,64);
- assert.equal(review.all64_exact_byte_parity_proven,false,'SOURCE_ONLY_LEDGER_MUST_NOT_PRECLAIM_RUNNING_CI');
+ assert.equal(review.all64_exact_byte_parity_proven,true,'CI_PROOF_NOT_CERTIFIED');
+ assert.equal(review.actual_all64_https_ci.run_id,41624965471);
+ assert.equal(review.actual_all64_https_ci.conclusion,'success');
 });
 test('T090-ALL64-02 64/64 exact LIVE HTTPS files equal immutable Git production source bytes, not just HEAD SHA',async()=>{
  assert.equal(files.length,64);
