@@ -10,12 +10,26 @@
   "expected_total": 64,
   "initial_verified_18_of_18": true,
   "initial_ci_run": 41620026501,
-  "actual_all64_https_ci": "NOT_RUN",
-  "all64_exact_byte_parity_proven": false,
+  "actual_all64_https_ci": {
+    "run_id": 41624965471,
+    "status": "completed",
+    "conclusion": "success",
+    "source_sha": "fe37372ccec52908044cefafc49bcee0915ec02a",
+    "actual_hosted_32_html_verified": true,
+    "actual_hosted_32_js_verified": true,
+    "exact_full_64_byte_match": true,
+    "protected_regressions_green": true
+  },
+  "all64_exact_byte_parity_proven": true,
   "security": "PUBLIC FILE GET ONLY, NO LOGIN, NO JWT, NO SQL, NO SECRETS, NO ARTICLE/USER DATA, NO DATA MUTATION",
   "test_expected_behavior": "Verify source and live full raw byte buffers identical, reject redirect cross-origin and unexpected file count; fail hard on any drift or network error",
   "semantic_requirements_1_339_proven": false,
   "signed_owner_reporter_E5_run": false,
   "full_independent_E8_hosted_runtime_restored": false,
-  "original_t090_final_pass_lock": "HOLD"
+  "original_t090_final_pass_lock": "HOLD",
+  "previous_unverified_due_to_tool_policy_now_tested_by_github_http": [
+    "index.html",
+    "published.html"
+  ],
+  "scope": "ALL64 current canonical static HTML/JS exact public hosted-byte parity ONLY; not browser Auth, full runtime E7 1–339, GoTrue/Edge/Vercel disaster restore"
 }

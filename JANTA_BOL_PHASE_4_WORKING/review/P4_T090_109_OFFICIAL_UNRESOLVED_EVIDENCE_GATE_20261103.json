@@ -1037,7 +1037,9 @@
     "live_domain": "https://jantabol.in",
     "scope": "Static HTML/JS byte comparison of canonical live source; not server Auth, hosted Edge, full restore or all UX",
     "manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json",
-    "CI": "NOT_RUN_AT_INITIAL_SOURCE_COMMIT",
-    "original_full_T090": "HOLD"
+    "CI": "EXACT_64_OF_64_REAL_HTTPS_BYTES_MATCH_GITHUB_RUN_41624965471",
+    "original_full_T090": "HOLD",
+    "result": "PASS_LOCK_SCOPED",
+    "full_original_final": "HOLD"
   }
 }

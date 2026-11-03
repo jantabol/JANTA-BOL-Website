@@ -124,6 +124,19 @@ test('T090-E7-12 full 64 hosted asset byte-parity planned without upgrading sign
  assert.equal(p.full_independent_E8_hosted_runtime_restored,false);
  assert.equal(p.original_t090_final_pass_lock,'HOLD');
 });
+test('T090-E7-13 exact original hosted all-64 static byte parity green without inventing E5 E8 or semantic implementation proof',()=>{
+ const p=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json','utf8'));
+ assert.equal(p.all64_exact_byte_parity_proven,true);
+ assert.equal(p.actual_all64_https_ci.run_id,41624965471);
+ assert.equal(p.actual_all64_https_ci.conclusion,'success');
+ assert.equal(p.actual_all64_https_ci.exact_full_64_byte_match,true);
+ assert.equal(p.actual_all64_https_ci.actual_hosted_32_html_verified,true);
+ assert.equal(p.actual_all64_https_ci.actual_hosted_32_js_verified,true);
+ assert.equal(p.semantic_requirements_1_339_proven,false);
+ assert.equal(p.signed_owner_reporter_E5_run,false);
+ assert.equal(p.full_independent_E8_hosted_runtime_restored,false);
+ assert.equal(p.original_t090_final_pass_lock,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
