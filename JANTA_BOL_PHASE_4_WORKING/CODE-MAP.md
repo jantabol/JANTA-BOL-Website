@@ -566,3 +566,8 @@ Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682
 The 58 *filename-only* gaps split as **16 original exact PASS records with 3–6 substantive Evidence bullets directly in the canonical TEST-REGISTER**, **39 original NOT RUN** (including the later-started T089) and **3 original IN PROGRESS**. **Absence of a separate file never invalidates already recorded official evidence.** Sixteen located historical source narratives are preserved, not re-executed; 42 remaining no-filename entries retain their original non-PASS status. Scoped protected evidence contract `T089-08` verifies every row; original full E7/source semantic duplication/source conflict remains HOLD.
 
 Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json`. No new backend authority, user record or production change.
+
+
+### T089 2026-11-03 independently retrieved live Edge source parity
+
+15 live Supabase functions were independently inventoried via authenticated read-only control plane. Exactly 10 actively deployed `index.ts` sources equal their same-name GitHub candidate bytes (per-file exact comparison). Five deployed functions lack source directories in the *public* Git repository: `jb-recovery-delete-mfa`, `jb-grievance-assets`, `jb-b11-t069-media-backup` (4 deployment files), `jb-youtube-oauth-health`, `jb-youtube-video-preflight`. Their deployed source bodies **are retrievable**, but source parity to a vetted tracked recovery home is unavailable; nothing was copied to a public repository or deployed. See `review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`. Original E7 module/source uniqueness and final T089 lock remain HOLD.
