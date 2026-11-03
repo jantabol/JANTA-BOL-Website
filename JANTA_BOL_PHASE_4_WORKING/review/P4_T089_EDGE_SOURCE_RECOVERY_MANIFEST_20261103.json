@@ -1,0 +1,63 @@
+{
+  "title": "P4-T089 / E7 five original deployed-only Edge functions source-provenance candidate",
+  "created_at": "2026-11-03",
+  "live_project": "vrffsnkycvjithwtiylt",
+  "capture": "authenticated Supabase get_edge_function read-only, source files copied exact as returned without modification",
+  "code_review": "literal credential/PEM/JWT/email patterns checked; this is not a full secret audit",
+  "previously_git_tracked_active_live_functions_verified_exact": 10,
+  "previously_untracked_active_live_functions_recovered": 5,
+  "exact_source_file_count": 8,
+  "no_prod_deployment_or_db_mutation": true,
+  "source_release_status": "DRAFT_UNMERGED_RECOVERY_CANDIDATE",
+  "full_t089_final": "HOLD: complete semantic orphan/duplicate and Vercel production authority E7 not established",
+  "functions": [
+    {
+      "slug": "jb-recovery-delete-mfa",
+      "version": 15,
+      "verify_jwt": true,
+      "control_plane_sha256": "f3a5059271b3f14fdcb60a84183af28923c6c454fa23b41e4a884f0e9fffc71a",
+      "files": [
+        "index.ts"
+      ]
+    },
+    {
+      "slug": "jb-grievance-assets",
+      "version": 7,
+      "verify_jwt": true,
+      "control_plane_sha256": "4d38e5b6db24ae269b0707585fd77f4cd3d6d6bdb8f959123a060ab4a958a8a2",
+      "files": [
+        "index.ts"
+      ]
+    },
+    {
+      "slug": "jb-b11-t069-media-backup",
+      "version": 5,
+      "verify_jwt": true,
+      "control_plane_sha256": "d3b62490ee432d35ecbd471aa3e7320071f632aa3f55355a5a1252b2907fa974",
+      "files": [
+        "index.ts",
+        "t069-media-age-b2-roundtrip.mjs",
+        "t069-owner-supabase-media-source.mjs",
+        "t069-b2-s3-transport.mjs"
+      ]
+    },
+    {
+      "slug": "jb-youtube-oauth-health",
+      "version": 2,
+      "verify_jwt": true,
+      "control_plane_sha256": "6509a2075980a4e4a07c70ca0d747a4909cb79c76519868047d258aaa197c0d0",
+      "files": [
+        "index.ts"
+      ]
+    },
+    {
+      "slug": "jb-youtube-video-preflight",
+      "version": 1,
+      "verify_jwt": true,
+      "control_plane_sha256": "171f8feb2702a6697d1843e6e98800a200da129001444bc8ae2aacb29f8e4967",
+      "files": [
+        "index.ts"
+      ]
+    }
+  ]
+}
