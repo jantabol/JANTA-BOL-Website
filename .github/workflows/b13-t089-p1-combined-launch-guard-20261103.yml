@@ -1,0 +1,41 @@
+# Source-only two P1 fixes against the exact production SHA.
+# Must not trigger an unapproved production release or read secret env vars.
+name: T089 P1 Combined Root and Grievance - Safe Launch Candidate
+on:
+  push:
+    branches: [codex/t089-p1-combined-launch-guard-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: t089-p1-combined-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  combined_fix_protected_news_auth:
+    name: Exact two-P1 source gates, old Founder/News/Auth regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Combined two P1 product boundary
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --check JANTA_BOL_PHASE_3C_WORKING/phase2-client.js
+          node --test ci/phase4/b13-t089-p1-launch-guard-integrated-20261103.test.mjs
+      - name: Existing locked Founder/Auth/News and Recovery regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node ci/phase3-regression/static-p3-preprod-regression.cjs
+      - name: No hidden deploy or production secret
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T089_SOURCE_ONLY_NO_PRODUCTION_DEPLOY=YES'
