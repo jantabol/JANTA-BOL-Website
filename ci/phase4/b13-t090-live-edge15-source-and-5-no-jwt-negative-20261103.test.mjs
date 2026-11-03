@@ -49,9 +49,14 @@ async function edgeGET(slug){
  assert.equal(new URL(res.url).origin,origin,'EDGE_NO_CROSS_ORIGIN_'+slug);
  return res;
 }
-test('T090-EDGE03 actual anonymous GET /jb-live-worker without secret denied (NO data write)',async()=>{
- const res=await edgeGET('jb-live-worker');
- assert.ok([401,403].includes(res.status),'WORKER_UNAUTH_GET_NOT_DENIED_'+res.status);
+test('T090-EDGE03 actual GET worker denied by method guard, anonymous POST denied by secret guard (NO operation)',async()=>{
+ const get=await edgeGET('jb-live-worker');
+ assert.equal(get.status,405,'WORKER_GET_METHOD_NOT_DENIED_'+get.status);
+ const post=await fetch(origin+'/functions/v1/jb-live-worker',{
+  method:'POST',headers:{'Content-Type':'application/json'},body:'{}',
+  redirect:'manual',signal:AbortSignal.timeout(16000)
+ });
+ assert.ok([401,403].includes(post.status),'WORKER_UNAUTH_POST_NOT_DENIED_'+post.status);
 });
 test('T090-EDGE04 actual anonymous POST connector without service Bearer denied (NO operation)',async()=>{
  const res=await fetch(origin+'/functions/v1/jb-encoder-connector-lols',{
