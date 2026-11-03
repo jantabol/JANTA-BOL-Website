@@ -137,6 +137,17 @@ test('T090-E7-13 exact original hosted all-64 static byte parity green without i
  assert.equal(p.full_independent_E8_hosted_runtime_restored,false);
  assert.equal(p.original_t090_final_pass_lock,'HOLD');
 });
+test('T090-E5-E7-14 live 15 Edge source authority has true 18 files and five no-JWT entrypoints scoped, NOT full E5/E8',()=>{
+ const p=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json','utf8'));
+ assert.equal(p.functions_active,15);
+ assert.equal(p.live_files_compared,18);
+ assert.equal(p.tracked_functions,10);
+ assert.equal(p.review_only_archived_functions,5);
+ assert.equal(p.verify_jwt_false_functions.length,5);
+ assert.equal(p.current_T087_signed_E5,'HOLD');
+ assert.equal(p.current_T088_full_E8,'HOLD');
+ assert.equal(p.current_T090_full_final,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
@@ -155,6 +166,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-production-source-e7-18-file-parity-20261103.test.mjs',
   'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json',
   'ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json',
+  'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));

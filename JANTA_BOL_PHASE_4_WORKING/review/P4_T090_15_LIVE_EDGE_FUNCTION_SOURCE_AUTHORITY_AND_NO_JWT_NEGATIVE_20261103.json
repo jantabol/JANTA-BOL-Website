@@ -1,0 +1,288 @@
+{
+  "title": "T090 real live 15 Supabase Edge function source parity and five public verify_jwt=false negative HTTP guards",
+  "observed": "2026-11-03",
+  "project_id": "vrffsnkycvjithwtiylt",
+  "source_branch_head_at_observation": "12cc9ccf92c032bb92f256b9bf39f403576948c2",
+  "functions": [
+    {
+      "slug": "jb-b11-t069-media-backup",
+      "version": 5,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "d3b62490ee432d35ecbd471aa3e7320071f632aa3f55355a5a1252b2907fa974",
+      "source_authority": "REVIEW_ONLY_ARCHIVE",
+      "files": [
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/index.ts",
+          "git_blob_sha": "cf49127cad97a84d695e296fb58ccdc61e84ac99",
+          "git_size_bytes": 4582,
+          "live_source_exact_match_observed_via_connector": true
+        },
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-b2-s3-transport.mjs",
+          "git_blob_sha": "5ffcc9f08d5f19bf62f4ff06566bbfce5d7872ad",
+          "git_size_bytes": 1696,
+          "live_source_exact_match_observed_via_connector": true
+        },
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-media-age-b2-roundtrip.mjs",
+          "git_blob_sha": "754a71f29b64b0366ffa5f61271768f135fc4942",
+          "git_size_bytes": 6392,
+          "live_source_exact_match_observed_via_connector": true
+        },
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-owner-supabase-media-source.mjs",
+          "git_blob_sha": "049c8935044e00199e411b5acee6d65dabc16025",
+          "git_size_bytes": 4103,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-encoder-connector-lols",
+      "version": 7,
+      "verify_jwt": false,
+      "active": true,
+      "ezbr_bundle_sha256": "35b7700ff05232fb1888f7235a9d322636130ae7efaefdc0f2186a1238c6cf7e",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-encoder-connector-lols/index.ts",
+          "git_blob_sha": "d6924ec6a5ab937667034f96ab32081aa8f63ba2",
+          "git_size_bytes": 2666,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-encoder-handoff",
+      "version": 15,
+      "verify_jwt": false,
+      "active": true,
+      "ezbr_bundle_sha256": "c60246e60142098a436dd7accd7988c33e6689a9c4af07d8fa3f484dfa371a93",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-encoder-handoff/index.ts",
+          "git_blob_sha": "3c56333d2a0e1f84e511b510be7f90298cb66e14",
+          "git_size_bytes": 3468,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-encoder-launch",
+      "version": 13,
+      "verify_jwt": false,
+      "active": true,
+      "ezbr_bundle_sha256": "f5cf2d19e87d17dc176738b661b4a98e0e28a0967fc53732048f60b0a305045f",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-encoder-launch/index.ts",
+          "git_blob_sha": "bbaf1d2755eb2b2e83b7c8e0ff0d582dfd3820c4",
+          "git_size_bytes": 9917,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-grievance-assets",
+      "version": 7,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "4d38e5b6db24ae269b0707585fd77f4cd3d6d6bdb8f959123a060ab4a958a8a2",
+      "source_authority": "REVIEW_ONLY_ARCHIVE",
+      "files": [
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-grievance-assets/index.ts",
+          "git_blob_sha": "852cf9f3e101ee4a18e73ee1d58391d99dbe7a34",
+          "git_size_bytes": 7476,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-live-api",
+      "version": 40,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "33b9d63a1df219b91ef6305863d766c67a8ff94a78876a79b39c7335e72d3985",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-live-api/index.ts",
+          "git_blob_sha": "b8a385873f78d7c18b476bd1714aa2a1586254a2",
+          "git_size_bytes": 54253,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-live-worker",
+      "version": 25,
+      "verify_jwt": false,
+      "active": true,
+      "ezbr_bundle_sha256": "1f0b08c8fdf74997f76a628d051f3fb982dbaf7ae948292eadbcc89fc6349282",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-live-worker/index.ts",
+          "git_blob_sha": "fff8c09301b04277be6c2c0ed486136888131780",
+          "git_size_bytes": 16511,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-records-api",
+      "version": 6,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "8b696778acf0a71f3c9de740939121618abc84eb04a888ad584912c6b7d98489",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-records-api/index.ts",
+          "git_blob_sha": "6809274c50f8ba5dd36bd06c015ec52231fb112b",
+          "git_size_bytes": 10288,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-recovery-delete-mfa",
+      "version": 15,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "f3a5059271b3f14fdcb60a84183af28923c6c454fa23b41e4a884f0e9fffc71a",
+      "source_authority": "REVIEW_ONLY_ARCHIVE",
+      "files": [
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-recovery-delete-mfa/index.ts",
+          "git_blob_sha": "29bd3c2ded6a5de0ade7a6bb9dd6fdd8a384d50f",
+          "git_size_bytes": 3938,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-team-api",
+      "version": 13,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "82c063f70ac818f8ba9fc642eaffa5a7754dcdfe48f165c77ccf983710c23788",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-team-api/index.ts",
+          "git_blob_sha": "9873f6445f663696731ac57cd51c03b832f89af3",
+          "git_size_bytes": 11536,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-youtube-oauth-callback",
+      "version": 16,
+      "verify_jwt": false,
+      "active": true,
+      "ezbr_bundle_sha256": "023874b6d79c06d7be2632d4942a0872e02231c5f5239749e33d4a21a4fd901d",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-callback/index.ts",
+          "git_blob_sha": "7f9690728e8abf9942b49c0527825bcd54671665",
+          "git_size_bytes": 7737,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-youtube-oauth-health",
+      "version": 2,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "6509a2075980a4e4a07c70ca0d747a4909cb79c76519868047d258aaa197c0d0",
+      "source_authority": "REVIEW_ONLY_ARCHIVE",
+      "files": [
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-oauth-health/index.ts",
+          "git_blob_sha": "1b99435d78d1615412acf53f3c50d83ff2a245ad",
+          "git_size_bytes": 10800,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-youtube-oauth-start",
+      "version": 18,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "c5d063a11757bc44a0de58213e1c71d9f72ee86f3feb1d2daf84aea827812784",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-youtube-oauth-start/index.ts",
+          "git_blob_sha": "c97a74566c61dcd760a44df9bbcb655905eb6f74",
+          "git_size_bytes": 4811,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-youtube-provider",
+      "version": 30,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "0ee1d84fb704b99cfcd337e338fb444284e1815f63ab4f14acb47b77d56148f9",
+      "source_authority": "PROTECTED_TRACKED",
+      "files": [
+        {
+          "path": "CODEX_CURRENT_SUPABASE/functions/jb-youtube-provider/index.ts",
+          "git_blob_sha": "0a69e75dba360bc327b81102571cd1692a6062a5",
+          "git_size_bytes": 23714,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    },
+    {
+      "slug": "jb-youtube-video-preflight",
+      "version": 1,
+      "verify_jwt": true,
+      "active": true,
+      "ezbr_bundle_sha256": "171f8feb2702a6697d1843e6e98800a200da129001444bc8ae2aacb29f8e4967",
+      "source_authority": "REVIEW_ONLY_ARCHIVE",
+      "files": [
+        {
+          "path": "JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-video-preflight/index.ts",
+          "git_blob_sha": "baa866d5b7b284e5adb74143f7215e1d917b7c4e",
+          "git_size_bytes": 6176,
+          "live_source_exact_match_observed_via_connector": true
+        }
+      ]
+    }
+  ],
+  "exact_live_source_comparison": "15 ACTIVE functions, 18 live source files exact-string matched Git tracked 10 functions and review-only 5 functions via Supabase get_edge_function and GitHub fetch_file read-only calls",
+  "functions_active": 15,
+  "live_files_compared": 18,
+  "tracked_functions": 10,
+  "review_only_archived_functions": 5,
+  "verify_jwt_false_functions": [
+    "jb-encoder-connector-lols",
+    "jb-encoder-handoff",
+    "jb-encoder-launch",
+    "jb-live-worker",
+    "jb-youtube-oauth-callback"
+  ],
+  "distinction": "Live source-file byte/text parity ≠ deployed compiled JS bundle equivalence, runtime configuration reconstructability, or signed Owner/Reporter auth negative.",
+  "source_git_blob_integrity_CI": "NOT_RUN",
+  "public_https_no_token_negative_CI": "NOT_RUN",
+  "public_requests": "No user credentials, no API keys, no state/code/ticket, NO valid token. Invalid GET/POST only. Must not trigger actual live data change.",
+  "product_files_or_edge_deploy_mutated": false,
+  "prod_database_mutated": false,
+  "current_T087_signed_E5": "HOLD",
+  "current_T088_full_E8": "HOLD",
+  "current_T089_full_E7": "HOLD",
+  "current_T090_full_final": "HOLD"
+}

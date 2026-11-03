@@ -1041,5 +1041,17 @@
     "original_full_T090": "HOLD",
     "result": "PASS_LOCK_SCOPED",
     "full_original_final": "HOLD"
+  },
+  "edge_15_live_current_source_reconciliation": {
+    "observed": "2026-11-03",
+    "functions": 15,
+    "files": 18,
+    "tracked": 10,
+    "review_only_archived": 5,
+    "verify_jwt_false": 5,
+    "manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json",
+    "source_only": true,
+    "live_guarded_negative_CI": "NOT_RUN",
+    "no_full_E5_E8_claim": true
   }
 }

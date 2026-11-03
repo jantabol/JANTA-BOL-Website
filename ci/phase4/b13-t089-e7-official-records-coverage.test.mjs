@@ -24,6 +24,8 @@ const requiredIds=Array.from({length:109},(_,i)=>'P4-T'+String(i+1).padStart(3,'
 const expectedBlockCounts={B0:4,B1:7,B2:9,B3:8,B4:6,B5:10,B6:6,B7:9,B8:8,B9:10,B10:9,B11:7,B12:8,B13:8};
 const approvedReviewOnlyArchivedEdgeSources=new Set(["JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-recovery-delete-mfa/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-grievance-assets/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-b2-s3-transport.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-media-age-b2-roundtrip.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-owner-supabase-media-source.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-oauth-health/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-video-preflight/index.ts"]);
 const expectedPaths=new Set([
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json',
+ 'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json',
  'ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json',
