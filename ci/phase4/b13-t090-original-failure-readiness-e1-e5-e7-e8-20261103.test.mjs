@@ -31,7 +31,7 @@ test('T090-E7-02 old master statuses immutable except declared scoped T089 and n
  assert.match(byId.get('P4-T090').status,/^IN PROGRESS.*ORIGINAL FINAL PASS\+LOCK HOLD/);
  assert.equal(byId.get('P4-T091').status,'NOT RUN — FINAL');
  assert.equal(rows.filter(x=>x.status.startsWith('NOT RUN')).length,65);
- assert.equal(rows.filter(x=>x.status.startsWith('IN PROGRESS')).length,16);
+ assert.equal(rows.filter(x=>x.status.startsWith('IN PROGRESS')).length,15); // 15 initial incl T089, T089 scoped locks (-1), T090 starts (+1)
  assert.equal(idx.counts.not_run,67);
  assert.equal(ledger.counts.source_snapshot_initial_not_run,67);
 });
