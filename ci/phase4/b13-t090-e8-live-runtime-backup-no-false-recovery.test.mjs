@@ -36,7 +36,7 @@ test('T090-E8-INVENTORY03 only backed-up identity counts equal the four live par
  for(const family of ['articles','auth_users','ad_campaigns','storage_objects_metadata'])
   assert.equal(b.backup_clone_sql_row_counts[family],b.live_read_only_counts_20261103[family],family);
  assert.equal(b.comparison,'COUNT_PARITY_ONLY_NOT_RECORD_IDENTITIES_NOT_RPO_RTO');
- assert.match(live,/not byte or identity parity/);
+ assert.match(live,/Do \\*\\*not\\*\\* interpret count equality as byte or identity parity/);
  assert.match(live,/920 `article_versions`/);
 });
 test('T090-E8-INVENTORY04 exact original status HOLD and risk flags preserved for final safe launch',()=>{
