@@ -1027,5 +1027,17 @@
     "scope": "Source-only exact byte parity, not browser login, actual Auth/Edge runtime, all 64 files or final ZIP",
     "checked_actual_bytes_on_github_ci": true,
     "new_E7_risk": "Two inactive-in-canonical-JS but ANON executable duplicate legacy ad_events insert RPCs, must review BEFORE claiming paid ad click metrics integrity"
+  },
+  "production_source_all64_coverage": {
+    "date": "2026-11-03",
+    "expected_html": 32,
+    "expected_js": 32,
+    "expected_total": 64,
+    "source_sha": "60970abdacf560815b9db3bd819eb467ef984616",
+    "live_domain": "https://jantabol.in",
+    "scope": "Static HTML/JS byte comparison of canonical live source; not server Auth, hosted Edge, full restore or all UX",
+    "manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json",
+    "CI": "NOT_RUN_AT_INITIAL_SOURCE_COMMIT",
+    "original_full_T090": "HOLD"
   }
 }

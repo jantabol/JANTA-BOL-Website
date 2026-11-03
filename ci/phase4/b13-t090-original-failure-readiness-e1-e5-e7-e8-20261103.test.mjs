@@ -113,6 +113,17 @@ test('T090-E7-11 actual production immutable 18 critical asset / two duplicate a
  assert.equal(a.anon_public_ad_duplicate.both_anon_executable,true);
  assert.equal(a.original_full_T090,'HOLD');
 });
+test('T090-E7-12 full 64 hosted asset byte-parity planned without upgrading signed E5/E8 or semantic 1-339',()=>{
+ const p=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json','utf8'));
+ assert.equal(p.expected_total,64);
+ assert.equal(p.html_count,32);
+ assert.equal(p.js_count,32);
+ assert.equal(p.source_prod_sha,'60970abdacf560815b9db3bd819eb467ef984616');
+ assert.equal(p.semantic_requirements_1_339_proven,false);
+ assert.equal(p.signed_owner_reporter_E5_run,false);
+ assert.equal(p.full_independent_E8_hosted_runtime_restored,false);
+ assert.equal(p.original_t090_final_pass_lock,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
@@ -129,6 +140,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-e8-real-backup-independent-history-and-current-live-counts.test.mjs',
   'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json',
   'ci/phase4/b13-t090-production-source-e7-18-file-parity-20261103.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json',
+  'ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));
