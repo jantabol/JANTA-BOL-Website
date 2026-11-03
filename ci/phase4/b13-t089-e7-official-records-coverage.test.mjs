@@ -32,6 +32,8 @@ const expectedPaths=new Set([
  'ci/phase4/b13-t090-existing-identity-session-rls-sql-scoped-20261103.test.mjs',
  'ci/phase4/b13-t090-live-http-forged-owner-reporter-postgrest-gotrue-negative-20261103.test.mjs',
  'ci/phase4/b13-t090-stale-session-rls-pg17-disposable-20261103.sql',
+ 'ci/phase4/b13-t090-e8-live-runtime-backup-no-false-recovery.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_20261103_LIVE_RUNTIME_INVENTORY_BACKUP_GAP_AND_LAUNCH_SCOPE.md',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_STALE_SESSION_USER_ROLES_RLS_MIN_FIX_REVIEW_ONLY_20261103.sql',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E5_EXISTING_OWNER_REPORTER_SESSION_RLS_SQL_20261103.json',
  'ci/phase4/b13-t090-build-verified-prod64-static-archive-20261103.py',
