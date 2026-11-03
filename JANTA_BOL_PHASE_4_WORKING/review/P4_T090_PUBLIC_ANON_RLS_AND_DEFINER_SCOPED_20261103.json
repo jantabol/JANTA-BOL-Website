@@ -197,5 +197,15 @@
   "production_data_mutated": false,
   "actual_signed_owner_reporter_e5_verified": false,
   "independent_full_e8_backup_restore_verified": false,
-  "original_t090_final": "HOLD"
+  "original_t090_final": "HOLD",
+  "production_negative_https_ci_status": "PASS_SCOPED_REAL_PUBLIC_KEY_NO_USER_JWT_RUN_41615897511",
+  "verification_run_url": "https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41615897511",
+  "verification_sha": "6055b1b499c23cadeef65dbb74a0558aafd638ed",
+  "public_home_and_direct_index_c1_proven_http": true,
+  "public_c1_rpc_publishable_key_http_200": true,
+  "private_dataapi_anon_select_denied_tables": 11,
+  "private_dataapi_anon_update_granted_tables": 0,
+  "missing_apikey_denied_grievance_read": true,
+  "http_test_count_passed": 6,
+  "note": "Actual CI public HTTPS queries only. No Owner JWT, reporter JWT, device, user data or mutating operations used; original FULL E5/E8 remain HOLD."
 }

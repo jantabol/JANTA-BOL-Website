@@ -84,6 +84,16 @@ test('T090-E5-08 real anon 11-table privilege snapshot is scoped, not signed hos
  assert.equal(p.actual_signed_owner_reporter_e5_verified,false);
  assert.equal(p.independent_full_e8_backup_restore_verified,false);
 });
+test('T090-E5-09 actual 6/6 public anon HTTPS completed CI 41615897511 but original full signed E5/E8 unproved',()=>{
+ const proof=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json','utf8'));
+ assert.equal(proof.production_negative_https_ci_status,'PASS_SCOPED_REAL_PUBLIC_KEY_NO_USER_JWT_RUN_41615897511');
+ assert.equal(proof.http_test_count_passed,6);
+ assert.equal(proof.private_dataapi_anon_select_denied_tables,11);
+ assert.equal(proof.public_c1_rpc_publishable_key_http_200,true);
+ assert.equal(proof.actual_signed_owner_reporter_e5_verified,false);
+ assert.equal(proof.independent_full_e8_backup_restore_verified,false);
+ assert.equal(proof.original_t090_final,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();

@@ -993,7 +993,11 @@
     "production_anon_11_table_rls_snapshot": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json",
     "production_anon_11_table_no_privilege_grant": "11/11 RLS ON; 0/11 anonymous SELECT, 0/11 anonymous UPDATE",
     "anon_definer_23_routine_categorization": "6 mutator-shaped, 17 other; lexical guard checks NOT authorization proof",
-    "live_public_https_negative_result": "PENDING CI on exact head; not full signed E5"
+    "live_public_https_negative_result": "PASS_SCOPED_REAL_PUBLIC_KEY_NO_USER_JWT_RUN_41615897511",
+    "live_public_https_negative_run": "https://github.com/jantabol/JANTA-BOL-Website/actions/runs/41615897511",
+    "real_anon_probes_passed": 6,
+    "private_table_http_denied": 11,
+    "public_C1_validated_via_publishable_key": true
   },
   "official_test_gate": "T090_FULL_FINAL_HOLD_UNTIL_E1_E5_E7_E8_AND_REQUIRED_ALL_REGRESSIONS_GREEN",
   "source_product_auth_db_mutation_by_this_t090_commit": false,
