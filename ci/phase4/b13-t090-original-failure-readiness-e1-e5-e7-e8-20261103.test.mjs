@@ -184,6 +184,7 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json',
   'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
   'ci/phase4/b13-t090-live-edge10-jwt-required-no-auth-denials-20261103.test.mjs',
+  'ci/phase4/b13-t090-live-edge10-forged-bearer-negatives-20261103.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));
