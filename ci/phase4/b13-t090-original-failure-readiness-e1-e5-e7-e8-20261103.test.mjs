@@ -94,6 +94,15 @@ test('T090-E5-09 actual 6/6 public anon HTTPS completed CI 41615897511 but origi
  assert.equal(proof.independent_full_e8_backup_restore_verified,false);
  assert.equal(proof.original_t090_final,'HOLD');
 });
+test('T090-E8-10 original Nov02 real joint restore and Nov03 independent count scope explicitly HOLD beyond PG17',()=>{
+ const e=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json','utf8'));
+ assert.equal(e.source_run.run_id,41444146576);
+ assert.deepEqual(e.backup_clone_sql_row_counts,e.live_read_only_counts_20261103);
+ assert.equal(e.evidence_from_real_job_logs.disposable_pg17_restored,true);
+ assert.equal(e.evidence_from_real_job_logs.real_auth_gotrue_server_rebuilt,false);
+ assert.equal(e.evidence_from_real_job_logs.storage_file_bytes_restored_into_actual_supabase_storage_runtime,false);
+ assert.equal(e.original_T090_full_e1_e5_e7_e8,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
@@ -106,6 +115,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs',
   'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json',
   'ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json',
+  'ci/phase4/b13-t090-e8-real-backup-independent-history-and-current-live-counts.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));

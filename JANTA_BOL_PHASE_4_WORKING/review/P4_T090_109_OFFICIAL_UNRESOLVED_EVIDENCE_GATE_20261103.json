@@ -948,7 +948,7 @@
       "id": "DUE-T088",
       "test": "P4-T088",
       "dependency": "full independent real GoTrue/Edge/Vercel signed restore E8, current live 5 Edge functions actual restore, true RPO/RTO and E6 signed private/provider remain",
-      "why_due": "partial isolated AGE/B2/PG17/read-only source archives, not full independent prod-disaster restore"
+      "why_due": "Actual Founder manual run 41444146576 SUCCESS on 2026-11-02 confirmed real AGE/B2 offsite and disposable PG17 restoration with 34 Articles/5 Auth Users/7 ad campaigns/5 storage metadata; matching Nov03 live counts only; real GoTrue/Edge/Vercel/Storage runtime, signed relogin, universal atomic freeze and RPO/RTO NOT restored/verified."
     },
     {
       "id": "DUE-T089",
@@ -1001,5 +1001,13 @@
   },
   "official_test_gate": "T090_FULL_FINAL_HOLD_UNTIL_E1_E5_E7_E8_AND_REQUIRED_ALL_REGRESSIONS_GREEN",
   "source_product_auth_db_mutation_by_this_t090_commit": false,
-  "external_paid_service_started": false
+  "external_paid_service_started": false,
+  "real_e8_component_backup_history": {
+    "dated": "2026-11-03",
+    "original_run_id": 41444146576,
+    "live_db_count_parity": "34 articles / 5 auth users / 7 campaigns / 5 storage metadata = same counts as Nov02 restored PG17; COUNT ONLY",
+    "real_encrypted_offsite_age_and_disposable_pg17": "PASS_SCOPED",
+    "full_Auth_Edge_Vercel_storage_runtime_restore": "NOT_EXECUTED",
+    "bundle_hash_and_false_lock_manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json"
+  }
 }
