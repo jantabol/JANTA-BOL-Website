@@ -4,6 +4,11 @@
       "source": "/",
       "destination": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
       "permanent": false
+    },
+    {
+      "source": "/index.html",
+      "destination": "/JANTA_BOL_PHASE_3C_WORKING/index.html",
+      "permanent": false
     }
   ],
   "headers": [
