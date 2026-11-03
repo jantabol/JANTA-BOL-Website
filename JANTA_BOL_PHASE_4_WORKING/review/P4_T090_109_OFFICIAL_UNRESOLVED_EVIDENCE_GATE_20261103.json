@@ -1008,6 +1008,7 @@
     "live_db_count_parity": "34 articles / 5 auth users / 7 campaigns / 5 storage metadata = same counts as Nov02 restored PG17; COUNT ONLY",
     "real_encrypted_offsite_age_and_disposable_pg17": "PASS_SCOPED",
     "full_Auth_Edge_Vercel_storage_runtime_restore": "NOT_EXECUTED",
-    "bundle_hash_and_false_lock_manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json"
+    "bundle_hash_and_false_lock_manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json",
+    "exact_scoped_verification_ci": "GitHub Actions 41617460098 SUCCESS SHA ee6e5c85a7201157e9ec52700fdcd95d293608c4"
   }
 }

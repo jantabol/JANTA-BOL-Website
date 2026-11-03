@@ -54,5 +54,12 @@
   "original_T089_full_E7": "HOLD",
   "original_T090_full_e1_e5_e7_e8": "HOLD",
   "this_turn_prod_db_auth_backup_configuration_mutated": false,
-  "no_service_keys_or_user_data_in_manifest": true
+  "no_service_keys_or_user_data_in_manifest": true,
+  "verified_ci": {
+    "run_id": 41617460098,
+    "conclusion": "success",
+    "head_sha": "ee6e5c85a7201157e9ec52700fdcd95d293608c4",
+    "verified_independently": true,
+    "artifact": "SCOPED_ONLY"
+  }
 }
