@@ -1,0 +1,68 @@
+{
+  "title": "P4-T090 synthetic auth-role RLS negative on real Supabase DB; true signed JWT E5 not performed",
+  "project": "vrffsnkycvjithwtiylt",
+  "observed_date": "2026-11-03",
+  "scope": "LIVE_READONLY_AUTHENTICATED_DB_ROLE_FAKE_CLAIMS_NEGATIVE_ONLY",
+  "statement": "In a BEGIN READ ONLY transaction, SET LOCAL ROLE authenticated; SET LOCAL request.jwt.claims synthetic non-existing uid/session; SELECT boolean guard checks + COUNT visibility; ROLLBACK",
+  "rollback_executed_after_each_scenario": true,
+  "production_data_mutated": false,
+  "real_user_ids_or_sessions_used": false,
+  "actual_signed_jwt_verified": false,
+  "actual_signed_owner_reporter_cross_account_test_run": false,
+  "private_record_rows_or_secrets_extracted": false,
+  "backend_privileged_admin_visibility_preflight": {
+    "grievances_have_at_least_one_record": true,
+    "nonpublished_articles_exist": true,
+    "published_article_count_at_observation": 2
+  },
+  "scenario_results": [
+    {
+      "scenario": "FAKE_OWNER_AAL2_WITH_TOTP_CLAIM",
+      "db_role": "authenticated",
+      "user_id_kind": "SYNTHETIC_NOT_A_REAL_USER",
+      "session_id_kind": "SYNTHETIC_NOT_A_REAL_SESSION",
+      "jwt_claimed_role": "owner",
+      "jwt_claimed_aal": "aal2",
+      "backend_role_found": false,
+      "current_session_active": false,
+      "owner_aal2_pass": false,
+      "owner_recent_mfa_pass": false,
+      "staff_allowed": false,
+      "owner_allowed": false,
+      "visible_grievance_rows": 0,
+      "visible_user_roles": 0,
+      "visible_nonpublished_articles": 0,
+      "visible_published_articles": 2
+    },
+    {
+      "scenario": "FAKE_REPORTER_AAL1",
+      "db_role": "authenticated",
+      "user_id_kind": "SYNTHETIC_NOT_A_REAL_USER",
+      "session_id_kind": "SYNTHETIC_NOT_A_REAL_SESSION",
+      "jwt_claimed_role": "reporter",
+      "jwt_claimed_aal": "aal1",
+      "backend_role_found": false,
+      "current_session_active": false,
+      "owner_aal2_pass": false,
+      "owner_recent_mfa_pass": false,
+      "staff_allowed": false,
+      "owner_allowed": false,
+      "visible_grievance_rows": 0,
+      "visible_user_roles": 0,
+      "visible_nonpublished_articles": 0,
+      "visible_published_articles": 2
+    }
+  ],
+  "limitations": [
+    "Not an HTTP API test and does not prove JWT gateway signature handling or direct authentication with actual valid users",
+    "Not signed Owner-to-Reporter cross-account denial, genuine revocation, expired real session, or real MFA freshness",
+    "Production database role is simulated with SET LOCAL ROLE authenticated and deliberately fake request.jwt.claims; production data and auth sessions unchanged",
+    "Source-only CI can verify evidence invariants but cannot independently repeat privileged database SQL"
+  ],
+  "verdict_scoped": "PASS_SCOPED_REAL_LIVE_SQL_FAKE_ROLE_RLS_NEGATIVES",
+  "t087_full_signed_e5": "HOLD",
+  "t088_original_real_e8": "HOLD",
+  "t089_original_full_e7": "HOLD",
+  "t090_original_final_pass_lock": "HOLD",
+  "t091_started": false
+}
