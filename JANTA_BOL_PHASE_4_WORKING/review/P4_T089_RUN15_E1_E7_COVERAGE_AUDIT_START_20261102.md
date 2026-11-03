@@ -61,3 +61,27 @@ New fail-hard `T089-S06/S07` original Blueprint topic-to-test ownership contract
 **Protected exact-head CI:** new fail-hard `T089-08` asserts 58 unique, 16/39/3 truthful split, 16 PASS original narrative source positions and at least two actual evidence bullets, no drift in original 57 register statuses, and the single declared T089 status transition. Added a real run of existing **T087 13-module source-negative E1 suite** to help detect broken cross-domain source adapters. Running T087's 13 module file-existence/authority guards is **NOT full semantic detection of duplicate implementation engines**, and does not prove hosted E2/E5. Source authority conflict (deployed Vercel SHA vs main; five live Edge functions absent Git) and T087/T088 full E2/E5/E6/E8 remain explicitly **HOLD**.
 
 **E7 outcome at this checkpoint:** `T089_E7_SIXTEEN_EXISTING_PASS_REGISTER_EVIDENCE_POINTERS=PASS_SCOPED_AFTER_CI`, `T089_E7_FORTYTWO_REMAINING_NONPASS_FILENAME_ABSENCES=CLASSIFIED_NOT_AUTOMATIC_FAIL`, `T089_E7_DUPLICATE_ENGINE_SEMANTIC_SOURCE_CONFLICT=HOLD`, `T089_ORIGINAL_FINAL_PASS_LOCK=HOLD`. No previous PASS status rewritten, no production change, no Founder step.
+
+
+## T089 independent live-source authority check — 2026-11-03
+
+**Method:** read-only, authenticated GitHub branch/tree, Vercel deployment metadata, and JANTA BOL Supabase Edge Functions *inventory*. No deployed code, user content, secrets, environment variables, database rows, production aliases, backup schedules, or credentials changed. This is a current-source authority finding, not live execution of all E7 gates.
+
+### Vercel production vs repository authority — independently confirmed
+
+- Vercel connected project: `shubham-pichhore-2028`, `prj_xNb9G3xjW35qSXEyF7o2qiCqG4HI`; explicit aliases on **production deployment** include `jantabol.in` and `www.jantabol.in`. Production deployment `dpl_6XpfdMa7gCF5SDXd7EKHZfbpLfeF` reports `READY`, **Git SHA `93df12aa8ffdfae38d9a4066b6a4556bb36969e5`**, branch `codex/t080-admin-ack-failclosed-review-20261031`.
+- GitHub protected `main` separately reports SHA `f447231c0677644ca5a44cc19f12cf0314ff38ea`. T089 review branch was SHA `e7bd5822328d95057b3519c1d155c2a2caf51d1c` when inspected. These are **three different source snapshots**. No unverified assertion that all runtime bytes or downstream functions are identical; do not promote, merge, or repoint production to force an apparent match.
+- Newer `READY` **preview** `dpl_BFbbNnd7nLSojHZsfNaBRNBmiKq5` at Git SHA `725df42de228bbe3fb1c263ee7b24455707b743f` is explicitly `target: null`, not the domain production alias. Preview READY does not supersede the production SHA.
+
+### Supabase Edge source availability — concrete missing files confirmed
+
+- Live Supabase project `vrffsnkycvjithwtiylt` reports **15 ACTIVE Edge Functions** (read-only list). GitHub review branch directory `CODEX_CURRENT_SUPABASE/functions/` lists 13 folders: **2 local-only/non-live** `jb-ad-media-preview` and `jb-b8-private-evidence`, plus 11 tracked live names.
+- Exactly **5 ACTIVE live Edge function slugs have NO same-named tracked source directory on this review branch**: `jb-recovery-delete-mfa` (live v15), `jb-grievance-assets` (v7), `jb-b11-t069-media-backup` (v5), `jb-youtube-oauth-health` (v2), and `jb-youtube-video-preflight` (v1).
+- All 15 live endpoints were *inventory checked only*. The five code bodies have **not** been retrieved, reviewed for embedded secrets, byte-reconciled, or added to a protected source PR here. Do not assume missing code is exploitable or safe; it is a concrete **source-control/recovery evidence gap**.
+- Current T089 static graph suite under `ci/phase4/b13-t089-live-module-entrypoints-authority.test.mjs` covers 32 HTML / 32 JS tracked assets and deliberate staged modules; its source assertions do **not** cover the five deployed-only Edge function code bodies, Vercel production's exact served bytes, or live provider authority. No source-level trace can close those omissions by relabeling.
+
+### T089 disposition and minimal safe closure criteria
+
+`T089_E7_VERCEL_PROD_ALIAS_SHA_VS_MAIN_SHA=CONFLICT_DOCUMENTED`; `T089_E7_FIVE_LIVE_EDGE_SOURCE_DIRECTORIES_MISSING=OPEN_VERIFIED`; `T089_E7_FULL_SOURCE_AUTHORITY=HOLD`; **`T089_ORIGINAL_FINAL_PASS_LOCK=HOLD`**.
+
+Closure needs (i) retrieve each deployed Edge function through authenticated read-only source export, scan and compare it against expected safe source without copying secrets into Git; then record trusted restore and rollback authority, (ii) explicitly pin/audit which actual Vercel production SHA and live-code snapshot is authoritative without automatic deployment, (iii) reconcile semantic duplicates/orphan requirements and remaining numbered Sections 1–339 under original Master, and (iv) execute exact-head approved E1/E7 gates and record real independent proof. Do not repeat Founder phone/tablet/backup manual drills. No payment required for this read-only inventory.
