@@ -571,3 +571,8 @@ Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVI
 ### T089 2026-11-03 independently retrieved live Edge source parity
 
 Nov03 independent cross-platform read-only source audit: **15 ACTIVE**, **10 of 10 already Git-tracked live Edge `index.ts` byte-exact match**, 5 other deployed-only function sources successfully retrieved but not published/merged, with 4-file backup function bundle. No secrets dumped, DB or production changed; no Founder Android/manual step. Date-stamped source authority note added; **T089 final HOLD**, not fake full PASS. Evidence: `review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`.
+
+
+### T089 2026-11-03 protected regression negative / exact revert + recovery trace
+
+Exact live deployed source review found all **5/5** previously untracked Edge functions and **8/8** authentic file contents, with **10/10** already-tracked active Edge sources byte-equal. A trial to copy those eight source files directly into the protected `CODEX_CURRENT_SUPABASE/` tree was **correctly blocked by original T087-M16** in Actions **#41581040652 RED**. It was immediately reverted by forward commit `619460b8`; no original security test was weakened. Exact recovered source copies are only in the unmerged historical Git revision `7556a44f`, **not current HEAD**; production was never changed. Actions **#41581212587 2/2 GREEN**. Further source recovery must use an authorized non-product archive/review gate before any protected-main change. **T089 E1/source reconciliation PASS SCOPED; full E7 semantic/source conflict and original FINAL PASS+LOCK HOLD.** Dossier: `review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md`.
