@@ -276,13 +276,37 @@
     "jb-youtube-oauth-callback"
   ],
   "distinction": "Live source-file byte/text parity ≠ deployed compiled JS bundle equivalence, runtime configuration reconstructability, or signed Owner/Reporter auth negative.",
-  "source_git_blob_integrity_CI": "NOT_RUN",
-  "public_https_no_token_negative_CI": "NOT_RUN",
+  "source_git_blob_integrity_CI": {
+    "run_id": 41628751442,
+    "head_sha": "e85e5a9be3a0ab7c8d4783845b36f901bbe79a6f",
+    "conclusion": "success",
+    "checks": "15 functions, 18 source files git hash-object exact; initial independent live Supabase-versus-Git full source text equality attested; no live compiled bundle re-fetch"
+  },
+  "public_https_no_token_negative_CI": {
+    "run_id": 41628751442,
+    "head_sha": "e85e5a9be3a0ab7c8d4783845b36f901bbe79a6f",
+    "conclusion": "success",
+    "tests_passed": 7,
+    "methods": {
+      "live_worker": "GET 405 + POST anonymous 401/403",
+      "encoder_connector": "POST anonymous 401/403",
+      "encoder_handoff": "GET without token 400/401/403",
+      "encoder_launch": "GET without token 400/401/403",
+      "youtube_oauth_callback": "GET without state rejects and no OAuth completed"
+    },
+    "real_privileged_role_test_performed": false
+  },
   "public_requests": "No user credentials, no API keys, no state/code/ticket, NO valid token. Invalid GET/POST only. Must not trigger actual live data change.",
   "product_files_or_edge_deploy_mutated": false,
   "prod_database_mutated": false,
   "current_T087_signed_E5": "HOLD",
   "current_T088_full_E8": "HOLD",
   "current_T089_full_E7": "HOLD",
-  "current_T090_full_final": "HOLD"
+  "current_T090_full_final": "HOLD",
+  "scoped_verdicts": {
+    "live_15_source_18_files": "PASS_LOCK_SCOPED",
+    "five_no_jwt_invalid_input_public_negative": "PASS_LOCK_SCOPED",
+    "signed_owner_reporter": "HOLD",
+    "full_independent_disaster_rebuild": "HOLD"
+  }
 }

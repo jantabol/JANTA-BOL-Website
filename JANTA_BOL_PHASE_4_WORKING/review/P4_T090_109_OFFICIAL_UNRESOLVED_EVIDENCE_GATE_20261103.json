@@ -1051,7 +1051,10 @@
     "verify_jwt_false": 5,
     "manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json",
     "source_only": true,
-    "live_guarded_negative_CI": "NOT_RUN",
-    "no_full_E5_E8_claim": true
+    "live_guarded_negative_CI": "REAL_NO_CREDENTIAL_PUBLIC_EDGE_5_OF_5_DENIED_RUN_41628751442",
+    "no_full_E5_E8_claim": true,
+    "protected_canonical_git_source_integrity": "15 LIVE ACTIVE FUNCTIONS 18 FILES EXACT SOURCE, GIT SHA CHECK GREEN RUN 41628751442",
+    "scoped_verdict": "PASS_LOCK_SCOPED",
+    "original_T090_FINAL_PASS_LOCK": "HOLD"
   }
 }

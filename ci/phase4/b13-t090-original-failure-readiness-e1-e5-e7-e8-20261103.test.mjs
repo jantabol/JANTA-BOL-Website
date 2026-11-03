@@ -148,6 +148,20 @@ test('T090-E5-E7-14 live 15 Edge source authority has true 18 files and five no-
  assert.equal(p.current_T088_full_E8,'HOLD');
  assert.equal(p.current_T090_full_final,'HOLD');
 });
+test('T090-E5-E7-15 exact real Edge 15/18 source and five no-JWT negative scoped proof GREEN but no signed E5/E8',()=>{
+ const p=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json','utf8'));
+ assert.equal(p.functions_active,15);
+ assert.equal(p.live_files_compared,18);
+ assert.equal(p.source_git_blob_integrity_CI.run_id,41628751442);
+ assert.equal(p.source_git_blob_integrity_CI.conclusion,'success');
+ assert.equal(p.public_https_no_token_negative_CI.run_id,41628751442);
+ assert.equal(p.public_https_no_token_negative_CI.conclusion,'success');
+ assert.equal(p.public_https_no_token_negative_CI.tests_passed,7);
+ assert.equal(p.public_https_no_token_negative_CI.real_privileged_role_test_performed,false);
+ assert.equal(p.scoped_verdicts.signed_owner_reporter,'HOLD');
+ assert.equal(p.scoped_verdicts.full_independent_disaster_rebuild,'HOLD');
+ assert.equal(p.current_T090_full_final,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
