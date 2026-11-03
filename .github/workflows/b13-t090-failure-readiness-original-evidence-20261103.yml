@@ -22,6 +22,7 @@ jobs:
         run: |
           set -Eeuo pipefail
           node --test ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs
+          node --test ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs
           node --test ci/phase4/b13-t089-e7-official-records-coverage.test.mjs
           node --test ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs
           node --test ci/phase4/b13-t089-live-module-entrypoints-authority.test.mjs

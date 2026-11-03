@@ -1,0 +1,201 @@
+{
+  "title": "P4-T090 E5 production anonymous public-key read-only denial snapshot",
+  "date": "2026-11-03",
+  "source": "Supabase pg_class/pg_proc privilege metadata read-only, no user data or secrets",
+  "project_id": "vrffsnkycvjithwtiylt",
+  "sensitive_table_role_snapshot": [
+    {
+      "table_name": "ad_campaigns",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "ad_portal_credentials",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "ad_portal_sessions",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "articles",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "audit_logs",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "compliance_tasks",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "grievance_history",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "grievance_issues",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "grievance_private_identity",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "grievances",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    },
+    {
+      "table_name": "user_roles",
+      "rls_on": true,
+      "anon_select": false,
+      "anon_update": false
+    }
+  ],
+  "sensitive_tables_anon_select_granted": 0,
+  "sensitive_tables_anon_update_granted": 0,
+  "anon_executable_security_definer_functions": [
+    {
+      "routine": "jb_ad_event(uuid,text)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_ad_portal_campaign(text)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_ad_portal_login(text,text)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_ad_portal_submit_creative(text,text,text,text,text,text)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_ad_public_enquiry(text,text,boolean,text,uuid,text)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_ad_public_feed(text,text)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_ad_public_packages()",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_ad_record_event(uuid,text)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_b10_live_update_public_eligible(uuid,uuid)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b8_g4_public_case(uuid)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b8_g4_public_feed(integer)",
+      "guard_signal": true,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_public_article_author(uuid)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_public_metrics(uuid)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_related_news(uuid,integer)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_reporter_discovery(text,integer)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_search(text,text,date,date,integer,integer,text,text,text,text,text,jsonb,integer)",
+      "guard_signal": true,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_b9_taxonomy_discover(text,integer)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_c1_public_articles(uuid,integer)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_compliance_public_months()",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_grievance_submit_internal(uuid,text,text,text,text,text,text,boolean)",
+      "guard_signal": true,
+      "write_signal": true
+    },
+    {
+      "routine": "jb_grievance_submit_receipt(uuid,text,text,text,text,text,text,boolean)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "jb_public_active_ads(text)",
+      "guard_signal": false,
+      "write_signal": false
+    },
+    {
+      "routine": "public_reporter_directory()",
+      "guard_signal": false,
+      "write_signal": false
+    }
+  ],
+  "anon_definer_routine_count": 23,
+  "anon_definer_mutation_text_signals": 6,
+  "limited_signal_note": "Regex auth/raise text presence does not prove authorization safety. Public ad event and grievance submit are intentionally anonymous mutation surfaces; require separate rate-limit and abuse hardening review.",
+  "source_code_mutated": false,
+  "production_data_mutated": false,
+  "actual_signed_owner_reporter_e5_verified": false,
+  "independent_full_e8_backup_restore_verified": false,
+  "original_t090_final": "HOLD"
+}

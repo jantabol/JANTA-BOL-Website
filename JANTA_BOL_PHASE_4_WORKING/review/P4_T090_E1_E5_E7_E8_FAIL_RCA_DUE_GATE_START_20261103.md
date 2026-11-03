@@ -10,3 +10,8 @@
 
 **T090 current verdict:** `T090_E1_FAILURE_REPAIR_EVIDENCE=PASS_SCOPED`, `T090_E7_109_STATUS_MISSING_DUE_CLASSIFICATION=PASS_SCOPED`, `T090_E5_SIGNED_ROLE_NEGATIVE=HOLD`, `T090_E8_INDEPENDENT_REAL_RESTORE_AND_STABLE_ZIP=HOLD`, **`P4-T090_ORIGINAL_FINAL_PASS_LOCK=HOLD`**. Start on separate CI branch; no production write or duplicate Android tests; no new paid service. T091 cannot be original Final PASS until these dependencies genuinely close.
 
+
+
+### T090 E5 anonymous real HTTPS negative + 23 DEFINER names (3 Nov 2026)
+
+Actual read-only Supabase privileges: **11/11 named private tables RLS ON; zero anonymous SELECT/UPDATE grants**. **23 public SECURITY DEFINER functions** enumerated; six have write statements, including intentional public ad events, advertiser creative submission and public grievance submission. SQL lexical guard signals are **not** authorization proofs. Added independent live HTTPS read-only negative suite `ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs`: actual `jantabol.in` homepage/direct index; public C1 RPC with only the publicly shipped publishable key; 11 sensitive private Data API GET denials; no-key Grievance deny. No private response bodies, user tokens, service role, Owner account, DB mutations or paid services. This checks anonymous E5 subset only; full signed cross-account E5, authenticated Grievance state-machine negative and independent real E8 restore remain HOLD.

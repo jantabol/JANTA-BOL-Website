@@ -989,7 +989,11 @@
       "enabled": false
     },
     "scope": "ADVISOR_FINDING_COUNTS_ONLY_NOT_PROOF_OF_VULNERABILITY",
-    "need": "per-function authorization review, disable or restrict actually unneeded EXECUTE grants where safe; no blind ACL migration/DB change"
+    "need": "per-function authorization review, disable or restrict actually unneeded EXECUTE grants where safe; no blind ACL migration/DB change",
+    "production_anon_11_table_rls_snapshot": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json",
+    "production_anon_11_table_no_privilege_grant": "11/11 RLS ON; 0/11 anonymous SELECT, 0/11 anonymous UPDATE",
+    "anon_definer_23_routine_categorization": "6 mutator-shaped, 17 other; lexical guard checks NOT authorization proof",
+    "live_public_https_negative_result": "PENDING CI on exact head; not full signed E5"
   },
   "official_test_gate": "T090_FULL_FINAL_HOLD_UNTIL_E1_E5_E7_E8_AND_REQUIRED_ALL_REGRESSIONS_GREEN",
   "source_product_auth_db_mutation_by_this_t090_commit": false,

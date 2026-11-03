@@ -75,6 +75,15 @@ test('T090-E7-06 security advisor warnings are evidence for future triage, NOT p
  assert.match(adv.scope,/NOT_PROOF_OF_VULNERABILITY/);
  assert.equal(ledger.external_paid_service_started,false);
 });
+test('T090-E5-08 real anon 11-table privilege snapshot is scoped, not signed hosted E5 or E8',()=>{
+ const p=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json','utf8'));
+ assert.equal(p.sensitive_table_role_snapshot.length,11);
+ assert.ok(p.sensitive_table_role_snapshot.every(x=>x.rls_on&&!x.anon_select&&!x.anon_update));
+ assert.equal(p.anon_definer_routine_count,23);
+ assert.equal(p.anon_definer_mutation_text_signals,6);
+ assert.equal(p.actual_signed_owner_reporter_e5_verified,false);
+ assert.equal(p.independent_full_e8_backup_restore_verified,false);
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
@@ -85,6 +94,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   root+'review/P4_T090_E1_E5_E7_E8_FAIL_RCA_DUE_GATE_START_20261103.md',
   root+'review/P4_T090_109_OFFICIAL_UNRESOLVED_EVIDENCE_GATE_20261103.json',
   'ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json',
+  'ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));
