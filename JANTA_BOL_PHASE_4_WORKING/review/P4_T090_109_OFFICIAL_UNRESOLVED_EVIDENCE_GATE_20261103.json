@@ -967,6 +967,12 @@
       "test": "P4-T090",
       "dependency": "independently restored backup including actual live identity and provider configs, verified RPO/RTO plus final stable ZIP/archive",
       "why_due": "no paid services, no unverified final build restore or source archive promotion"
+    },
+    {
+      "id": "DUE-T090-AD-METRIC-LEGACY",
+      "test": "P4-T090",
+      "dependency": "Two still anon-callable PUBLIC SECURITY DEFINER RPCs jb_ad_event and jb_ad_record_event both insert ad_events on active campaign, no rate limit or ticket dedupe; modern 32 JS has zero callers; require third-party caller and paid ad reporting abuse review",
+      "why_due": "Known duplicate backend event insertion authority and plausible metrics inflation, no evidence abuse or permission to revoke prior paid clients. No source/DB changes made."
     }
   ],
   "current_supabase_security_advisors": {
@@ -1010,5 +1016,14 @@
     "full_Auth_Edge_Vercel_storage_runtime_restore": "NOT_EXECUTED",
     "bundle_hash_and_false_lock_manifest": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json",
     "exact_scoped_verification_ci": "GitHub Actions 41617460098 SUCCESS SHA ee6e5c85a7201157e9ec52700fdcd95d293608c4"
+  },
+  "production_source_18_critical_assets_exact": {
+    "date": "2026-11-03",
+    "source_git_sha": "60970abdacf560815b9db3bd819eb467ef984616",
+    "live_deployment_id": "dpl_7YhVGAh758YvZq6HmteERdyCKtMb",
+    "source_file_count": 18,
+    "real_live_network_ci": "PENDING",
+    "manifest_path": "JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json",
+    "scope": "Source-only exact byte parity, not browser login, actual Auth/Edge runtime, all 64 files or final ZIP"
   }
 }

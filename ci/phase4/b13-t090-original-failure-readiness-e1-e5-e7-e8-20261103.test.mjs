@@ -103,6 +103,16 @@ test('T090-E8-10 original Nov02 real joint restore and Nov03 independent count s
  assert.equal(e.evidence_from_real_job_logs.storage_file_bytes_restored_into_actual_supabase_storage_runtime,false);
  assert.equal(e.original_T090_full_e1_e5_e7_e8,'HOLD');
 });
+test('T090-E7-11 actual production immutable 18 critical asset / two duplicate anon AdEvent RPC E7 evidence stays scoped and honest',()=>{
+ const a=JSON.parse(fs.readFileSync('JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json','utf8'));
+ assert.equal(a.exact_verified_by_connected_readonly_git_and_vercel_pairs_20261103.length,18);
+ assert.equal(a.all_32_js_and_32_html_proven,false);
+ assert.equal(a.anon_public_ad_duplicate.current_canonical_js_files_scanned,32);
+ assert.equal(a.anon_public_ad_duplicate.current_canonical_js_has_direct_legacy_rpc_call,false);
+ assert.equal(a.anon_public_ad_duplicate.both_security_definer,true);
+ assert.equal(a.anon_public_ad_duplicate.both_anon_executable,true);
+ assert.equal(a.original_full_T090,'HOLD');
+});
 test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
  const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
  const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
@@ -117,6 +127,8 @@ test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for inde
   'ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs',
   'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json',
   'ci/phase4/b13-t090-e8-real-backup-independent-history-and-current-live-counts.test.mjs',
+  'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json',
+  'ci/phase4/b13-t090-production-source-e7-18-file-parity-20261103.test.mjs',
   '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
  ].sort());
  assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));

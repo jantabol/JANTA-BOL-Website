@@ -1,0 +1,63 @@
+{
+  "name": "P4-T090 live Git SHA ↔ actually hosted canonical product asset exact UTF-8 byte parity",
+  "date": "2026-11-03",
+  "source_git_revision": "60970abdacf560815b9db3bd819eb467ef984616",
+  "live_alias": "https://jantabol.in",
+  "live_deployment_id": "dpl_7YhVGAh758YvZq6HmteERdyCKtMb",
+  "deployment_state": "READY",
+  "exact_verified_by_connected_readonly_git_and_vercel_pairs_20261103": [
+    "article.html",
+    "backend-client.js",
+    "public-c1-projection.js",
+    "website-v3.js",
+    "admin-auth.js",
+    "phase2-client.js",
+    "supabase-config.js",
+    "b9-client.js",
+    "b9-search-ui.js",
+    "grievances.html",
+    "b8-accountability-client.js",
+    "phase4-domain-client.js",
+    "phase4-team-client.js",
+    "phase4-records-client.js",
+    "admin-login.html",
+    "add-news.html",
+    "admin.html",
+    "b9-search.html"
+  ],
+  "already_manual_verified_count": 18,
+  "github_CI_live_reverification": "PENDING",
+  "all_32_js_and_32_html_proven": false,
+  "unverified_due_to_tool_policy": [
+    "index.html",
+    "published.html"
+  ],
+  "scope": "B13 T090 production 18 critical public/admin source byte parity only, NOT full user interactive/DB/Edge/GoTrue/Vercel config restore",
+  "anon_public_ad_duplicate": {
+    "source": "Live read-only SQL public pg_proc of functions jb_ad_event and jb_ad_record_event on 2026-11-03",
+    "signatures": [
+      "public.jb_ad_event(uuid,text) RETURNS void",
+      "public.jb_ad_record_event(uuid,text) RETURNS boolean"
+    ],
+    "both_security_definer": true,
+    "both_anon_executable": true,
+    "both_insert_public_ad_events_on_live_campaign": true,
+    "both_require_event_impression_or_click": true,
+    "both_have_explicit_rate_limit_or_ticket_dedupe": false,
+    "current_canonical_js_files_scanned": 32,
+    "current_canonical_js_has_direct_legacy_rpc_call": false,
+    "modern_client_uses": [
+      "jb_ad_issue_view_ticket",
+      "jb_ad_record_ticket_click",
+      "jb_ad_qualify_view_ticket"
+    ],
+    "interpretation": "P2 POTENTIAL AD METRIC INFLATION by anonymous calls; both legacy DB functions still callable even if no canonical JS currently calls them; do not revoke without full external caller proof",
+    "production_fix_started": false,
+    "public_paid_ad_report_ready": "HOLD_PER_OWNER_POLICY"
+  },
+  "source_only_audit_commit": true,
+  "existing_news_auth_backup_db_files_mutated": false,
+  "signed_2role_e5": "NOT_RUN",
+  "independent_E8_full": "HOLD",
+  "original_full_T090": "HOLD"
+}
