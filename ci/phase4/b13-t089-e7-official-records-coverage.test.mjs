@@ -24,6 +24,33 @@ const requiredIds=Array.from({length:109},(_,i)=>'P4-T'+String(i+1).padStart(3,'
 const expectedBlockCounts={B0:4,B1:7,B2:9,B3:8,B4:6,B5:10,B6:6,B7:9,B8:8,B9:10,B10:9,B11:7,B12:8,B13:8};
 const approvedReviewOnlyArchivedEdgeSources=new Set(["JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-recovery-delete-mfa/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-grievance-assets/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-b2-s3-transport.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-media-age-b2-roundtrip.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-b11-t069-media-backup/t069-owner-supabase-media-source.mjs","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-oauth-health/index.ts","JANTA_BOL_PHASE_4_WORKING/review/T089_EDGE_SOURCE_REVIEW_ONLY_20261103/jb-youtube-video-preflight/index.ts"]);
 const expectedPaths=new Set([
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_15_LIVE_EDGE_FUNCTION_SOURCE_AUTHORITY_AND_NO_JWT_NEGATIVE_20261103.json',
+ 'ci/phase4/b13-t090-live-edge15-source-and-5-no-jwt-negative-20261103.test.mjs',
+ 'ci/phase4/b13-t090-live-edge10-jwt-required-no-auth-denials-20261103.test.mjs',
+ 'ci/phase4/b13-t090-live-edge10-forged-bearer-negatives-20261103.test.mjs',
+ 'ci/phase4/b13-t090-synthetic-role-rls-no-publish-leak-20261103.test.mjs',
+ 'ci/phase4/b13-t090-existing-identity-session-rls-sql-scoped-20261103.test.mjs',
+ 'ci/phase4/b13-t090-live-http-forged-owner-reporter-postgrest-gotrue-negative-20261103.test.mjs',
+ 'ci/phase4/b13-t090-stale-session-rls-pg17-disposable-20261103.sql',
+ 'ci/phase4/b13-t090-e8-live-runtime-backup-no-false-recovery.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_20261103_LIVE_RUNTIME_INVENTORY_BACKUP_GAP_AND_LAUNCH_SCOPE.md',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_STALE_SESSION_USER_ROLES_RLS_MIN_FIX_REVIEW_ONLY_20261103.sql',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E5_EXISTING_OWNER_REPORTER_SESSION_RLS_SQL_20261103.json',
+ 'ci/phase4/b13-t090-build-verified-prod64-static-archive-20261103.py',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E5_SYNTHETIC_AUTHENTICATED_RLS_REAL_DB_READONLY_20261103.json',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E5_REAL_RLS_ROLE_GRANTS_AND_AD_RISK_READONLY_20261103.md',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_ALL_64_CANONICAL_ASSETS_LIVE_BYTE_PARITY_20261103.json',
+ 'ci/phase4/b13-t090-all64-live-deployment-git-byte-parity-20261103.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PRODUCTION_18_CRITICAL_ASSET_BYTE_PARITY_AND_AD_RPC_DUPLICATE_20261103.json',
+ 'ci/phase4/b13-t090-production-source-e7-18-file-parity-20261103.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E8_REAL_JOINT_BACKUP_20261102_TO_LIVE_COUNTS_20261103.json',
+ 'ci/phase4/b13-t090-e8-real-backup-independent-history-and-current-live-counts.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_PUBLIC_ANON_RLS_AND_DEFINER_SCOPED_20261103.json',
+ 'ci/phase4/b13-t090-live-anon-private-access-denial.test.mjs',
+ 'ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_109_OFFICIAL_UNRESOLVED_EVIDENCE_GATE_20261103.json',
+ 'JANTA_BOL_PHASE_4_WORKING/review/P4_T090_E1_E5_E7_E8_FAIL_RCA_DUE_GATE_START_20261103.md',
+ '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml',
  'ci/phase4/b13-t089-cross-engine-static-owners-20261103.test.mjs',
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_CROSS_ENGINE_STATIC_SOURCE_AUTHORITY_MATRIX_20261103.json',...approvedReviewOnlyArchivedEdgeSources,
  'JANTA_BOL_PHASE_4_WORKING/review/P4_T089_REVIEW_ONLY_EDGE_5_FUNCTION_8_FILE_MANIFEST_20261103.json',
@@ -59,11 +86,11 @@ test('T089-03 original final governance state CANNOT be silently upgraded',()=>{
  assert.match(row('P4-T087').status,/SCOPED PASS\+LOCK.*FINAL PASS\+LOCK HOLD/);
  assert.match(row('P4-T088').status,/FOUNDER SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
  assert.match(row('P4-T089').status,/^SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
- assert.match(row('P4-T090').status,/^NOT RUN/);
+ assert.match(row('P4-T090').status,/^IN PROGRESS.*ORIGINAL FINAL PASS\+LOCK HOLD/);
  assert.match(row('P4-T091').status,/^NOT RUN/);
  const alreadyNotRun=records.filter(x=>x.status.startsWith('NOT RUN'));
  // From initial source 67 NOT RUN, T089 is now formally IN PROGRESS, so 66.
- assert.equal(alreadyNotRun.length,66);
+ assert.equal(alreadyNotRun.length,65);
 });
 test('T089-04 append-only official Evidence Index has 109 unique entries and truthful statuses',()=>{
  assert.equal(idx.source_sha,base);
@@ -80,7 +107,7 @@ test('T089-04 append-only official Evidence Index has 109 unique entries and tru
   assert.equal(x.block,v.block);
   assert.equal(x.name,v.name);
   assert.equal(x.official_register_status,
-   x.id==='P4-T089'?'NOT RUN — FINAL':v.status,
+   (x.id==='P4-T089'||x.id==='P4-T090')?'NOT RUN — FINAL':v.status,
    'metadata mismatch or unreviewed status upgrade: '+x.id);
   assert.equal(x.can_count_candidates_as_actual_pass,false);
   assert.ok(['CANDIDATE_ONLY_NEEDS_E7_AUTHORITY_RECONCILIATION',
@@ -141,6 +168,9 @@ test('T089-08 58 no-filename candidates are honestly split 16 registered PASS ev
   if(x.id==='P4-T089'){
     assert.equal(x.type,'NOT_RUN_IN_SOURCE_SNAPSHOT');
     assert.match(current.status,/^SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
+  }else if(x.id==='P4-T090'){
+    assert.equal(x.type,'NOT_RUN_IN_SOURCE_SNAPSHOT');
+    assert.match(current.status,/^IN PROGRESS.*ORIGINAL FINAL PASS\+LOCK HOLD/);
   }else assert.equal(current.status,x.original_status,'Unapproved status drift: '+x.id);
   if(x.type==='EXACT_PASS_IN_REGISTER'){
     assert.equal(x.original_status,'PASS');
