@@ -1,0 +1,35 @@
+# Isolated T089 P1 public static root redirect candidate; NO deploy, merge, secrets or provider credentials.
+name: T089 P1 Legacy Root Index Canonical Redirect - SAFE CANDIDATE
+on:
+  push:
+    branches: [codex/t089-prod-root-index-canonical-redirect-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: t089-legacy-index-route-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  p1_bounded_redirect_and_old_news_auth:
+    name: Source-only route plus protected Founder News Auth regressions
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Validate safe candidate routing and original product-unchanged boundary
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t089-prod-root-index-redirect-candidate.test.mjs
+      - name: Old protected P3 News/Auth/Recovery source regressions
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          echo 'T089_NO_OLD_PRODUCT_SECURITY_NEWS_REGRESSION=PASS_SCOPED'
+      - name: Do not promote candidate or claim hosted fix without independent evidence
+        run: |
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T089_BOUNDED_REVIEW_ONLY_NO_DEPLOY=YES'
