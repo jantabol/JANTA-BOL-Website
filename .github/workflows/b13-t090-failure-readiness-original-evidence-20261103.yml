@@ -1,0 +1,49 @@
+# Original P4-T090 quality gate — START, NOT full release signoff
+name: P4 T090 RUN15 E1 E5 E7 E8 Failure Repair DUE Readiness - Protected
+on:
+  push:
+    branches: [codex/b13-t090-failure-readiness-audit-20261103]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: t090-official-due-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  t090_original_register_and_fail_repair:
+    name: T090 canonical 109 states + P1 RCA exact evidence + source-only E7 negative
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Full exact original E1 E7 failure/repair and NOT RUN status protection
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node --test ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs
+          node --test ci/phase4/b13-t089-e7-official-records-coverage.test.mjs
+          node --test ci/phase4/b13-t089-original-master-section-checkpoint-crosswalk.test.mjs
+          node --test ci/phase4/b13-t089-live-module-entrypoints-authority.test.mjs
+          node --test ci/phase4/b13-t089-cross-engine-static-owners-20261103.test.mjs
+          node --test ci/phase4/b13-t089-recovery-archive-integrity.test.mjs
+          node --test ci/phase4/b13-t087-cross-module-security-negative-map.test.mjs
+      - name: Original protected News Auth Recovery Failure-Isolation regressions
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          node ci/phase3-regression/static-p3-security-regression.cjs
+          node ci/phase3-regression/static-p3-recovery-regression.cjs
+          node ci/phase3-regression/static-p3-incident-regression.cjs
+          node --test ci/phase4/b11/t070-real-joint-manual-safety.test.mjs
+          node --test ci/phase4/b11/t071-c2-all-13-scoped-fault-proof-contract.test.mjs
+          echo 'T090_PROTECTED_PREVIOUS_LOCKED_GATES=PASS_SCOPED'
+      - name: Explicit E5/E8 and full final authority HOLD, no service account/payment/deploy
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          echo 'T090_REAL_SIGNED_E5=HOLD'
+          echo 'T090_REAL_INDEPENDENT_E8=HOLD'
+          echo 'T090_ORIGINAL_FINAL_PASS_LOCK=HOLD'

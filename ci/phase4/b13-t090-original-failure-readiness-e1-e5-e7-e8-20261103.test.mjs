@@ -1,0 +1,96 @@
+// P4-T090 Sections805-818: exact original signed-gate evidence accounting.
+// This suite DOES NOT mark E5/E8 or FULL ORIGINAL T089/T090 PASS.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {execFileSync} from 'node:child_process';
+const root='JANTA_BOL_PHASE_4_WORKING/';
+const ledger=JSON.parse(fs.readFileSync(root+'review/P4_T090_109_OFFICIAL_UNRESOLVED_EVIDENCE_GATE_20261103.json','utf8'));
+const idx=JSON.parse(fs.readFileSync(root+'review/P4_T089_OFFICIAL_E7_REGISTER_EVIDENCE_INDEX_20261102.json','utf8'));
+const data=fs.readFileSync(root+'TEST-REGISTER.md','utf8');
+const rows=[...data.matchAll(/^\|\s*(P4-T\d{3})\s*\|([^|\n]*)\|([^|\n]*)\|([^|\n]*)\|([^|\n]*)\|/gm)].map(x=>({id:x[1],block:x[4].trim(),status:x[5].trim()}));
+const byId=new Map(rows.map(x=>[x.id,x]));
+const original=new Map(idx.records.map(x=>[x.id,x.official_register_status]));
+test('T090-E1-01 all 109 unique original tests preserved with true exact statuses, 14 unique blocks',()=>{
+ assert.equal(rows.length,109);
+ assert.equal(ledger.official_states.length,109);
+ assert.deepEqual(rows.map(x=>x.id),Array.from({length:109},(_,i)=>'P4-T'+String(i+1).padStart(3,'0')));
+ assert.equal(new Set(rows.map(x=>x.block)).size,14);
+ assert.equal(new Set(rows.map(x=>x.id)).size,109);
+ for(let i=0;i<109;i++){
+  assert.equal(ledger.official_states[i].id,rows[i].id);
+  assert.equal(ledger.official_states[i].block,rows[i].block);
+  assert.equal(ledger.official_states[i].status,rows[i].status);
+  assert.equal(ledger.official_states[i].source_original_status,original.get(rows[i].id));
+ }
+});
+test('T090-E7-02 old master statuses immutable except declared scoped T089 and newly started T090',()=>{
+ const changed=rows.filter(x=>x.status!==original.get(x.id)).map(x=>x.id);
+ assert.deepEqual(changed,['P4-T089','P4-T090']);
+ assert.match(byId.get('P4-T089').status,/^SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
+ assert.match(byId.get('P4-T090').status,/^IN PROGRESS.*ORIGINAL FINAL PASS\+LOCK HOLD/);
+ assert.equal(byId.get('P4-T091').status,'NOT RUN — FINAL');
+ assert.equal(rows.filter(x=>x.status.startsWith('NOT RUN')).length,65);
+ assert.equal(rows.filter(x=>x.status.startsWith('IN PROGRESS')).length,16);
+ assert.equal(idx.counts.not_run,67);
+ assert.equal(ledger.counts.source_snapshot_initial_not_run,67);
+});
+test('T090-E1-03 two real P1 RED/RCA/MINIMUM/RETEST cases have independent live SHA and old regression CI source references',()=>{
+ assert.equal(ledger.repaired_cases.length,2);
+ assert.deepEqual(ledger.repaired_cases.map(x=>x.case),['P1-PUBLIC-LEGACY-INDEX','P1-LEGACY-GRIEVANCE-FSM']);
+ const prod=ledger.live_snapshot;
+ assert.equal(prod.vercel_ready,true);
+ assert.equal(prod.github_sha,'60970abdacf560815b9db3bd819eb467ef984616');
+ assert.equal(prod.deployment,'dpl_7YhVGAh758YvZq6HmteERdyCKtMb');
+ assert.equal(prod.root_http_200_canonical,true);
+ assert.equal(prod.direct_index_http_200_canonical,true);
+ assert.equal(prod.grievance_ui_js_rpc,true);
+ for(const row of ledger.repaired_cases){
+  for(const key of ['red','rca','min_safe_fix','green'])assert.ok(row[key]?.length>30,'MISSING_RCA_EVIDENCE_'+row.case+'_'+key);
+  assert.equal(row.merge_sha,prod.github_sha);
+ }
+ assert.equal(prod.actual_browser_article_render_not_verified,true);
+});
+test('T090-E7-04 every remaining high-risk E5/E8 and original semantic due has reason, owner dependency and no fake PASS',()=>{
+ assert.deepEqual(ledger.critical_due.map(x=>x.id),['DUE-T087','DUE-T088','DUE-T089','DUE-T090-E5','DUE-T090-E8']);
+ for(const x of ledger.critical_due){assert.ok(x.test&&x.why_due?.length>25&&x.dependency?.length>30);}
+ assert.equal(ledger.official_test_gate,'T090_FULL_FINAL_HOLD_UNTIL_E1_E5_E7_E8_AND_REQUIRED_ALL_REGRESSIONS_GREEN');
+ assert.equal(ledger.status,'IN_PROGRESS_FULL_FINAL_HOLD');
+});
+test('T090-E5-05 real signed E5 and full independent E8 cannot be inferred from source/preview/HTTP smoke',()=>{
+ assert.equal(ledger.live_snapshot.full_owner_e2_e5_negative_not_executed,true);
+ assert.equal(ledger.live_snapshot.actual_browser_article_render_not_verified,true);
+ assert.equal(ledger.critical_due.some(x=>x.id==='DUE-T088'),true);
+ assert.equal(ledger.critical_due.some(x=>x.id==='DUE-T090-E8'),true);
+ assert.equal(ledger.official_test_gate.includes('E5_E7_E8'),true);
+});
+test('T090-E7-06 security advisor warnings are evidence for future triage, NOT proven exploits or automatic user-paid upgrades',()=>{
+ const adv=ledger.current_supabase_security_advisors;
+ assert.equal(adv.security_definer_anon_executable.level,'WARN');
+ assert.equal(adv.security_definer_anon_executable.count,23);
+ assert.equal(adv.security_definer_authenticated_executable.count,118);
+ assert.equal(adv.rls_enabled_no_policy.level,'INFO');
+ assert.equal(adv.rls_enabled_no_policy.count,43);
+ assert.equal(adv.leaked_password_protection.enabled,false);
+ assert.match(adv.scope,/NOT_PROOF_OF_VULNERABILITY/);
+ assert.equal(ledger.external_paid_service_started,false);
+});
+test('T090-E1-07 no source/News/Auth/Database/Backup/Edge modifications for independent T090 audit',()=>{
+ const base='c813490ac36bba2e1958eb8f62f55168a71c68ce';
+ const diff=execFileSync('git',['diff','--name-only',base,'HEAD'],{encoding:'utf8'}).trim().split('\n').filter(Boolean).sort();
+ assert.deepEqual(diff,[
+  root+'TEST-REGISTER.md',root+'CODE-MAP.md',root+'DEBUG-MAP.md',root+'CHANGELOG.md',
+  root+'review/P4_T089_RUN15_E1_E7_COVERAGE_AUDIT_START_20261102.md',
+  'ci/phase4/b13-t089-e7-official-records-coverage.test.mjs',
+  root+'review/P4_T090_E1_E5_E7_E8_FAIL_RCA_DUE_GATE_START_20261103.md',
+  root+'review/P4_T090_109_OFFICIAL_UNRESOLVED_EVIDENCE_GATE_20261103.json',
+  'ci/phase4/b13-t090-original-failure-readiness-e1-e5-e7-e8-20261103.test.mjs',
+  '.github/workflows/b13-t090-failure-readiness-original-evidence-20261103.yml'
+ ].sort());
+ assert.ok(diff.every(x=>x.startsWith(root)||x.startsWith('ci/phase4/')||x.startsWith('.github/workflows/')));
+ assert.equal(ledger.source_product_auth_db_mutation_by_this_t090_commit,false);
+});
+console.log('T090_ORIGINAL_109_REGISTER_STATUS_ACCOUNTING=PASS_SCOPED');
+console.log('T090_P1_FAIL_RCA_SAFE_FIX_EXACT_RETEST=PASS_SCOPED');
+console.log('T090_E5_SIGNED_NEGATIVE_AND_E8_FULL_RESTORE=HOLD');
+console.log('T090_FULL_FINAL_PASS_LOCK=HOLD');
