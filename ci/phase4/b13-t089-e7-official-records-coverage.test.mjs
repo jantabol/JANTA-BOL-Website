@@ -58,7 +58,7 @@ test('T089-03 original final governance state CANNOT be silently upgraded',()=>{
  assert.equal(row('P4-T086').status,'PASS');
  assert.match(row('P4-T087').status,/SCOPED PASS\+LOCK.*FINAL PASS\+LOCK HOLD/);
  assert.match(row('P4-T088').status,/FOUNDER SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
- assert.match(row('P4-T089').status,/IN PROGRESS.*FINAL PASS\+LOCK HOLD/);
+ assert.match(row('P4-T089').status,/^SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
  assert.match(row('P4-T090').status,/^NOT RUN/);
  assert.match(row('P4-T091').status,/^NOT RUN/);
  const alreadyNotRun=records.filter(x=>x.status.startsWith('NOT RUN'));
@@ -140,7 +140,7 @@ test('T089-08 58 no-filename candidates are honestly split 16 registered PASS ev
   const current=row(x.id);
   if(x.id==='P4-T089'){
     assert.equal(x.type,'NOT_RUN_IN_SOURCE_SNAPSHOT');
-    assert.match(current.status,/^IN PROGRESS/);
+    assert.match(current.status,/^SCOPED PASS\+LOCK.*ORIGINAL FINAL PASS\+LOCK HOLD/);
   }else assert.equal(current.status,x.original_status,'Unapproved status drift: '+x.id);
   if(x.type==='EXACT_PASS_IN_REGISTER'){
     assert.equal(x.original_status,'PASS');
