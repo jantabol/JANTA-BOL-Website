@@ -48,7 +48,7 @@ test('T090-HTTP03 genuine public news RPC works via public-only publishable key 
 test('T090-HTTP04 11 sensitive real Data API reads denied without signed user session; no private bodies returned or logged',async()=>{
  assert.ok(publicKey?.startsWith('sb_publishable_'));
  for(const name of names){
-  const res=await get(project+'/rest/v1/'+encodeURIComponent(name)+'?select=id&limit=1',{
+  const res=await get(project+'/rest/v1/'+encodeURIComponent(name)+'?select=*&limit=1',{
    method:'GET',headers:{apikey:publicKey,Accept:'application/json'}
   });
   assert.ok([401,403,404].includes(res.status),'PRIVATE_NO_USER_TOKEN_READ_UNEXPECTED_HTTP_'+name+'_'+res.status);
