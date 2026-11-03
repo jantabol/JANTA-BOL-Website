@@ -1,0 +1,85 @@
+{
+  "title": "T090 REAL existing Owner/Reporter identities and matching auth.sessions in isolated READ ONLY PostgreSQL RLS tests",
+  "source": "Connected Supabase production project vrffsnkycvjithwtiylt via database read-only execution; no actual JWT access token, no user identities exported",
+  "date": "2026-11-03",
+  "exact_real_live_db": true,
+  "method": "BEGIN READ ONLY; DO SELECT existing public.user_roles, auth.sessions and active team_accounts into local variables; PERFORM set_config(request.jwt.claims, claims from real DB identity/session, true); SET LOCAL ROLE authenticated; SELECT ONLY privacy-safe booleans/counts; ROLLBACK",
+  "authorization_context": "EXISTING_USER_ID_AND_SESSION_ID_WITH_SYNTHETIC_UNVERIFIED_JWT_CLAIMS",
+  "verified_http_jwt_signature": false,
+  "verified_real_issued_owner_jwt": false,
+  "verified_real_issued_reporter_jwt": false,
+  "verified_revoked_real_jwt": false,
+  "credentials_or_session_ids_logged": false,
+  "real_production_database_write_performed": false,
+  "scenarios": [
+    {
+      "scenario": "ACTIVE_REAL_REPORTER_SESSION_SPOOF_OWNER_AAL2",
+      "db_role": "authenticated",
+      "real_db_role": "reporter",
+      "session_exists": true,
+      "owner_aal2_guard": false,
+      "p4_owner_allowed": false,
+      "staff_allowed": false,
+      "visible_grievances": 0,
+      "visible_live_sessions": 0,
+      "visible_nonpublished_articles": 0,
+      "visible_role_rows": 1
+    },
+    {
+      "scenario": "ACTIVE_REAL_OWNER_SESSION_AAL1",
+      "db_role": "authenticated",
+      "real_db_role": "owner",
+      "session_exists": true,
+      "owner_aal2_guard": false,
+      "p4_owner_allowed": false,
+      "visible_grievances": 0,
+      "visible_live_sessions": 0,
+      "visible_nonpublished_articles": 0,
+      "visible_role_rows": 1
+    },
+    {
+      "scenario": "ACTIVE_REAL_OWNER_SESSION_SIMULATED_AAL2",
+      "db_role": "authenticated",
+      "real_db_role": "owner",
+      "session_exists": true,
+      "owner_aal2_guard": true,
+      "p4_owner_allowed": true,
+      "visible_grievances": 6,
+      "visible_live_sessions": 16,
+      "visible_nonpublished_articles": 32,
+      "visible_role_rows": 4
+    },
+    {
+      "scenario": "REAL_OWNER_ID_NONEXISTENT_SESSION_SIMULATED_AAL2",
+      "db_role": "authenticated",
+      "real_db_role": "owner",
+      "session_exists": false,
+      "owner_aal2_guard": false,
+      "p4_owner_allowed": false,
+      "visible_grievances": 0,
+      "visible_live_sessions": 0,
+      "visible_nonpublished_articles": 0,
+      "visible_role_rows": 1
+    }
+  ],
+  "observations": [
+    "Authenticated report-role claim declaring Owner AAL2 did not grant Owner; actual app role remains reporter",
+    "Owner under AAL1 cannot access Owner records",
+    "Authorized Owner AAL2 simulated claims plus existing session gives nonzero Owner data, providing a positive-control against vacuous zero-row tests",
+    "Nonexistent session blocks Owner-sensitive RLS despite owner user ID; Owner can still read one own user_roles record because users_can_read_own_role lacks private.current_session_active(), existing T087 identified this stale-session self-role metadata exception"
+  ],
+  "finding": {
+    "severity": "P2_REVIEW",
+    "key": "USER_ROLES_SELF_READ_MISSING_SESSION_GUARD",
+    "evidence": "user_roles.users_can_read_own_role USING (user_id=auth.uid()) permits one own role row with synthetic nonexistent session context; no direct cross-user role rows",
+    "not_proven": "No actual revoked hosted JWT or Data API request was used; this is SQL RLS evaluation only.",
+    "minimum_fix_candidate": "Add private.current_session_active() to users_can_read_own_role self-read RLS policy only after isolated authorized regression proves active Owner, Reporter, MFA, and admin role reads are unaffected.",
+    "production_policy_changed": false
+  },
+  "e5_sql_existing_identity_session_scoped": "PASS+LOCK_SCOPED",
+  "e5_signed_cross_user_https": "HOLD",
+  "e8_full_hosted_restore": "HOLD",
+  "e7_full_semantic_1034": "HOLD",
+  "original_t090_final": "HOLD",
+  "original_t091_started": false
+}
