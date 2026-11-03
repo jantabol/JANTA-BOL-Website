@@ -52,7 +52,7 @@ test('T090-E1-03 two real P1 RED/RCA/MINIMUM/RETEST cases have independent live 
  assert.equal(prod.actual_browser_article_render_not_verified,true);
 });
 test('T090-E7-04 every remaining high-risk E5/E8 and original semantic due has reason, owner dependency and no fake PASS',()=>{
- assert.deepEqual(ledger.critical_due.map(x=>x.id),['DUE-T087','DUE-T088','DUE-T089','DUE-T090-E5','DUE-T090-E8']);
+ assert.deepEqual(ledger.critical_due.map(x=>x.id),['DUE-T087','DUE-T088','DUE-T089','DUE-T090-E5','DUE-T090-E8','DUE-T090-AD-METRIC-LEGACY']);
  for(const x of ledger.critical_due){assert.ok(x.test&&x.why_due?.length>25&&x.dependency?.length>30);}
  assert.equal(ledger.official_test_gate,'T090_FULL_FINAL_HOLD_UNTIL_E1_E5_E7_E8_AND_REQUIRED_ALL_REGRESSIONS_GREEN');
  assert.equal(ledger.status,'IN_PROGRESS_FULL_FINAL_HOLD');
