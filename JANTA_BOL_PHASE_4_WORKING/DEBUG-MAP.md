@@ -545,3 +545,8 @@ Evidence: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_ORIGINAL_MASTER_14_TOPIC_682
 The 58 *filename-only* gaps split as **16 original exact PASS records with 3–6 substantive Evidence bullets directly in the canonical TEST-REGISTER**, **39 original NOT RUN** (including the later-started T089) and **3 original IN PROGRESS**. **Absence of a separate file never invalidates already recorded official evidence.** Sixteen located historical source narratives are preserved, not re-executed; 42 remaining no-filename entries retain their original non-PASS status. Scoped protected evidence contract `T089-08` verifies every row; original full E7/source semantic duplication/source conflict remains HOLD.
 
 Record: `JANTA_BOL_PHASE_4_WORKING/review/P4_T089_E7_58_NO_FILENAME_REGISTER_EVIDENCE_RECONCILIATION_20261102.json`. No new backend authority, user record or production change.
+
+
+### T089 2026-11-03 independently retrieved live Edge source parity
+
+Earlier statement “5 deployed Edge functions absent Git” independently reproduced; refined to **retrievable at Supabase control plane**, but **not yet represented by reviewed source-controlled recovery homes**. Ten other production Edge `index.ts` files were independently confirmed exact equal to this review branch. No hardcoded-token scan can replace complete source and auth proof; private source was not published. Vercel production still uses a distinct SHA from main. The architecture/orphan/source conflict is therefore NOT resolved; **T089 original FINAL PASS+LOCK HOLD**. See dated T089 dossier for exact function/version inventory.
