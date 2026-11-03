@@ -85,9 +85,32 @@ test('T089-D08 duplicate legacy root static UI, staged ad modules and dummy prev
  assert.ok(src['script.js'].includes('शिवपुरी में भारी बारिश'));
  assert.ok(src['script.js'].includes('T080: published-only geographic coverage'));
  assert.equal(html['index.html'].includes('top-story-open'),false,'OLD_PREVIEW_BUTTON_RETURNED');
- assert.ok(mat.unresolved.some(x=>x.id==='LEGACY_STATIC_PREVIEW_ROOT'&&x.status==='REVIEW_NOT_AUTO_FAIL'));
+ assert.ok(mat.unresolved.some(x=>x.id==='LEGACY_STATIC_PREVIEW_ROOT'&&x.status==='CONFIRMED_P1_HOSTED_LEGACY_ROUTE'));
  assert.ok(mat.unresolved.some(x=>x.id==='OLD_PREVIEW_HANDLERS'&&x.status==='REVIEW_NOT_AUTO_FAIL'));
 });
+test('T089-D10 confirmed source-integrity P1: old direct grievance UPDATE bypass vs existing backend FSM remain explicit until deployed',()=>{
+ assert.ok(src['phase2-client.js'].includes(".from('grievances').update("));
+ assert.ok(html['grievances.html'].includes('JBPhase2.setGrievanceStatus('));
+ assert.ok(src['phase4-domain-client.js'].includes("rpc('jb_grievance_transition_internal'"));
+ const issue=mat.unresolved.find(x=>x.id==='LEGACY_GRIEVANCE_DIRECT_STATUS_MUTATION');
+ assert.ok(issue&&issue.status==='CONFIRMED_P1_SOURCE_RLS_FSM_DIVERGENCE');
+ assert.equal(mat.database_readonly_authority_proof.grievances_rls_on,true);
+ assert.equal(mat.database_readonly_authority_proof.authenticated_update_grant,true);
+ assert.equal(mat.database_readonly_authority_proof.noninternal_grievance_table_triggers,0);
+ assert.equal(mat.database_readonly_authority_proof.approved_rpc_validates_fsm,true);
+ assert.equal(mat.database_readonly_authority_proof.approved_rpc_emits_case_event,true);
+});
+test('T089-D11 live root P1 and two narrow production-source PRs are documented as staged-only, not false deployed proof',()=>{
+ const issue=mat.unresolved.find(x=>x.id==='LEGACY_STATIC_PREVIEW_ROOT');
+ assert.equal(issue.status,'CONFIRMED_P1_HOSTED_LEGACY_ROUTE');
+ assert.deepEqual(mat.live_http_readonly_proof.endpoints.slice(0,2).map(x=>x.status),[200,200]);
+ assert.equal(mat.live_http_readonly_proof.endpoints[0].canonical_c1,true);
+ assert.equal(mat.live_http_readonly_proof.endpoints[1].canonical_c1,false);
+ assert.deepEqual(mat.isolated_fix_candidates.map(x=>x.pr),[115,116]);
+ assert.ok(mat.isolated_fix_candidates.every(x=>x.ci==='SUCCESS'&&x.status==='DRAFT_UNMERGED_NOT_DEPLOYED'));
+ assert.match(mat.original_t089_final,/HOLD/);
+});
+
 test('T089-D09 scoped audit cannot be misreported as complete semantic source authority or original T089 PASS',()=>{
  assert.equal(mat.scope,'STATIC_SOURCE_E7_ONLY');
  assert.equal(mat.all_module_semantic_uniqueness_proven,false);
