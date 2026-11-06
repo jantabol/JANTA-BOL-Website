@@ -40,5 +40,11 @@
     }
   ],
   "buildCommand": "node tools/build-public-static.mjs",
-  "outputDirectory": "public-launch"
+  "outputDirectory": "public-launch",
+  "rewrites": [
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    }
+  ]
 }
