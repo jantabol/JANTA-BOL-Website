@@ -9,7 +9,24 @@ async function analyticsSummary(){await owner();const today=new Date();today.set
 async function track(articleId,eventType){const {error}=await c().from('analytics_events').insert({article_id:articleId||null,event_type:eventType});if(error)console.warn('analytics',error.message)}
 async function grievances(status){await owner();let q=c().from('grievances').select('*').order('created_at',{ascending:false});if(status)q=q.eq('status',status);const {data,error}=await q;if(error)throw error;return data||[]}
 function clientUuid(){if(global.crypto?.randomUUID)return global.crypto.randomUUID();const b=new Uint8Array(16);global.crypto.getRandomValues(b);b[6]=(b[6]&15)|64;b[8]=(b[8]&63)|128;const h=[...b].map(x=>x.toString(16).padStart(2,'0')).join('');return `${h.slice(0,8)}-${h.slice(8,12)}-${h.slice(12,16)}-${h.slice(16,20)}-${h.slice(20)}`}
-async function createGrievance(x){const id=clientUuid();const {error}=await c().from('grievances').insert({id,article_id:x.articleId||null,article_url:x.articleUrl||'',complainant_name:x.name||'',contact:x.contact||'',issue:x.issue||'',reason:x.reason||'',evidence_note:x.evidence||'',urgent:!!x.urgent,status:'received'});if(error)throw error;return{id,status:'received'}}
+async function createGrievance(x){
+  // Public complaints must use the audited RPC. Anonymous browsers are not
+  // permitted to INSERT into the private workflow's grievances table.
+  const payload={
+    p_article:x.articleId||null,
+    p_article_url:x.articleUrl||'',
+    p_name:x.name||'',
+    p_contact:x.contact||'',
+    p_issue:x.issue||'',
+    p_reason:x.reason||'',
+    p_evidence:x.evidence||'',
+    p_urgent:!!x.urgent
+  };
+  const {data,error}=await c().rpc('jb_grievance_submit_receipt',payload);
+  if(error)throw error;
+  if(!data||!data.id||!data.public_id||data.status!=='received')throw Error('GRIEVANCE_RECEIPT_UNCONFIRMED');
+  return {id:data.id,publicId:data.public_id,status:data.status};
+}
 async function setGrievanceStatus(id,status,note){await owner();const {data,error}=await c().rpc('jb_grievance_transition_internal',{p_id:id,p_status:status,p_note:note||''});if(error)throw error;if(!data||String(data.id)!==String(id))throw Error('GRIEVANCE_TRANSITION_UNCONFIRMED');return data} async function liveSessions(){await owner();const {data,error}=await c().from('live_sessions').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
 async function setLive(id,active){await owner();const {data,error}=await c().from('live_sessions').update({active:!!active,ended_at:active?null:iso()}).eq('id',id).select('*').single();if(error)throw error;await audit(active?'live_start':'live_stop','live_session',id);return data}
 async function reporters(){await owner();const {data,error}=await c().from('reporters').select('*').order('created_at',{ascending:false});if(error)throw error;return data||[]}
