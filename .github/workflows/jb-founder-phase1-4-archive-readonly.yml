@@ -1,0 +1,108 @@
+# Read-only, source-only archival of the user's own public GitHub repository.
+# NO secrets, production DB/Storage, Vercel deployment, merge or release mutation.
+name: JB Founder Phase 1-4 Master Source ZIP (read-only)
+on:
+  push:
+    branches: [codex/founder-phase1-4-master-zip-20261106]
+    paths:
+      - .github/workflows/jb-founder-phase1-4-archive-readonly.yml
+permissions:
+  contents: read
+concurrency:
+  group: jb-phase1-phase4-source-archive-readonly
+  cancel-in-progress: false
+jobs:
+  create_source_archive:
+    if: github.repository == 'jantabol/JANTA-BOL-Website'
+    name: Build original deployed, current main and Phase4 T090 draft source snapshots
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Generate source-only Master ZIP with SHA manifest
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test "$GITHUB_REPOSITORY" = "jantabol/JANTA-BOL-Website"
+          test "$GITHUB_REF" = "refs/heads/codex/founder-phase1-4-master-zip-20261106"
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          python3 - <<'PY'
+          import io, json, hashlib, os, pathlib, re, subprocess, tarfile, zipfile
+          from datetime import datetime, timezone
+          out="JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106.zip"
+          refs=[
+            ("01_PRODUCTION_DEPLOYED_SOURCE_20261031","60970abdacf560815b9db3bd819eb467ef984616"),
+            ("02_MAIN_PROTECTED_SOURCE_20261102","f447231c0677644ca5a44cc19f12cf0314ff38ea"),
+            ("03_PHASE4_T090_DRAFT_UNMERGED_20261103","d106851cef918fa6b8c971f6362dd4d956d173e8")
+          ]
+          report={"project":"JANTA BOL ONLY","created_utc":datetime.now(timezone.utc).isoformat(),
+             "repository":"jantabol/JANTA-BOL-Website","source_type":"PUBLIC_GITHUB_TRACKED_CODE_AND_DOCUMENTS_ONLY",
+             "snapshots":[],"missing_not_included":["current production Supabase DB data, private storage media, credentials, OTP, private Backblaze B2 ciphertext, Auth sessions, runtime deployment configuration"],
+             "advisory":"The Phase4 T090 draft is not merged or released. This is a portable source archive, NOT a full running disaster-recovery backup."}
+          excluded_all=[]
+          zip_context=zipfile.ZipFile(out,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=6,allowZip64=True)
+          with zip_context as z:
+            readme=("JANTA BOL PHASE 1-4 MASTER SOURCE BACKUP (6 November 2026)\n"
+              "फोन पर सुरक्षित रखने के लिए - GitHub tracked source snapshots.\n"
+              "01: वास्तविक Production deployed immutable source (Oct 31).\n"
+              "02: protected GitHub main (Nov 02).\n"
+              "03: Phase4 T090 review branch (Nov 03), अभी DRAFT, MERGE नहीं.\n"
+              "केवल source/docs/tests/CI हैं; live database, private media, auth keys और secrets शामिल नहीं हैं.\n"
+              "यह complete disaster-recovery backup नहीं है.\n"
+              "About Us अपडेट करने के लिए बाद में verified admin/editor workflow से changes करेंगे.\n"
+              "Source को site पर upload/replace मत करना.\n")
+            z.writestr("00_READ_FIRST_HINDI.txt",readme)
+            for label,sha in refs:
+              raw=subprocess.run(["git","archive","--format=tar",sha],capture_output=True,check=True).stdout
+              count=0; size=0; excluded=[]
+              with tarfile.open(fileobj=io.BytesIO(raw),mode="r:") as tf:
+                for member in tf:
+                  if not member.isfile():continue
+                  name=member.name
+                  parts=pathlib.PurePosixPath(name).parts
+                  if name.startswith("/") or ".." in parts or "\\" in name:
+                    raise RuntimeError("UNSAFE_ARCHIVE_PATH")
+                  # Exclude files likely to contain actual private keys, credentials or nested opaque archives.
+                  if any(p.startswith(".env") for p in parts) or re.search(r"\.(?:pem|p12|pfx|key|age|kdbx)$",name,re.I) or name=="JANTA-BOL v1 BACKUP.zip":
+                    excluded.append(name);continue
+                  body=tf.extractfile(member).read()
+                  if b"-----BEGIN PRIVATE KEY-----" in body or b"AGE-SECRET-KEY-" in body:
+                    excluded.append(name);continue
+                  z.writestr(label+"/"+name,body)
+                  count+=1;size+=len(body)
+              report["snapshots"].append({"folder":label,"git_sha":sha,"files":count,"uncompressed_bytes":size})
+              excluded_all.extend({"snapshot":label,"path":x} for x in excluded)
+              print(f"MASTER_SOURCE_SNAPSHOT={label};SHA={sha};FILES={count};BYTES={size};EXCLUDED={len(excluded)}")
+            report["excluded_paths"]=excluded_all
+            z.writestr("00_SOURCE_MANIFEST.json",json.dumps(report,indent=2,ensure_ascii=False)+"\n")
+            z.writestr("00_ABOUT_US_NEXT_STEP.txt","STEP 1: Store this ZIP in Android Downloads.\nSTEP 2: Open https://jantabol.in/ in Chrome and verify public page.\nSTEP 3: Sign in via existing authorized JANTA BOL admin.\nSTEP 4: Review and correct actual About Us content with verified Publisher/Editor/contact; never assert unverified Government recognition.\nNever upload this ZIP to your public website or overwrite running backend.\n")
+          with zipfile.ZipFile(out) as z:
+            names=z.namelist()
+            assert z.testzip() is None
+            assert all(sum(n.startswith(k+"/") for n in names)>0 for k,_ in refs)
+            for item in report["snapshots"]:assert item["files"]>75
+          digest=hashlib.sha256(pathlib.Path(out).read_bytes()).hexdigest()
+          pathlib.Path(out+".sha256").write_text(f"{digest}  {out}\n",encoding="utf-8")
+          print("MASTER_SOURCE_ZIP_CREATED=PASS")
+          print("MASTER_SOURCE_ZIP_SIZE_BYTES="+str(os.path.getsize(out)))
+          print("MASTER_SOURCE_SHA256="+digest)
+          print("MASTER_SOURCE_UNMERGED_T090=true")
+          print("MASTER_SOURCE_PRODUCTION_RUNTIME_BACKUP_INCLUDED=false")
+          PY
+          python3 -m zipfile -t JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106.zip
+          sha256sum -c JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106.zip.sha256
+      - name: Upload founder portable ZIP (source only, temporary runner artifact)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106
+          path: |
+            JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106.zip
+            JANTA_BOL_PHASE_1_TO_4_MASTER_SOURCE_20261106.zip.sha256
+          retention-days: 14
+          if-no-files-found: error
+          compression-level: 0
