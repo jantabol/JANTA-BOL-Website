@@ -9,7 +9,7 @@
  * No credentials, database changes, renames or source deletion.
  */
 import {
-  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, rmSync
+  copyFileSync, existsSync, lstatSync, mkdirSync, readdirSync, rmSync, writeFileSync
 } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
 
@@ -69,6 +69,11 @@ for (const name of legacyRootAssets) {
   }
   copyFileSync(src, join(webOutput, name));
 }
+
+// Root robots.txt makes the live public sitemap discoverable without blocking news.
+writeFileSync(join(webOutput, 'robots.txt'),
+  'User-agent: *\nAllow: /\nSitemap: https://jantabol.in/sitemap.xml\n',
+  'utf8');
 
 // Regression guards: the output must never contain internal project artifacts.
 const forbidden = [
