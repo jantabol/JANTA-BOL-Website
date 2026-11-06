@@ -44,7 +44,8 @@ jobs:
             'production_root_renders_about': 'JANTA-BOL के बारे में' in root,
             'government_rules_box': 'jb-about-government-rules' in about and 'भारत सरकार के डिजिटल मीडिया नियमों का संदर्भ' in about,
             'gov_rules_2021_part_iii': '2021 के भाग-III' in about and 'Ministry of Information and Broadcasting' in about,
-            'no_false_govt_recognition': 'मान्यता, पंजीकरण, लाइसेंस' in about and 'does not imply Government' in about,
+            'english_still_clearly_no_govt_approval': 'does not imply Government' in about,
+            'requested_hindi_clarification_paragraph_removed': 'महत्वपूर्ण स्पष्टीकरण' not in about and 'मान्यता, पंजीकरण, लाइसेंस' not in about,
             'MP_wide_without_districts': 'मध्य प्रदेश' in about and not any(x in about for x in ('पिछोर','शिवपुरी','गुना','अशोकनगर','Pichhore','Shivpuri','Guna','Ashoknagar')),
             'english_about': 'Our coverage spans Madhya Pradesh' in about and 'Where Truth Speaks' in about,
             'new_tagline': 'जहाँ सच बोलता है' in about,
@@ -57,6 +58,6 @@ jobs:
             print(f'JANTA_BOL_PUBLIC_20261106_{name}={"PASS" if passed else "FAIL"}')
           if not all(checks.values()):
             raise SystemExit('LIVE_PUBLIC_LAUNCH_SMOKE_HOLD')
-          print('JANTA_BOL_11_PUBLIC_LIVE_HTTP_CHECKS=PASS')
+          print('JANTA_BOL_12_PUBLIC_LIVE_HTTP_CHECKS=PASS')
           print('JANTA_BOL_FULL_T090_DISASTER_RECOVERY=STILL_HOLD')
           PY
