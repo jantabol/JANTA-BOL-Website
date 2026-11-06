@@ -1,0 +1,62 @@
+name: JANTA BOL - 06 Nov Live About Us HTTP Smoke (READ ONLY)
+on:
+  push:
+    branches:
+      - codex/about-us-live-smoke-20261106
+    paths:
+      - .github/workflows/jb-about-us-live-http-smoke-20261106.yml
+permissions:
+  contents: read
+concurrency:
+  group: jb-about-us-live-http-smoke-20261106
+  cancel-in-progress: false
+jobs:
+  verify_public_live:
+    name: Production origin / About Us / News discovery — GET only
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - name: Real HTTPS origin smoke, no accounts, tokens or writes
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${SUPABASE_DB_PASSWORD:-}"
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          curl --fail --silent --show-error --location --retry 2 --max-time 25 \
+            --header 'Cache-Control: no-cache' \
+            'https://jantabol.in/' -o /tmp/jb-root.html
+          curl --fail --silent --show-error --location --retry 2 --max-time 25 \
+            --header 'Cache-Control: no-cache' \
+            'https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/index.html' -o /tmp/jb-live.html
+          curl --fail --silent --show-error --location --retry 2 --max-time 25 \
+            'https://jantabol.in/JANTA_BOL_PHASE_3C_WORKING/b9-search.html' -o /tmp/jb-search.html
+          python3 - <<'PY'
+          from pathlib import Path
+          from html import unescape
+          live=Path('/tmp/jb-live.html').read_text(encoding='utf8')
+          root=Path('/tmp/jb-root.html').read_text(encoding='utf8')
+          search=Path('/tmp/jb-search.html').read_text(encoding='utf8')
+          a=live.index('<section class="about-jantabol" id="about">')
+          b=live.index('</section>',a)+len('</section>')
+          about=unescape(live[a:b])
+          checks={
+            'production_root_renders_about': 'JANTA-BOL के बारे में' in root,
+            'government_rules_box': 'jb-about-government-rules' in about and 'भारत सरकार के डिजिटल मीडिया नियमों का संदर्भ' in about,
+            'gov_rules_2021_part_iii': '2021 के भाग-III' in about and 'Ministry of Information and Broadcasting' in about,
+            'no_false_govt_recognition': 'मान्यता, पंजीकरण, लाइसेंस' in about and 'does not imply Government' in about,
+            'MP_wide_without_districts': 'मध्य प्रदेश' in about and not any(x in about for x in ('पिछोर','शिवपुरी','गुना','अशोकनगर','Pichhore','Shivpuri','Guna','Ashoknagar')),
+            'english_about': 'Our coverage spans Madhya Pradesh' in about and 'Where Truth Speaks' in about,
+            'new_tagline': 'जहाँ सच बोलता है' in about,
+            'original_three_cards': about.count('class="about-point"')==3,
+            'original_news_and_reporter_controls_intact': 'citizen-reporter' in live and 'b9-search-entry' in live and 'supabase-config.js' in live,
+            'public_news_search_accessible': '<html' in search.lower() and 'b9' in search.lower(),
+            'no_isolated_preview_in_production': 'JANTA BOL — Isolated Preview' not in live,
+          }
+          for name, passed in checks.items():
+            print(f'JANTA_BOL_PUBLIC_20261106_{name}={"PASS" if passed else "FAIL"}')
+          if not all(checks.values()):
+            raise SystemExit('LIVE_PUBLIC_LAUNCH_SMOKE_HOLD')
+          print('JANTA_BOL_11_PUBLIC_LIVE_HTTP_CHECKS=PASS')
+          print('JANTA_BOL_FULL_T090_DISASTER_RECOVERY=STILL_HOLD')
+          PY
