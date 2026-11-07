@@ -1,0 +1,22 @@
+name: B13 T089 legacy homepage route P1 minimum safe fix
+on:
+  push:
+    branches: [codex/b13-t089-legacy-home-public-route-safe-fix-20261103]
+permissions:
+  contents: read
+jobs:
+  source-only-safe-routing:
+    name: Verify /index.html canonical redirect + no source/security regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with: {persist-credentials: false, fetch-depth: 0}
+      - name: Verify minimal one-route difference, original headers and PURL
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          test -z "${VERCEL_TOKEN:-}"
+          test -z "${SUPABASE_SERVICE_ROLE_KEY:-}"
+          node --test ci/phase4/b13-t089-legacy-home-route-safe-fix.test.mjs
+          echo 'T089_LEGACY_FIX_PROD_DEPLOYMENT=NOT_RUN'
